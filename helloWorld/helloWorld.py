@@ -23,24 +23,18 @@ from slicer import vtkMRMLScalarVolumeNode
 
 
 class helloWorld(ScriptedLoadableModule):
-    """Uses ScriptedLoadableModule base class, available at:
-    https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
-    """
-
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = _("helloWorld")  # TODO: make this more human readable by adding spaces
-        # TODO: set categories (folders where the module shows up in the module selector)
-        self.parent.categories = [translate("qSlicerAbstractCoreModule", "Examples")]
-        self.parent.dependencies = []  # TODO: add here list of module names that this module requires
-        self.parent.contributors = ["John Doe (AnyWare Corp.)"]  # TODO: replace with "Firstname Lastname (Organization)"
+        self.parent.title = _("helloWorld")
+        # folders where the module shows up in the module selector
+        self.parent.categories = [
+            translate("qSlicerAbstractCoreModule", "Examples")]
+        self.parent.dependencies = []  # list of module names that this module requires
+        self.parent.contributors = ["Fryderyk Kögl (TUM)"]
         # TODO: update with short description of the module and a link to online module documentation
         # _() function marks text as translatable to other languages
-        self.parent.helpText = _("""
-This is an example of scripted loadable module bundled in an extension.
-See more information in <a href="https://github.com/organization/projectname#helloWorld">module documentation</a>.
+        self.parent.helpText = _("""Basic module. See more information in <a href="https://github.com/koegl-PhD/RegistrationViewer">module documentation</a>.
 """)
-        # TODO: replace with organization, grant and thanks
         self.parent.acknowledgementText = _("""
 This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc., Andras Lasso, PerkLab,
 and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
@@ -85,21 +79,6 @@ def registerSampleData():
         nodeNames="helloWorld1",
     )
 
-    # helloWorld2
-    SampleData.SampleDataLogic.registerCustomSampleDataSource(
-        # Category and sample name displayed in Sample Data module
-        category="helloWorld",
-        sampleName="helloWorld2",
-        thumbnailFileName=os.path.join(iconsPath, "helloWorld2.png"),
-        # Download URL and target file name
-        uris="https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97",
-        fileNames="helloWorld2.nrrd",
-        checksums="SHA256:1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97",
-        # This node name will be used when the data set is loaded
-        nodeNames="helloWorld2",
-    )
-
-
 #
 # helloWorldParameterNode
 #
@@ -110,18 +89,10 @@ class helloWorldParameterNode:
     """
     The parameters needed by module.
 
-    inputVolume - The volume to threshold.
-    imageThreshold - The value at which to threshold the input volume.
-    invertThreshold - If true, will invert the threshold.
-    thresholdedVolume - The output volume that will contain the thresholded volume.
-    invertedVolume - The output volume that will contain the inverted thresholded volume.
+    inputVolume - Input volume to print the name
     """
 
     inputVolume: vtkMRMLScalarVolumeNode
-    imageThreshold: Annotated[float, WithinRange(-100, 500)] = 100
-    invertThreshold: bool = False
-    thresholdedVolume: vtkMRMLScalarVolumeNode
-    invertedVolume: vtkMRMLScalarVolumeNode
 
 
 #
@@ -130,14 +101,11 @@ class helloWorldParameterNode:
 
 
 class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
-    """Uses ScriptedLoadableModuleWidget base class, available at:
-    https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
-    """
-
     def __init__(self, parent=None) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.__init__(self, parent)
-        VTKObservationMixin.__init__(self)  # needed for parameter node observation
+        # needed for parameter node observation
+        VTKObservationMixin.__init__(self)
         self.logic = None
         self._parameterNode = None
         self._parameterNodeGuiTag = None
@@ -164,11 +132,13 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Connections
 
         # These connections ensure that we update parameter node when scene is closed
-        self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
-        self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
+        self.addObserver(
+            slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
+        self.addObserver(slicer.mrmlScene,
+                         slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         # Buttons
-        self.ui.applyButton.connect("clicked(bool)", self.onApplyButton)
+        self.ui.printName.connect("clicked(bool)", self.onPrintName)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -188,7 +158,8 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if self._parameterNode:
             self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
             self._parameterNodeGuiTag = None
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+            self.removeObserver(
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
 
     def onSceneStartClose(self, caller, event) -> None:
         """Called just before the scene is closed."""
@@ -210,7 +181,8 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
         if not self._parameterNode.inputVolume:
-            firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLScalarVolumeNode")
+            firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass(
+                "vtkMRMLScalarVolumeNode")
             if firstVolumeNode:
                 self._parameterNode.inputVolume = firstVolumeNode
 
@@ -222,35 +194,31 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         if self._parameterNode:
             self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+            self.removeObserver(
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
             # ui element that needs connection.
             self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
-            self.addObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+            self.addObserver(self._parameterNode,
+                             vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
             self._checkCanApply()
 
     def _checkCanApply(self, caller=None, event=None) -> None:
-        if self._parameterNode and self._parameterNode.inputVolume and self._parameterNode.thresholdedVolume:
-            self.ui.applyButton.toolTip = _("Compute output volume")
-            self.ui.applyButton.enabled = True
+        if self._parameterNode and self._parameterNode.inputVolume:
+            self.ui.printName.toolTip = _("Print volume name")
+            self.ui.printName.enabled = True
         else:
-            self.ui.applyButton.toolTip = _("Select input and output volume nodes")
-            self.ui.applyButton.enabled = False
+            self.ui.printName.toolTip = _(
+                "Select input volume nodes")
+            self.ui.printName.enabled = False
 
-    def onApplyButton(self) -> None:
+    def onPrintName(self) -> None:
         """Run processing when user clicks "Apply" button."""
-        with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
+        with slicer.util.tryWithErrorDisplay(_("Failed to print name."), waitCursor=True):
             # Compute output
-            self.logic.process(self.ui.inputSelector.currentNode(), self.ui.outputSelector.currentNode(),
-                               self.ui.imageThresholdSliderWidget.value, self.ui.invertOutputCheckBox.checked)
-
-            # Compute inverted output (if needed)
-            if self.ui.invertedOutputSelector.currentNode():
-                # If additional output volume is selected then result with inverted threshold is written there
-                self.logic.process(self.ui.inputSelector.currentNode(), self.ui.invertedOutputSelector.currentNode(),
-                                   self.ui.imageThresholdSliderWidget.value, not self.ui.invertOutputCheckBox.checked, showResult=False)
+            self.logic.process(self.ui.inputSelector.currentNode())
 
 
 #
@@ -275,43 +243,26 @@ class helloWorldLogic(ScriptedLoadableModuleLogic):
     def getParameterNode(self):
         return helloWorldParameterNode(super().getParameterNode())
 
-    def process(self,
-                inputVolume: vtkMRMLScalarVolumeNode,
-                outputVolume: vtkMRMLScalarVolumeNode,
-                imageThreshold: float,
-                invert: bool = False,
-                showResult: bool = True) -> None:
+    def process(self, inputVolume: vtkMRMLScalarVolumeNode) -> None:
         """
         Run the processing algorithm.
         Can be used without GUI widget.
         :param inputVolume: volume to be thresholded
-        :param outputVolume: thresholding result
-        :param imageThreshold: values above/below this threshold will be set to 0
-        :param invert: if True then values above the threshold will be set to 0, otherwise values below are set to 0
-        :param showResult: show output volume in slice viewers
         """
 
-        if not inputVolume or not outputVolume:
-            raise ValueError("Input or output volume is invalid")
+        if not inputVolume:
+            raise ValueError("Input volume is invalid")
 
         import time
 
         startTime = time.time()
         logging.info("Processing started")
 
-        # Compute the thresholded output volume using the "Threshold Scalar Volume" CLI module
-        cliParams = {
-            "InputVolume": inputVolume.GetID(),
-            "OutputVolume": outputVolume.GetID(),
-            "ThresholdValue": imageThreshold,
-            "ThresholdType": "Above" if invert else "Below",
-        }
-        cliNode = slicer.cli.run(slicer.modules.thresholdscalarvolume, None, cliParams, wait_for_completion=True, update_display=showResult)
-        # We don't need the CLI module node anymore, remove it to not clutter the scene with it
-        slicer.mrmlScene.RemoveNode(cliNode)
+        print(f"Volume name: {inputVolume.GetName()}")
 
         stopTime = time.time()
-        logging.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
+        logging.info(
+            f"Processing completed in {stopTime-startTime:.2f} seconds")
 
 
 #
@@ -361,7 +312,8 @@ class helloWorldTest(ScriptedLoadableModuleTest):
         self.assertEqual(inputScalarRange[0], 0)
         self.assertEqual(inputScalarRange[1], 695)
 
-        outputVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
+        outputVolume = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLScalarVolumeNode")
         threshold = 100
 
         # Test the module logic
