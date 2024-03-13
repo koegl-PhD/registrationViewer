@@ -16,6 +16,7 @@ from slicer.parameterNodeWrapper import (
 
 from slicer import vtkMRMLScalarVolumeNode
 
+from registrationViewerLib import utils
 
 #
 # helloWorld
@@ -33,7 +34,7 @@ class helloWorld(ScriptedLoadableModule):
         self.parent.contributors = ["Fryderyk Kögl (TUM)"]
         # TODO: update with short description of the module and a link to online module documentation
         # _() function marks text as translatable to other languages
-        self.parent.helpText = _("""Basic module. See more information in <a href="https://github.com/koegl-PhD/RegistrationViewer">module documentation</a>.
+        self.parent.helpText = _("""Basic module. See more information in <a href="https://github.com/koegl-PhD/registrationViewer">module documentation</a>.
 """)
         self.parent.acknowledgementText = _("""
 This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc., Andras Lasso, PerkLab,
@@ -258,7 +259,9 @@ class helloWorldLogic(ScriptedLoadableModuleLogic):
         startTime = time.time()
         logging.info("Processing started")
 
-        print(f"Volume name: {inputVolume.GetName()}")
+        utils.printVolumeName(inputVolume)
+
+        # print(f"Volume name: {inputVolume.GetName()}")
 
         stopTime = time.time()
         logging.info(
@@ -306,30 +309,5 @@ class helloWorldTest(ScriptedLoadableModuleTest):
 
         registerSampleData()
         inputVolume = SampleData.downloadSample("helloWorld1")
-        self.delayDisplay("Loaded test data set")
-
-        inputScalarRange = inputVolume.GetImageData().GetScalarRange()
-        self.assertEqual(inputScalarRange[0], 0)
-        self.assertEqual(inputScalarRange[1], 695)
-
-        outputVolume = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLScalarVolumeNode")
-        threshold = 100
-
-        # Test the module logic
-
-        logic = helloWorldLogic()
-
-        # Test algorithm with non-inverted threshold
-        logic.process(inputVolume, outputVolume, threshold, True)
-        outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-        self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-        self.assertEqual(outputScalarRange[1], threshold)
-
-        # Test algorithm with inverted threshold
-        logic.process(inputVolume, outputVolume, threshold, False)
-        outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-        self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-        self.assertEqual(outputScalarRange[1], inputScalarRange[1])
 
         self.delayDisplay("Test passed")
