@@ -12,8 +12,8 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton" native="true">
-     <property name="text" stdset="0">
+    <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton">
+     <property name="text">
       <string>Inputs</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
@@ -25,22 +25,22 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="qMRMLNodeComboBox" name="inputSelector" native="true">
+       <widget class="qMRMLNodeComboBox" name="inputSelector">
         <property name="toolTip">
          <string>Pick the input volume.</string>
         </property>
-        <property name="nodeTypes" stdset="0">
+        <property name="nodeTypes">
          <stringlist notr="true">
           <string>vtkMRMLScalarVolumeNode</string>
          </stringlist>
         </property>
-        <property name="showChildNodeTypes" stdset="0">
+        <property name="showChildNodeTypes">
          <bool>false</bool>
         </property>
-        <property name="addEnabled" stdset="0">
+        <property name="addEnabled">
          <bool>false</bool>
         </property>
-        <property name="removeEnabled" stdset="0">
+        <property name="removeEnabled">
          <bool>false</bool>
         </property>
         <property name="SlicerParameterName" stdset="0">
@@ -65,6 +65,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="toggle_transform">
+     <property name="text">
+      <string>turn_transform_off</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -81,6 +88,12 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>ctkCollapsibleButton</class>
+   <extends>QWidget</extends>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>qMRMLNodeComboBox</class>
    <extends>QWidget</extends>
    <header>qMRMLNodeComboBox.h</header>
@@ -89,12 +102,6 @@
    <class>qMRMLWidget</class>
    <extends>QWidget</extends>
    <header>qMRMLWidget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ctkCollapsibleButton</class>
-   <extends>QWidget</extends>
-   <header>ctkCollapsibleButton.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -3,7 +3,7 @@ import os
 from typing import Annotated, Optional
 
 import vtk
-
+import vtk, qt
 import slicer
 from slicer.i18n import tr as _
 from slicer.i18n import translate
@@ -22,6 +22,7 @@ from registrationViewerLib import utils
 # helloWorld
 #
 
+use_transform = True
 
 class helloWorld(ScriptedLoadableModule):
     def __init__(self, parent):
@@ -100,23 +101,59 @@ class helloWorldParameterNode:
 # helloWorldWidget
 #
 
+'''
 def place_crosshair_at(position: tuple[float, float, float], centered: bool = True, view_group: int = 1) -> None:
     """
     Place the crosshair at the given position. Position is in RAS coordinates.
     """
-    crosshair_node = slicer.util.getNode("Crosshair")
+    
+    views_plus = ["Red+", "Green+", "Yellow+"]
+    
+    # crosshair_node = slicer.util.getNode("Crosshair")
     
     crosshair_node.SetCrosshairRAS(position)
     
     # make it visible
     crosshair_node.SetCrosshairMode(slicer.vtkMRMLCrosshairNode.ShowBasic)
     
-     # center views on current control point 
+    # center views on current control point 
     slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
                                                         position[1],
                                                         position[2],
                                                         centered,
-                                                        view_group)
+                                                        -1)
+'''
+    
+def place_my_crosshair_at(position: tuple[float, float, float], centered: bool = True, view_group: int = 1) -> None:
+    """
+    Place the crosshair at the given position. Position is in RAS coordinates.
+    """
+    
+    # in normal views we should follow the cursor (that's why group 1)
+    slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
+                                                        position[1],
+                                                        position[2],
+                                                        False,
+                                                        1)
+    
+    # now we set the position of our corsshair and then transform it to the new position
+    my_crosshair_node.SetNthControlPointPositionWorld(0, position[0], position[1], position[2])
+    
+    # now transform the crosshair to the new position
+    if use_transform:
+        my_crosshair_node.ApplyTransformMatrix(transformation_matrix)
+    new_position = [0, 0, 0]
+    my_crosshair_node.GetNthControlPointPositionWorld(0, new_position)
+    
+    # make it visible
+    my_crosshair_node.GetDisplayNode().SetVisibility(True)
+    
+    # in plus views we should follow the transformed cursor (that's why group 2)
+    slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
+                                                        new_position[1],
+                                                        new_position[2],
+                                                        False,
+                                                        2)
 
 def on_mouse_moved(observer, eventid):
     ras=[0,0,0]
@@ -124,8 +161,9 @@ def on_mouse_moved(observer, eventid):
     
     crosshair_node.GetCursorPositionRAS(ras)
     
-    place_crosshair_at((ras[0] + 10, ras[1], ras[2]), centered=False)
-
+    # place_crosshair_at((ras[0] + 10, ras[1], ras[2]), centered=False)
+    place_my_crosshair_at((ras[0], ras[1], ras[2]), centered=False)
+    
 
 class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def __init__(self, parent=None) -> None:
@@ -137,8 +175,53 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._parameterNode = None
         self._parameterNodeGuiTag = None
         
-        self.crosshair_node = None
-
+        self.crosshair_node_observer_id = None
+        self.pressed = False
+        
+        global my_crosshair_node 
+        my_crosshair_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
+        my_crosshair_node.SetName("")
+        
+        my_crosshair_node.AddControlPoint(0, 0, 0, "")
+        my_crosshair_node.SetNthControlPointLabel(0, "")
+        my_crosshair_node.GetDisplayNode().SetGlyphScale(1)
+        
+        global transformation_node
+        try:
+            transformation_node = slicer.util.getNode("rigid")
+        except:
+            transformation_node = slicer.util.getNode("affine")
+        
+        global transformation_matrix
+        transformation_matrix = vtk.vtkMatrix4x4()
+        transformation_node.GetMatrixTransformFromParent(transformation_matrix)
+        
+        # set the view to 3 over 3
+        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutThreeOverThreeView)
+        
+        self.group_normal = 1
+        self.group_plus = 2
+        self.views_normal = ["Red", "Green", "Yellow"]
+        self.views_plus = ["Red+", "Green+", "Yellow+"]
+        # set groups
+        for i in range(3):
+            slicer.app.layoutManager().sliceWidget(self.views_normal[i]).mrmlSliceNode().SetViewGroup(self.group_normal)
+            slicer.app.layoutManager().sliceWidget(self.views_plus[i]).mrmlSliceNode().SetViewGroup(self.group_plus)
+        
+        self.shortcuts = [('d', lambda: self.on_toggle_transform()),
+                          ('e', lambda: print("shortcut"))]
+        
+        for (shortcutKey, callback) in self.shortcuts:
+            shortcut = qt.QShortcut(slicer.util.mainWindow())
+            shortcut.setKey(qt.QKeySequence(shortcutKey))
+            shortcut.connect('activated()', callback)
+        
+        sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red+").mrmlSliceNode()
+        sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green+").mrmlSliceNode()
+        sliceNodeYellow_plus = slicer.app.layoutManager().sliceWidget("Yellow+").mrmlSliceNode()
+        
+        my_crosshair_node.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
+        
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -168,12 +251,10 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Buttons
         self.ui.printName.connect("clicked(bool)", self.onPrintName)
+        self.ui.toggle_transform.connect("clicked(bool)", self.on_toggle_transform)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
-        
-        # set the view to 3 over 3
-        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutThreeOverThreeView)
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -246,6 +327,12 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 "Select input volume nodes")
             self.ui.printName.enabled = True
 
+    
+    def on_toggle_transform(self) -> None:
+        global use_transform
+        use_transform = not use_transform
+        print(f"Transform: {use_transform}")
+    
     def onPrintName(self) -> None:
         """Run processing when user clicks "Apply" button."""
         with slicer.util.tryWithErrorDisplay(_("Failed to print name."), waitCursor=True):
@@ -255,9 +342,14 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             # place_crosshair_at((5, 22, 0))
             
             global crosshair_node
-            crosshair_node = slicer.util.getNode("Crosshair")
-            crosshair_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent, on_mouse_moved)
-
+            
+            if self.pressed is False:
+                crosshair_node = slicer.util.getNode("Crosshair")
+                self.crosshair_node_observer_id = crosshair_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent, on_mouse_moved)
+                self.pressed = True
+            else:
+                crosshair_node.RemoveObserver(self.crosshair_node_observer_id)
+                self.pressed = False
 
 #
 # helloWorldLogic
