@@ -100,6 +100,32 @@ class helloWorldParameterNode:
 # helloWorldWidget
 #
 
+def place_crosshair_at(position: tuple[float, float, float], centered: bool = True, view_group: int = 1) -> None:
+    """
+    Place the crosshair at the given position. Position is in RAS coordinates.
+    """
+    crosshair_node = slicer.util.getNode("Crosshair")
+    
+    crosshair_node.SetCrosshairRAS(position)
+    
+    # make it visible
+    crosshair_node.SetCrosshairMode(slicer.vtkMRMLCrosshairNode.ShowBasic)
+    
+     # center views on current control point 
+    slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
+                                                        position[1],
+                                                        position[2],
+                                                        centered,
+                                                        view_group)
+
+def on_mouse_moved(observer, eventid):
+    ras=[0,0,0]
+    # crosshair_node=slicer.util.getNode("Crosshair") # this seems inefficient - can it be passed once?
+    
+    crosshair_node.GetCursorPositionRAS(ras)
+    
+    place_crosshair_at((ras[0] + 10, ras[1], ras[2]), centered=False)
+
 
 class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def __init__(self, parent=None) -> None:
@@ -110,6 +136,8 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.logic = None
         self._parameterNode = None
         self._parameterNodeGuiTag = None
+        
+        self.crosshair_node = None
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -143,13 +171,16 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
+        
+        # set the view to 3 over 3
+        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutThreeOverThreeView)
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
         self.removeObservers()
 
     def enter(self) -> None:
-        """Called each time the user opens this module."""
+        """Called each time the user opens this module."""        
         # Make sure parameter node exists and observed
         self.initializeParameterNode()
 
@@ -213,13 +244,19 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         else:
             self.ui.printName.toolTip = _(
                 "Select input volume nodes")
-            self.ui.printName.enabled = False
+            self.ui.printName.enabled = True
 
     def onPrintName(self) -> None:
         """Run processing when user clicks "Apply" button."""
         with slicer.util.tryWithErrorDisplay(_("Failed to print name."), waitCursor=True):
             # Compute output
-            self.logic.process(self.ui.inputSelector.currentNode())
+            # self.logic.process(self.ui.inputSelector.currentNode())
+            
+            # place_crosshair_at((5, 22, 0))
+            
+            global crosshair_node
+            crosshair_node = slicer.util.getNode("Crosshair")
+            crosshair_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent, on_mouse_moved)
 
 
 #
