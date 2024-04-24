@@ -62,50 +62,9 @@ class registrationViewerParameterNode:
 #
 # registrationViewerWidget
 #
-    
-def place_my_crosshair_at(crosshair_node, transformation_matrix, position: tuple[float, float, float], use_transform = True, centered: bool = True, view_group: int = 1) -> None:
-    """
-    Place the crosshair at the given position. Position is in RAS coordinates.
-    """
-    
-    # in normal views we should follow the cursor (that's why group 1)
-    slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                        position[1],
-                                                        position[2],
-                                                        False,
-                                                        1)
-    
-    # now we set the position of our corsshair and then transform it to the new position
-    crosshair_node.SetNthControlPointPositionWorld(0, position[0], position[1], position[2])
-    
-    # now transform the crosshair to the new position
-    if use_transform:
-        crosshair_node.ApplyTransformMatrix(transformation_matrix)
-    new_position = [0, 0, 0]
-    crosshair_node.GetNthControlPointPositionWorld(0, new_position)
-    
-    # make it visible
-    crosshair_node.GetDisplayNode().SetVisibility(True)
-    
-    # in plus views we should follow the transformed cursor (that's why group 2)
-    slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
-                                                        new_position[1],
-                                                        new_position[2],
-                                                        False,
-                                                        2)
 
-def on_mouse_moved(self, observer, eventid):
-    
-    ras=[0,0,0]
-    self.cursor_node.GetCursorPositionRAS(ras)
-    
-    # print(use_transform)
-    
-    place_my_crosshair_at(self.my_crosshair_node,
-                          self.transformation_matrix,
-                          position = (ras[0], ras[1], ras[2]),
-                          use_transform=self.use_transform,
-                          centered=False)
+
+
     
 
 class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
@@ -290,7 +249,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.pressed is False:
             self.cursor_node = slicer.util.getNode("Crosshair")
             self.cursor_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                                                            functools.partial(on_mouse_moved, self))
+                                         functools.partial(utils.on_mouse_moved, self))
             self.pressed = True
             self.ui.synchronise_views.setText("Unsynchronise views (s)")
             
