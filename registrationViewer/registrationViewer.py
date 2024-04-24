@@ -102,7 +102,7 @@ class registrationViewerParameterNode:
 # registrationViewerWidget
 #
     
-def place_my_crosshair_at(crosshair_node, position: tuple[float, float, float], use_transform = True, centered: bool = True, view_group: int = 1) -> None:
+def place_my_crosshair_at(crosshair_node, transformation_matrix, position: tuple[float, float, float], use_transform = True, centered: bool = True, view_group: int = 1) -> None:
     """
     Place the crosshair at the given position. Position is in RAS coordinates.
     """
@@ -140,7 +140,11 @@ def on_mouse_moved(self, observer, eventid):
     
     # print(use_transform)
     
-    place_my_crosshair_at(self.my_crosshair_node, (ras[0], ras[1], ras[2]), use_transform=self.use_transform, centered=False)
+    place_my_crosshair_at(self.my_crosshair_node,
+                          self.transformation_matrix,
+                          position = (ras[0], ras[1], ras[2]),
+                          use_transform=self.use_transform,
+                          centered=False)
     
 
 class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
@@ -214,26 +218,26 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
         
-        volume_fixed = slicer.util.loadVolume(
+        node_volume_fixed = slicer.util.loadVolume(
             r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor1.nii")
-        volume_moving = slicer.util.loadVolume(
+        node_volume_moving = slicer.util.loadVolume(
             r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor2.nii")
-        transformation = slicer.util.loadTransform(
+        node_transformation = slicer.util.loadTransform(
             r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/affine.h5")
 
-        volume_fixed.SetName('volume_fixed')
-        volume_moving.SetName('volume_moving')
-        transformation.SetName('affine')
+        node_volume_fixed.SetName('volume_fixed')
+        node_volume_moving.SetName('volume_moving')
+        node_transformation.SetName('affine')
 
         # add to the scene
-        slicer.mrmlScene.AddNode(volume_fixed)
-        slicer.mrmlScene.AddNode(volume_moving)
-        slicer.mrmlScene.AddNode(transformation)
+        slicer.mrmlScene.AddNode(node_volume_fixed)
+        slicer.mrmlScene.AddNode(node_volume_moving)
+        slicer.mrmlScene.AddNode(node_transformation)
         
         # set the nodes
-        self.ui.inputSelector_fixed.setCurrentNode(volume_fixed)
-        self.ui.inputSelector_moving.setCurrentNode(volume_moving)
-        self.ui.inputSelector_transformation.setCurrentNode(transformation)
+        self.ui.inputSelector_fixed.setCurrentNode(node_volume_fixed)
+        self.ui.inputSelector_moving.setCurrentNode(node_volume_moving)
+        self.ui.inputSelector_transformation.setCurrentNode(node_transformation)
         
         self.my_crosshair_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
         self.my_crosshair_node.SetName("")
@@ -248,15 +252,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         
         self.my_crosshair_node.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
         
-        global transformation_node
-        try:
-            transformation_node = slicer.util.getNode("rigid")
-        except:
-            transformation_node = slicer.util.getNode("affine")
-        
-        global transformation_matrix
-        transformation_matrix = vtk.vtkMatrix4x4()
-        transformation_node.GetMatrixTransformFromParent(transformation_matrix)
+        self.transformation_matrix = vtk.vtkMatrix4x4()
+        node_transformation.GetMatrixTransformFromParent(self.transformation_matrix)
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
