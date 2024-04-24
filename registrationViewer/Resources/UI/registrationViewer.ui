@@ -111,7 +111,7 @@
    <item>
     <widget class="QPushButton" name="toggle_transform">
      <property name="text">
-      <string>turn_transform_off</string>
+      <string>Toggle transformation</string>
      </property>
     </widget>
    </item>
