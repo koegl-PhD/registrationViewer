@@ -104,14 +104,14 @@
       <string>Print volume name.</string>
      </property>
      <property name="text">
-      <string>Synchronise views</string>
+      <string>Synchronise views (s)</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QPushButton" name="toggle_transform">
      <property name="text">
-      <string>Toggle transformation</string>
+      <string>Toggle transformation (d)</string>
      </property>
     </widget>
    </item>
