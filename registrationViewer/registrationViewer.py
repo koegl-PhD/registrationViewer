@@ -131,18 +131,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
         
-        self.my_crosshair_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
-        self.my_crosshair_node.SetName("")
+        utils.temp_load_data(self)
         
-        self.my_crosshair_node.AddControlPoint(0, 0, 0, "")
-        self.my_crosshair_node.SetNthControlPointLabel(0, "")
-        self.my_crosshair_node.GetDisplayNode().SetGlyphScale(1)
-        
-        sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red+").mrmlSliceNode()
-        sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green+").mrmlSliceNode()
-        sliceNodeYellow_plus = slicer.app.layoutManager().sliceWidget("Yellow+").mrmlSliceNode()
-        
-        self.my_crosshair_node.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
+        utils.create_crosshair(self)
         
         self.transformation_matrix = vtk.vtkMatrix4x4()
         node_transformation = slicer.util.getNode("affine")

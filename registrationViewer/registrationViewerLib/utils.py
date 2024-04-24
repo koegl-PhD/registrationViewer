@@ -12,7 +12,6 @@ def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
         shortcut = qt.QShortcut(slicer.util.mainWindow())
         shortcut.setKey(qt.QKeySequence(shortcutKey))
         shortcut.connect('activated()', callback)
-
     
 def place_my_crosshair_at(crosshair_node, transformation_matrix, position: tuple[float, float, float], use_transform = True, centered: bool = True, view_group: int = 1) -> None:
     """
@@ -37,7 +36,6 @@ def place_my_crosshair_at(crosshair_node, transformation_matrix, position: tuple
     
     # make it visible
     crosshair_node.GetDisplayNode().SetVisibility(True)
-    
     # in plus views we should follow the transformed cursor (that's why group 2)
     slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
                                                         new_position[1],
@@ -58,6 +56,20 @@ def on_mouse_moved_place_corsshair(self, observer, eventid):
                           use_transform=self.use_transform,
                           centered=False)
 
+def create_crosshair(self):
+    self.my_crosshair_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
+    self.my_crosshair_node.SetName("")
+    
+    self.my_crosshair_node.AddControlPoint(0, 0, 0, "")
+    self.my_crosshair_node.SetNthControlPointLabel(0, "")
+    self.my_crosshair_node.GetDisplayNode().SetGlyphScale(1)
+    
+    sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red+").mrmlSliceNode()
+    sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green+").mrmlSliceNode()
+    sliceNodeYellow_plus = slicer.app.layoutManager().sliceWidget("Yellow+").mrmlSliceNode()
+    
+    self.my_crosshair_node.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
+    
 def temp_load_data(self):
     node_volume_fixed = slicer.util.loadVolume(
         r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor1.nii")
