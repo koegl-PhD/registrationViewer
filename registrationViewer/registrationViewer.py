@@ -14,7 +14,7 @@ from slicer.parameterNodeWrapper import (
     WithinRange,
 )
 
-from slicer import vtkMRMLScalarVolumeNode
+from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode
 
 from registrationViewerLib import utils
 
@@ -94,35 +94,14 @@ class registrationViewerParameterNode:
     inputVolume - Input volume to print the name
     """
 
-    inputVolume: vtkMRMLScalarVolumeNode
+    volume_moving: vtkMRMLScalarVolumeNode
+    volume_fixed: vtkMRMLScalarVolumeNode
+    transformation: vtkMRMLTransformNode
 
 
 #
 # registrationViewerWidget
 #
-
-'''
-def place_crosshair_at(position: tuple[float, float, float], centered: bool = True, view_group: int = 1) -> None:
-    """
-    Place the crosshair at the given position. Position is in RAS coordinates.
-    """
-    
-    views_plus = ["Red+", "Green+", "Yellow+"]
-    
-    # crosshair_node = slicer.util.getNode("Crosshair")
-    
-    crosshair_node.SetCrosshairRAS(position)
-    
-    # make it visible
-    crosshair_node.SetCrosshairMode(slicer.vtkMRMLCrosshairNode.ShowBasic)
-    
-    # center views on current control point 
-    slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                        position[1],
-                                                        position[2],
-                                                        centered,
-                                                        -1)
-'''
     
 def place_my_crosshair_at(position: tuple[float, float, float], centered: bool = True, view_group: int = 1) -> None:
     """
@@ -250,7 +229,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         # Buttons
-        self.ui.printName.connect("clicked(bool)", self.onPrintName)
+        self.ui.synchronise_views.connect("clicked(bool)", self.on_synchronise_views)
         self.ui.toggle_transform.connect("clicked(bool)", self.on_toggle_transform)
 
         # Make sure parameter node is initialized (needed for module reload)
@@ -292,12 +271,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.setParameterNode(self.logic.getParameterNode())
 
+        # to do make smart selection
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
-        if not self._parameterNode.inputVolume:
-            firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass(
-                "vtkMRMLScalarVolumeNode")
-            if firstVolumeNode:
-                self._parameterNode.inputVolume = firstVolumeNode
+        # if not self._parameterNode.inputVolume:
+        #     firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass(
+        #         "vtkMRMLScalarVolumeNode")
+        #     if firstVolumeNode:
+        #         self._parameterNode.inputVolume = firstVolumeNode
 
     def setParameterNode(self, inputParameterNode: Optional[registrationViewerParameterNode]) -> None:
         """
@@ -318,22 +298,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                              vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
             self._checkCanApply()
 
+    # todo why is this needed
     def _checkCanApply(self, caller=None, event=None) -> None:
-        if self._parameterNode and self._parameterNode.inputVolume:
-            self.ui.printName.toolTip = _("Print volume name")
-            self.ui.printName.enabled = True
-        else:
-            self.ui.printName.toolTip = _(
-                "Select input volume nodes")
-            self.ui.printName.enabled = True
-
+        pass
     
     def on_toggle_transform(self) -> None:
         global use_transform
         use_transform = not use_transform
         print(f"Transform: {use_transform}")
     
-    def onPrintName(self) -> None:
+    def on_synchronise_views(self) -> None:
         """Run processing when user clicks "Apply" button."""
         with slicer.util.tryWithErrorDisplay(_("Failed to print name."), waitCursor=True):
             # Compute output
@@ -350,93 +324,3 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             else:
                 crosshair_node.RemoveObserver(self.crosshair_node_observer_id)
                 self.pressed = False
-
-#
-# registrationViewerLogic
-#
-
-
-class registrationViewerLogic(ScriptedLoadableModuleLogic):
-    """This class should implement all the actual
-    computation done by your module.  The interface
-    should be such that other python code can import
-    this class and make use of the functionality without
-    requiring an instance of the Widget.
-    Uses ScriptedLoadableModuleLogic base class, available at:
-    https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
-    """
-
-    def __init__(self) -> None:
-        """Called when the logic class is instantiated. Can be used for initializing member variables."""
-        ScriptedLoadableModuleLogic.__init__(self)
-
-    def getParameterNode(self):
-        return registrationViewerParameterNode(super().getParameterNode())
-
-    def process(self, inputVolume: vtkMRMLScalarVolumeNode) -> None:
-        """
-        Run the processing algorithm.
-        Can be used without GUI widget.
-        :param inputVolume: volume to be thresholded
-        """
-
-        if not inputVolume:
-            raise ValueError("Input volume is invalid")
-
-        import time
-
-        startTime = time.time()
-        logging.info("Processing started")
-
-        utils.printVolumeName(inputVolume)
-
-        # print(f"Volume name: {inputVolume.GetName()}")
-
-        stopTime = time.time()
-        logging.info(
-            f"Processing completed in {stopTime-startTime:.2f} seconds")
-
-
-#
-# registrationViewerTest
-#
-
-
-class registrationViewerTest(ScriptedLoadableModuleTest):
-    """
-    This is the test case for your scripted module.
-    Uses ScriptedLoadableModuleTest base class, available at:
-    https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
-    """
-
-    def setUp(self):
-        """Do whatever is needed to reset the state - typically a scene clear will be enough."""
-        slicer.mrmlScene.Clear()
-
-    def runTest(self):
-        """Run as few or as many tests as needed here."""
-        self.setUp()
-        self.test_registrationViewer1()
-
-    def test_registrationViewer1(self):
-        """Ideally you should have several levels of tests.  At the lowest level
-        tests should exercise the functionality of the logic with different inputs
-        (both valid and invalid).  At higher levels your tests should emulate the
-        way the user would interact with your code and confirm that it still works
-        the way you intended.
-        One of the most important features of the tests is that it should alert other
-        developers when their changes will have an impact on the behavior of your
-        module.  For example, if a developer removes a feature that you depend on,
-        your test should break so they know that the feature is needed.
-        """
-
-        self.delayDisplay("Starting the test")
-
-        # Get/create input data
-
-        import SampleData
-
-        registerSampleData()
-        inputVolume = SampleData.downloadSample("registrationViewer1")
-
-        self.delayDisplay("Test passed")
