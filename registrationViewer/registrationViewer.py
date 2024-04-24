@@ -130,15 +130,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.app.layoutManager().sliceWidget(self.views_normal[i]).mrmlSliceNode().SetViewGroup(self.group_normal)
             slicer.app.layoutManager().sliceWidget(self.views_plus[i]).mrmlSliceNode().SetViewGroup(self.group_plus)
         
-        # utils.create_shortcuts(('t', self.on_toggle_transform),
-        #                        ('s', self.on_synchronise_views))
-        
-        shortcuts = [('t', self.on_toggle_transform),
-                               ('s', self.on_synchronise_views)]
-        for (shortcutKey, callback) in shortcuts:
-            shortcut = qt.QShortcut(slicer.util.mainWindow())
-            shortcut.setKey(qt.QKeySequence(shortcutKey))
-            shortcut.connect('activated()', callback)
+        utils.create_shortcuts(('t', self.on_toggle_transform),
+                               ('s', self.on_synchronise_views))
             
         self.use_transform = True
         
