@@ -19,15 +19,15 @@ from slicer import vtkMRMLScalarVolumeNode
 from registrationViewerLib import utils
 
 #
-# helloWorld
+# registrationViewer
 #
 
 use_transform = True
 
-class helloWorld(ScriptedLoadableModule):
+class registrationViewer(ScriptedLoadableModule):
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = _("helloWorld")
+        self.parent.title = _("registrationViewer")
         # folders where the module shows up in the module selector
         self.parent.categories = [
             translate("qSlicerAbstractCoreModule", "Examples")]
@@ -63,7 +63,7 @@ def registerSampleData():
     # To ensure that the source code repository remains small (can be downloaded and installed quickly)
     # it is recommended to store data sets that are larger than a few MB in a Github release.
 
-    # helloWorld1
+    # registrationViewer1
     SampleData.SampleDataLogic.registerCustomSampleDataSource(
         # Category and sample name displayed in Sample Data module
         category="helloWorld",
@@ -82,12 +82,12 @@ def registerSampleData():
     )
 
 #
-# helloWorldParameterNode
+# registrationViewerParameterNode
 #
 
 
 @parameterNodeWrapper
-class helloWorldParameterNode:
+class registrationViewerParameterNode:
     """
     The parameters needed by module.
 
@@ -98,7 +98,7 @@ class helloWorldParameterNode:
 
 
 #
-# helloWorldWidget
+# registrationViewerWidget
 #
 
 '''
@@ -165,7 +165,7 @@ def on_mouse_moved(observer, eventid):
     place_my_crosshair_at((ras[0], ras[1], ras[2]), centered=False)
     
 
-class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
+class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def __init__(self, parent=None) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.__init__(self, parent)
@@ -228,7 +228,7 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Load widget from .ui file (created by Qt Designer).
         # Additional widgets can be instantiated manually and added to self.layout.
-        uiWidget = slicer.util.loadUI(self.resourcePath("UI/helloWorld.ui"))
+        uiWidget = slicer.util.loadUI(self.resourcePath("UI/registrationViewer.ui"))
         self.layout.addWidget(uiWidget)
         self.ui = slicer.util.childWidgetVariables(uiWidget)
 
@@ -239,7 +239,7 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Create logic class. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
-        self.logic = helloWorldLogic()
+        self.logic = registrationViewerLogic()
 
         # Connections
 
@@ -299,7 +299,7 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if firstVolumeNode:
                 self._parameterNode.inputVolume = firstVolumeNode
 
-    def setParameterNode(self, inputParameterNode: Optional[helloWorldParameterNode]) -> None:
+    def setParameterNode(self, inputParameterNode: Optional[registrationViewerParameterNode]) -> None:
         """
         Set and observe parameter node.
         Observation is needed because when the parameter node is changed then the GUI must be updated immediately.
@@ -352,11 +352,11 @@ class helloWorldWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.pressed = False
 
 #
-# helloWorldLogic
+# registrationViewerLogic
 #
 
 
-class helloWorldLogic(ScriptedLoadableModuleLogic):
+class registrationViewerLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
     computation done by your module.  The interface
     should be such that other python code can import
@@ -371,7 +371,7 @@ class helloWorldLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self)
 
     def getParameterNode(self):
-        return helloWorldParameterNode(super().getParameterNode())
+        return registrationViewerParameterNode(super().getParameterNode())
 
     def process(self, inputVolume: vtkMRMLScalarVolumeNode) -> None:
         """
@@ -398,11 +398,11 @@ class helloWorldLogic(ScriptedLoadableModuleLogic):
 
 
 #
-# helloWorldTest
+# registrationViewerTest
 #
 
 
-class helloWorldTest(ScriptedLoadableModuleTest):
+class registrationViewerTest(ScriptedLoadableModuleTest):
     """
     This is the test case for your scripted module.
     Uses ScriptedLoadableModuleTest base class, available at:
@@ -416,9 +416,9 @@ class helloWorldTest(ScriptedLoadableModuleTest):
     def runTest(self):
         """Run as few or as many tests as needed here."""
         self.setUp()
-        self.test_helloWorld1()
+        self.test_registrationViewer1()
 
-    def test_helloWorld1(self):
+    def test_registrationViewer1(self):
         """Ideally you should have several levels of tests.  At the lowest level
         tests should exercise the functionality of the logic with different inputs
         (both valid and invalid).  At higher levels your tests should emulate the
@@ -437,6 +437,6 @@ class helloWorldTest(ScriptedLoadableModuleTest):
         import SampleData
 
         registerSampleData()
-        inputVolume = SampleData.downloadSample("helloWorld1")
+        inputVolume = SampleData.downloadSample("registrationViewer1")
 
         self.delayDisplay("Test passed")
