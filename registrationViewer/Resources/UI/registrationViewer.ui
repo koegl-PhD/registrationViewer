@@ -123,7 +123,7 @@
    <item>
     <widget class="QPushButton" name="toggle_transform">
      <property name="text">
-      <string>Toggle transformation (t)</string>
+      <string>Turn on transform (t)</string>
      </property>
     </widget>
    </item>
