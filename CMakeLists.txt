@@ -19,7 +19,7 @@ include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 # Extension modules
-add_subdirectory(helloWorld)
+add_subdirectory(registrationViewer)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
