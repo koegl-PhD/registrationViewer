@@ -131,27 +131,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
         
-        node_volume_fixed = slicer.util.loadVolume(
-            r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor1.nii")
-        node_volume_moving = slicer.util.loadVolume(
-            r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor2.nii")
-        node_transformation = slicer.util.loadTransform(
-            r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/affine.h5")
-
-        node_volume_fixed.SetName('volume_fixed')
-        node_volume_moving.SetName('volume_moving')
-        node_transformation.SetName('affine')
-
-        # add to the scene
-        slicer.mrmlScene.AddNode(node_volume_fixed)
-        slicer.mrmlScene.AddNode(node_volume_moving)
-        slicer.mrmlScene.AddNode(node_transformation)
-        
-        # set the nodes
-        self.ui.inputSelector_fixed.setCurrentNode(node_volume_fixed)
-        self.ui.inputSelector_moving.setCurrentNode(node_volume_moving)
-        self.ui.inputSelector_transformation.setCurrentNode(node_transformation)
-        
         self.my_crosshair_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
         self.my_crosshair_node.SetName("")
         
@@ -166,6 +145,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.my_crosshair_node.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
         
         self.transformation_matrix = vtk.vtkMatrix4x4()
+        node_transformation = slicer.util.getNode("affine")
         node_transformation.GetMatrixTransformFromParent(self.transformation_matrix)
 
     def cleanup(self) -> None:
@@ -249,7 +229,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.pressed is False:
             self.cursor_node = slicer.util.getNode("Crosshair")
             self.cursor_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                         functools.partial(utils.on_mouse_moved, self))
+                                         functools.partial(utils.on_mouse_moved_place_corsshair, self))
             self.pressed = True
             self.ui.synchronise_views.setText("Unsynchronise views (s)")
             

@@ -45,7 +45,7 @@ def place_my_crosshair_at(crosshair_node, transformation_matrix, position: tuple
                                                         False,
                                                         2)
 
-def on_mouse_moved(self, observer, eventid):
+def on_mouse_moved_place_corsshair(self, observer, eventid):
     
     ras=[0,0,0]
     self.cursor_node.GetCursorPositionRAS(ras)
@@ -57,3 +57,25 @@ def on_mouse_moved(self, observer, eventid):
                           position = (ras[0], ras[1], ras[2]),
                           use_transform=self.use_transform,
                           centered=False)
+
+def temp_load_data(self):
+    node_volume_fixed = slicer.util.loadVolume(
+        r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor1.nii")
+    node_volume_moving = slicer.util.loadVolume(
+        r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor2.nii")
+    node_transformation = slicer.util.loadTransform(
+        r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/affine.h5")
+
+    node_volume_fixed.SetName('volume_fixed')
+    node_volume_moving.SetName('volume_moving')
+    node_transformation.SetName('affine')
+
+    # add to the scene
+    slicer.mrmlScene.AddNode(node_volume_fixed)
+    slicer.mrmlScene.AddNode(node_volume_moving)
+    slicer.mrmlScene.AddNode(node_transformation)
+    
+    # set the nodes
+    self.ui.inputSelector_fixed.setCurrentNode(node_volume_fixed)
+    self.ui.inputSelector_moving.setCurrentNode(node_volume_moving)
+    self.ui.inputSelector_transformation.setCurrentNode(node_transformation)
