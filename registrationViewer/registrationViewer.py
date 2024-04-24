@@ -1,6 +1,7 @@
 import logging
 import os
 from typing import Annotated, Optional
+import functools
 
 import vtk
 import vtk, qt
@@ -21,8 +22,6 @@ from registrationViewerLib import utils
 #
 # registrationViewer
 #
-
-use_transform = True
 
 class registrationViewer(ScriptedLoadableModule):
     def __init__(self, parent):
@@ -94,8 +93,8 @@ class registrationViewerParameterNode:
     inputVolume - Input volume to print the name
     """
 
-    volume_moving: vtkMRMLScalarVolumeNode
     volume_fixed: vtkMRMLScalarVolumeNode
+    volume_moving: vtkMRMLScalarVolumeNode
     transformation: vtkMRMLTransformNode
 
 
@@ -103,7 +102,7 @@ class registrationViewerParameterNode:
 # registrationViewerWidget
 #
     
-def place_my_crosshair_at(position: tuple[float, float, float], centered: bool = True, view_group: int = 1) -> None:
+def place_my_crosshair_at(position: tuple[float, float, float], use_transform = True, centered: bool = True, view_group: int = 1) -> None:
     """
     Place the crosshair at the given position. Position is in RAS coordinates.
     """
@@ -134,14 +133,14 @@ def place_my_crosshair_at(position: tuple[float, float, float], centered: bool =
                                                         False,
                                                         2)
 
-def on_mouse_moved(observer, eventid):
-    ras=[0,0,0]
-    # crosshair_node=slicer.util.getNode("Crosshair") # this seems inefficient - can it be passed once?
+def on_mouse_moved(self, observer, eventid):
     
+    ras=[0,0,0]
     crosshair_node.GetCursorPositionRAS(ras)
     
-    # place_crosshair_at((ras[0] + 10, ras[1], ras[2]), centered=False)
-    place_my_crosshair_at((ras[0], ras[1], ras[2]), centered=False)
+    # print(use_transform)
+    
+    place_my_crosshair_at((ras[0], ras[1], ras[2]), use_transform=self.use_transform, centered=False)
     
 
 class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
@@ -157,24 +156,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.crosshair_node_observer_id = None
         self.pressed = False
         
-        global my_crosshair_node 
-        my_crosshair_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
-        my_crosshair_node.SetName("")
-        
-        my_crosshair_node.AddControlPoint(0, 0, 0, "")
-        my_crosshair_node.SetNthControlPointLabel(0, "")
-        my_crosshair_node.GetDisplayNode().SetGlyphScale(1)
-        
-        global transformation_node
-        try:
-            transformation_node = slicer.util.getNode("rigid")
-        except:
-            transformation_node = slicer.util.getNode("affine")
-        
-        global transformation_matrix
-        transformation_matrix = vtk.vtkMatrix4x4()
-        transformation_node.GetMatrixTransformFromParent(transformation_matrix)
-        
         # set the view to 3 over 3
         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutThreeOverThreeView)
         
@@ -187,22 +168,19 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.app.layoutManager().sliceWidget(self.views_normal[i]).mrmlSliceNode().SetViewGroup(self.group_normal)
             slicer.app.layoutManager().sliceWidget(self.views_plus[i]).mrmlSliceNode().SetViewGroup(self.group_plus)
         
-        utils.create_shortcuts(('t', lambda: self.on_toggle_transform()),
-                               ('s', lambda: self.on_synchronise_views()))
+        # utils.create_shortcuts(('t', self.on_toggle_transform),
+        #                        ('s', self.on_synchronise_views))
         
-        # self.shortcuts = [('d', lambda: self.on_toggle_transform()),
-        #                   ('e', lambda: print("shortcut"))]
+        shortcuts = [('t', self.on_toggle_transform),
+                               ('s', self.on_synchronise_views)]
+        for (shortcutKey, callback) in shortcuts:
+            shortcut = qt.QShortcut(slicer.util.mainWindow())
+            shortcut.setKey(qt.QKeySequence(shortcutKey))
+            shortcut.connect('activated()', callback)
+            
+        self.use_transform = True
         
-        # for (shortcutKey, callback) in self.shortcuts:
-        #     shortcut = qt.QShortcut(slicer.util.mainWindow())
-        #     shortcut.setKey(qt.QKeySequence(shortcutKey))
-        #     shortcut.connect('activated()', callback)
-        
-        sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red+").mrmlSliceNode()
-        sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green+").mrmlSliceNode()
-        sliceNodeYellow_plus = slicer.app.layoutManager().sliceWidget("Yellow+").mrmlSliceNode()
-        
-        my_crosshair_node.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
+        self.logic = registrationViewerLogic()
         
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -219,10 +197,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # "setMRMLScene(vtkMRMLScene*)" slot.
         uiWidget.setMRMLScene(slicer.mrmlScene)
 
-        # Create logic class. Logic implements all computations that should be possible to run
-        # in batch mode, without a graphical user interface.
-        self.logic = registrationViewerLogic()
-
         # Connections
 
         # These connections ensure that we update parameter node when scene is closed
@@ -237,6 +211,52 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
+        
+        volume_fixed = slicer.util.loadVolume(
+            r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor1.nii")
+        volume_moving = slicer.util.loadVolume(
+            r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor2.nii")
+        transformation = slicer.util.loadTransform(
+            r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/affine.h5")
+
+        volume_fixed.SetName('volume_fixed')
+        volume_moving.SetName('volume_moving')
+        transformation.SetName('affine')
+
+        # add to the scene
+        slicer.mrmlScene.AddNode(volume_fixed)
+        slicer.mrmlScene.AddNode(volume_moving)
+        slicer.mrmlScene.AddNode(transformation)
+        
+        # set the nodes
+        self.ui.inputSelector_fixed.setCurrentNode(volume_fixed)
+        self.ui.inputSelector_moving.setCurrentNode(volume_moving)
+        self.ui.inputSelector_transformation.setCurrentNode(transformation)
+        
+        global my_crosshair_node 
+        my_crosshair_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
+        my_crosshair_node.SetName("")
+        
+        my_crosshair_node.AddControlPoint(0, 0, 0, "")
+        my_crosshair_node.SetNthControlPointLabel(0, "")
+        my_crosshair_node.GetDisplayNode().SetGlyphScale(1)
+        
+        sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red+").mrmlSliceNode()
+        sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green+").mrmlSliceNode()
+        sliceNodeYellow_plus = slicer.app.layoutManager().sliceWidget("Yellow+").mrmlSliceNode()
+        
+        my_crosshair_node.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
+        
+        
+        global transformation_node
+        try:
+            transformation_node = slicer.util.getNode("rigid")
+        except:
+            transformation_node = slicer.util.getNode("affine")
+        
+        global transformation_matrix
+        transformation_matrix = vtk.vtkMatrix4x4()
+        transformation_node.GetMatrixTransformFromParent(transformation_matrix)
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -306,12 +326,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         pass
     
     def on_toggle_transform(self) -> None:
-        global use_transform
-        use_transform = not use_transform
-        print(f"Transform: {use_transform}")
+        print("Toggling transform")
+        self.use_transform = not self.use_transform
+        print(self.use_transform)
     
     def on_synchronise_views(self) -> None:
         """Run processing when user clicks "Apply" button."""
+        print("Synchronising views")
+        
         with slicer.util.tryWithErrorDisplay(_("Failed to print name."), waitCursor=True):
             # Compute output
             # self.logic.process(self.ui.inputSelector.currentNode())
@@ -322,8 +344,50 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             
             if self.pressed is False:
                 crosshair_node = slicer.util.getNode("Crosshair")
-                self.crosshair_node_observer_id = crosshair_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent, on_mouse_moved)
+                # self.crosshair_node_observer_id = crosshair_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent, on_mouse_moved)
+                self.crosshair_node_observer_id = crosshair_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
+                                                                             functools.partial(on_mouse_moved, self))
                 self.pressed = True
             else:
                 crosshair_node.RemoveObserver(self.crosshair_node_observer_id)
                 self.pressed = False
+
+class registrationViewerLogic(ScriptedLoadableModuleLogic):
+    """This class should implement all the actual
+    computation done by your module.  The interface
+    should be such that other python code can import
+    this class and make use of the functionality without
+    requiring an instance of the Widget.
+    Uses ScriptedLoadableModuleLogic base class, available at:
+    https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
+    """
+
+    def __init__(self) -> None:
+        """Called when the logic class is instantiated. Can be used for initializing member variables."""
+        ScriptedLoadableModuleLogic.__init__(self)
+
+    def getParameterNode(self):
+        return registrationViewerParameterNode(super().getParameterNode())
+
+    def process(self, inputVolume: vtkMRMLScalarVolumeNode) -> None:
+        """
+        Run the processing algorithm.
+        Can be used without GUI widget.
+        :param inputVolume: volume to be thresholded
+        """
+
+        if not inputVolume:
+            raise ValueError("Input volume is invalid")
+
+        import time
+
+        startTime = time.time()
+        logging.info("Processing started")
+
+        utils.printVolumeName(inputVolume)
+
+        # print(f"Volume name: {inputVolume.GetName()}")
+
+        stopTime = time.time()
+        logging.info(
+            f"Processing completed in {stopTime-startTime:.2f} seconds")
