@@ -187,13 +187,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.app.layoutManager().sliceWidget(self.views_normal[i]).mrmlSliceNode().SetViewGroup(self.group_normal)
             slicer.app.layoutManager().sliceWidget(self.views_plus[i]).mrmlSliceNode().SetViewGroup(self.group_plus)
         
-        self.shortcuts = [('d', lambda: self.on_toggle_transform()),
-                          ('e', lambda: print("shortcut"))]
+        utils.create_shortcuts(('t', lambda: self.on_toggle_transform()),
+                               ('s', lambda: self.on_synchronise_views()))
         
-        for (shortcutKey, callback) in self.shortcuts:
-            shortcut = qt.QShortcut(slicer.util.mainWindow())
-            shortcut.setKey(qt.QKeySequence(shortcutKey))
-            shortcut.connect('activated()', callback)
+        # self.shortcuts = [('d', lambda: self.on_toggle_transform()),
+        #                   ('e', lambda: print("shortcut"))]
+        
+        # for (shortcutKey, callback) in self.shortcuts:
+        #     shortcut = qt.QShortcut(slicer.util.mainWindow())
+        #     shortcut.setKey(qt.QKeySequence(shortcutKey))
+        #     shortcut.connect('activated()', callback)
         
         sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red+").mrmlSliceNode()
         sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green+").mrmlSliceNode()
