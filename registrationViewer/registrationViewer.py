@@ -103,6 +103,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         
         self.transformation_matrix = vtk.vtkMatrix4x4()
         
+        self.new_crosshair = utils.myCrosshair()
+        
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)

@@ -1,7 +1,45 @@
-from typing import Tuple, Callable
+from typing import Tuple, Callable, List
 
 import qt
 import slicer
+
+class myCrosshair:
+    def __init__(self) -> None:
+        # create a crosshair
+        
+        self.arm_length = 10
+        
+        self.arm_1 = self.create_arm([-7.5,  0.0,  0.0], [-2.5,  0.0,  0.0])
+        self.arm_2 = self.create_arm([ 2.5,  0.0,  0.0], [ 7.5,  0.0,  0.0])
+        
+        self.arm_3 = self.create_arm([ 0.0, -7.5,  0.0], [ 0.0, -2.5,  0.0])
+        self.arm_4 = self.create_arm([ 0.0,  2.5,  0.0], [ 0.0,  7.5,  0.0])
+        
+        self.arm_5 = self.create_arm([ 0.0,  0.0, -7.5], [ 0.0,  0.0, -2.5])
+        self.arm_6 = self.create_arm([ 0.0,  0.0,  2.5], [ 0.0,  0.0,  7.5])
+        
+        self.arms = [self.arm_1, self.arm_2, self.arm_3, self.arm_4, self.arm_5, self.arm_6]
+        
+    def create_arm(self, start: List[float], end: List[float]) -> None:
+        arm = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
+        arm.SetName("")
+        
+        arm.AddControlPoint(start)
+        arm.AddControlPoint(end)
+        
+        arm.SetNthControlPointVisibility(0, False)
+        arm.SetNthControlPointVisibility(1, False)
+        
+        arm.GetDisplayNode().SetGlyphScale(1)
+        
+        viewNodeIDs = [
+            slicer.app.layoutManager().sliceWidget(viewName).mrmlSliceNode().GetID()
+            for viewName in ["Green", "Yellow", "Red+", "Green+", "Yellow+"]
+        ]
+
+        arm.GetDisplayNode().SetViewNodeIDs(viewNodeIDs)
+        
+        return arm
 
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
     """
