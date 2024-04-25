@@ -101,6 +101,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         
         self.pressed = False
         
+        self.transformation_matrix = vtk.vtkMatrix4x4()
+        
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -131,14 +133,46 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
         
-        utils.temp_load_data(self)
+        # utils.temp_load_data(self)
         
         utils.create_crosshair(self)
         
-        self.transformation_matrix = vtk.vtkMatrix4x4()
-        node_transformation = slicer.util.getNode("affine")
-        node_transformation.GetMatrixTransformFromParent(self.transformation_matrix)
-
+    # TODO remove all my observers
+    def update_views_normal_with_volume_fixed(self):
+        # show fixed volume in top row
+        for view in self.views_normal:
+            slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
+            composite_node = slice_logic.GetSliceCompositeNode()
+            
+            node_fixed = self.ui.inputSelector_fixed.currentNode()
+            
+            if node_fixed:
+                composite_node.SetBackgroundVolumeID(node_fixed.GetID())
+            else:
+                composite_node.SetBackgroundVolumeID(None)
+                
+            composite_node.SetForegroundVolumeID(None)
+    
+    def update_views_plus_with_volume_moving(self):
+        # show fixed volume in top row
+        for view in self.views_plus:
+            slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
+            composite_node = slice_logic.GetSliceCompositeNode()
+            
+            node_moving = self.ui.inputSelector_moving.currentNode()
+            
+            if node_moving:
+                composite_node.SetBackgroundVolumeID(node_moving.GetID())
+            else:
+                composite_node.SetBackgroundVolumeID(None)
+                
+            composite_node.SetForegroundVolumeID(None)
+    
+    def update_transformation_from_selector(self):
+        node_transformation = self.ui.inputSelector_transformation.currentNode()
+        if node_transformation:
+            node_transformation.GetMatrixTransformFromParent(self.transformation_matrix)
+    
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
         self.removeObservers()
@@ -200,13 +234,22 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
             self.addObserver(self._parameterNode,
                              vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+            
             self._checkCanApply()
-
+    
     # todo why is this needed
     def _checkCanApply(self, caller=None, event=None) -> None:
-        pass
+        self.update_views_normal_with_volume_fixed()
+        self.update_views_plus_with_volume_moving()
+        self.update_transformation_from_selector()
     
-    def on_toggle_transform(self) -> None:            
+    def on_toggle_transform(self) -> None:
+        if self.transformation_matrix is None:
+            self.update_transformation_from_selector()
+        if self.transformation_matrix is None:
+            slicer.util.errorDisplay("No transformation found")
+            return
+
         self.use_transform = not self.use_transform
         
         if self.use_transform:
@@ -216,6 +259,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     
     def on_synchronise_views(self) -> None:
         """Run processing when user clicks "Apply" button."""
+        
+        if self.transformation_matrix is None:
+            self.update_transformation_from_selector()
+        if self.transformation_matrix is None:
+            slicer.util.errorDisplay("No transformation found")
+            return
         
         if self.pressed is False:
             self.cursor_node = slicer.util.getNode("Crosshair")
