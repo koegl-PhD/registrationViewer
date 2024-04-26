@@ -63,10 +63,6 @@ class registrationViewerParameterNode:
 # registrationViewerWidget
 #
 
-
-
-    
-
 class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def __init__(self, parent=None) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -103,8 +99,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         
         self.transformation_matrix = vtk.vtkMatrix4x4()
         
-        self.new_crosshair = utils.myCrosshair()
+        # self.new_crosshair = utils.myCrosshair()
         
+        self.ubuntu_cursor_node_red = slicer.util.loadVolume(
+        r"/home/fryderyk/Documents/code/registrationViewer/registrationViewer/Resources/Icons/cursor_ubuntu.png")
+        self.ubuntu_cursor_node_green = slicer.util.loadVolume(
+        r"/home/fryderyk/Documents/code/registrationViewer/registrationViewer/Resources/Icons/cursor_ubuntu.png")
+        self.ubuntu_cursor_node_yellow = slicer.util.loadVolume(
+        r"/home/fryderyk/Documents/code/registrationViewer/registrationViewer/Resources/Icons/cursor_ubuntu.png")
+    
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -137,8 +140,51 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         
         # utils.temp_load_data(self)
         
-        utils.create_crosshair(self)
+        # utils.create_crosshair(self)
         
+        self.handle_ubuntu_cursor()
+    
+    def handle_ubuntu_cursor(self):
+        # red
+        slice_logic = slicer.app.layoutManager().sliceWidget("Red+").sliceLogic()
+        composite_node = slice_logic.GetSliceCompositeNode()
+        composite_node.SetForegroundVolumeID(self.ubuntu_cursor_node_red.GetID())
+        
+        # green
+        slice_logic = slicer.app.layoutManager().sliceWidget("Green+").sliceLogic()
+        composite_node = slice_logic.GetSliceCompositeNode()
+        composite_node.SetForegroundVolumeID(self.ubuntu_cursor_node_green.GetID())
+        
+        matrix = vtk.vtkMatrix4x4()
+        matrix.SetElement(0, 0, 1)
+        matrix.SetElement(1, 1, 0)
+        matrix.SetElement(2, 2, 0)
+        matrix.SetElement(1, 2, -1)
+        matrix.SetElement(2, 1, 1)
+        
+        transform_green = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTransformNode")
+        transform_green.SetMatrixTransformToParent(matrix)
+        
+        self.ubuntu_cursor_node_green.SetAndObserveTransformNodeID(transform_green.GetID())
+        
+        # yellow
+        slice_logic = slicer.app.layoutManager().sliceWidget("Yellow+").sliceLogic()
+        composite_node = slice_logic.GetSliceCompositeNode()
+        composite_node.SetForegroundVolumeID(self.ubuntu_cursor_node_yellow.GetID())
+        
+        # around y axis
+        
+        matrix = vtk.vtkMatrix4x4()
+        matrix.SetElement(0, 2, 1)
+        matrix.SetElement(1, 0, 1)
+        matrix.SetElement(2, 1, 1)
+        
+        transform_yellow = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTransformNode")
+        transform_yellow.SetMatrixTransformToParent(matrix)
+        
+        self.ubuntu_cursor_node_yellow.SetAndObserveTransformNodeID(transform_yellow.GetID())
+
+    
     # TODO remove all my observers
     def update_views_normal_with_volume_fixed(self):
         # show fixed volume in top row
@@ -168,7 +214,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             else:
                 composite_node.SetBackgroundVolumeID(None)
                 
-            composite_node.SetForegroundVolumeID(None)
+            # composite_node.SetForegroundVolumeID(None)
+            
+        self.handle_ubuntu_cursor()
     
     def update_transformation_from_selector(self):
         node_transformation = self.ui.inputSelector_transformation.currentNode()
