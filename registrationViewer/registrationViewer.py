@@ -90,7 +90,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.app.layoutManager().sliceWidget(self.views_plus[i]).mrmlSliceNode().SetViewGroup(self.group_plus)
         
         utils.create_shortcuts(('t', self.on_toggle_transform),
-                               ('s', self.on_synchronise_views))
+                               ('s', self.on_synchronise_views),
+                               ('d', functools.partial(utils.activate_fiducial_placement, self)))  # fiducial placement
+                                
             
         self.use_transform = True
         

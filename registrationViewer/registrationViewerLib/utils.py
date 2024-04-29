@@ -12,7 +12,18 @@ def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
         shortcut = qt.QShortcut(slicer.util.mainWindow())
         shortcut.setKey(qt.QKeySequence(shortcutKey))
         shortcut.connect('activated()', callback)
-    
+
+def activate_fiducial_placement(self):
+    """
+    Entire fiducial logic - create list, activate appropriate list and set the placement widget
+    """
+    try:
+        slicer.modules.markups.logic().StartPlaceMode(0)
+        slicer.modules.markups.logic().SetActiveList(self.hull_node)
+
+    except Exception as e:
+        slicer.util.errorDisplay("Could not activate fiducial placement.\n" + str(e))
+
 def place_my_crosshair_at(crosshair_node, transformation_matrix, position: tuple[float, float, float], use_transform = True, centered: bool = True, view_group: int = 1) -> None:
     """
     Place the crosshair at the given position. Position is in RAS coordinates.
