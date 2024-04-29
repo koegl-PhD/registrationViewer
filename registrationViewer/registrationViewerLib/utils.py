@@ -19,7 +19,7 @@ def activate_fiducial_placement(self):
     """
     try:
         slicer.modules.markups.logic().StartPlaceMode(0)
-        slicer.modules.markups.logic().SetActiveList(self.hull_node)
+        slicer.modules.markups.logic().SetActiveList(self.hull_node_fixed)
 
     except Exception as e:
         slicer.util.errorDisplay("Could not activate fiducial placement.\n" + str(e))
@@ -83,11 +83,11 @@ def create_crosshair(self):
     
 def temp_load_data(self):
     node_volume_fixed = slicer.util.loadVolume(
-        r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor1.nii")
+        r"/home/fryderyk/Documents/data/tumor1.nii")
     node_volume_moving = slicer.util.loadVolume(
-        r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/tumor2.nii")
+        r"/home/fryderyk/Documents/data/tumor2.nii")
     node_transformation = slicer.util.loadTransform(
-        r"/home/fryderyk/Documents/code/registrationbaselines/registrationbaselines/data/unregistered/affine.h5")
+        r"/home/fryderyk/Documents/data/affine.h5")
 
     node_volume_fixed.SetName('volume_fixed')
     node_volume_moving.SetName('volume_moving')

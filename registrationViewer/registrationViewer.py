@@ -104,16 +104,62 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.pressed = False
         
         self.transformation_matrix = vtk.vtkMatrix4x4()
+        self.transformation_matrix_inverse = vtk.vtkMatrix4x4()
+        self.transformation_node_inverse = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTransformNode", "affine_inverse")
         
         # create list for convex hull
-        self.hull_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
-        self.hull_node.SetName("hull")
-        self.hull_node.GetDisplayNode().SetGlyphScale(1)
+        self.hull_node_fixed = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
+        self.hull_node_fixed.SetName("hull fixed")
+        self.hull_node_fixed.GetDisplayNode().SetGlyphScale(1)
+        self.hull_node_fixed_observer_id = self.hull_node_fixed.AddObserver(slicer.vtkMRMLMarkupsNode.PointPositionDefinedEvent,
+                                                                            self.on_hull_node_modified)
+        sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red").mrmlSliceNode()
+        sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green").mrmlSliceNode()
+        sliceNodeYellow_plus = slicer.app.layoutManager().sliceWidget("Yellow").mrmlSliceNode()
+        self.hull_node_fixed.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
         
-        self.hull_node.AddObserver(slicer.vtkMRMLMarkupsNode.PointPositionDefinedEvent, self.on_hull_node_modified)
+        self.hull_node_moving = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
+        self.hull_node_moving.SetName("hull moving")
+        self.hull_node_moving.GetDisplayNode().SetGlyphScale(1)
+        
+        sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red+").mrmlSliceNode()
+        sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green+").mrmlSliceNode()
+        sliceNodeYellow_plus = slicer.app.layoutManager().sliceWidget("Yellow+").mrmlSliceNode()
+        self.hull_node_moving.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
+        
+        self.hull_index = 0
     
     def on_hull_node_modified(self, observer, eventid):
+        
+        # remove observer to avoid recursion
+        self.hull_node_fixed.RemoveObserver(self.hull_node_fixed_observer_id)
+        
+        node_transformation = self.ui.inputSelector_transformation.currentNode()
+        
+        if node_transformation is None:
+            self.update_transformation_from_selector()
+        if node_transformation is None:
+            slicer.util.errorDisplay("No transformation found - cannot add hull points")
+            return
+
+        node_transformation.GetMatrixTransformToParent(self.transformation_matrix_inverse)        
+        self.transformation_matrix_inverse.Invert()
+        self.transformation_node_inverse.SetMatrixTransformToParent(self.transformation_matrix_inverse)
+        self.hull_node_moving.SetAndObserveTransformNodeID(self.transformation_node_inverse.GetID())
+        
+        last_added_point_index = self.hull_node_fixed.GetNumberOfControlPoints() - 1
+         
+        self.hull_node_fixed.SetNthControlPointLabel(last_added_point_index, f"{self.hull_index}-a")
+         
+        self.hull_node_moving.AddControlPoint(self.hull_node_fixed.GetNthControlPointPosition(last_added_point_index), f"{self.hull_index}-b")
+         
+        self.hull_index += 1
+        
         print("hull node modified")
+        
+        # re-add observer
+        self.hull_node_fixed_observer_id = self.hull_node_fixed.AddObserver(slicer.vtkMRMLMarkupsNode.PointPositionDefinedEvent,
+                                                                            self.on_hull_node_modified)
         
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -145,10 +191,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
         
-        # utils.temp_load_data(self)
+        utils.temp_load_data(self)
         
         utils.create_crosshair(self)
-        
+    
+    # TODO when one is removed from a list, remove it from the other
     # TODO remove all my observers
     def update_views_normal_with_volume_fixed(self):
         # show fixed volume in top row
@@ -256,9 +303,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.update_transformation_from_selector()
     
     def on_toggle_transform(self) -> None:
-        if self.transformation_matrix is None:
+        
+        node_transformation = self.ui.inputSelector_transformation.currentNode()
+        
+        if node_transformation is None:
             self.update_transformation_from_selector()
-        if self.transformation_matrix is None:
+        if node_transformation is None:
             slicer.util.errorDisplay("No transformation found")
             return
 
@@ -272,9 +322,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def on_synchronise_views(self) -> None:
         """Run processing when user clicks "Apply" button."""
         
-        if self.transformation_matrix is None:
+        node_transformation = self.ui.inputSelector_transformation.currentNode()
+        
+        if node_transformation is None:
             self.update_transformation_from_selector()
-        if self.transformation_matrix is None:
+        if node_transformation is None:
             slicer.util.errorDisplay("No transformation found")
             return
         
