@@ -105,6 +105,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         
         self.transformation_matrix = vtk.vtkMatrix4x4()
         
+        # create list for convex hull
+        self.hull_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
+        self.hull_node.SetName("hull")
+        self.hull_node.GetDisplayNode().SetGlyphScale(1)
+        
+        self.hull_node.AddObserver(slicer.vtkMRMLMarkupsNode.PointPositionDefinedEvent, self.on_hull_node_modified)
+    
+    def on_hull_node_modified(self, observer, eventid):
+        print("hull node modified")
+        
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
