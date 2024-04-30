@@ -3,6 +3,10 @@ import os
 from typing import Annotated, Optional
 import functools
 
+from typing import Tuple
+
+from scipy.spatial import ConvexHull
+import numpy as np
 import vtk
 import vtk, qt
 import slicer
@@ -116,7 +120,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red").mrmlSliceNode()
         sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green").mrmlSliceNode()
         sliceNodeYellow_plus = slicer.app.layoutManager().sliceWidget("Yellow").mrmlSliceNode()
-        self.hull_node_fixed.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
+        sliceNode3D = slicer.app.layoutManager().threeDWidget(0).mrmlViewNode()
+        self.hull_node_fixed.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID(), sliceNode3D.GetID()])
         
         self.hull_node_moving = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
         self.hull_node_moving.SetName("hull moving")
@@ -125,7 +130,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red+").mrmlSliceNode()
         sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green+").mrmlSliceNode()
         sliceNodeYellow_plus = slicer.app.layoutManager().sliceWidget("Yellow+").mrmlSliceNode()
-        self.hull_node_moving.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
+        sliceNode3D = slicer.app.layoutManager().threeDWidget(0).mrmlViewNode()
+        self.hull_node_moving.GetDisplayNode().SetViewNodeIDs([sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID(), sliceNode3D.GetID()])
         
         self.hull_index = 0
     
@@ -160,6 +166,53 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # re-add observer
         self.hull_node_fixed_observer_id = self.hull_node_fixed.AddObserver(slicer.vtkMRMLMarkupsNode.PointPositionDefinedEvent,
                                                                             self.on_hull_node_modified)
+        
+        if self.hull_node_fixed.GetNumberOfControlPoints() > 3:
+            hull_volume_fixed, hull_volume_moving = self.__calculate_convex_hull()
+            
+            print(f"Volume before: {hull_volume_fixed}, Volume after: {hull_volume_moving}")
+            
+            diff = hull_volume_moving - hull_volume_fixed
+            percentage_change = (diff / hull_volume_fixed) * 100
+
+            if diff > 0:
+                print(f"Volume increased by {percentage_change:.2f}%")
+                self.ui.label_hull_change.setText(f"Volume increased by {percentage_change:.2f}%")
+                self.ui.label_hull_change.setStyleSheet("color: green")
+            else:
+                print(f"Volume decreased by {percentage_change:.2f}%")
+                self.ui.label_hull_change.setText(f"Volume decreased by {percentage_change:.2f}%")
+                self.ui.label_hull_change.setStyleSheet("color: red")
+            
+            # update ui
+            self.ui.label_fixed_hull.setText(f"Fixed hull volume: {hull_volume_fixed}")
+            self.ui.label_moving_hull.setText(f"Moving hull volume: {hull_volume_moving}")
+            
+        
+        
+    def __calculate_convex_hull(self) -> Tuple[float, float]:
+        
+        num_points = self.hull_node_fixed.GetNumberOfControlPoints()
+        
+        fixed_coordinates = []
+        moving_coordinates = []
+        
+        for i in range(num_points):
+            # the world position is the RAS position with any transform matrices applied
+            world_cor_fixed = [0.0, 0.0, 0.0]
+            world_cor_moving = [0.0, 0.0, 0.0]
+            
+            self.hull_node_fixed.GetNthControlPointPositionWorld(i,world_cor_fixed)
+            fixed_coordinates.append(world_cor_fixed)
+            
+            self.hull_node_moving.GetNthControlPointPositionWorld(i,world_cor_moving)
+            moving_coordinates.append(world_cor_moving)
+        
+        fixed_coordinates = np.array(fixed_coordinates)
+        moving_coordinates = np.array(moving_coordinates)
+        
+        return ConvexHull(fixed_coordinates).volume, ConvexHull(moving_coordinates).volume
+        
         
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""

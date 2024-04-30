@@ -17,9 +17,9 @@
       <string>Inputs</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
-           <item row="0" column="1">
+      <item row="0" column="1">
        <widget class="qMRMLNodeComboBox" name="inputSelector_fixed">
-       <property name="toolTip">
+        <property name="toolTip">
          <string>Pick the fixed volume.</string>
         </property>
         <property name="nodeTypes">
@@ -78,7 +78,7 @@
       </item>
       <item row="2" column="1">
        <widget class="qMRMLNodeComboBox" name="inputSelector_transformation">
-       <property name="toolTip">
+        <property name="toolTip">
          <string>Pick the transformation between moving and fixed.</string>
         </property>
         <property name="nodeTypes">
@@ -126,6 +126,44 @@
       <string>Turn off transform (t)</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_fixed_hull">
+       <property name="text">
+        <string>Need at least 4 points for hull</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="label_moving_hull">
+       <property name="text">
+        <string>Need at least 4 points for hull</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <widget class="QLabel" name="label_hull_change">
+       <property name="text">
+        <string>Need at least 4 points for hull</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <spacer name="verticalSpacer">
