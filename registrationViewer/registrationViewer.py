@@ -108,6 +108,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # self.transformation_matrix = vtk.vtkMatrix4x4()
         self.node_transformation = None
 
+        self.cursor_view: str = ""
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -286,6 +288,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.pressed = True
             self.ui.synchronise_views.setText("Unsynchronise views (s)")
 
+            # has to be done here because here we know that the cursor_node is not None
+            self.update_cursor_view()
+
         else:
             self.cursor_node.RemoveAllObservers()
             self.pressed = False
@@ -305,6 +310,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.util.errorDisplay(
                 "Cannot reverse transformation direction without using transformation.\n \
                 Please turn on transformation first.")
+
+    def update_cursor_view(self):
+
+        c = slicer.util.getNode("*Crosshair*")
+
+        def wrapper(self, callee, event):
+            position = c.GetCursorPositionXYZ([0]*3)
+            if position is not None:
+                self.cursor_view = position.GetName()
+
+                print(self.cursor_view)
+
+        c.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
+                      functools.partial(wrapper, self))
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
