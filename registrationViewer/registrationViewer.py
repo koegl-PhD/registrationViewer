@@ -98,6 +98,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.use_transform = True
         self.reverse_transformation_direction = True
 
+        self.my_crosshair_node_normal = None
         self.my_crosshair_node_plus = None
         self.cursor_node = None
 
@@ -147,9 +148,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         utils.temp_load_data(self)
 
-        utils.create_crosshair(self)
+        self.my_crosshair_node_red = utils.create_crosshair(views=["Red"])
+        self.my_crosshair_node_green = utils.create_crosshair(views=["Green"])
+        self.my_crosshair_node_yellow = utils.create_crosshair(views=[
+                                                               "Yellow"])
+
+        self.my_crosshair_node_plus = utils.create_crosshair(
+            views=["Red+", "Green+", "Yellow+"])
 
     # TODO remove all my observers
+
     def update_views_normal_with_volume_fixed(self):
         # show fixed volume in top row
         for view in self.views_normal:

@@ -69,27 +69,41 @@ def on_mouse_moved_place_corsshair(self, observer, eventid):
                                                         False,
                                                         2)
 
-    # set crosshair to the new position
+    # set plus crosshair to the new position
     self.my_crosshair_node_plus.SetNthControlPointPositionWorld(
         0, new_position[0], new_position[1], new_position[2])
 
+    handle_normal_crosshairs(self, initial_position)
 
-def create_crosshair(self):
-    self.my_crosshair_node_plus = slicer.mrmlScene.AddNewNodeByClass(
+
+def handle_normal_crosshairs(self, initial_position):
+    # set normal crosshair to the new position
+    self.my_crosshair_node_normal.SetNthControlPointPositionWorld(
+        0, initial_position[0], initial_position[1], initial_position[2])
+
+    c = slicer.util.getNode("*Crosshair*")
+
+    c.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
+                  lambda callee, event: print(c.GetCursorPositionXYZ([0]*3).GetName()))
+
+
+def create_crosshair(views: list[str]):
+
+    crosshair_node = slicer.mrmlScene.AddNewNodeByClass(
         "vtkMRMLMarkupsFiducialNode")
-    self.my_crosshair_node_plus.SetName("")
+    crosshair_node.SetName("")
 
-    self.my_crosshair_node_plus.AddControlPoint(0, 0, 0, "")
-    self.my_crosshair_node_plus.SetNthControlPointLabel(0, "")
-    self.my_crosshair_node_plus.GetDisplayNode().SetGlyphScale(1)
+    crosshair_node.AddControlPoint(0, 0, 0, "")
+    crosshair_node.SetNthControlPointLabel(0, "")
+    crosshair_node.GetDisplayNode().SetGlyphScale(1)
 
-    sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red+").mrmlSliceNode()
-    sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green+").mrmlSliceNode()
-    sliceNodeYellow_plus = slicer.app.layoutManager(
-    ).sliceWidget("Yellow+").mrmlSliceNode()
+    slice_node_IDs = [slicer.app.layoutManager().sliceWidget(
+        view).mrmlSliceNode().GetID() for view in views]
 
-    self.my_crosshair_node_plus.GetDisplayNode().SetViewNodeIDs(
-        [sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
+    crosshair_node.GetDisplayNode().SetViewNodeIDs(
+        slice_node_IDs)
+
+    return crosshair_node
 
 
 def temp_load_data(self):
