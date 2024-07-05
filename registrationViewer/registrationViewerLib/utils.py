@@ -17,37 +17,49 @@ def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
         shortcut.connect('activated()', callback)
 
 
-def place_my_crosshair_at(crosshair_node, node_transformation, position: tuple[float, float, float], use_transform=True, centered: bool = True, view_group: int = 1) -> None:
+def reverse_transformation_direction(position, new_position):
     """
-    Place the crosshair at the given position. Position is in RAS coordinates.
+    Reverse the transformation direction.
     """
 
+    position_difference = np.array(new_position) - np.array(position)
+    new_position = np.array(new_position) - 2*position_difference
+
+    return new_position
+
+
+def on_mouse_moved_place_corsshair(self, observer, eventid):
+
+    initial_position = [0, 0, 0]
+    self.cursor_node.GetCursorPositionRAS(initial_position)
+
     # in normal views we should follow the cursor (that's why group 1)
-    slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                        position[1],
-                                                        position[2],
+    slicer.modules.markups.logic().JumpSlicesToLocation(initial_position[0],
+                                                        initial_position[1],
+                                                        initial_position[2],
                                                         False,
                                                         1)
 
     # now we set the position of our corsshair and then transform it to the new position
-    crosshair_node.SetNthControlPointPositionWorld(
-        0, position[0], position[1], position[2])
+    self.my_crosshair_node.SetNthControlPointPositionWorld(
+        0, initial_position[0], initial_position[1], initial_position[2])
 
     # now transform the crosshair to the new position
-    if use_transform:
-        crosshair_node.ApplyTransform(
-            node_transformation.GetTransformToParent())
+    if self.use_transform:
+        self.my_crosshair_node.ApplyTransform(
+            self.node_transformation.GetTransformToParent())
+
     new_position = [0, 0, 0]
-    crosshair_node.GetNthControlPointPositionWorld(0, new_position)
+    self.my_crosshair_node.GetNthControlPointPositionWorld(0, new_position)
 
-    position_difference = np.array(new_position) - np.array(position)
-
-    # the new_position should be moved in the opposite direction
-    # for some reason the displacement is applied in the opposite direction
-    new_position = np.array(new_position) - 2*position_difference
+    if self.reverse_transformation_direction:
+        # the new_position should be moved in the opposite direction
+        # for some reason the displacement is applied in the opposite direction
+        new_position = reverse_transformation_direction(initial_position,
+                                                        new_position)
 
     # make it visible
-    crosshair_node.GetDisplayNode().SetVisibility(True)
+    self.my_crosshair_node.GetDisplayNode().SetVisibility(True)
 
     # in plus views we should follow the transformed cursor (that's why group 2)
     slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
@@ -57,22 +69,8 @@ def place_my_crosshair_at(crosshair_node, node_transformation, position: tuple[f
                                                         2)
 
     # set crosshair to the new position
-    crosshair_node.SetNthControlPointPositionWorld(
+    self.my_crosshair_node.SetNthControlPointPositionWorld(
         0, new_position[0], new_position[1], new_position[2])
-
-
-def on_mouse_moved_place_corsshair(self, observer, eventid):
-
-    ras = [0, 0, 0]
-    self.cursor_node.GetCursorPositionRAS(ras)
-
-    # print(use_transform)
-
-    place_my_crosshair_at(self.my_crosshair_node,
-                          self.node_transformation,
-                          position=(ras[0], ras[1], ras[2]),
-                          use_transform=self.use_transform,
-                          centered=False)
 
 
 def create_crosshair(self):

@@ -92,9 +92,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.views_plus[i]).mrmlSliceNode().SetViewGroup(self.group_plus)
 
         utils.create_shortcuts(('t', self.on_toggle_transform),
-                               ('s', self.on_synchronise_views))
+                               ('s', self.on_synchronise_views),
+                               ('r', self.on_toggle_transform_reversal))
 
         self.use_transform = True
+        self.reverse_transformation_direction = True
 
         self.my_crosshair_node = None
         self.cursor_node = None
@@ -135,6 +137,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views)
         self.ui.toggle_transform.connect(
             "clicked(bool)", self.on_toggle_transform)
+        self.ui.toggle_transform_reversal.connect(
+            "clicked(bool)", self.on_toggle_transform_reversal)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -263,6 +267,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         else:
             self.ui.toggle_transform.setText("Turn on transform (t)")
 
+        # disable this transform reversal button if use_transform is False
+        self.ui.toggle_transform_reversal.setEnabled(self.use_transform)
+
     def on_synchronise_views(self) -> None:
         """Run processing when user clicks "Apply" button."""
 
@@ -283,6 +290,21 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.cursor_node.RemoveAllObservers()
             self.pressed = False
             self.ui.synchronise_views.setText("Synchronise views (s)")
+
+    def on_toggle_transform_reversal(self) -> None:
+        if self.use_transform:
+            self.reverse_transformation_direction = not self.reverse_transformation_direction
+
+            if self.reverse_transformation_direction:
+                self.ui.toggle_transform_reversal.setText(
+                    "Turn off transform reversal (r)")
+            else:
+                self.ui.toggle_transform_reversal.setText(
+                    "Turn on transform reversal (r)")
+        else:
+            slicer.util.errorDisplay(
+                "Cannot reverse transformation direction without using transformation.\n \
+                Please turn on transformation first.")
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
