@@ -107,19 +107,16 @@
      </layout>
     </widget>
    </item>
+
    <item>
     <widget class="QPushButton" name="synchronise_views">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="toolTip">
-      <string>Print volume name.</string>
-     </property>
      <property name="text">
       <string>Synchronise views (s)</string>
      </property>
     </widget>
    </item>
+
+
    <item>
     <widget class="QPushButton" name="toggle_transform">
      <property name="text">
@@ -127,6 +124,17 @@
      </property>
     </widget>
    </item>
+
+
+   <item>
+    <widget class="QPushButton" name="toggle_transform_reversal">
+     <property name="text">
+      <string>Turn off transform reversal (r)</string>
+     </property>
+    </widget>
+   </item>
+
+
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">

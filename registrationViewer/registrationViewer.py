@@ -4,7 +4,8 @@ from typing import Annotated, Optional
 import functools
 
 import vtk
-import vtk, qt
+import vtk
+import qt
 import slicer
 from slicer.i18n import tr as _
 from slicer.i18n import translate
@@ -22,6 +23,7 @@ from registrationViewerLib import utils
 #
 # registrationViewer
 #
+
 
 class registrationViewer(ScriptedLoadableModule):
     def __init__(self, parent):
@@ -64,9 +66,6 @@ class registrationViewerParameterNode:
 #
 
 
-
-    
-
 class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def __init__(self, parent=None) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -76,40 +75,47 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.logic = None
         self._parameterNode = None
         self._parameterNodeGuiTag = None
-        
+
         # set the view to 3 over 3
-        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutThreeOverThreeView)
-        
+        slicer.app.layoutManager().setLayout(
+            slicer.vtkMRMLLayoutNode.SlicerLayoutThreeOverThreeView)
+
         self.group_normal = 1
         self.group_plus = 2
         self.views_normal = ["Red", "Green", "Yellow"]
         self.views_plus = ["Red+", "Green+", "Yellow+"]
         # set groups
         for i in range(3):
-            slicer.app.layoutManager().sliceWidget(self.views_normal[i]).mrmlSliceNode().SetViewGroup(self.group_normal)
-            slicer.app.layoutManager().sliceWidget(self.views_plus[i]).mrmlSliceNode().SetViewGroup(self.group_plus)
-        
+            slicer.app.layoutManager().sliceWidget(
+                self.views_normal[i]).mrmlSliceNode().SetViewGroup(self.group_normal)
+            slicer.app.layoutManager().sliceWidget(
+                self.views_plus[i]).mrmlSliceNode().SetViewGroup(self.group_plus)
+
         utils.create_shortcuts(('t', self.on_toggle_transform),
-                               ('s', self.on_synchronise_views))
-            
+                               ('s', self.on_synchronise_views),
+                               ('r', self.on_toggle_transform_reversal))
+
         self.use_transform = True
-        
+        self.reverse_transformation_direction = True
+
         self.my_crosshair_node = None
         self.cursor_node = None
-        
+
         self.logic = registrationViewerLogic()
-        
+
         self.pressed = False
-        
-        self.transformation_matrix = vtk.vtkMatrix4x4()
-        
+
+        # self.transformation_matrix = vtk.vtkMatrix4x4()
+        self.node_transformation = None
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
 
         # Load widget from .ui file (created by Qt Designer).
         # Additional widgets can be instantiated manually and added to self.layout.
-        uiWidget = slicer.util.loadUI(self.resourcePath("UI/registrationViewer.ui"))
+        uiWidget = slicer.util.loadUI(
+            self.resourcePath("UI/registrationViewer.ui"))
         self.layout.addWidget(uiWidget)
         self.ui = slicer.util.childWidgetVariables(uiWidget)
 
@@ -127,58 +133,62 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         # Buttons
-        self.ui.synchronise_views.connect("clicked(bool)", self.on_synchronise_views)
-        self.ui.toggle_transform.connect("clicked(bool)", self.on_toggle_transform)
+        self.ui.synchronise_views.connect(
+            "clicked(bool)", self.on_synchronise_views)
+        self.ui.toggle_transform.connect(
+            "clicked(bool)", self.on_toggle_transform)
+        self.ui.toggle_transform_reversal.connect(
+            "clicked(bool)", self.on_toggle_transform_reversal)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
-        
-        # utils.temp_load_data(self)
-        
+
+        utils.temp_load_data(self)
+
         utils.create_crosshair(self)
-        
+
     # TODO remove all my observers
     def update_views_normal_with_volume_fixed(self):
         # show fixed volume in top row
         for view in self.views_normal:
             slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
             composite_node = slice_logic.GetSliceCompositeNode()
-            
+
             node_fixed = self.ui.inputSelector_fixed.currentNode()
-            
+
             if node_fixed:
                 composite_node.SetBackgroundVolumeID(node_fixed.GetID())
             else:
                 composite_node.SetBackgroundVolumeID(None)
-                
+
             composite_node.SetForegroundVolumeID(None)
-    
+
     def update_views_plus_with_volume_moving(self):
         # show fixed volume in top row
         for view in self.views_plus:
             slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
             composite_node = slice_logic.GetSliceCompositeNode()
-            
+
             node_moving = self.ui.inputSelector_moving.currentNode()
-            
+
             if node_moving:
                 composite_node.SetBackgroundVolumeID(node_moving.GetID())
             else:
                 composite_node.SetBackgroundVolumeID(None)
-                
+
             composite_node.SetForegroundVolumeID(None)
-    
+
     def update_transformation_from_selector(self):
-        node_transformation = self.ui.inputSelector_transformation.currentNode()
-        if node_transformation:
-            node_transformation.GetMatrixTransformFromParent(self.transformation_matrix)
-    
+        self.node_transformation = self.ui.inputSelector_transformation.currentNode()
+
+        # invert transformation
+
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
         self.removeObservers()
 
     def enter(self) -> None:
-        """Called each time the user opens this module."""        
+        """Called each time the user opens this module."""
         # Make sure parameter node exists and observed
         self.initializeParameterNode()
 
@@ -234,49 +244,68 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
             self.addObserver(self._parameterNode,
                              vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
-            
+
             self._checkCanApply()
-    
+
     # todo why is this needed
     def _checkCanApply(self, caller=None, event=None) -> None:
         self.update_views_normal_with_volume_fixed()
         self.update_views_plus_with_volume_moving()
         self.update_transformation_from_selector()
-    
+
     def on_toggle_transform(self) -> None:
-        if self.transformation_matrix is None:
+        if self.node_transformation is None:
             self.update_transformation_from_selector()
-        if self.transformation_matrix is None:
+        if self.node_transformation is None:
             slicer.util.errorDisplay("No transformation found")
             return
 
         self.use_transform = not self.use_transform
-        
+
         if self.use_transform:
             self.ui.toggle_transform.setText("Turn off transform (t)")
         else:
             self.ui.toggle_transform.setText("Turn on transform (t)")
-    
+
+        # disable this transform reversal button if use_transform is False
+        self.ui.toggle_transform_reversal.setEnabled(self.use_transform)
+
     def on_synchronise_views(self) -> None:
         """Run processing when user clicks "Apply" button."""
-        
-        if self.transformation_matrix is None:
+
+        if self.node_transformation is None:
             self.update_transformation_from_selector()
-        if self.transformation_matrix is None:
+        if self.node_transformation is None:
             slicer.util.errorDisplay("No transformation found")
             return
-        
+
         if self.pressed is False:
             self.cursor_node = slicer.util.getNode("Crosshair")
             self.cursor_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                                          functools.partial(utils.on_mouse_moved_place_corsshair, self))
             self.pressed = True
             self.ui.synchronise_views.setText("Unsynchronise views (s)")
-            
+
         else:
             self.cursor_node.RemoveAllObservers()
             self.pressed = False
             self.ui.synchronise_views.setText("Synchronise views (s)")
+
+    def on_toggle_transform_reversal(self) -> None:
+        if self.use_transform:
+            self.reverse_transformation_direction = not self.reverse_transformation_direction
+
+            if self.reverse_transformation_direction:
+                self.ui.toggle_transform_reversal.setText(
+                    "Turn off transform reversal (r)")
+            else:
+                self.ui.toggle_transform_reversal.setText(
+                    "Turn on transform reversal (r)")
+        else:
+            slicer.util.errorDisplay(
+                "Cannot reverse transformation direction without using transformation.\n \
+                Please turn on transformation first.")
+
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
