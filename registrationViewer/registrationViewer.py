@@ -98,7 +98,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.use_transform = True
         self.reverse_transformation_direction = True
 
-        self.my_crosshair_node = None
+        self.my_crosshair_node_plus = None
         self.cursor_node = None
 
         self.logic = registrationViewerLogic()

@@ -41,16 +41,17 @@ def on_mouse_moved_place_corsshair(self, observer, eventid):
                                                         1)
 
     # now we set the position of our corsshair and then transform it to the new position
-    self.my_crosshair_node.SetNthControlPointPositionWorld(
+    self.my_crosshair_node_plus.SetNthControlPointPositionWorld(
         0, initial_position[0], initial_position[1], initial_position[2])
 
     # now transform the crosshair to the new position
     if self.use_transform:
-        self.my_crosshair_node.ApplyTransform(
+        self.my_crosshair_node_plus.ApplyTransform(
             self.node_transformation.GetTransformToParent())
 
     new_position = [0, 0, 0]
-    self.my_crosshair_node.GetNthControlPointPositionWorld(0, new_position)
+    self.my_crosshair_node_plus.GetNthControlPointPositionWorld(0,
+                                                                new_position)
 
     if self.reverse_transformation_direction:
         # the new_position should be moved in the opposite direction
@@ -59,7 +60,7 @@ def on_mouse_moved_place_corsshair(self, observer, eventid):
                                                         new_position)
 
     # make it visible
-    self.my_crosshair_node.GetDisplayNode().SetVisibility(True)
+    self.my_crosshair_node_plus.GetDisplayNode().SetVisibility(True)
 
     # in plus views we should follow the transformed cursor (that's why group 2)
     slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
@@ -69,25 +70,25 @@ def on_mouse_moved_place_corsshair(self, observer, eventid):
                                                         2)
 
     # set crosshair to the new position
-    self.my_crosshair_node.SetNthControlPointPositionWorld(
+    self.my_crosshair_node_plus.SetNthControlPointPositionWorld(
         0, new_position[0], new_position[1], new_position[2])
 
 
 def create_crosshair(self):
-    self.my_crosshair_node = slicer.mrmlScene.AddNewNodeByClass(
+    self.my_crosshair_node_plus = slicer.mrmlScene.AddNewNodeByClass(
         "vtkMRMLMarkupsFiducialNode")
-    self.my_crosshair_node.SetName("")
+    self.my_crosshair_node_plus.SetName("")
 
-    self.my_crosshair_node.AddControlPoint(0, 0, 0, "")
-    self.my_crosshair_node.SetNthControlPointLabel(0, "")
-    self.my_crosshair_node.GetDisplayNode().SetGlyphScale(1)
+    self.my_crosshair_node_plus.AddControlPoint(0, 0, 0, "")
+    self.my_crosshair_node_plus.SetNthControlPointLabel(0, "")
+    self.my_crosshair_node_plus.GetDisplayNode().SetGlyphScale(1)
 
     sliceNodeRed_plus = slicer.app.layoutManager().sliceWidget("Red+").mrmlSliceNode()
     sliceNodeGreen_plus = slicer.app.layoutManager().sliceWidget("Green+").mrmlSliceNode()
     sliceNodeYellow_plus = slicer.app.layoutManager(
     ).sliceWidget("Yellow+").mrmlSliceNode()
 
-    self.my_crosshair_node.GetDisplayNode().SetViewNodeIDs(
+    self.my_crosshair_node_plus.GetDisplayNode().SetViewNodeIDs(
         [sliceNodeRed_plus.GetID(), sliceNodeGreen_plus.GetID(), sliceNodeYellow_plus.GetID()])
 
 
