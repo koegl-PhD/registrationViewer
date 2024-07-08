@@ -101,8 +101,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.use_transform = True
         self.reverse_transformation_direction = True
 
-        self.my_crosshair_node_normal = None
-        self.my_crosshair_node_plus = None
+        self.crosshair_node_red: slicer.vtkMRMLMarkupsFiducialNode = None
+        self.crosshair_node_green: slicer.vtkMRMLMarkupsFiducialNode = None
+        self.crosshair_node_yellow: slicer.vtkMRMLMarkupsFiducialNode = None
+
+        self.crosshair_node_red_plus: slicer.vtkMRMLMarkupsFiducialNode = None
+        self.crosshair_node_green_plus: slicer.vtkMRMLMarkupsFiducialNode = None
+        self.crosshair_node_yellow_plus: slicer.vtkMRMLMarkupsFiducialNode = None
+
         self.cursor_node = None
 
         self.logic = registrationViewerLogic()
@@ -151,13 +157,42 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         utils.temp_load_data(self)
 
-        self.my_crosshair_node_red = utils.create_crosshair(views=["Red"])
-        self.my_crosshair_node_green = utils.create_crosshair(views=["Green"])
-        self.my_crosshair_node_yellow = utils.create_crosshair(views=[
-                                                               "Yellow"])
+        # create crosshairs for each view
+        self.crosshair_node_red = utils.create_crosshair(
+            views=["Red"])
+        self.crosshair_node_green = utils.create_crosshair(
+            views=["Green"])
+        self.crosshair_node_yellow = utils.create_crosshair(
+            views=["Yellow"])
 
-        self.my_crosshair_node_plus = utils.create_crosshair(
-            views=["Red+", "Green+", "Yellow+"])
+        self.crosshair_node_red_plus = utils.create_crosshair(
+            views=["Red+"])
+        self.crosshair_node_green_plus = utils.create_crosshair(
+            views=["Green+"])
+        self.crosshair_node_yellow_plus = utils.create_crosshair(
+            views=["Yellow+"])
+
+        # create a folder to put the crosshairs in
+        sh_node = slicer.mrmlScene.GetSubjectHierarchyNode()
+        crosshair_folder_id = sh_node.CreateFolderItem(
+            sh_node.GetSceneItemID(), "crosshairs")
+
+        sh_node.SetItemParent(sh_node.GetItemByDataNode(
+            self.crosshair_node_red), crosshair_folder_id)
+        sh_node.SetItemParent(sh_node.GetItemByDataNode(
+            self.crosshair_node_green), crosshair_folder_id)
+        sh_node.SetItemParent(sh_node.GetItemByDataNode(
+            self.crosshair_node_yellow), crosshair_folder_id)
+
+        sh_node.SetItemParent(sh_node.GetItemByDataNode(
+            self.crosshair_node_red_plus), crosshair_folder_id)
+        sh_node.SetItemParent(sh_node.GetItemByDataNode(
+            self.crosshair_node_green_plus), crosshair_folder_id)
+        sh_node.SetItemParent(sh_node.GetItemByDataNode(
+            self.crosshair_node_yellow_plus), crosshair_folder_id)
+
+        # collapse folder
+        sh_node.SetItemExpanded(crosshair_folder_id, False)
 
     # TODO remove all my observers
 
@@ -333,8 +368,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             position = c.GetCursorPositionXYZ([0]*3)
             if position is not None:
                 self.cursor_view = position.GetName()
-
-                print(self.cursor_view)
 
         c.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                       functools.partial(wrapper, self))
