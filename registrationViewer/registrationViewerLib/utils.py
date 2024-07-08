@@ -81,7 +81,27 @@ def on_mouse_moved_place_corsshair(self, observer, eventid):  # pylint: disable=
 
 def handle_normal_crosshairs(self, initial_position):
     # set normal crosshair to the new position
-    self.my_crosshair_node_normal.SetNthControlPointPositionWorld(
+
+    if self.cursor_view == "Red":
+        self.my_crosshair_node_red.GetDisplayNode().SetVisibility(False)
+        self.my_crosshair_node_green.GetDisplayNode().SetVisibility(True)
+        self.my_crosshair_node_yellow.GetDisplayNode().SetVisibility(True)
+
+    elif self.cursor_view == "Green":
+        self.my_crosshair_node_red.GetDisplayNode().SetVisibility(True)
+        self.my_crosshair_node_green.GetDisplayNode().SetVisibility(False)
+        self.my_crosshair_node_yellow.GetDisplayNode().SetVisibility(True)
+
+    elif self.cursor_view == "Yellow":
+        self.my_crosshair_node_red.GetDisplayNode().SetVisibility(True)
+        self.my_crosshair_node_green.GetDisplayNode().SetVisibility(True)
+        self.my_crosshair_node_yellow.GetDisplayNode().SetVisibility(False)
+
+    self.my_crosshair_node_red.SetNthControlPointPositionWorld(
+        0, initial_position[0], initial_position[1], initial_position[2])
+    self.my_crosshair_node_green.SetNthControlPointPositionWorld(
+        0, initial_position[0], initial_position[1], initial_position[2])
+    self.my_crosshair_node_yellow.SetNthControlPointPositionWorld(
         0, initial_position[0], initial_position[1], initial_position[2])
 
     c = slicer.util.getNode("*Crosshair*")
