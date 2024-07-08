@@ -1,0 +1,4 @@
+{
+    "reportMissingTypeStubs": false,
+    "import-untyped": false,
+  }
