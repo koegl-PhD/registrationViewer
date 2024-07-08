@@ -28,14 +28,7 @@ def reverse_transformation_direction(position, new_position):
     return new_position
 
 
-def on_mouse_moved_place_corsshair(self, observer, eventid) -> None:  # pylint: disable=unused-argument
-    """
-    When the mouse moves in a view, the crosshair should follow the cursor.
-
-    """
-
-    if self.cursor_view not in ["Red", "Green", "Yellow"]:
-        return
+def place_crosshair_when_cursor__in_normal(self) -> None:
 
     initial_position: list[float] = [0., 0., 0.]
     self.cursor_node.GetCursorPositionRAS(initial_position)
@@ -47,7 +40,7 @@ def on_mouse_moved_place_corsshair(self, observer, eventid) -> None:  # pylint: 
                                                         False,
                                                         1)
 
-    # now we set the position of our corsshair and then transform it to the new position
+    # now we set the position of our crosshair and then transform it to the new position
     set_crosshair_nodes_to_position([self.crosshair_node_red_plus,
                                      self.crosshair_node_green_plus,
                                      self.crosshair_node_yellow_plus],
@@ -90,6 +83,72 @@ def on_mouse_moved_place_corsshair(self, observer, eventid) -> None:  # pylint: 
                                     new_position)
 
 
+def place_crosshair_when_cursor_in_plus(self) -> None:
+    initial_position: list[float] = [0., 0., 0.]
+    self.cursor_node.GetCursorPositionRAS(initial_position)
+
+    # in plus views we should follow the cursor (that's why group 2)
+    slicer.modules.markups.logic().JumpSlicesToLocation(initial_position[0],
+                                                        initial_position[1],
+                                                        initial_position[2],
+                                                        False,
+                                                        2)
+
+    # now we set the position of our crosshair and then transform it to the new position
+    set_crosshair_nodes_to_position([self.crosshair_node_red,
+                                     self.crosshair_node_green,
+                                     self.crosshair_node_yellow],
+                                    initial_position)
+
+    # now transform the crosshair to the new position
+    if self.use_transform:
+        transform_crosshair_nodes(self,
+                                  [self.crosshair_node_red,
+                                   self.crosshair_node_green,
+                                   self.crosshair_node_yellow])
+
+    new_position: list[float] = [0., 0., 0.]
+    self.crosshair_node_red.GetNthControlPointPositionWorld(0,
+                                                            new_position)
+
+    if not self.reverse_transformation_direction:
+        # the new_position should be moved in the opposite direction
+        # for some reason the displacement is applied in the opposite direction
+        new_position = reverse_transformation_direction(initial_position,
+                                                        new_position)
+
+    # in plus views we should follow the transformed cursor (that's why group 2)
+    slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
+                                                        new_position[1],
+                                                        new_position[2],
+                                                        False,
+                                                        1)
+
+    set_crosshair_visibility(self)
+
+    set_crosshair_nodes_to_position([self.crosshair_node_red,
+                                     self.crosshair_node_green,
+                                     self.crosshair_node_yellow],
+                                    new_position)
+
+    set_crosshair_nodes_to_position([self.crosshair_node_red_plus,
+                                     self.crosshair_node_green_plus,
+                                     self.crosshair_node_yellow_plus],
+                                    initial_position)
+
+
+def on_mouse_moved_place_crosshair(self, observer, eventid) -> None:  # pylint: disable=unused-argument
+    """
+    When the mouse moves in a view, the crosshair should follow the cursor.
+
+    """
+
+    if self.cursor_view in ["Red", "Green", "Yellow"]:
+        place_crosshair_when_cursor__in_normal(self)
+    elif self.cursor_view in ["Red+", "Green+", "Yellow+"]:
+        place_crosshair_when_cursor_in_plus(self)
+
+
 def transform_crosshair_nodes(self, crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode]) -> None:
     """
     Transform every crosshair from the list of nodes with the current transformation.
@@ -111,7 +170,7 @@ def set_crosshair_nodes_to_position(crosshair_nodes: list[slicer.vtkMRMLMarkupsF
 
 def set_crosshair_visibility(self) -> None:
     """
-    Turns off the corsshair in the current view
+    Turns off the crosshair in the current view
     """
 
     self.crosshair_node_red.GetDisplayNode().SetVisibility(True)
