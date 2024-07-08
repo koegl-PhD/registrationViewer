@@ -28,7 +28,10 @@ def reverse_transformation_direction(position, new_position):
     return new_position
 
 
-def on_mouse_moved_place_corsshair(self, observer, eventid):
+def on_mouse_moved_place_corsshair(self, observer, eventid):  # pylint: disable=unused-argument
+
+    if self.cursor_view not in ["Red", "Green", "Yellow"]:
+        return
 
     initial_position = [0, 0, 0]
     self.cursor_node.GetCursorPositionRAS(initial_position)
