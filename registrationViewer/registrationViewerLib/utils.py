@@ -28,12 +28,16 @@ def reverse_transformation_direction(position, new_position):
     return new_position
 
 
-def on_mouse_moved_place_corsshair(self, observer, eventid):  # pylint: disable=unused-argument
+def on_mouse_moved_place_corsshair(self, observer, eventid) -> None:  # pylint: disable=unused-argument
+    """
+    When the mouse moves in a view, the crosshair should follow the cursor.
+
+    """
 
     if self.cursor_view not in ["Red", "Green", "Yellow"]:
         return
 
-    initial_position = [0, 0, 0]
+    initial_position: list[float] = [0., 0., 0.]
     self.cursor_node.GetCursorPositionRAS(initial_position)
 
     # in normal views we should follow the cursor (that's why group 1)
@@ -44,26 +48,27 @@ def on_mouse_moved_place_corsshair(self, observer, eventid):  # pylint: disable=
                                                         1)
 
     # now we set the position of our corsshair and then transform it to the new position
-    self.my_crosshair_node_plus.SetNthControlPointPositionWorld(
-        0, initial_position[0], initial_position[1], initial_position[2])
+    set_crosshair_nodes_to_position([self.crosshair_node_red_plus,
+                                     self.crosshair_node_green_plus,
+                                     self.crosshair_node_yellow_plus],
+                                    initial_position)
 
     # now transform the crosshair to the new position
     if self.use_transform:
-        self.my_crosshair_node_plus.ApplyTransform(
-            self.node_transformation.GetTransformToParent())
+        transform_crosshair_nodes(self,
+                                  [self.crosshair_node_red_plus,
+                                   self.crosshair_node_green_plus,
+                                   self.crosshair_node_yellow_plus])
 
-    new_position = [0, 0, 0]
-    self.my_crosshair_node_plus.GetNthControlPointPositionWorld(0,
-                                                                new_position)
+    new_position: list[float] = [0., 0., 0.]
+    self.crosshair_node_red_plus.GetNthControlPointPositionWorld(0,
+                                                                 new_position)
 
     if self.reverse_transformation_direction:
         # the new_position should be moved in the opposite direction
         # for some reason the displacement is applied in the opposite direction
         new_position = reverse_transformation_direction(initial_position,
                                                         new_position)
-
-    # make it visible
-    self.my_crosshair_node_plus.GetDisplayNode().SetVisibility(True)
 
     # in plus views we should follow the transformed cursor (that's why group 2)
     slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
@@ -72,40 +77,70 @@ def on_mouse_moved_place_corsshair(self, observer, eventid):  # pylint: disable=
                                                         False,
                                                         2)
 
-    # set plus crosshair to the new position
-    self.my_crosshair_node_plus.SetNthControlPointPositionWorld(
-        0, new_position[0], new_position[1], new_position[2])
+    set_crosshair_visibility(self)
 
-    handle_normal_crosshairs(self, initial_position)
+    set_crosshair_nodes_to_position([self.crosshair_node_red,
+                                     self.crosshair_node_green,
+                                     self.crosshair_node_yellow],
+                                    initial_position)
+
+    set_crosshair_nodes_to_position([self.crosshair_node_red_plus,
+                                     self.crosshair_node_green_plus,
+                                     self.crosshair_node_yellow_plus],
+                                    new_position)
 
 
-def handle_normal_crosshairs(self, initial_position):
-    # set normal crosshair to the new position
+def transform_crosshair_nodes(self, crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode]) -> None:
+    """
+    Transform every crosshair from the list of nodes with the current transformation.
+    """
+
+    for node in crosshair_nodes:
+        node.ApplyTransform(self.node_transformation.GetTransformToParent())
+
+
+def set_crosshair_nodes_to_position(crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode], position: list[float]) -> None:
+    """
+    Set every crosshair from the list of nodes to the given position.
+    """
+
+    for node in crosshair_nodes:
+        node.SetNthControlPointPositionWorld(
+            0, position[0], position[1], position[2])
+
+
+def set_crosshair_visibility(self) -> None:
+    """
+    Turns off the corsshair in the current view
+    """
+
+    self.crosshair_node_red.GetDisplayNode().SetVisibility(True)
+    self.crosshair_node_green.GetDisplayNode().SetVisibility(True)
+    self.crosshair_node_yellow.GetDisplayNode().SetVisibility(True)
+    self.crosshair_node_red_plus.GetDisplayNode().SetVisibility(True)
+    self.crosshair_node_green_plus.GetDisplayNode().SetVisibility(True)
+    self.crosshair_node_yellow_plus.GetDisplayNode().SetVisibility(True)
 
     if self.cursor_view == "Red":
-        self.my_crosshair_node_red.GetDisplayNode().SetVisibility(False)
-        self.my_crosshair_node_green.GetDisplayNode().SetVisibility(True)
-        self.my_crosshair_node_yellow.GetDisplayNode().SetVisibility(True)
+        self.crosshair_node_red.GetDisplayNode().SetVisibility(False)
 
     elif self.cursor_view == "Green":
-        self.my_crosshair_node_red.GetDisplayNode().SetVisibility(True)
-        self.my_crosshair_node_green.GetDisplayNode().SetVisibility(False)
-        self.my_crosshair_node_yellow.GetDisplayNode().SetVisibility(True)
+        self.crosshair_node_green.GetDisplayNode().SetVisibility(False)
 
     elif self.cursor_view == "Yellow":
-        self.my_crosshair_node_red.GetDisplayNode().SetVisibility(True)
-        self.my_crosshair_node_green.GetDisplayNode().SetVisibility(True)
-        self.my_crosshair_node_yellow.GetDisplayNode().SetVisibility(False)
+        self.crosshair_node_yellow.GetDisplayNode().SetVisibility(False)
 
-    self.my_crosshair_node_red.SetNthControlPointPositionWorld(
-        0, initial_position[0], initial_position[1], initial_position[2])
-    self.my_crosshair_node_green.SetNthControlPointPositionWorld(
-        0, initial_position[0], initial_position[1], initial_position[2])
-    self.my_crosshair_node_yellow.SetNthControlPointPositionWorld(
-        0, initial_position[0], initial_position[1], initial_position[2])
+    elif self.cursor_view == "Red+":
+        self.crosshair_node_red_plus.GetDisplayNode().SetVisibility(False)
+
+    elif self.cursor_view == "Green+":
+        self.crosshair_node_green_plus.GetDisplayNode().SetVisibility(False)
+
+    elif self.cursor_view == "Yellow+":
+        self.crosshair_node_yellow_plus.GetDisplayNode().SetVisibility(False)
 
 
-def create_crosshair(views: list[str]):
+def create_crosshair(views: list[str]) -> slicer.vtkMRMLMarkupsFiducialNode:
 
     crosshair_node = slicer.mrmlScene.AddNewNodeByClass(
         "vtkMRMLMarkupsFiducialNode")
