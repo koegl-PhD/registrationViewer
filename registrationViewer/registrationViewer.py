@@ -333,7 +333,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.pressed is False:
             self.cursor_node = slicer.util.getNode("Crosshair")
             self.cursor_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                         functools.partial(utils.on_mouse_moved_place_corsshair, self))
+                                         functools.partial(utils.on_mouse_moved_place_crosshair, self))
             self.pressed = True
             self.ui.synchronise_views.setText("Unsynchronise views (s)")
 
