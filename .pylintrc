@@ -1,0 +1,11 @@
+[MASTER]
+ignore=/home/fryderyk/Documents/Programs/Slicer-5.7.0-2024-03-06-linux-amd64/bin/Python/slicer/parameterNodeWrapper/wrapper.py
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    no-member,
+    # Add any other warnings you want to disable here
+
+[TYPECHECK]
+generated-members=slicer.app,slicer.vtkMRMLLayoutNode,slicer.mrmlScene,ui.*,vtk.vtkCommand

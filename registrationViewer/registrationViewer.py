@@ -1,22 +1,21 @@
+import time
 import logging
-import os
-from typing import Annotated, Optional
+from typing import Optional
 import functools
 
 import vtk
-import vtk
-import qt
 import slicer
 from slicer.i18n import tr as _
 from slicer.i18n import translate
-from slicer.ScriptedLoadableModule import *
+from slicer.ScriptedLoadableModule import (
+    ScriptedLoadableModule,
+    ScriptedLoadableModuleWidget,
+    ScriptedLoadableModuleLogic)
 from slicer.util import VTKObservationMixin
 from slicer.parameterNodeWrapper import (
     parameterNodeWrapper,
-    WithinRange,
 )
-
-from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode
+from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
 from registrationViewerLib import utils
 
@@ -26,6 +25,12 @@ from registrationViewerLib import utils
 
 
 class registrationViewer(ScriptedLoadableModule):
+    """_summary_
+
+    Args:
+        ScriptedLoadableModule (_type_): _description_
+    """
+
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = _("registrationViewer")
@@ -34,7 +39,6 @@ class registrationViewer(ScriptedLoadableModule):
             translate("qSlicerAbstractCoreModule", "Examples")]
         self.parent.dependencies = []  # list of module names that this module requires
         self.parent.contributors = ["Fryderyk Kögl (TUM)"]
-        # TODO: update with short description of the module and a link to online module documentation
         # _() function marks text as translatable to other languages
         self.parent.helpText = _("""Basic module. See more information in <a href="https://github.com/koegl-PhD/registrationViewer">module documentation</a>.
 """)
@@ -72,8 +76,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         ScriptedLoadableModuleWidget.__init__(self, parent)
         # needed for parameter node observation
         VTKObservationMixin.__init__(self)
-        self.logic = None
-        self._parameterNode = None
+        self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTag = None
 
         # set the view to 3 over 3
@@ -98,7 +101,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.use_transform = True
         self.reverse_transformation_direction = True
 
-        self.my_crosshair_node = None
+        self.my_crosshair_node_normal = None
+        self.my_crosshair_node_plus = None
         self.cursor_node = None
 
         self.logic = registrationViewerLogic()
@@ -107,6 +111,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # self.transformation_matrix = vtk.vtkMatrix4x4()
         self.node_transformation = None
+
+        self.cursor_view: str = ""
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -145,9 +151,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         utils.temp_load_data(self)
 
-        utils.create_crosshair(self)
+        self.my_crosshair_node_red = utils.create_crosshair(views=["Red"])
+        self.my_crosshair_node_green = utils.create_crosshair(views=["Green"])
+        self.my_crosshair_node_yellow = utils.create_crosshair(views=[
+                                                               "Yellow"])
+
+        self.my_crosshair_node_plus = utils.create_crosshair(
+            views=["Red+", "Green+", "Yellow+"])
 
     # TODO remove all my observers
+
     def update_views_normal_with_volume_fixed(self):
         # show fixed volume in top row
         for view in self.views_normal:
@@ -196,17 +209,18 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called each time the user opens a different module."""
         # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
         if self._parameterNode:
-            self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
+            self._parameterNode.disconnectGui(  # type: ignore
+                self._parameterNodeGuiTag)
             self._parameterNodeGuiTag = None
             self.removeObserver(
                 self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
 
-    def onSceneStartClose(self, caller, event) -> None:
+    def onSceneStartClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just before the scene is closed."""
         # Parameter node will be reset, do not use it anymore
         self.setParameterNode(None)
 
-    def onSceneEndClose(self, caller, event) -> None:
+    def onSceneEndClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just after the scene is closed."""
         # If this module is shown while the scene is closed then recreate a new parameter node immediately
         if self.parent.isEntered:
@@ -234,21 +248,23 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """
 
         if self._parameterNode:
-            self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
+            self._parameterNode.disconnectGui(  # type: ignore
+                self._parameterNodeGuiTag)
             self.removeObserver(
                 self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
             # ui element that needs connection.
-            self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
+            self._parameterNodeGuiTag = self._parameterNode.connectGui(  # type: ignore
+                self.ui)
             self.addObserver(self._parameterNode,
                              vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
 
             self._checkCanApply()
 
     # todo why is this needed
-    def _checkCanApply(self, caller=None, event=None) -> None:
+    def _checkCanApply(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
         self.update_views_normal_with_volume_fixed()
         self.update_views_plus_with_volume_moving()
         self.update_transformation_from_selector()
@@ -286,12 +302,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.pressed = True
             self.ui.synchronise_views.setText("Unsynchronise views (s)")
 
+            # has to be done here because here we know that the cursor_node is not None
+            self.update_cursor_view()
+
         else:
             self.cursor_node.RemoveAllObservers()
             self.pressed = False
             self.ui.synchronise_views.setText("Synchronise views (s)")
 
-    def on_toggle_transform_reversal(self) -> None:
+    def on_toggle_transform_reversal(self) -> None:  # pylint: disable=unused-argument
         if self.use_transform:
             self.reverse_transformation_direction = not self.reverse_transformation_direction
 
@@ -305,6 +324,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.util.errorDisplay(
                 "Cannot reverse transformation direction without using transformation.\n \
                 Please turn on transformation first.")
+
+    def update_cursor_view(self):
+
+        c = slicer.util.getNode("*Crosshair*")
+
+        def wrapper(self, callee, event):  # pylint: disable=unused-argument
+            position = c.GetCursorPositionXYZ([0]*3)
+            if position is not None:
+                self.cursor_view = position.GetName()
+
+                print(self.cursor_view)
+
+        c.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
+                      functools.partial(wrapper, self))
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
@@ -334,15 +367,11 @@ class registrationViewerLogic(ScriptedLoadableModuleLogic):
         if not inputVolume:
             raise ValueError("Input volume is invalid")
 
-        import time
-
-        startTime = time.time()
+        start_time = time.time()
         logging.info("Processing started")
-
-        utils.printVolumeName(inputVolume)
 
         # print(f"Volume name: {inputVolume.GetName()}")
 
-        stopTime = time.time()
+        stop_time = time.time()
         logging.info(
-            f"Processing completed in {stopTime-startTime:.2f} seconds")
+            "Processing completed in %.2f seconds", stop_time-start_time)
