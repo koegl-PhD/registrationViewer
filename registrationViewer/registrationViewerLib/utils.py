@@ -104,11 +104,6 @@ def handle_normal_crosshairs(self, initial_position):
     self.my_crosshair_node_yellow.SetNthControlPointPositionWorld(
         0, initial_position[0], initial_position[1], initial_position[2])
 
-    c = slicer.util.getNode("*Crosshair*")
-
-    c.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                  lambda callee, event: print(c.GetCursorPositionXYZ([0]*3).GetName()))
-
 
 def create_crosshair(views: list[str]):
 
