@@ -13,11 +13,15 @@ class Crosshairs():
                  cursor_node,
                  use_transform) -> None:
 
+        assert cursor_node is not None, "Cursor node is None"
+        assert use_transform is not None, "Use transform is None"
+
         self.cursor_node = cursor_node
         self.use_transform = use_transform
 
         self.node_transformation = None
         self.cursor_view: str = ""
+        self.reverse_transf_direction: bool = False
 
         # create crosshairs for each view
         self.crosshair_node_red = self.create_crosshair(
@@ -158,7 +162,7 @@ class Crosshairs():
                                  tranformed_crosshair_nodes=[self.crosshair_node_red_plus,
                                                              self.crosshair_node_green_plus,
                                                              self.crosshair_node_yellow_plus],
-                                 reverse_transf_direction=False)
+                                 reverse_transf_direction=self.reverse_transf_direction)
         elif self.cursor_view in ["Red+", "Green+", "Yellow+"]:
             self.place_crosshair(untransformed_view_group=2,
                                  transformed_view_group=1,
@@ -168,7 +172,7 @@ class Crosshairs():
                                  tranformed_crosshair_nodes=[self.crosshair_node_red,
                                                              self.crosshair_node_green,
                                                              self.crosshair_node_yellow],
-                                 reverse_transf_direction=True)
+                                 reverse_transf_direction=not self.reverse_transf_direction)
 
     def transform_crosshair_nodes(self, crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode]) -> None:
         """

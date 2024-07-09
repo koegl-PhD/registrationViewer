@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 import functools
 
+import slicer.util
 import vtk
 import slicer
 from slicer.i18n import tr as _
@@ -151,9 +152,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         utils.temp_load_data(self)
 
-        self.crosshair = crosshairs.Crosshairs(cursor_node=self.cursor_node,
-                                               use_transform=self.use_transform)
-
     # TODO remove all my observers
 
     def update_views_normal_with_volume_fixed(self):
@@ -191,6 +189,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             return
 
         self.crosshair.node_transformation = self.ui.inputSelector_transformation.currentNode()
+        self.node_transformation = self.ui.inputSelector_transformation.currentNode()
 
         # invert transformation
 
@@ -275,6 +274,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             return
 
         self.use_transform = not self.use_transform
+        self.crosshair.use_transform = self.use_transform
 
         if self.use_transform:
             self.ui.toggle_transform.setText("Turn off transform (t)")
@@ -287,6 +287,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def on_synchronise_views(self) -> None:
         """Run processing when user clicks "Apply" button."""
 
+        self.cursor_node = slicer.util.getNode("Crosshair")
+        if self.cursor_node is None:
+            slicer.util.errorDisplay("No crosshair found")
+            return
+
+        self.crosshair = crosshairs.Crosshairs(cursor_node=self.cursor_node,
+                                               use_transform=self.use_transform)
+        self.cursor_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
+                                     self.crosshair.on_mouse_moved_place_crosshair)
+        self.update_cursor_view()
+
         if self.node_transformation is None:
             self.update_transformation_from_selector()
         if self.node_transformation is None:
@@ -294,14 +305,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             return
 
         if self.pressed is False:
-            self.cursor_node = slicer.util.getNode("Crosshair")
-            self.cursor_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                         functools.partial(self.crosshair.on_mouse_moved_place_crosshair, self.crosshair))
             self.pressed = True
             self.ui.synchronise_views.setText("Unsynchronise views (s)")
-
-            # has to be done here because here we know that the cursor_node is not None
-            self.update_cursor_view()
 
         else:
             self.cursor_node.RemoveAllObservers()
@@ -311,6 +316,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def on_toggle_transform_reversal(self) -> None:  # pylint: disable=unused-argument
         if self.use_transform:
             self.reverse_transformation_direction = not self.reverse_transformation_direction
+            self.crosshair.reverse_transf_direction = self.reverse_transformation_direction
 
             if self.reverse_transformation_direction:
                 self.ui.toggle_transform_reversal.setText(
