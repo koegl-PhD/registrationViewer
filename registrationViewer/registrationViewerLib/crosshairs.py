@@ -38,24 +38,22 @@ class Crosshairs():
         self.crosshair_node_yellow_plus = self.create_crosshair(
             views=["Yellow+"])
 
+        self.crosshair_nodes = {"Red": self.crosshair_node_red,
+                                "Green": self.crosshair_node_green,
+                                "Yellow": self.crosshair_node_yellow,
+                                "Red+": self.crosshair_node_red_plus,
+                                "Green+": self.crosshair_node_green_plus,
+                                "Yellow+": self.crosshair_node_yellow_plus,
+                                }
+
         # create a folder to put the crosshairs in
         self.sh_node = slicer.mrmlScene.GetSubjectHierarchyNode()
         self.crosshair_folder_id = self.sh_node.CreateFolderItem(
             self.sh_node.GetSceneItemID(), "crosshairs")
 
-        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
-            self.crosshair_node_red), self.crosshair_folder_id)
-        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
-            self.crosshair_node_green), self.crosshair_folder_id)
-        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
-            self.crosshair_node_yellow), self.crosshair_folder_id)
-
-        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
-            self.crosshair_node_red_plus), self.crosshair_folder_id)
-        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
-            self.crosshair_node_green_plus), self.crosshair_folder_id)
-        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
-            self.crosshair_node_yellow_plus), self.crosshair_folder_id)
+        for _, crosshair_node in self.crosshair_nodes.items():
+            self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
+                crosshair_node), self.crosshair_folder_id)
 
         # collapse folder
         self.sh_node.SetItemExpanded(self.crosshair_folder_id, False)
@@ -65,13 +63,8 @@ class Crosshairs():
         Delete the crosshairs and the folder.
         """
 
-        slicer.mrmlScene.RemoveNode(self.crosshair_node_red)
-        slicer.mrmlScene.RemoveNode(self.crosshair_node_green)
-        slicer.mrmlScene.RemoveNode(self.crosshair_node_yellow)
-
-        slicer.mrmlScene.RemoveNode(self.crosshair_node_red_plus)
-        slicer.mrmlScene.RemoveNode(self.crosshair_node_green_plus)
-        slicer.mrmlScene.RemoveNode(self.crosshair_node_yellow_plus)
+        for _, node in self.crosshair_nodes.items():
+            slicer.mrmlScene.RemoveNode(node)
 
         self.sh_node.RemoveItem(self.crosshair_folder_id)
 
@@ -215,27 +208,13 @@ class Crosshairs():
         Turns off the crosshair in the current view
         """
 
-        self.crosshair_node_red.GetDisplayNode().SetVisibility(True)
-        self.crosshair_node_green.GetDisplayNode().SetVisibility(True)
-        self.crosshair_node_yellow.GetDisplayNode().SetVisibility(True)
-        self.crosshair_node_red_plus.GetDisplayNode().SetVisibility(True)
-        self.crosshair_node_green_plus.GetDisplayNode().SetVisibility(True)
-        self.crosshair_node_yellow_plus.GetDisplayNode().SetVisibility(True)
+        for _, node in self.crosshair_nodes.items():
+            display_node = node.GetDisplayNode()
+            if display_node is not None:
+                display_node.SetVisibility(True)
 
-        if self.cursor_view == "Red":
-            self.crosshair_node_red.GetDisplayNode().SetVisibility(False)
-
-        elif self.cursor_view == "Green":
-            self.crosshair_node_green.GetDisplayNode().SetVisibility(False)
-
-        elif self.cursor_view == "Yellow":
-            self.crosshair_node_yellow.GetDisplayNode().SetVisibility(False)
-
-        elif self.cursor_view == "Red+":
-            self.crosshair_node_red_plus.GetDisplayNode().SetVisibility(False)
-
-        elif self.cursor_view == "Green+":
-            self.crosshair_node_green_plus.GetDisplayNode().SetVisibility(False)
-
-        elif self.cursor_view == "Yellow+":
-            self.crosshair_node_yellow_plus.GetDisplayNode().SetVisibility(False)
+        if self.cursor_view in self.crosshair_nodes:
+            display_node = self.crosshair_nodes[self.cursor_view].GetDisplayNode(
+            )
+            if display_node is not None:
+                display_node.SetVisibility(False)
