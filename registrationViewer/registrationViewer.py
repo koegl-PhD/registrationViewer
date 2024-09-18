@@ -286,7 +286,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.toggle_transform_reversal.setEnabled(self.use_transform)
 
     def on_synchronise_views(self) -> None:
-        """Run processing when user clicks "Apply" button."""
+        utils.link_normal_views()
+        utils.link_plus_views()
+
+        slicer.util.resetSliceViews()
 
         self.cursor_node = slicer.util.getNode("Crosshair")
         if self.cursor_node is None:

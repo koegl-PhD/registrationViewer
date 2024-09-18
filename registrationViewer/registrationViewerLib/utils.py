@@ -1,9 +1,7 @@
-from typing import Tuple, Callable
+from typing import Tuple, Callable, List
 
 import qt
 import slicer
-
-import numpy as np
 
 
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
@@ -38,3 +36,32 @@ def temp_load_data(self):
     self.ui.inputSelector_fixed.setCurrentNode(node_volume_fixed)
     self.ui.inputSelector_moving.setCurrentNode(node_volume_moving)
     self.ui.inputSelector_transformation.setCurrentNode(node_transformation)
+
+
+def link_views(views: List[str]) -> None:
+    """
+    Links the given views.
+
+    @param views: The views to link.
+    """
+
+    for view in views:
+        sliceLogic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
+        compositeNode = sliceLogic.GetSliceCompositeNode()
+        compositeNode.SetLinkedControl(True)
+
+
+def link_normal_views() -> None:
+    """
+    Links the normal views.
+    """
+
+    link_views(['Red', 'Yellow', 'Green'])
+
+
+def link_plus_views() -> None:
+    """
+    Links the plus views.
+    """
+
+    link_views(['Red+', 'Yellow+', 'Green+'])
