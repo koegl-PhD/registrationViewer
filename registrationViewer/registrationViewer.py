@@ -151,7 +151,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
 
-        utils.temp_load_data(self)
+        # utils.temp_load_data(self)
 
     # TODO remove all my observers
 
