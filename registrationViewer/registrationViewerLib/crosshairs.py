@@ -39,26 +39,41 @@ class Crosshairs():
             views=["Yellow+"])
 
         # create a folder to put the crosshairs in
-        sh_node = slicer.mrmlScene.GetSubjectHierarchyNode()
-        crosshair_folder_id = sh_node.CreateFolderItem(
-            sh_node.GetSceneItemID(), "crosshairs")
+        self.sh_node = slicer.mrmlScene.GetSubjectHierarchyNode()
+        self.crosshair_folder_id = self.sh_node.CreateFolderItem(
+            self.sh_node.GetSceneItemID(), "crosshairs")
 
-        sh_node.SetItemParent(sh_node.GetItemByDataNode(
-            self.crosshair_node_red), crosshair_folder_id)
-        sh_node.SetItemParent(sh_node.GetItemByDataNode(
-            self.crosshair_node_green), crosshair_folder_id)
-        sh_node.SetItemParent(sh_node.GetItemByDataNode(
-            self.crosshair_node_yellow), crosshair_folder_id)
+        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
+            self.crosshair_node_red), self.crosshair_folder_id)
+        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
+            self.crosshair_node_green), self.crosshair_folder_id)
+        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
+            self.crosshair_node_yellow), self.crosshair_folder_id)
 
-        sh_node.SetItemParent(sh_node.GetItemByDataNode(
-            self.crosshair_node_red_plus), crosshair_folder_id)
-        sh_node.SetItemParent(sh_node.GetItemByDataNode(
-            self.crosshair_node_green_plus), crosshair_folder_id)
-        sh_node.SetItemParent(sh_node.GetItemByDataNode(
-            self.crosshair_node_yellow_plus), crosshair_folder_id)
+        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
+            self.crosshair_node_red_plus), self.crosshair_folder_id)
+        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
+            self.crosshair_node_green_plus), self.crosshair_folder_id)
+        self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
+            self.crosshair_node_yellow_plus), self.crosshair_folder_id)
 
         # collapse folder
-        sh_node.SetItemExpanded(crosshair_folder_id, False)
+        self.sh_node.SetItemExpanded(self.crosshair_folder_id, False)
+
+    def delete_crosshairs_and_folder(self) -> None:
+        """
+        Delete the crosshairs and the folder.
+        """
+
+        slicer.mrmlScene.RemoveNode(self.crosshair_node_red)
+        slicer.mrmlScene.RemoveNode(self.crosshair_node_green)
+        slicer.mrmlScene.RemoveNode(self.crosshair_node_yellow)
+
+        slicer.mrmlScene.RemoveNode(self.crosshair_node_red_plus)
+        slicer.mrmlScene.RemoveNode(self.crosshair_node_green_plus)
+        slicer.mrmlScene.RemoveNode(self.crosshair_node_yellow_plus)
+
+        self.sh_node.RemoveItem(self.crosshair_folder_id)
 
     @staticmethod
     def create_crosshair(views: list[str]) -> slicer.vtkMRMLMarkupsFiducialNode:

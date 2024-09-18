@@ -1,7 +1,8 @@
 import time
 import logging
-from typing import Optional
 import functools
+
+from typing import Optional
 
 import slicer.util
 import vtk
@@ -291,6 +292,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.cursor_node is None:
             slicer.util.errorDisplay("No crosshair found")
             return
+
+        if self.crosshair is not None:
+            self.crosshair.delete_crosshairs_and_folder()
 
         self.crosshair = crosshairs.Crosshairs(cursor_node=self.cursor_node,
                                                use_transform=self.use_transform)
