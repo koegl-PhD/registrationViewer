@@ -51,17 +51,166 @@ def link_views(views: List[str]) -> None:
         compositeNode.SetLinkedControl(True)
 
 
-def link_normal_views() -> None:
-    """
-    Links the normal views.
+def set_2x3_layout() -> None:
+    customLayout = """
+    <layout type="vertical" split="true">
+    <item>
+        <layout type="horizontal">
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Red1">
+            <property name="orientation" action="default">Axial</property>
+            <property name="viewlabel" action="default">R1</property>
+            <property name="viewcolor" action="default">#F34A33</property>
+            </view>
+        </item>
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Green1">
+            <property name="orientation" action="default">Coronal</property>
+            <property name="viewlabel" action="default">G1</property>
+            <property name="viewcolor" action="default">#6EB04B</property>
+            </view>
+        </item>
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Yellow1">
+            <property name="orientation" action="default">Sagittal</property>
+            <property name="viewlabel" action="default">Y1</property>
+            <property name="viewcolor" action="default">#EDD54C</property>
+            </view>
+        </item>
+        </layout>
+    </item>
+
+    <item>
+        <layout type="horizontal">
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Red2">
+            <property name="orientation" action="default">Axial</property>
+            <property name="viewlabel" action="default">R2</property>
+            <property name="viewcolor" action="default">#F34A33</property>
+            </view>
+        </item>
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Green2">
+            <property name="orientation" action="default">Coronal</property>
+            <property name="viewlabel" action="default">G2</property>
+            <property name="viewcolor" action="default">#6EB04B</property>
+            </view>
+        </item>
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Yellow2">
+            <property name="orientation" action="default">Sagittal</property>
+            <property name="viewlabel" action="default">Y2</property>
+            <property name="viewcolor" action="default">#EDD54C</property>
+            </view>
+        </item>
+        </layout>
+    </item>
+    </layout>
     """
 
-    link_views(['Red', 'Yellow', 'Green'])
+    # Built-in layout IDs are all below 100, so you can choose any large random number
+    # for your custom layout ID.
+    customLayoutId = 701
+
+    layoutManager = slicer.app.layoutManager()
+    layoutManager.layoutLogic().GetLayoutNode(
+    ).AddLayoutDescription(customLayoutId, customLayout)
+
+    # Switch to the new custom layout
+    layoutManager.setLayout(customLayoutId)
 
 
-def link_plus_views() -> None:
+def set_3x3_layout() -> None:
+
+    customLayout = """
+    <layout type="vertical" split="true">
+    <item>
+        <layout type="horizontal">
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Red1">
+            <property name="orientation" action="default">Axial</property>
+            <property name="viewlabel" action="default">R1</property>
+            <property name="viewcolor" action="default">#F34A33</property>
+            </view>
+        </item>
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Green1">
+            <property name="orientation" action="default">Coronal</property>
+            <property name="viewlabel" action="default">G1</property>
+            <property name="viewcolor" action="default">#6EB04B</property>
+            </view>
+        </item>
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Yellow1">
+            <property name="orientation" action="default">Sagittal</property>
+            <property name="viewlabel" action="default">Y1</property>
+            <property name="viewcolor" action="default">#EDD54C</property>
+            </view>
+        </item>
+        </layout>
+    </item>
+
+    <item>
+        <layout type="horizontal">
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Red2">
+            <property name="orientation" action="default">Axial</property>
+            <property name="viewlabel" action="default">R2</property>
+            <property name="viewcolor" action="default">#F34A33</property>
+            </view>
+        </item>
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Green2">
+            <property name="orientation" action="default">Coronal</property>
+            <property name="viewlabel" action="default">G2</property>
+            <property name="viewcolor" action="default">#6EB04B</property>
+            </view>
+        </item>
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Yellow2">
+            <property name="orientation" action="default">Sagittal</property>
+            <property name="viewlabel" action="default">Y2</property>
+            <property name="viewcolor" action="default">#EDD54C</property>
+            </view>
+        </item>
+        </layout>
+    </item>
+
+    <item>
+        <layout type="horizontal">
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Red3">
+            <property name="orientation" action="default">Axial</property>
+            <property name="viewlabel" action="default">R3</property>
+            <property name="viewcolor" action="default">#F34A33</property>
+            </view>
+        </item>
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Green3">
+            <property name="orientation" action="default">Coronal</property>
+            <property name="viewlabel" action="default">G3</property>
+            <property name="viewcolor" action="default">#6EB04B</property>
+            </view>
+        </item>
+        <item>
+            <view class="vtkMRMLSliceNode" singletontag="Yellow3">
+            <property name="orientation" action="default">Sagittal</property>
+            <property name="viewlabel" action="default">Y3</property>
+            <property name="viewcolor" action="default">#EDD54C</property>
+            </view>
+        </item>
+        </layout>
+    </item>
+    </layout>
     """
-    Links the plus views.
-    """
 
-    link_views(['Red+', 'Yellow+', 'Green+'])
+    # Built-in layout IDs are all below 100, so you can choose any large random number
+    # for your custom layout ID.
+    customLayoutId = 601
+
+    layoutManager = slicer.app.layoutManager()
+    layoutManager.layoutLogic().GetLayoutNode(
+    ).AddLayoutDescription(customLayoutId, customLayout)
+
+    # Switch to the new custom layout
+    layoutManager.setLayout(customLayoutId)
