@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>325</width>
-    <height>311</height>
+    <width>447</width>
+    <height>382</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -17,9 +17,16 @@
       <string>Inputs</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
-           <item row="0" column="1">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Fixed volume:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
        <widget class="qMRMLNodeComboBox" name="inputSelector_fixed">
-       <property name="toolTip">
+        <property name="toolTip">
          <string>Pick the fixed volume.</string>
         </property>
         <property name="nodeTypes">
@@ -30,18 +37,17 @@
         <property name="hideChildNodeTypes">
          <stringlist notr="true"/>
         </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
         <property name="interactionNodeSingletonTag">
          <string notr="true"/>
         </property>
         <property name="SlicerParameterName" stdset="0">
          <string>volume_fixed</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Fixed volume</string>
         </property>
        </widget>
       </item>
@@ -76,9 +82,47 @@
         </property>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Warped volume:</string>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_warped">
+        <property name="toolTip">
+         <string>Pick the warped volume.</string>
+        </property>
+        <property name="nodeTypes">
+         <stringlist notr="true">
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="SlicerParameterName" stdset="0">
+         <string>volume_warped</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Transformation:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
        <widget class="qMRMLNodeComboBox" name="inputSelector_transformation">
-       <property name="toolTip">
+        <property name="toolTip">
          <string>Pick the transformation between moving and fixed.</string>
         </property>
         <property name="nodeTypes">
@@ -89,6 +133,12 @@
         <property name="hideChildNodeTypes">
          <stringlist notr="true"/>
         </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
         <property name="interactionNodeSingletonTag">
          <string notr="true"/>
         </property>
@@ -97,17 +147,53 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Transformation</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>
-
+   <item>
+    <widget class="qMRMLLayoutWidget" name="MRMLLayoutWidget"/>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string> View:    </string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <layout class="QFormLayout" name="viewsLayout">
+       <item row="0" column="0">
+        <widget class="QPushButton" name="button_2x3">
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>2x3</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QPushButton" name="button_3x3">
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>3x3</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
    <item>
     <widget class="QPushButton" name="synchronise_views">
      <property name="text">
@@ -115,8 +201,6 @@
      </property>
     </widget>
    </item>
-
-
    <item>
     <widget class="QPushButton" name="toggle_transform">
      <property name="text">
@@ -124,8 +208,6 @@
      </property>
     </widget>
    </item>
-
-
    <item>
     <widget class="QPushButton" name="toggle_transform_reversal">
      <property name="text">
@@ -133,8 +215,6 @@
      </property>
     </widget>
    </item>
-
-
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
@@ -158,6 +238,11 @@
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>qMRMLLayoutWidget</class>
+   <extends>QWidget</extends>
+   <header>qMRMLLayoutWidget.h</header>
+  </customwidget>
+  <customwidget>
    <class>qMRMLNodeComboBox</class>
    <extends>QWidget</extends>
    <header>qMRMLNodeComboBox.h</header>
@@ -171,6 +256,22 @@
  </customwidgets>
  <resources/>
  <connections>
+  <connection>
+   <sender>registrationViewer</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>inputSelector_fixed</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>122</x>
+     <y>132</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>248</x>
+     <y>61</y>
+    </hint>
+   </hints>
+  </connection>
   <connection>
    <sender>registrationViewer</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
@@ -190,7 +291,7 @@
   <connection>
    <sender>registrationViewer</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
-   <receiver>inputSelector_fixed</receiver>
+   <receiver>inputSelector_warped</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
    <hints>
     <hint type="sourcelabel">
