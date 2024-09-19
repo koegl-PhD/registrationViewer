@@ -1,6 +1,7 @@
 import time
 import logging
 import functools
+import importlib
 
 from typing import Optional
 
@@ -81,6 +82,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTag = None
 
+        from registrationViewerLib import utils, crosshairs
+        utils = importlib.reload(utils)
+        crosshairs = importlib.reload(crosshairs)
+
         # set the view to 3 over 3
         slicer.app.layoutManager().setLayout(
             slicer.vtkMRMLLayoutNode.SlicerLayoutThreeOverThreeView)
@@ -103,7 +108,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.use_transform = True
         self.reverse_transformation_direction = True
 
-        self.crosshair: crosshairs.Crosshairs = None
+        self.crosshair = None
 
         self.cursor_node = None
 
@@ -150,6 +155,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
+
+        utils.link_normal_views()
+        utils.link_plus_views()
+
+        slicer.util.resetSliceViews()
 
         # utils.temp_load_data(self)
 
@@ -286,8 +296,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.toggle_transform_reversal.setEnabled(self.use_transform)
 
     def on_synchronise_views(self) -> None:
-        """Run processing when user clicks "Apply" button."""
-
         self.cursor_node = slicer.util.getNode("Crosshair")
         if self.cursor_node is None:
             slicer.util.errorDisplay("No crosshair found")
