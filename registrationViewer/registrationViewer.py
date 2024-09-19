@@ -3,7 +3,7 @@ import logging
 import functools
 import importlib
 
-from typing import Optional
+from typing import Optional, List
 
 import slicer.util
 import vtk
@@ -65,6 +65,7 @@ class registrationViewerParameterNode:
 
     volume_fixed: vtkMRMLScalarVolumeNode
     volume_moving: vtkMRMLScalarVolumeNode
+    volume_warped: vtkMRMLScalarVolumeNode
     transformation: vtkMRMLTransformNode
 
 
@@ -86,20 +87,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         utils = importlib.reload(utils)
         crosshairs = importlib.reload(crosshairs)
 
-        # set the view to 3 over 3
-        slicer.app.layoutManager().setLayout(
-            slicer.vtkMRMLLayoutNode.SlicerLayoutThreeOverThreeView)
+        self.group_first_row = 1
+        self.group_second_row = 2
+        self.group_third_row = 3
 
-        self.group_normal = 1
-        self.group_plus = 2
-        self.views_normal = ["Red", "Green", "Yellow"]
-        self.views_plus = ["Red+", "Green+", "Yellow+"]
-        # set groups
-        for i in range(3):
-            slicer.app.layoutManager().sliceWidget(
-                self.views_normal[i]).mrmlSliceNode().SetViewGroup(self.group_normal)
-            slicer.app.layoutManager().sliceWidget(
-                self.views_plus[i]).mrmlSliceNode().SetViewGroup(self.group_plus)
+        self.views_first_row = ["Red1", "Green1", "Yellow1"]
+        self.views_second_row = ["Red2", "Green2", "Yellow2"]
+        self.views_third_row = ["Red3", "Green3", "Yellow3"]
 
         utils.create_shortcuts(('t', self.on_toggle_transform),
                                ('s', self.on_synchronise_views),
@@ -120,6 +114,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.node_transformation = None
 
         self.cursor_view: str = ""
+
+        self.node_diff = None
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -145,7 +141,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.addObserver(slicer.mrmlScene,
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
+        utils.set_3x3_layout()
+
+        # set groups
+        for i in range(3):
+            slicer.app.layoutManager().sliceWidget(
+                self.views_first_row[i]).mrmlSliceNode().SetViewGroup(1)
+            slicer.app.layoutManager().sliceWidget(
+                self.views_second_row[i]).mrmlSliceNode().SetViewGroup(2)
+            slicer.app.layoutManager().sliceWidget(
+                self.views_third_row[i]).mrmlSliceNode().SetViewGroup(3)
+
         # Buttons
+        self.ui.button_2x3.connect("clicked(bool)", self.on_button_2x3_clicked)
+        self.ui.button_3x3.connect("clicked(bool)", self.on_button_3x3_clicked)
         self.ui.synchronise_views.connect(
             "clicked(bool)", self.on_synchronise_views)
         self.ui.toggle_transform.connect(
@@ -156,8 +165,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
 
-        utils.link_normal_views()
-        utils.link_plus_views()
+        utils.link_views(self.views_first_row)
+        utils.link_views(self.views_second_row)
+        utils.link_views(self.views_third_row)
 
         slicer.util.resetSliceViews()
 
@@ -165,35 +175,47 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     # TODO remove all my observers
 
-    def update_views_normal_with_volume_fixed(self):
-        # show fixed volume in top row
-        for view in self.views_normal:
+    def update_views_with_volume(self, views: List[str], volume: vtkMRMLScalarVolumeNode):
+        for view in views:
             slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
             composite_node = slice_logic.GetSliceCompositeNode()
 
-            node_fixed = self.ui.inputSelector_fixed.currentNode()
-
-            if node_fixed:
-                composite_node.SetBackgroundVolumeID(node_fixed.GetID())
+            if volume:
+                composite_node.SetBackgroundVolumeID(volume.GetID())
             else:
                 composite_node.SetBackgroundVolumeID(None)
 
             composite_node.SetForegroundVolumeID(None)
 
-    def update_views_plus_with_volume_moving(self):
-        # show fixed volume in top row
-        for view in self.views_plus:
-            slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
-            composite_node = slice_logic.GetSliceCompositeNode()
+    def update_views_first_row_with_volume_fixed(self):
 
-            node_moving = self.ui.inputSelector_moving.currentNode()
+        node_fixed = self.ui.inputSelector_fixed.currentNode()
 
-            if node_moving:
-                composite_node.SetBackgroundVolumeID(node_moving.GetID())
-            else:
-                composite_node.SetBackgroundVolumeID(None)
+        self.update_views_with_volume(self.views_first_row, node_fixed)
 
-            composite_node.SetForegroundVolumeID(None)
+    def update_views_second_row_with_volume_moving(self):
+
+        node_moving = self.ui.inputSelector_moving.currentNode()
+
+        self.update_views_with_volume(self.views_second_row, node_moving)
+
+    def update_views_third_row_with_volume_diff(self):
+
+        node_fixed = self.ui.inputSelector_fixed.currentNode()
+        node_warped = self.ui.inputSelector_warped.currentNode()
+
+        if node_fixed is not None and node_warped is not None:
+            array_fixed = slicer.util.arrayFromVolume(node_fixed)
+            array_warped = slicer.util.arrayFromVolume(node_warped)
+
+            array_diff = array_fixed - array_warped
+
+            if self.node_diff is None:
+                self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed, "Difference")
+
+            slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
+
+            self.update_views_with_volume(self.views_third_row, self.node_diff)
 
     def update_transformation_from_selector(self):
         if self.crosshair is None:
@@ -273,9 +295,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     # todo why is this needed
     def _checkCanApply(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
-        self.update_views_normal_with_volume_fixed()
-        self.update_views_plus_with_volume_moving()
+        self.update_views_first_row_with_volume_fixed()
+        self.update_views_second_row_with_volume_moving()
+        self.update_views_third_row_with_volume_diff()
         self.update_transformation_from_selector()
+
+    def on_button_2x3_clicked(self) -> None:
+        utils.set_2x3_layout()
+
+    def on_button_3x3_clicked(self) -> None:
+        utils.set_3x3_layout()
 
     def on_toggle_transform(self) -> None:
         if self.node_transformation is None:
