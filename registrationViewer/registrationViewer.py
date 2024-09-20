@@ -287,6 +287,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.setParameterNode(self.logic.getParameterNode())
 
+        if self.node_diff is not None:
+            slicer.mrmlScene.RemoveNode(self.node_diff)
+            self.node_diff = None
+        if self.node_warped is not None:
+            slicer.mrmlScene.RemoveNode(self.node_warped)
+            self.node_warped = None
+
+        self._checkCanApply()
+
         # to do make smart selection
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
         # if not self._parameterNode.inputVolume:
