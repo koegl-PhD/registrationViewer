@@ -65,7 +65,6 @@ class registrationViewerParameterNode:
 
     volume_fixed: vtkMRMLScalarVolumeNode
     volume_moving: vtkMRMLScalarVolumeNode
-    volume_warped: vtkMRMLScalarVolumeNode
     transformation: vtkMRMLTransformNode
 
 
@@ -115,6 +114,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.cursor_view: str = ""
 
+        self.node_warped = None
         self.node_diff = None
 
     def setup(self) -> None:
@@ -202,16 +202,25 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def update_views_third_row_with_volume_diff(self):
 
         node_fixed = self.ui.inputSelector_fixed.currentNode()
-        node_warped = self.ui.inputSelector_warped.currentNode()
+        node_transformation = self.ui.inputSelector_transformation.currentNode()
+        node_moving = self.ui.inputSelector_moving.currentNode()
 
-        if node_fixed is not None and node_warped is not None:
-            array_fixed = slicer.util.arrayFromVolume(node_fixed)
-            array_warped = slicer.util.arrayFromVolume(node_warped)
-
-            array_diff = array_fixed - array_warped
-
+        if node_fixed is not None and node_moving is not None and node_transformation is not None:
             if self.node_diff is None:
                 self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed, "Difference")
+
+            if self.node_warped is not None:
+                slicer.mrmlScene.RemoveNode(self.node_warped)
+
+            self.node_warped = slicer.modules.volumes.logic().CloneVolume(node_moving, "Warped")
+            utils.warp_moving_with_transform(node_moving,
+                                             node_transformation,
+                                             self.node_warped)
+
+            array_fixed = slicer.util.arrayFromVolume(node_fixed)
+            array_warped = slicer.util.arrayFromVolume(self.node_warped)
+
+            array_diff = array_fixed - array_warped
 
             slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
 

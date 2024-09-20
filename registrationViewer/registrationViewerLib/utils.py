@@ -214,3 +214,39 @@ def set_3x3_layout() -> None:
 
     # Switch to the new custom layout
     layoutManager.setLayout(customLayoutId)
+
+
+def apply_and_harden_transform_to_node(node_target: slicer.vtkMRMLNode,
+                                       node_transform: slicer.vtkMRMLTransformNode, ) -> None:
+    """
+    Applies the given transform to the target node and hardens it.
+
+    @param node_target: The target node.
+    @param node_transform: The transform node.
+    """
+
+    node_target.SetAndObserveTransformNodeID(node_transform.GetID())
+
+    node_target.HardenTransform()
+
+
+def resample_node_to_reference_node(node_input: slicer.vtkMRMLScalarVolumeNode,
+                                    node_reference: slicer.vtkMRMLScalarVolumeNode) -> None:
+    params = {}
+
+    params["inputVolume"] = node_input
+    params["outputVolume"] = node_input
+    params["referenceVolume"] = node_reference
+    params["interpolationType"] = "linear"
+
+    slicer.cli.runSync(
+        slicer.modules.resamplescalarvectordwivolume, None, params)
+
+
+def warp_moving_with_transform(node_moving: slicer.vtkMRMLScalarVolumeNode,
+                               node_transform: slicer.vtkMRMLTransformNode,
+                               node_warped):
+
+    apply_and_harden_transform_to_node(node_warped, node_transform)
+
+    resample_node_to_reference_node(node_warped, node_moving)
