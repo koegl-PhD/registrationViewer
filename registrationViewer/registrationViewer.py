@@ -328,9 +328,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     # todo why is this needed
     def _checkCanApply(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
+
+        if self.current_layout == Layout.L_3X3:
+            self.update_views_third_row_with_volume_diff()
+
         self.update_views_first_row_with_volume_fixed()
         self.update_views_second_row_with_volume_moving()
-        self.update_views_third_row_with_volume_diff()
         self.update_transformation_from_selector()
 
     def on_button_2x3_clicked(self) -> None:
