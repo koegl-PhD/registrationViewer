@@ -217,11 +217,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if node_fixed is not None and node_moving is not None and node_transformation is not None:
             if self.node_diff is None:
                 self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed, "Difference")
+                self.node_diff.SetName("Difference")
 
             if self.node_warped is not None:
                 slicer.mrmlScene.RemoveNode(self.node_warped)
 
             self.node_warped = slicer.modules.volumes.logic().CloneVolume(node_moving, "Warped")
+            self.node_warped.SetName("Warped")
             utils.warp_moving_with_transform(node_moving,
                                              node_transformation,
                                              self.node_warped)
