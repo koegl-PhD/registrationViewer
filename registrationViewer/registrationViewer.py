@@ -3,6 +3,7 @@ import logging
 import functools
 import importlib
 
+from enum import Enum
 from typing import Optional, List
 
 import slicer.util
@@ -25,6 +26,11 @@ from registrationViewerLib import utils, crosshairs
 #
 # registrationViewer
 #
+
+
+class Layout(Enum):
+    L_2X3 = 701
+    L_3X3 = 601
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -117,6 +123,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.node_warped = None
         self.node_diff = None
 
+        self.current_layout: Layout
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -142,6 +150,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         utils.set_3x3_layout()
+        self.current_layout = Layout.L_3X3
 
         # set groups
         for i in range(3):
@@ -311,9 +320,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_button_2x3_clicked(self) -> None:
         utils.set_2x3_layout()
+        self.current_layout = Layout.L_2X3
 
     def on_button_3x3_clicked(self) -> None:
         utils.set_3x3_layout()
+        self.current_layout = Layout.L_3X3
 
     def on_toggle_transform(self) -> None:
         if self.node_transformation is None:
