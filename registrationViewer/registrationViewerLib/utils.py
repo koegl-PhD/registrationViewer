@@ -59,21 +59,21 @@ def set_2x3_layout() -> None:
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Red1">
             <property name="orientation" action="default">Axial</property>
-            <property name="viewlabel" action="default">R1</property>
+            <property name="viewlabel" action="default">Fixed - axial</property>
             <property name="viewcolor" action="default">#F34A33</property>
             </view>
         </item>
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Green1">
             <property name="orientation" action="default">Coronal</property>
-            <property name="viewlabel" action="default">G1</property>
+            <property name="viewlabel" action="default">Fixed - coronal</property>
             <property name="viewcolor" action="default">#6EB04B</property>
             </view>
         </item>
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Yellow1">
             <property name="orientation" action="default">Sagittal</property>
-            <property name="viewlabel" action="default">Y1</property>
+            <property name="viewlabel" action="default">Fixed - saggital</property>
             <property name="viewcolor" action="default">#EDD54C</property>
             </view>
         </item>
@@ -85,21 +85,21 @@ def set_2x3_layout() -> None:
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Red2">
             <property name="orientation" action="default">Axial</property>
-            <property name="viewlabel" action="default">R2</property>
+            <property name="viewlabel" action="default">Moving - axial</property>
             <property name="viewcolor" action="default">#F34A33</property>
             </view>
         </item>
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Green2">
             <property name="orientation" action="default">Coronal</property>
-            <property name="viewlabel" action="default">G2</property>
+            <property name="viewlabel" action="default">Moving - coronal</property>
             <property name="viewcolor" action="default">#6EB04B</property>
             </view>
         </item>
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Yellow2">
             <property name="orientation" action="default">Sagittal</property>
-            <property name="viewlabel" action="default">Y2</property>
+            <property name="viewlabel" action="default">Moving - sagittal</property>
             <property name="viewcolor" action="default">#EDD54C</property>
             </view>
         </item>
@@ -129,21 +129,21 @@ def set_3x3_layout() -> None:
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Red1">
             <property name="orientation" action="default">Axial</property>
-            <property name="viewlabel" action="default">R1</property>
+            <property name="viewlabel" action="default">Fixed - axial</property>
             <property name="viewcolor" action="default">#F34A33</property>
             </view>
         </item>
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Green1">
             <property name="orientation" action="default">Coronal</property>
-            <property name="viewlabel" action="default">G1</property>
+            <property name="viewlabel" action="default">Fixed - coronal</property>
             <property name="viewcolor" action="default">#6EB04B</property>
             </view>
         </item>
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Yellow1">
             <property name="orientation" action="default">Sagittal</property>
-            <property name="viewlabel" action="default">Y1</property>
+            <property name="viewlabel" action="default">Fixed - sagittal</property>
             <property name="viewcolor" action="default">#EDD54C</property>
             </view>
         </item>
@@ -155,21 +155,21 @@ def set_3x3_layout() -> None:
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Red2">
             <property name="orientation" action="default">Axial</property>
-            <property name="viewlabel" action="default">R2</property>
+            <property name="viewlabel" action="default">Moving - axial</property>
             <property name="viewcolor" action="default">#F34A33</property>
             </view>
         </item>
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Green2">
             <property name="orientation" action="default">Coronal</property>
-            <property name="viewlabel" action="default">G2</property>
+            <property name="viewlabel" action="default">Moving - coronal</property>
             <property name="viewcolor" action="default">#6EB04B</property>
             </view>
         </item>
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Yellow2">
             <property name="orientation" action="default">Sagittal</property>
-            <property name="viewlabel" action="default">Y2</property>
+            <property name="viewlabel" action="default">Moving - sagittal</property>
             <property name="viewcolor" action="default">#EDD54C</property>
             </view>
         </item>
@@ -181,21 +181,21 @@ def set_3x3_layout() -> None:
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Red3">
             <property name="orientation" action="default">Axial</property>
-            <property name="viewlabel" action="default">R3</property>
+            <property name="viewlabel" action="default">Diff - axial</property>
             <property name="viewcolor" action="default">#F34A33</property>
             </view>
         </item>
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Green3">
             <property name="orientation" action="default">Coronal</property>
-            <property name="viewlabel" action="default">G3</property>
+            <property name="viewlabel" action="default">Diff - coronal</property>
             <property name="viewcolor" action="default">#6EB04B</property>
             </view>
         </item>
         <item>
             <view class="vtkMRMLSliceNode" singletontag="Yellow3">
             <property name="orientation" action="default">Sagittal</property>
-            <property name="viewlabel" action="default">Y3</property>
+            <property name="viewlabel" action="default">Diff - sagittal</property>
             <property name="viewcolor" action="default">#EDD54C</property>
             </view>
         </item>
