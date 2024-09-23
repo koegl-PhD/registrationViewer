@@ -262,7 +262,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self._parameterNodeGuiTag)
             self._parameterNodeGuiTag = None
             self.removeObserver(
-                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
 
     def onSceneStartClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just before the scene is closed."""
@@ -309,7 +309,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._parameterNode.disconnectGui(  # type: ignore
                 self._parameterNodeGuiTag)
             self.removeObserver(
-                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
@@ -317,12 +317,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._parameterNodeGuiTag = self._parameterNode.connectGui(  # type: ignore
                 self.ui)
             self.addObserver(self._parameterNode,
-                             vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+                             vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
 
-            self._checkCanApply()
-
-    # todo why is this needed
-    def _checkCanApply(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
+    def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
 
         if self.current_layout == Layout.L_3X3:
             self.update_views_third_row_with_volume_diff()
