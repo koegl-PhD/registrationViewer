@@ -355,7 +355,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.toggle_transform_reversal.setEnabled(self.use_transform)
 
     def on_synchronise_views(self) -> None:
-        self.cursor_node = slicer.util.getNode("Crosshair")
+
+        if not self._are_nodes_selected():
+            slicer.util.errorDisplay(
+                "Please select fixed, moving and transformation nodes")
+            return
+
         if self.cursor_node is None:
             slicer.util.errorDisplay("No crosshair found")
             return
@@ -384,6 +389,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui.synchronise_views.setText("Synchronise views (s)")
 
     def on_toggle_transform_reversal(self) -> None:  # pylint: disable=unused-argument
+
+        if not self._are_nodes_selected():
+            slicer.util.errorDisplay(
+                "Please select fixed, moving and transformation nodes")
+            return
+
         if self.use_transform:
             self.reverse_transformation_direction = not self.reverse_transformation_direction
             self.crosshair.reverse_transf_direction = self.reverse_transformation_direction
@@ -410,6 +421,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         c.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                       functools.partial(wrapper, self))
+
+
+    def _are_nodes_selected(self) -> bool:
+        return self.ui.inputSelector_fixed.currentNode() is not None and \
+            self.ui.inputSelector_moving.currentNode() is not None and \
+            self.ui.inputSelector_transformation.currentNode() is not None
 
     @property
     def cursor_node(self) -> vtk.vtkMRMLCrosshairNode:
