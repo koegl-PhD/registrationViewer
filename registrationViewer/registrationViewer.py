@@ -179,8 +179,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # utils.temp_load_data(self)
 
-    # TODO remove all my observers
-
     def update_views_with_volume(self, views: List[str], volume: vtkMRMLScalarVolumeNode):
         for view in views:
             slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
@@ -289,22 +287,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.setParameterNode(self.logic.getParameterNode())
 
-        if self.node_diff is not None:
-            slicer.mrmlScene.RemoveNode(self.node_diff)
-            self.node_diff = None
-        if self.node_warped is not None:
-            slicer.mrmlScene.RemoveNode(self.node_warped)
-            self.node_warped = None
-
-        self._checkCanApply()
-
-        # to do make smart selection
-        # Select default input nodes if nothing is selected yet to save a few clicks for the user
-        # if not self._parameterNode.inputVolume:
-        #     firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass(
-        #         "vtkMRMLScalarVolumeNode")
-        #     if firstVolumeNode:
-        #         self._parameterNode.inputVolume = firstVolumeNode
+        # we have to call this here to propagate the new transform node to the cursor
+        self.update_transformation_from_selector()
 
     def setParameterNode(self, inputParameterNode: Optional[registrationViewerParameterNode]) -> None:
         """
@@ -417,7 +401,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 "Cannot reverse transformation direction without using transformation.\n \
                 Please turn on transformation first.")
 
-    def update_cursor_view(self):
+    def update_cursor_view(self) -> None:
 
         c = slicer.util.getNode("*Crosshair*")
 
