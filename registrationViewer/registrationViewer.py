@@ -266,6 +266,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def onSceneStartClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just before the scene is closed."""
+
+        self._remove_custom_nodes()
+
         # Parameter node will be reset, do not use it anymore
         self.setParameterNode(None)
 
@@ -422,6 +425,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         c.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                       functools.partial(wrapper, self))
 
+    def _remove_custom_nodes(self) -> None:
+        if self.node_diff is not None:
+            slicer.mrmlScene.RemoveNode(self.node_diff)
+            self.node_diff = None
+        if self.node_warped is not None:
+            slicer.mrmlScene.RemoveNode(self.node_warped)
+            self.node_warped = None
+        if self.crosshair is not None:
+            self.crosshair.delete_crosshairs_and_folder()
 
     def _are_nodes_selected(self) -> bool:
         return self.ui.inputSelector_fixed.currentNode() is not None and \
