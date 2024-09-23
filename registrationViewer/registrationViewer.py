@@ -109,13 +109,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.crosshair = None
 
-        self.cursor_node = None
-
         self.logic = registrationViewerLogic()
 
-        self.pressed = False
+        self.synchronize_pressed = False
 
-        # self.transformation_matrix = vtk.vtkMatrix4x4()
         self.node_transformation = None
 
         self.cursor_view: str = ""
@@ -182,8 +179,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # utils.temp_load_data(self)
 
-    # TODO remove all my observers
-
     def update_views_with_volume(self, views: List[str], volume: vtkMRMLScalarVolumeNode):
         for view in views:
             slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
@@ -242,13 +237,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.update_views_with_volume(self.views_third_row, self.node_diff)
 
     def update_transformation_from_selector(self):
-        if self.crosshair is None:
-            return
-
-        self.crosshair.node_transformation = self.ui.inputSelector_transformation.currentNode()
         self.node_transformation = self.ui.inputSelector_transformation.currentNode()
 
-        # invert transformation
+        if self.crosshair is None:
+            return
+        self.crosshair.node_transformation = self.ui.inputSelector_transformation.currentNode()
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -267,10 +260,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self._parameterNodeGuiTag)
             self._parameterNodeGuiTag = None
             self.removeObserver(
-                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
 
     def onSceneStartClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just before the scene is closed."""
+
+        self.cursor_node.RemoveAllObservers()
+        self.synchronize_pressed = False
+        self.ui.synchronise_views.setText("Synchronise views (s)")
+
+        self._remove_custom_nodes()
+
         # Parameter node will be reset, do not use it anymore
         self.setParameterNode(None)
 
@@ -287,22 +287,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.setParameterNode(self.logic.getParameterNode())
 
-        if self.node_diff is not None:
-            slicer.mrmlScene.RemoveNode(self.node_diff)
-            self.node_diff = None
-        if self.node_warped is not None:
-            slicer.mrmlScene.RemoveNode(self.node_warped)
-            self.node_warped = None
-
-        self._checkCanApply()
-
-        # to do make smart selection
-        # Select default input nodes if nothing is selected yet to save a few clicks for the user
-        # if not self._parameterNode.inputVolume:
-        #     firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass(
-        #         "vtkMRMLScalarVolumeNode")
-        #     if firstVolumeNode:
-        #         self._parameterNode.inputVolume = firstVolumeNode
+        # we have to call this here to propagate the new transform node to the cursor
+        self.update_transformation_from_selector()
 
     def setParameterNode(self, inputParameterNode: Optional[registrationViewerParameterNode]) -> None:
         """
@@ -314,7 +300,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._parameterNode.disconnectGui(  # type: ignore
                 self._parameterNodeGuiTag)
             self.removeObserver(
-                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
@@ -322,12 +308,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._parameterNodeGuiTag = self._parameterNode.connectGui(  # type: ignore
                 self.ui)
             self.addObserver(self._parameterNode,
-                             vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+                             vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
 
-            self._checkCanApply()
-
-    # todo why is this needed
-    def _checkCanApply(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
+    def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
 
         if self.current_layout == Layout.L_3X3:
             self.update_views_third_row_with_volume_diff()
@@ -363,7 +346,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.toggle_transform_reversal.setEnabled(self.use_transform)
 
     def on_synchronise_views(self) -> None:
-        self.cursor_node = slicer.util.getNode("Crosshair")
+
+        if not self._are_nodes_selected():
+            slicer.util.errorDisplay(
+                "Please select fixed, moving and transformation nodes")
+            return
+
         if self.cursor_node is None:
             slicer.util.errorDisplay("No crosshair found")
             return
@@ -383,16 +371,21 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.util.errorDisplay("No transformation found")
             return
 
-        if self.pressed is False:
-            self.pressed = True
-            self.ui.synchronise_views.setText("Unsynchronise views (s)")
+        self.synchronize_pressed = not self.synchronize_pressed
 
+        if self.synchronize_pressed is False:
+            self.ui.synchronise_views.setText("Unsynchronise views (s)")
         else:
             self.cursor_node.RemoveAllObservers()
-            self.pressed = False
             self.ui.synchronise_views.setText("Synchronise views (s)")
 
     def on_toggle_transform_reversal(self) -> None:  # pylint: disable=unused-argument
+
+        if not self._are_nodes_selected():
+            slicer.util.errorDisplay(
+                "Please select fixed, moving and transformation nodes")
+            return
+
         if self.use_transform:
             self.reverse_transformation_direction = not self.reverse_transformation_direction
             self.crosshair.reverse_transf_direction = self.reverse_transformation_direction
@@ -408,7 +401,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 "Cannot reverse transformation direction without using transformation.\n \
                 Please turn on transformation first.")
 
-    def update_cursor_view(self):
+    def update_cursor_view(self) -> None:
 
         c = slicer.util.getNode("*Crosshair*")
 
@@ -419,6 +412,25 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         c.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                       functools.partial(wrapper, self))
+
+    def _remove_custom_nodes(self) -> None:
+        if self.node_diff is not None:
+            slicer.mrmlScene.RemoveNode(self.node_diff)
+            self.node_diff = None
+        if self.node_warped is not None:
+            slicer.mrmlScene.RemoveNode(self.node_warped)
+            self.node_warped = None
+        if self.crosshair is not None:
+            self.crosshair.delete_crosshairs_and_folder()
+
+    def _are_nodes_selected(self) -> bool:
+        return self.ui.inputSelector_fixed.currentNode() is not None and \
+            self.ui.inputSelector_moving.currentNode() is not None and \
+            self.ui.inputSelector_transformation.currentNode() is not None
+
+    @property
+    def cursor_node(self) -> vtk.vtkMRMLCrosshairNode:
+        return slicer.util.getNode("Crosshair")
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):

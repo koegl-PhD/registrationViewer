@@ -225,17 +225,17 @@ class Crosshairs():
             if display_node is not None:
                 display_node.SetVisibility(False)
 
-    @ property
+    @property
     def crosshairs_1(self) -> list[slicer.vtkMRMLMarkupsFiducialNode]:
 
         return [self.crosshair_nodes[view] for view in self.views_1]
 
-    @ property
+    @property
     def crosshairs_2(self) -> list[slicer.vtkMRMLMarkupsFiducialNode]:
 
         return [self.crosshair_nodes[view] for view in self.views_2]
 
-    @ property
+    @property
     def crosshairs_3(self) -> list[slicer.vtkMRMLMarkupsFiducialNode]:
 
         return [self.crosshair_nodes[view] for view in self.views_3]
