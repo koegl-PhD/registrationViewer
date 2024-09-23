@@ -111,9 +111,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.logic = registrationViewerLogic()
 
-        self.pressed = False
+        self.synchronize_pressed = False
 
-        # self.transformation_matrix = vtk.vtkMatrix4x4()
         self.node_transformation = None
 
         self.cursor_view: str = ""
@@ -381,13 +380,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.util.errorDisplay("No transformation found")
             return
 
-        if self.pressed is False:
-            self.pressed = True
-            self.ui.synchronise_views.setText("Unsynchronise views (s)")
+        self.synchronize_pressed = not self.synchronize_pressed
 
+        if self.synchronize_pressed is False:
+            self.ui.synchronise_views.setText("Unsynchronise views (s)")
         else:
             self.cursor_node.RemoveAllObservers()
-            self.pressed = False
             self.ui.synchronise_views.setText("Synchronise views (s)")
 
     def on_toggle_transform_reversal(self) -> None:  # pylint: disable=unused-argument
