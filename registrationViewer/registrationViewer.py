@@ -267,6 +267,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def onSceneStartClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just before the scene is closed."""
 
+        self.cursor_node.RemoveAllObservers()
+        self.synchronize_pressed = False
+        self.ui.synchronise_views.setText("Synchronise views (s)")
+
         self._remove_custom_nodes()
 
         # Parameter node will be reset, do not use it anymore
