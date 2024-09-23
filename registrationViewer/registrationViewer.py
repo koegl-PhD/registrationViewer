@@ -239,13 +239,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.update_views_with_volume(self.views_third_row, self.node_diff)
 
     def update_transformation_from_selector(self):
-        if self.crosshair is None:
-            return
-
-        self.crosshair.node_transformation = self.ui.inputSelector_transformation.currentNode()
         self.node_transformation = self.ui.inputSelector_transformation.currentNode()
 
-        # invert transformation
+        if self.crosshair is None:
+            return
+        self.crosshair.node_transformation = self.ui.inputSelector_transformation.currentNode()
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
