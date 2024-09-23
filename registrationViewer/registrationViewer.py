@@ -109,8 +109,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.crosshair = None
 
-        self.cursor_node = None
-
         self.logic = registrationViewerLogic()
 
         self.pressed = False
@@ -419,6 +417,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         c.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                       functools.partial(wrapper, self))
+
+    @property
+    def cursor_node(self) -> vtk.vtkMRMLCrosshairNode:
+        return slicer.util.getNode("Crosshair")
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
