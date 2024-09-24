@@ -4,7 +4,7 @@ import functools
 import importlib
 
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Any
 
 import slicer.util
 import vtk
@@ -113,8 +113,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.synchronize_pressed = False
 
-        self.node_transformation = None
-
         self.cursor_view: str = ""
 
         self.node_warped = None
@@ -145,6 +143,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
         self.addObserver(slicer.mrmlScene,
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
+
+        self.node_cursor.RemoveAllObservers()
+        self.synchronize_pressed = False
+        self.ui.synchronise_views.setText("Synchronise views (s)")
+
+        self._remove_custom_nodes()
 
         utils.set_3x3_layout()
         self.current_layout = Layout.L_3X3
@@ -206,10 +210,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def update_views_third_row_with_volume_diff(self):
 
         node_fixed = self.ui.inputSelector_fixed.currentNode()
-        node_transformation = self.ui.inputSelector_transformation.currentNode()
         node_moving = self.ui.inputSelector_moving.currentNode()
 
-        if node_fixed is not None and node_moving is not None and node_transformation is not None:
+        if node_fixed is not None and node_moving is not None and self.node_transformation is not None:
             if self.node_diff is None:
                 self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed, "Difference")
                 self.node_diff.SetName("Difference")
@@ -220,7 +223,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_warped = slicer.modules.volumes.logic().CloneVolume(node_moving, "Warped")
             self.node_warped.SetName("Warped")
             utils.warp_moving_with_transform(node_moving,
-                                             node_transformation,
+                                             self.node_transformation,
                                              self.node_warped)
 
             array_fixed = slicer.util.arrayFromVolume(node_fixed)
@@ -235,13 +238,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_diff.GetDisplayNode().SetThreshold(-1.0, 1.0)
 
             self.update_views_with_volume(self.views_third_row, self.node_diff)
-
-    def update_transformation_from_selector(self):
-        self.node_transformation = self.ui.inputSelector_transformation.currentNode()
-
-        if self.crosshair is None:
-            return
-        self.crosshair.node_transformation = self.ui.inputSelector_transformation.currentNode()
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -265,7 +261,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def onSceneStartClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just before the scene is closed."""
 
-        self.cursor_node.RemoveAllObservers()
+        self.node_cursor.RemoveAllObservers()
         self.synchronize_pressed = False
         self.ui.synchronise_views.setText("Synchronise views (s)")
 
@@ -288,7 +284,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.setParameterNode(self.logic.getParameterNode())
 
         # we have to call this here to propagate the new transform node to the cursor
-        self.update_transformation_from_selector()
+        self._update_crosshair_transformation()
 
     def setParameterNode(self, inputParameterNode: Optional[registrationViewerParameterNode]) -> None:
         """
@@ -317,7 +313,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.update_views_first_row_with_volume_fixed()
         self.update_views_second_row_with_volume_moving()
-        self.update_transformation_from_selector()
+        self._update_crosshair_transformation()
 
     def on_button_2x3_clicked(self) -> None:
         utils.set_2x3_layout()
@@ -328,8 +324,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.current_layout = Layout.L_3X3
 
     def on_toggle_transform(self) -> None:
-        if self.node_transformation is None:
-            self.update_transformation_from_selector()
         if self.node_transformation is None:
             slicer.util.errorDisplay("No transformation found")
             return
@@ -352,32 +346,25 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 "Please select fixed, moving and transformation nodes")
             return
 
-        if self.cursor_node is None:
+        if self.node_cursor is None:
             slicer.util.errorDisplay("No crosshair found")
             return
 
-        if self.crosshair is not None:
-            self.crosshair.delete_crosshairs_and_folder()
+        self._set_up_crosshair()
 
-        self.crosshair = crosshairs.Crosshairs(cursor_node=self.cursor_node,
-                                               use_transform=self.use_transform)
-        self.cursor_node.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                     self.crosshair.on_mouse_moved_place_crosshair)
-        self.update_cursor_view()
-
-        if self.node_transformation is None:
-            self.update_transformation_from_selector()
         if self.node_transformation is None:
             slicer.util.errorDisplay("No transformation found")
             return
 
-        self.synchronize_pressed = not self.synchronize_pressed
-
         if self.synchronize_pressed is False:
+            print("pressed to synchronise")
             self.ui.synchronise_views.setText("Unsynchronise views (s)")
         else:
-            self.cursor_node.RemoveAllObservers()
+            print("pressed to unsynchronise")
+            self.node_cursor.RemoveAllObservers()
             self.ui.synchronise_views.setText("Synchronise views (s)")
+
+        self.synchronize_pressed = not self.synchronize_pressed
 
     def on_toggle_transform_reversal(self) -> None:  # pylint: disable=unused-argument
 
@@ -428,9 +415,32 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui.inputSelector_moving.currentNode() is not None and \
             self.ui.inputSelector_transformation.currentNode() is not None
 
+    def _set_up_crosshair(self) -> None:
+        if self.crosshair is not None:
+            self.crosshair.delete_crosshairs_and_folder()
+
+        self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_cursor,
+                                               use_transform=self.use_transform)
+        self.node_cursor.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
+                                     self.crosshair.on_mouse_moved_place_crosshair)
+        self.update_cursor_view()
+
+    def _update_crosshair_transformation(self) -> None:
+        if self.crosshair is None:
+            return
+
+        self.crosshair.node_transformation = self.ui.inputSelector_transformation.currentNode()
+
     @property
-    def cursor_node(self) -> vtk.vtkMRMLCrosshairNode:
+    def node_cursor(self) -> Any:
         return slicer.util.getNode("Crosshair")
+
+    @property
+    def node_transformation(self) -> Any:
+
+        self._update_crosshair_transformation()
+
+        return self.ui.inputSelector_transformation.currentNode()
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
