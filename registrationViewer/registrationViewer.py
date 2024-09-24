@@ -298,13 +298,18 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.removeObserver(
                 self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
         self._parameterNode = inputParameterNode
+
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
             # ui element that needs connection.
             self._parameterNodeGuiTag = self._parameterNode.connectGui(  # type: ignore
                 self.ui)
             self.addObserver(self._parameterNode,
-                             vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
+                             vtk.vtkCommand.ModifiedEvent,
+                             self._update_from_gui)
+
+            self.ui.slider_double_threshold.valuesChanged.connect(
+                self._update_threshold_labels)
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
 
@@ -314,6 +319,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.update_views_first_row_with_volume_fixed()
         self.update_views_second_row_with_volume_moving()
         self._update_crosshair_transformation()
+
+    def _update_threshold_labels(self, caller=None, event=None) -> None:
+        lower_2_decimal = "{:.2f}".format(
+            utils.get_lower_threshold_value(self.ui.slider_double_threshold))
+        self.ui.label_lower_threshold.setText(lower_2_decimal)
+
+        upper_2_decimal = "{:.2f}".format(
+            utils.get_upper_threshold_value(self.ui.slider_double_threshold))
+        self.ui.label_upper_threshold.setText(upper_2_decimal)
 
     def on_button_2x3_clicked(self) -> None:
         utils.set_2x3_layout()

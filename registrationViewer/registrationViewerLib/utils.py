@@ -250,3 +250,11 @@ def warp_moving_with_transform(node_moving: slicer.vtkMRMLScalarVolumeNode,
     apply_and_harden_transform_to_node(node_warped, node_transform)
 
     resample_node_to_reference_node(node_warped, node_moving)
+
+
+def get_lower_threshold_value(slider_double_threshold) -> float:
+    return slider_double_threshold.minimumValue
+
+
+def get_upper_threshold_value(slider_double_threshold) -> float:
+    return slider_double_threshold.maximumValue
