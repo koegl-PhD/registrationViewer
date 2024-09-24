@@ -12,13 +12,13 @@ class Crosshairs():
     """
 
     def __init__(self,
-                 cursor_node,
+                 node_cursor,
                  use_transform) -> None:
 
-        assert cursor_node is not None, "Cursor node is None"
+        assert node_cursor is not None, "Cursor node is None"
         assert use_transform is not None, "Use transform is None"
 
-        self.cursor_node = cursor_node
+        self.node_cursor = node_cursor
         self.use_transform = use_transform
 
         self.node_transformation = None
@@ -103,7 +103,7 @@ class Crosshairs():
         """
 
         initial_position: list[float] = [0., 0., 0.]
-        self.cursor_node.GetCursorPositionRAS(initial_position)
+        self.node_cursor.GetCursorPositionRAS(initial_position)
 
         # now we set the position of our crosshair and then transform it to the new position
         self.set_crosshair_nodes_to_position(crosshair_nodes,
@@ -140,7 +140,7 @@ class Crosshairs():
                                                crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode]) -> None:
 
         initial_position: list[float] = [0., 0., 0.]
-        self.cursor_node.GetCursorPositionRAS(initial_position)
+        self.node_cursor.GetCursorPositionRAS(initial_position)
 
         # in plus views we should follow the cursor (that's why group 2)
         slicer.modules.markups.logic().JumpSlicesToLocation(initial_position[0],
@@ -197,6 +197,8 @@ class Crosshairs():
             if self.node_transformation:
                 node.ApplyTransform(
                     self.node_transformation.GetTransformToParent())
+            else:
+                print("No transformation available")
 
     @ staticmethod
     def set_crosshair_nodes_to_position(crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
