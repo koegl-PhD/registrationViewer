@@ -103,8 +103,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.views_third_row = ["Red3", "Green3", "Yellow3"]
 
         utils.create_shortcuts(('t', self.on_toggle_transform),
-                               ('s', self.on_synchronise_views),
-                               ('r', self.on_toggle_transform_reversal))
+                               ('s', self.on_synchronise_views))
 
         self.use_transform = True
         self.reverse_transformation_direction = True
@@ -171,8 +170,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views)
         self.ui.toggle_transform.connect(
             "clicked(bool)", self.on_toggle_transform)
-        self.ui.toggle_transform_reversal.connect(
-            "clicked(bool)", self.on_toggle_transform_reversal)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -341,9 +338,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         else:
             self.ui.toggle_transform.setText("Turn on transform (t)")
 
-        # disable this transform reversal button if use_transform is False
-        self.ui.toggle_transform_reversal.setEnabled(self.use_transform)
-
     def on_synchronise_views(self) -> None:
 
         if not self._are_nodes_selected():
@@ -370,28 +364,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui.synchronise_views.setText("Synchronise views (s)")
 
         self.synchronize_pressed = not self.synchronize_pressed
-
-    def on_toggle_transform_reversal(self) -> None:  # pylint: disable=unused-argument
-
-        if not self._are_nodes_selected():
-            slicer.util.errorDisplay(
-                "Please select fixed, moving and transformation nodes")
-            return
-
-        if self.use_transform:
-            self.reverse_transformation_direction = not self.reverse_transformation_direction
-            self.crosshair.reverse_transf_direction = self.reverse_transformation_direction
-
-            if self.reverse_transformation_direction:
-                self.ui.toggle_transform_reversal.setText(
-                    "Turn off transform reversal (r)")
-            else:
-                self.ui.toggle_transform_reversal.setText(
-                    "Turn on transform reversal (r)")
-        else:
-            slicer.util.errorDisplay(
-                "Cannot reverse transformation direction without using transformation.\n \
-                Please turn on transformation first.")
 
     def update_cursor_view(self) -> None:
 
