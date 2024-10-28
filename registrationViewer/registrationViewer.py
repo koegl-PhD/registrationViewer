@@ -6,9 +6,11 @@ import importlib
 from enum import Enum
 from typing import Optional, List, Any
 
+import ctk
 import slicer.util
 import vtk
 import slicer
+import qt
 from slicer.i18n import tr as _
 from slicer.i18n import translate
 from slicer.ScriptedLoadableModule import (
@@ -21,7 +23,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import utils, crosshairs
+from registrationViewerLib import utils, crosshairs, baseline_loading
 
 #
 # registrationViewer
@@ -182,6 +184,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         slicer.util.resetSliceViews()
 
         # utils.temp_load_data(self)
+
+        # loading code
+        baseline_loading.create_loading_ui(self)
 
     def update_views_with_volume(self, views: List[str], volume: vtkMRMLScalarVolumeNode):
         for view in views:
