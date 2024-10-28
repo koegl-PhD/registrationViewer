@@ -22,11 +22,15 @@ from slicer.parameterNodeWrapper import (
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
 from registrationViewerLib import utils, crosshairs
-from registrationViewerLib.utils import Layout
 
 #
 # registrationViewer
 #
+
+
+class Layout(Enum):
+    L_2X3 = 701
+    L_3X3 = 601
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -146,7 +150,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._remove_custom_nodes()
 
-        self.current_layout = utils.set_2x3_layout()
+        utils.set_3x3_layout()
+        self.current_layout = Layout.L_3X3
 
         # set groups
         for i in range(3):
@@ -154,10 +159,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.views_first_row[i]).mrmlSliceNode().SetViewGroup(1)
             slicer.app.layoutManager().sliceWidget(
                 self.views_second_row[i]).mrmlSliceNode().SetViewGroup(2)
-
-            if self.current_layout == Layout.L_3X3:
-                slicer.app.layoutManager().sliceWidget(
-                    self.views_third_row[i]).mrmlSliceNode().SetViewGroup(3)
+            slicer.app.layoutManager().sliceWidget(
+                self.views_third_row[i]).mrmlSliceNode().SetViewGroup(3)
 
         # Buttons
         self.ui.button_2x3.connect("clicked(bool)", self.on_button_2x3_clicked)
@@ -174,8 +177,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         utils.link_views(self.views_first_row)
         utils.link_views(self.views_second_row)
-        if self.current_layout == Layout.L_3X3:
-            utils.link_views(self.views_third_row)
+        utils.link_views(self.views_third_row)
 
         slicer.util.resetSliceViews()
 

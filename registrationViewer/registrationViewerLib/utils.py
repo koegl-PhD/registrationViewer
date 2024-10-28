@@ -1,14 +1,7 @@
-from enum import Enum
-
 from typing import Tuple, Callable, List
 
 import qt
 import slicer
-
-
-class Layout(Enum):
-    L_2X3 = 701
-    L_3X3 = 601
 
 
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
@@ -58,7 +51,7 @@ def link_views(views: List[str]) -> None:
         compositeNode.SetLinkedControl(True)
 
 
-def set_2x3_layout() -> Layout:
+def set_2x3_layout() -> None:
     customLayout = """
     <layout type="vertical" split="true">
     <item>
@@ -126,10 +119,8 @@ def set_2x3_layout() -> Layout:
     # Switch to the new custom layout
     layoutManager.setLayout(customLayoutId)
 
-    return Layout.L_2X3
 
-
-def set_3x3_layout() -> Layout:
+def set_3x3_layout() -> None:
 
     customLayout = """
     <layout type="vertical" split="true">
@@ -223,8 +214,6 @@ def set_3x3_layout() -> Layout:
 
     # Switch to the new custom layout
     layoutManager.setLayout(customLayoutId)
-
-    return Layout.L_3X3
 
 
 def apply_and_harden_transform_to_node(node_target: slicer.vtkMRMLNode,
