@@ -266,5 +266,6 @@ def collapse_all_segmentations() -> None:
             itemID = itemIDs.GetId(i)
             node = subjectHierarchyNode.GetItemDataNode(itemID)
             if node and node.IsA("vtkMRMLSegmentationNode"):
-
                 subjectHierarchyNode.SetItemExpanded(itemID, False)
+                # turn off visibility
+                node.SetDisplayVisibility(False)
