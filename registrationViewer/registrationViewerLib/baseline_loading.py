@@ -107,6 +107,8 @@ class DropWidget(qt.QFrame):
                 self.moduleWidget.indicesInput.text.strip()
             )
 
+        utils.collapse_all_segmentations()
+
 
 def load_data_from_dropped_folder(dropped_folder_path: str,
                                   original_data_path: str,
@@ -170,8 +172,6 @@ def load_data_from_dropped_folder(dropped_folder_path: str,
 
             load_orignal_data(volume_name,
                               original_data_path)
-
-        utils.collapse_all_segmentations()
 
     except Exception as e:
         logging.error(f"Error loading data: {str(e)}")
