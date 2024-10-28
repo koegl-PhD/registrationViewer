@@ -144,6 +144,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.addObserver(slicer.mrmlScene,
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
+        self._remove_custom_nodes()
+
         self.node_cursor.RemoveAllObservers()
         self.synchronize_pressed = False
         self.ui.synchronise_views.setText("Synchronise views (s)")
@@ -207,7 +209,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.update_views_with_volume(self.views_second_row, node_moving)
 
-    def update_views_third_row_with_volume_diff(self):
+    def update_views_third_row_with_volume_diff(self) -> None:
 
         node_fixed = self.ui.inputSelector_fixed.currentNode()
         node_moving = self.ui.inputSelector_moving.currentNode()
@@ -238,6 +240,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_diff.GetDisplayNode().SetThreshold(-1.0, 1.0)
 
             self.update_views_with_volume(self.views_third_row, self.node_diff)
+
+    def _threshold_diff_volume(self) -> None:
+        if self.node_diff is not None:
+            array_diff = slicer.util.arrayFromVolume(self.node_diff)
+
+            lower_threshold = utils.get_lower_threshold_value(
+                self.ui.slider_double_threshold)
+            upper_threshold = utils.get_upper_threshold_value(
+                self.ui.slider_double_threshold)
+
+            array_diff[array_diff > lower_threshold] = 0
+            array_diff[array_diff < upper_threshold] = 0
+
+            slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -321,13 +337,21 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._update_crosshair_transformation()
 
     def _update_threshold_labels(self, caller=None, event=None) -> None:
-        lower_2_decimal = "{:.2f}".format(
-            utils.get_lower_threshold_value(self.ui.slider_double_threshold))
+
+        lower = utils.get_lower_threshold_value(
+            self.ui.slider_double_threshold)
+        lower_2_decimal = "{:.2f}".format(lower)
         self.ui.label_lower_threshold.setText(lower_2_decimal)
 
-        upper_2_decimal = "{:.2f}".format(
-            utils.get_upper_threshold_value(self.ui.slider_double_threshold))
+        upper = utils.get_upper_threshold_value(
+            self.ui.slider_double_threshold)
+        upper_2_decimal = "{:.2f}".format(upper)
         self.ui.label_upper_threshold.setText(upper_2_decimal)
+
+        # self._threshold_diff_volume()
+
+        if self.node_diff:
+            self.node_diff.GetDisplayNode().SetThreshold(lower, upper)
 
     def on_button_2x3_clicked(self) -> None:
         utils.set_2x3_layout()
