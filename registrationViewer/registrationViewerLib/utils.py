@@ -2,6 +2,7 @@ from typing import Tuple, Callable, List
 
 import qt
 import slicer
+import vtk
 
 
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
@@ -250,3 +251,21 @@ def warp_moving_with_transform(node_moving: slicer.vtkMRMLScalarVolumeNode,
     apply_and_harden_transform_to_node(node_warped, node_transform)
 
     resample_node_to_reference_node(node_warped, node_moving)
+
+
+def collapse_all_segmentations() -> None:
+
+    subjectHierarchyNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+
+    if subjectHierarchyNode:
+        itemIDs = vtk.vtkIdList()
+        subjectHierarchyNode.GetItemChildren(
+            subjectHierarchyNode.GetSceneItemID(), itemIDs, True)
+
+        for i in range(itemIDs.GetNumberOfIds()):
+            itemID = itemIDs.GetId(i)
+            node = subjectHierarchyNode.GetItemDataNode(itemID)
+            if node and node.IsA("vtkMRMLSegmentationNode"):
+                subjectHierarchyNode.SetItemExpanded(itemID, False)
+                # turn off visibility
+                node.SetDisplayVisibility(False)
