@@ -52,6 +52,14 @@ def link_views(views: List[str]) -> None:
         compositeNode.SetLinkedControl(True)
 
 
+def unlink_views(views: List[str]) -> None:
+
+    for view in views:
+        sliceLogic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
+        compositeNode = sliceLogic.GetSliceCompositeNode()
+        compositeNode.SetLinkedControl(False)
+
+
 def set_2x3_layout() -> None:
     customLayout = """
     <layout type="vertical" split="true">
@@ -269,3 +277,25 @@ def collapse_all_segmentations() -> None:
                 subjectHierarchyNode.SetItemExpanded(itemID, False)
                 # turn off visibility
                 node.SetDisplayVisibility(False)
+
+
+def get_view_offset(view: str) -> float:
+    """
+    Get the current offset of the given view.
+    """
+
+    sliceLogic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
+    sliceNode = sliceLogic.GetSliceNode()
+
+    return sliceNode.GetSliceOffset()
+
+
+def set_view_offset(view: str, offset: float) -> None:
+    """
+    Set the offset for the given view.
+    """
+
+    sliceLogic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
+    sliceNode = sliceLogic.GetSliceNode()
+
+    sliceNode.SetSliceOffset(offset)

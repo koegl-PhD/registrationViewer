@@ -102,17 +102,25 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.views_second_row = ["Red2", "Green2", "Yellow2"]
         self.views_third_row = ["Red3", "Green3", "Yellow3"]
 
+        self.views_all = self.views_first_row + \
+            self.views_second_row + self.views_third_row
+
         utils.create_shortcuts(('t', self.on_toggle_transform),
-                               ('s', self.on_synchronise_views))
+                               ('s', self.on_synchronise_views_wth_trasform),
+                               ('l', self.on_synchronise_views_manually),
+                               )
 
         self.use_transform = True
         self.reverse_transformation_direction = True
+        self.use_offsets = False
+        self.current_offset = [0.0, 0.0, 0.0]
 
         self.crosshair = None
 
         self.logic = registrationViewerLogic()
 
-        self.synchronize_pressed = False
+        self.synchronise_with_displacement_pressed = False
+        self.synchronise_manually_pressed = False
 
         self.cursor_view: str = ""
 
@@ -146,7 +154,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         self.node_cursor.RemoveAllObservers()
-        self.synchronize_pressed = False
+        self.synchronise_with_displacement_pressed = False
         self.ui.synchronise_views.setText("Synchronise views (s)")
 
         self._remove_custom_nodes()
@@ -167,7 +175,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.button_2x3.connect("clicked(bool)", self.on_button_2x3_clicked)
         self.ui.button_3x3.connect("clicked(bool)", self.on_button_3x3_clicked)
         self.ui.synchronise_views.connect(
-            "clicked(bool)", self.on_synchronise_views)
+            "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui.toggle_transform.connect(
             "clicked(bool)", self.on_toggle_transform)
 
@@ -264,7 +272,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called just before the scene is closed."""
 
         self.node_cursor.RemoveAllObservers()
-        self.synchronize_pressed = False
+        self.synchronise_with_displacement_pressed = False
         self.ui.synchronise_views.setText("Synchronise views (s)")
 
         self._remove_custom_nodes()
@@ -326,19 +334,26 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.current_layout = Layout.L_3X3
 
     def on_toggle_transform(self) -> None:
-        if self.node_transformation is None:
-            slicer.util.errorDisplay("No transformation found")
-            return
+        # if self.node_transformation is None:
+        #     slicer.util.errorDisplay("No transformation found")
+        #     return
 
-        self.use_transform = not self.use_transform
-        self.crosshair.use_transform = self.use_transform
+        # self.use_transform = not self.use_transform
+        # self.crosshair.use_transform = self.use_transform
 
-        if self.use_transform:
-            self.ui.toggle_transform.setText("Turn off transform (t)")
-        else:
-            self.ui.toggle_transform.setText("Turn on transform (t)")
+        # if self.use_transform:
+        #     self.ui.toggle_transform.setText("Turn off transform (t)")
+        # else:
+        #     self.ui.toggle_transform.setText("Turn on transform (t)")
 
-    def on_synchronise_views(self) -> None:
+        # if self.use_transform:
+        #     print("Using transform")
+        # else:
+        #     print("Not using transform")
+
+        self.on_synchronise_views_manually()
+
+    def on_synchronise_views_wth_trasform(self) -> None:
 
         if not self._are_nodes_selected():
             slicer.util.errorDisplay(
@@ -355,7 +370,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.util.errorDisplay("No transformation found")
             return
 
-        if self.synchronize_pressed is False:
+        if self.synchronise_with_displacement_pressed is False:
             print("pressed to synchronise")
             self.ui.synchronise_views.setText("Unsynchronise views (s)")
         else:
@@ -363,7 +378,42 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_cursor.RemoveAllObservers()
             self.ui.synchronise_views.setText("Synchronise views (s)")
 
-        self.synchronize_pressed = not self.synchronize_pressed
+        self.synchronise_with_displacement_pressed = not self.synchronise_with_displacement_pressed
+
+        if self.synchronise_with_displacement_pressed:
+            print("Synchronising views with displacement")
+        else:
+            print("Unsynchronising views with displacement")
+
+    def on_synchronise_views_manually(self, views: List[List[str]] = None) -> None:
+
+        # if it is synchronised, unsynchronise first
+        self.use_transform = not self.use_transform
+        self.crosshair.use_transform = self.use_transform
+        self.use_offsets = not self.use_offsets
+
+        # get all offsets
+        {view: utils.get_view_offset(view) for view in self.views_all}
+
+        # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
+        offset_red = utils.get_view_offset(
+            "Red1") - utils.get_view_offset("Red2")
+        offset_green = utils.get_view_offset(
+            "Green1") - utils.get_view_offset("Green2")
+        offset_yellow = utils.get_view_offset(
+            "Yellow1") - utils.get_view_offset("Yellow2")
+
+        self.crosshair.offset_diffs = [offset_red, offset_green, offset_yellow]
+        self.current_offset = self.crosshair.offset_diffs
+
+        self.crosshair.apply_offsets = not self.crosshair.apply_offsets
+
+        if self.crosshair.apply_offsets:
+            print("synchrinising views manually")
+        else:
+            print("unsynchrinising views manually")
+
+        self.on_synchronise_views_wth_trasform()
 
     def update_cursor_view(self) -> None:
 
@@ -397,7 +447,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair.delete_crosshairs_and_folder()
 
         self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_cursor,
-                                               use_transform=self.use_transform)
+                                               use_transform=self.use_transform,
+                                               offset_diffs=self.current_offset,
+                                               apply_offsets=self.use_offsets,)
         self.node_cursor.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                                      self.crosshair.on_mouse_moved_place_crosshair)
         self.update_cursor_view()

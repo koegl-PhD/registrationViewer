@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Literal
 
 import numpy as np
-
 import slicer
+
+from registrationViewerLib import utils
 
 
 class Crosshairs():
@@ -13,7 +14,9 @@ class Crosshairs():
 
     def __init__(self,
                  node_cursor,
-                 use_transform) -> None:
+                 use_transform,
+                 offset_diffs: List[float],
+                 apply_offsets: bool) -> None:
 
         assert node_cursor is not None, "Cursor node is None"
         assert use_transform is not None, "Use transform is None"
@@ -29,6 +32,9 @@ class Crosshairs():
         self.views_2 = ["Red2", "Green2", "Yellow2"]
         self.views_3 = ["Red3", "Green3", "Yellow3"]
         self.views = self.views_1 + self.views_2 + self.views_3
+
+        self.offset_diffs = offset_diffs
+        self.apply_offsets = apply_offsets
 
         self.create_crosshairs_and_folder()
 
@@ -96,7 +102,9 @@ class Crosshairs():
     def place_crosshair_with_transformation(self,
                                             view_group: int,
                                             crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
-                                            reverse_transf_direction: bool
+                                            reverse_transf_direction: bool,
+                                            offset_direction: Literal['pos',
+                                                                      'neg', 'nan']
                                             ) -> None:
         """
         Places the crosshair in the current view and transforms it to the new position.
@@ -123,6 +131,21 @@ class Crosshairs():
             new_position = self.reverse_transformation_direction(initial_position,
                                                                  new_position)
 
+        # Apply offset
+        if not self.apply_offsets or offset_direction == 'nan':
+            offset = [0.0, 0.0, 0.0]
+        elif offset_direction == 'pos':
+            offset = self.offset_diffs
+        elif offset_direction == 'neg':
+            offset = [-self.offset_diffs[i] for i in range(3)]
+
+        if offset != [0.0, 0.0, 0.0]:
+            print(f"Offset: {offset} with direction: {offset_direction}")
+
+        new_position = [new_position[0] + offset[2],
+                        new_position[1] + offset[1],
+                        new_position[2] + offset[0]]
+
         # in plus views we should follow the transformed cursor (that's why group 2)
         slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
                                                             new_position[1],
@@ -137,10 +160,27 @@ class Crosshairs():
 
     def place_crosshair_without_transformation(self,
                                                view_group: int,
-                                               crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode]) -> None:
+                                               crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
+                                               offset_direction: Literal['pos',
+                                                                         'neg', 'nan']
+                                               ) -> None:
 
         initial_position: list[float] = [0., 0., 0.]
         self.node_cursor.GetCursorPositionRAS(initial_position)
+
+        # Apply offset
+        # if not self.apply_offsets or offset_direction == 'nan':
+        #     offset = [0.0, 0.0, 0.0]
+        # elif offset_direction == 'pos':
+        #     offset = self.offset_diffs
+        # elif offset_direction == 'neg':
+        #     offset = [-self.offset_diffs[i] for i in range(3)]
+        offset = [0.0, 0.0, 0.0]
+
+        if offset != [0.0, 0.0, 0.0]:
+            print(f"Offset: {offset} with direction: {offset_direction}")
+
+        initial_position = [initial_position[i] + offset[i] for i in range(3)]
 
         # in plus views we should follow the cursor (that's why group 2)
         slicer.modules.markups.logic().JumpSlicesToLocation(initial_position[0],
@@ -162,31 +202,40 @@ class Crosshairs():
 
         if self.cursor_view in self.views_1:
             self.place_crosshair_without_transformation(view_group=1,
-                                                        crosshair_nodes=self.crosshairs_1)
+                                                        crosshair_nodes=self.crosshairs_1,
+                                                        offset_direction='nan')
             self.place_crosshair_with_transformation(view_group=2,
                                                      crosshair_nodes=self.crosshairs_2,
-                                                     reverse_transf_direction=self.reverse_transf_direction)
+                                                     reverse_transf_direction=self.reverse_transf_direction,
+                                                     offset_direction='pos')
             self.place_crosshair_without_transformation(view_group=3,
-                                                        crosshair_nodes=self.crosshairs_3)
+                                                        crosshair_nodes=self.crosshairs_3,
+                                                        offset_direction='nan')
 
         elif self.cursor_view in self.views_2:
             self.place_crosshair_with_transformation(view_group=1,
                                                      crosshair_nodes=self.crosshairs_1,
-                                                     reverse_transf_direction=not self.reverse_transf_direction)
+                                                     reverse_transf_direction=not self.reverse_transf_direction,
+                                                     offset_direction='neg')
             self.place_crosshair_without_transformation(view_group=2,
-                                                        crosshair_nodes=self.crosshairs_2)
+                                                        crosshair_nodes=self.crosshairs_2,
+                                                        offset_direction='nan')
             self.place_crosshair_with_transformation(view_group=3,
                                                      crosshair_nodes=self.crosshairs_3,
-                                                     reverse_transf_direction=not self.reverse_transf_direction)
+                                                     reverse_transf_direction=not self.reverse_transf_direction,
+                                                     offset_direction='neg')
 
         elif self.cursor_view in self.views_3:
             self.place_crosshair_without_transformation(view_group=1,
-                                                        crosshair_nodes=self.crosshairs_1)
+                                                        crosshair_nodes=self.crosshairs_1,
+                                                        offset_direction='nan')
             self.place_crosshair_with_transformation(view_group=2,
                                                      crosshair_nodes=self.crosshairs_2,
-                                                     reverse_transf_direction=self.reverse_transf_direction)
+                                                     reverse_transf_direction=self.reverse_transf_direction,
+                                                     offset_direction='pos')
             self.place_crosshair_without_transformation(view_group=3,
-                                                        crosshair_nodes=self.crosshairs_3)
+                                                        crosshair_nodes=self.crosshairs_3,
+                                                        offset_direction='nan')
 
     def transform_crosshair_nodes(self, crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode]) -> None:
         """
