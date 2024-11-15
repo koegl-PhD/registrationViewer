@@ -101,7 +101,7 @@ class DropWidget(qt.QFrame):
                 paths.append(path)
 
         if paths and self.moduleWidget:
-            load_data_from_dropped_folder(
+            self.load_data_from_dropped_folder(
                 paths[0],  # Use first dropped folder
                 self.moduleWidget.pathLineEdit.currentPath,
                 self.moduleWidget.indicesInput.text.strip()
@@ -109,91 +109,102 @@ class DropWidget(qt.QFrame):
 
         utils.collapse_all_segmentations()
 
+    def load_data_from_dropped_folder(self, dropped_folder_path: str,
+                                      original_data_path: str,
+                                      indices_text: str) -> None:
+        """
+        Load data from the specified directory structure
+        """
+        try:
+            # First count how many groups we have
+            deformationsPath = os.path.join(
+                dropped_folder_path, "deformations")
+            deformation_files = [f for f in os.listdir(deformationsPath)
+                                 if f.endswith(('.nii.gz'))]
 
-def load_data_from_dropped_folder(dropped_folder_path: str,
-                                  original_data_path: str,
-                                  indices_text: str) -> None:
-    """
-    Load data from the specified directory structure
-    """
-    try:
-        # First count how many groups we have
-        deformationsPath = os.path.join(dropped_folder_path, "deformations")
-        deformation_files = [f for f in os.listdir(deformationsPath)
-                             if f.endswith(('.nii.gz'))]
+            # srot the files
+            deformation_files.sort()
 
-        # srot the files
-        deformation_files.sort()
+            total_groups = len(deformation_files)
 
-        total_groups = len(deformation_files)
+            # Determine which groups to load
+            if indices_text == "":
+                groups_to_load = list(range(total_groups))
 
-        # Determine which groups to load
-        if indices_text == "":
-            groups_to_load = list(range(total_groups))
+            else:
+                # Parse indices from text input
+                try:
+                    indices: List[int] = [int(idx.strip())
+                                          for idx in indices_text.split(',')]
+                    groups_to_load: List[int] = [
+                        i for i in indices if 0 <= i < total_groups]
 
-        else:
-            # Parse indices from text input
-            try:
-                indices: List[int] = [int(idx.strip())
-                                      for idx in indices_text.split(',')]
-                groups_to_load: List[int] = [
-                    i for i in indices if 0 <= i < total_groups]
+                except ValueError:
+                    slicer.util.errorDisplay(
+                        "Invalid indices format. Please use comma-separated numbers.")
+                    return
 
-            except ValueError:
-                slicer.util.errorDisplay(
-                    "Invalid indices format. Please use comma-separated numbers.")
-                return
+            # Load the selected groups
+            for i in groups_to_load:
+                # Load displacement field
+                filepath = os.path.join(deformationsPath, deformation_files[i])
+                logging.info(f"Loading displacement field: {filepath}")
+                slicer.util.loadTransform(filepath)
 
-        # Load the selected groups
-        for i in groups_to_load:
-            # Load displacement field
-            filepath = os.path.join(deformationsPath, deformation_files[i])
-            logging.info(f"Loading displacement field: {filepath}")
-            slicer.util.loadTransform(filepath)
+                # Get base name for matching deformed files
+                base_name = deformation_files[i].replace(
+                    '_deformation_', '_deformed_')
+                deformedPath = os.path.join(dropped_folder_path, "deformed")
 
-            # Get base name for matching deformed files
-            base_name = deformation_files[i].replace(
-                '_deformation_', '_deformed_')
-            deformedPath = os.path.join(dropped_folder_path, "deformed")
+                # Load volume
+                volume_name = base_name
+                volume_path = os.path.join(deformedPath, volume_name)
+                if os.path.exists(volume_path):
+                    logging.info(f"Loading volume: {volume_path}")
+                    slicer.util.loadVolume(volume_path)
 
-            # Load volume
-            volume_name = base_name
-            volume_path = os.path.join(deformedPath, volume_name)
-            if os.path.exists(volume_path):
-                logging.info(f"Loading volume: {volume_path}")
-                slicer.util.loadVolume(volume_path)
+                # Load segmentation
+                seg_name = base_name.replace('.nii.gz', '_seg.nii.gz')
+                seg_path = os.path.join(deformedPath, seg_name)
+                if os.path.exists(seg_path):
+                    logging.info(f"Loading segmentation: {seg_path}")
+                    slicer.util.loadSegmentation(seg_path)
 
-            # Load segmentation
-            seg_name = base_name.replace('.nii.gz', '_seg.nii.gz')
-            seg_path = os.path.join(deformedPath, seg_name)
-            if os.path.exists(seg_path):
-                logging.info(f"Loading segmentation: {seg_path}")
-                slicer.util.loadSegmentation(seg_path)
+                self.load_orignal_data(volume_name,
+                                       original_data_path)
 
-            load_orignal_data(volume_name,
-                              original_data_path)
+        except Exception as e:
+            logging.error(f"Error loading data: {str(e)}")
+            slicer.util.errorDisplay(f"Error loading data: {str(e)}")
 
-    except Exception as e:
-        logging.error(f"Error loading data: {str(e)}")
-        slicer.util.errorDisplay(f"Error loading data: {str(e)}")
+    def load_orignal_data(self, file_name: str, data_path: str) -> None:
+        file_name = file_name.replace('.nii.gz', '')
+        moving_name, fixed_name = file_name.split('_deformed_to_')
 
+        if data_path == "":
+            return
 
-def load_orignal_data(file_name: str, data_path: str) -> None:
-    file_name = file_name.replace('.nii.gz', '')
-    moving_name, fixed_name = file_name.split('_deformed_to_')
+        fixed_volumes = []
+        moving_volumes = []
 
-    if data_path == "":
-        return
+        # find all files recrusively in data_path
+        for file in glob.glob(data_path + f"/*/{moving_name}.nii.gz", recursive=True):
+            if any([x in file.lower() for x in ['mask', 'seg', 'label']]):
+                slicer.util.loadSegmentation(file)
+            else:
+                moving_volumes.append(slicer.util.loadVolume(file))
 
-    # find all files recrusively in data_path
-    for file in glob.glob(data_path + f"/*/{moving_name}.nii.gz", recursive=True):
-        if any([x in file.lower() for x in ['mask', 'seg', 'label']]):
-            slicer.util.loadSegmentation(file)
-        else:
-            slicer.util.loadVolume(file)
+        for file in glob.glob(data_path + f"/*/{fixed_name}.nii.gz", recursive=True):
+            if any([x in file.lower() for x in ['mask', 'seg', 'label']]):
+                slicer.util.loadSegmentation(file)
+            else:
+                fixed_volumes.append(slicer.util.loadVolume(file))
 
-    for file in glob.glob(data_path + f"/*/{fixed_name}.nii.gz", recursive=True):
-        if any([x in file.lower() for x in ['mask', 'seg', 'label']]):
-            slicer.util.loadSegmentation(file)
-        else:
-            slicer.util.loadVolume(file)
+        # Set the first fixed volume in the fixed volume input selector (same for moving)
+        if fixed_volumes:
+            self.moduleWidget.ui.inputSelector_fixed.setCurrentNode(
+                fixed_volumes[0])
+
+        if moving_volumes:
+            self.moduleWidget.ui.inputSelector_moving.setCurrentNode(
+                moving_volumes[0])
