@@ -106,14 +106,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.views_all = self.views_first_row + \
             self.views_second_row + self.views_third_row
 
-        utils.create_shortcuts(('t', self.on_toggle_transform),
-                               ('s', self.on_synchronise_views_wth_trasform),
+        utils.create_shortcuts(('s', self.on_synchronise_views_wth_trasform),
                                ('l', self.on_synchronise_views_manually),
                                )
 
         self.use_transform = True
         self.reverse_transformation_direction = True
-        self.use_offsets = False
         self.current_offset = [0.0, 0.0, 0.0]
 
         self.crosshair = None
@@ -156,7 +154,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.node_crosshair.RemoveAllObservers()
         self.synchronise_with_displacement_pressed = False
-        self.ui.synchronise_views.setText("Synchronise views (s)")
+        self.ui.synchronise_views_with_transform.setText(
+            "Synchronise views (s)")
 
         self._remove_custom_nodes()
 
@@ -175,10 +174,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Buttons
         self.ui.button_2x3.connect("clicked(bool)", self.on_button_2x3_clicked)
         self.ui.button_3x3.connect("clicked(bool)", self.on_button_3x3_clicked)
-        self.ui.synchronise_views.connect(
+        self.ui.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
-        self.ui.toggle_transform.connect(
-            "clicked(bool)", self.on_toggle_transform)
+        self.ui.synchronise_views_manually.connect(
+            "clicked(bool)", self.on_synchronise_views_manually)
 
         # loading code
         baseline_loading.create_loading_ui(self)
@@ -279,7 +278,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.node_crosshair.RemoveAllObservers()
         self.synchronise_with_displacement_pressed = False
-        self.ui.synchronise_views.setText("Synchronise views (s)")
+        self.ui.synchronise_views_with_transform.setText(
+            "Synchronise views (s)")
 
         self._remove_custom_nodes()
 
@@ -336,67 +336,75 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         utils.set_3x3_layout()
         self.current_layout = Layout.L_3X3
 
-    def on_toggle_transform(self) -> None:
-        # if self.node_transformation is None:
-        #     slicer.util.errorDisplay("No transformation found")
-        #     return
-
-        # self.use_transform = not self.use_transform
-        # self.crosshair.use_transform = self.use_transform
-
-        # if self.use_transform:
-        #     self.ui.toggle_transform.setText("Turn off transform (t)")
-        # else:
-        #     self.ui.toggle_transform.setText("Turn on transform (t)")
-
-        # if self.use_transform:
-        #     print("Using transform")
-        # else:
-        #     print("Not using transform")
-
-        self.on_synchronise_views_manually()
-
-    def on_synchronise_views_wth_trasform(self) -> None:
-
+    def _synchronisation_checks(self) -> bool:
+        """
+        Internal helper method to validate synchronization prerequisites.
+        Returns True if synchronization can proceed, False otherwise.
+        """
         if not self._are_nodes_selected():
             slicer.util.errorDisplay(
                 "Please select fixed, moving and transformation nodes")
-            return
+            return False
 
         if self.node_crosshair is None:
             slicer.util.errorDisplay("No crosshair found")
-            return
+            return False
 
         if self.node_transformation is None:
             slicer.util.errorDisplay("No transformation found")
-            return
+            return False
 
-        if self.synchronise_with_displacement_pressed is False:
-            print("pressed to synchronise")
-            self.ui.synchronise_views.setText("Unsynchronise views (s)")
-        else:
-            print("pressed to unsynchronise")
-            self.node_crosshair.RemoveAllObservers()
-            self.ui.synchronise_views.setText("Synchronise views (s)")
+        return True
+
+    def on_synchronise_views_wth_trasform(self) -> None:
+
+        if not self._synchronisation_checks():
+            return
 
         self.synchronise_with_displacement_pressed = not self.synchronise_with_displacement_pressed
 
-        if self.synchronise_with_displacement_pressed:
-            print("Synchronising views with displacement")
-        else:
-            print("Unsynchronising views with displacement")
+        self._set_up_crosshair(self.synchronise_with_displacement_pressed)
 
-        self._set_up_crosshair()
+        if self.synchronise_with_displacement_pressed is True:
+            print("pressed to synchronise")
+            self.ui.synchronise_views_with_transform.setText(
+                "Unsynchronise views (s)")
+
+            self.use_transform = self.crosshair.use_transform = True
+            self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
+            self.crosshair.apply_offsets = False
+            self.ui.synchronise_views_manually.setText("Synchronise views (l)")
+            self.synchronise_manually_pressed = False
+
+        else:
+            print("pressed to unsynchronise")
+            self.node_crosshair.RemoveAllObservers()
+            self.ui.synchronise_views_with_transform.setText(
+                "Synchronise views (s)")
 
     def on_synchronise_views_manually(self, views: List[List[str]] = None) -> None:
 
-        # if it is synchronised, unsynchronise first
-        self.use_transform = not self.use_transform
-        self.crosshair.use_transform = self.use_transform
-        self.use_offsets = not self.use_offsets
+        if not self._synchronisation_checks():
+            return
 
-        # get all offsets
-        {view: utils.get_view_offset(view) for view in self.views_all}
+        self.synchronise_manually_pressed = not self.synchronise_manually_pressed
+
+        self._set_up_crosshair(self.synchronise_manually_pressed)
+
+        if self.synchronise_manually_pressed is True:
+            print("pressed to synchronise manually")
+            self.ui.synchronise_views_manually.setText(
+                "Unsynchronise views (l)")
+
+            self.use_transform = self.crosshair.use_transform = False
+            self.ui.synchronise_views_with_transform.setText(
+                "Synchronise views (s)")
+            self.synchronise_with_displacement_pressed = False
+
+        else:
+            print("pressed to unsynchronise manually")
+            self.node_crosshair.RemoveAllObservers()
+            self.ui.synchronise_views_manually.setText("Synchronise views (l)")
 
         # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
         offset_red = utils.get_view_offset(
@@ -406,17 +414,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         offset_yellow = utils.get_view_offset(
             "Yellow1") - utils.get_view_offset("Yellow2")
 
-        self.crosshair.offset_diffs = [offset_red, offset_green, offset_yellow]
-        self.current_offset = self.crosshair.offset_diffs
-
-        self.crosshair.apply_offsets = not self.crosshair.apply_offsets
-
-        if self.crosshair.apply_offsets:
-            print("synchrinising views manually")
-        else:
-            print("unsynchrinising views manually")
-
-        self.on_synchronise_views_wth_trasform()
+        self.crosshair.offset_diffs = self.current_offset = [
+            offset_red, offset_green, offset_yellow]
+        self.crosshair.apply_offsets = self.synchronise_manually_pressed
 
     def update_cursor_view(self) -> None:
 
@@ -443,7 +443,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui.inputSelector_moving.currentNode() is not None and \
             self.ui.inputSelector_transformation.currentNode() is not None
 
-    def _set_up_crosshair(self) -> None:
+    def _set_up_crosshair(self, turn_synchronisation_on: bool) -> None:
         if self.crosshair is None:
             # self.crosshair.delete_crosshairs_and_folder()
 
@@ -451,9 +451,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                    node_transformation=self.node_transformation,
                                                    use_transform=self.use_transform,
                                                    offset_diffs=self.current_offset,
-                                                   apply_offsets=self.use_offsets,)
+                                                   apply_offsets=self.synchronise_manually_pressed,)
 
-        if self.synchronise_with_displacement_pressed:
+        if turn_synchronisation_on:
             self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                                             self.crosshair.on_mouse_moved_place_crosshair)
             self.update_cursor_view()
