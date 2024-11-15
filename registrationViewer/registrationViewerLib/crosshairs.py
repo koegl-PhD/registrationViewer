@@ -14,6 +14,7 @@ class Crosshairs():
 
     def __init__(self,
                  node_cursor,
+                 node_transformation,
                  use_transform,
                  offset_diffs: List[float],
                  apply_offsets: bool) -> None:
@@ -24,7 +25,7 @@ class Crosshairs():
         self.node_cursor = node_cursor
         self.use_transform = use_transform
 
-        self.node_transformation = None
+        self.node_transformation = node_transformation
         self.cursor_view: str = ""
         self.reverse_transf_direction: bool = False
 
