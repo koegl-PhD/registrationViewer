@@ -164,16 +164,23 @@
     </layout>
    </item>
    <item>
-    <widget class="QPushButton" name="synchronise_views">
+    <widget class="QPushButton" name="synchronise_views_with_transform">
      <property name="text">
       <string>Synchronise views (s)</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="toggle_transform">
+    <widget class="QPushButton" name="synchronise_views_manually">
      <property name="text">
-      <string>Turn off transform (t)</string>
+      <string>Link views (l)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="reset_views">
+     <property name="text">
+      <string>Reset views (r)</string>
      </property>
     </widget>
    </item>
