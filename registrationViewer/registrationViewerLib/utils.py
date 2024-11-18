@@ -1,8 +1,9 @@
-from typing import Tuple, Callable, List
+from typing import Tuple, Callable, List, Literal
 
 import qt
 import slicer
 import vtk
+from qt import QEvent, QObject
 
 
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
@@ -58,6 +59,31 @@ def unlink_views(views: List[str]) -> None:
         sliceLogic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
         compositeNode = sliceLogic.GetSliceCompositeNode()
         compositeNode.SetLinkedControl(False)
+
+
+class ViewClickFilter(QObject):
+    def __init__(self, to_layout: Literal["set_1x2_layout", "set_2x3_layout", "set_3x3_layout"], parent=None):
+        super().__init__(parent)
+        self.view_widgets = {}
+        self.to_layout = to_layout
+
+    def add_view(self, name, widget):
+        self.view_widgets[widget] = name
+
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.MouseButtonDblClick:
+            if watched in self.view_widgets:
+                view_name = self.view_widgets[watched]
+
+                if self.to_layout == "set_1x2_layout":
+                    set_1x2_layout(view_name[:-1])
+                elif self.to_layout == "set_2x3_layout":
+                    set_2x3_layout()
+                elif self.to_layout == "set_3x3_layout":
+                    set_3x3_layout()
+
+                return True  # Event has been handled
+        return QObject.eventFilter(self, watched, event)
 
 
 def set_2x3_layout() -> None:
@@ -127,6 +153,23 @@ def set_2x3_layout() -> None:
 
     # Switch to the new custom layout
     layoutManager.setLayout(customLayoutId)
+
+    # Create event filter
+    event_filter = ViewClickFilter(to_layout="set_1x2_layout")
+
+    # Install filter on all views
+    view_names = ['Red1', 'Green1', 'Yellow1', 'Red2', 'Green2', 'Yellow2']
+    for view_name in view_names:
+        slice_widget = layoutManager.sliceWidget(view_name)
+        if slice_widget:
+            view_widget = slice_widget.sliceView()
+            event_filter.add_view(view_name, view_widget)
+            view_widget.installEventFilter(event_filter)
+            print(f"Installed event filter on {view_name}")
+
+    # Keep a reference to the event filter
+    global _event_filter
+    _event_filter = event_filter
 
 
 def set_3x3_layout() -> None:
@@ -223,6 +266,101 @@ def set_3x3_layout() -> None:
 
     # Switch to the new custom layout
     layoutManager.setLayout(customLayoutId)
+
+    # Create event filter
+    event_filter = ViewClickFilter(to_layout="set_1x2_layout")
+
+    view_names = [
+        "Red1", "Green1", "Yellow1",
+        "Red2", "Green2", "Yellow2",
+        "Red3", "Green3", "Yellow3"]
+
+    # Install filter on all views
+    for view_name in view_names:
+        slice_widget = layoutManager.sliceWidget(view_name)
+        if slice_widget:
+            view_widget = slice_widget.sliceView()
+            event_filter.add_view(view_name, view_widget)
+            view_widget.installEventFilter(event_filter)
+            print(f"Installed event filter on {view_name}")
+
+    # Keep a reference to the event filter
+    global _event_filter
+    _event_filter = event_filter
+
+
+def set_1x2_layout(color: Literal["Red", "Green", "Yellow"]) -> None:
+    """
+    Create a custom 1x2 layout for the given color.
+    The two views (e.g., Red1 and Red2) are shown side by side.
+
+    Parameters:
+    - color (str): The color of the slice view to use ("Red", "Green", or "Yellow").
+    """
+
+    if color not in ["Red", "Green", "Yellow"]:
+        raise ValueError("Invalid color. Must be 'Red', 'Green', or 'Yellow'.")
+
+    if color == "Red":
+        orientation = "Axial"
+        hexColor = "#F34A33"
+    elif color == "Green":
+        orientation = "Coronal"
+        hexColor = "#6EB04B"
+    else:
+        orientation = "Sagittal"
+        hexColor = "#EDD54C"
+
+    customLayout = f"""
+    <layout type="vertical" split="true">
+        <item>
+            <layout type="horizontal">
+                <item>
+                    <view class="vtkMRMLSliceNode" singletontag="{color}4">
+                    <property name="orientation" action="default">{orientation}</property>
+                    <property name="viewlabel" action="default">Fixed - {orientation.lower()}</property>
+                    <property name="viewcolor" action="default">{hexColor}</property>
+                    </view>
+                </item>
+                <item>
+                    <view class="vtkMRMLSliceNode" singletontag="{color}5">
+                    <property name="orientation" action="default">{orientation}</property>
+                    <property name="viewlabel" action="default">Moving - {orientation.lower()}</property>
+                    <property name="viewcolor" action="default">{hexColor}</property>
+                    </view>
+                </item>
+            </layout>
+        </item>
+    </layout>
+    """
+
+    # Create a unique layout ID based on the color
+    layoutIdMap = {"Red": 801, "Green": 802, "Yellow": 803}
+    customLayoutId = layoutIdMap[color]
+
+    layoutManager = slicer.app.layoutManager()
+    layoutManager.layoutLogic().GetLayoutNode(
+    ).AddLayoutDescription(customLayoutId, customLayout)
+
+    # Switch to the new custom layout
+    layoutManager.setLayout(customLayoutId)
+
+    # Create event filter
+    event_filter = ViewClickFilter(to_layout="set_2x3_layout")
+
+    # Install filter on all views
+    view_names = [f"{color}4", f"{color}5"]
+    for view_name in view_names:
+        slice_widget = layoutManager.sliceWidget(view_name)
+        if slice_widget:
+            view_widget = slice_widget.sliceView()
+            event_filter.add_view(view_name, view_widget)
+            view_widget.installEventFilter(event_filter)
+            print(f"Installed event filter on {view_name}")
+
+    # Keep a reference to the event filter
+    global _event_filter
+    _event_filter = event_filter
 
 
 def apply_and_harden_transform_to_node(node_target: slicer.vtkMRMLNode,

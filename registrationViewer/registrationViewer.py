@@ -31,6 +31,9 @@ from registrationViewerLib import utils, crosshairs, baseline_loading
 
 
 class Layout(Enum):
+    L_1X2_RED = 801
+    L_1X2_GREEN = 802
+    L_1X2_YELLOW = 803
     L_2X3 = 701
     L_3X3 = 601
 
@@ -195,6 +198,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         utils.link_views(self.views_first_row)
         utils.link_views(self.views_second_row)
         utils.link_views(self.views_third_row)
+
+        utils.set_2x3_layout()
 
         slicer.util.resetSliceViews()
 
