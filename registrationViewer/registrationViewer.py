@@ -3,7 +3,6 @@ import logging
 import functools
 import importlib
 
-from enum import Enum
 from typing import Optional, List, Any
 
 import ctk
@@ -23,16 +22,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import utils, crosshairs, baseline_loading
-
-#
-# registrationViewer
-#
-
-
-class Layout(Enum):
-    L_2X3 = 701
-    L_3X3 = 601
+from registrationViewerLib import utils, crosshairs, baseline_loading, view_logic
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -90,10 +80,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTag = None
 
-        from registrationViewerLib import utils, crosshairs, baseline_loading
+        from registrationViewerLib import utils, crosshairs, baseline_loading, view_logic
         utils = importlib.reload(utils)
         crosshairs = importlib.reload(crosshairs)
         baseline_loading = importlib.reload(baseline_loading)
+        view_logic = importlib.reload(view_logic)
 
         self.group_first_row = 1
         self.group_second_row = 2
@@ -102,9 +93,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.views_first_row = ["Red1", "Green1", "Yellow1"]
         self.views_second_row = ["Red2", "Green2", "Yellow2"]
         self.views_third_row = ["Red3", "Green3", "Yellow3"]
+        self.views_double_red = ["Red4", "Red5"]
+        self.views_double_green = ["Green4", "Green5"]
+        self.views_double_yellow = ["Yellow4", "Yellow5"]
 
         self.views_all = self.views_first_row + \
-            self.views_second_row + self.views_third_row
+            self.views_second_row + self.views_third_row + \
+            self.views_double_red + self.views_double_green + self.views_double_yellow
 
         utils.create_shortcuts(('s', self.on_synchronise_views_wth_trasform),
                                ('l', self.on_synchronise_views_manually),
@@ -127,7 +122,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.node_warped = None
         self.node_diff = None
 
-        self.current_layout: Layout
+        self.current_layout: view_logic.Layout
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -160,8 +155,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._remove_custom_nodes()
 
-        utils.set_3x3_layout()
-        self.current_layout = Layout.L_3X3
+        view_logic.register_layout_callback(self.update_current_layout)
+        view_logic.set_3x3_layout()
 
         # set groups
         for i in range(3):
@@ -173,8 +168,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.views_third_row[i]).mrmlSliceNode().SetViewGroup(3)
 
         # Buttons
-        self.ui.button_2x3.connect("clicked(bool)", self.on_button_2x3_clicked)
-        self.ui.button_3x3.connect("clicked(bool)", self.on_button_3x3_clicked)
+        self.ui.button_2x3.connect("clicked(bool)", view_logic.set_2x3_layout)
+        self.ui.button_3x3.connect("clicked(bool)", view_logic.set_3x3_layout)
         self.ui.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui.synchronise_views_manually.connect(
@@ -192,58 +187,38 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                       '0')
         utils.collapse_all_segmentations()
 
-        utils.link_views(self.views_first_row)
-        utils.link_views(self.views_second_row)
-        utils.link_views(self.views_third_row)
+        view_logic.link_views(self.views_first_row)
+        view_logic.link_views(self.views_second_row)
+        view_logic.link_views(self.views_third_row)
+
+        view_logic.set_2x3_layout()
 
         slicer.util.resetSliceViews()
 
         # utils.temp_load_data(self)
 
-    def update_views_with_volume(self, views: List[str], volume: vtkMRMLScalarVolumeNode):
-        for view in views:
-            slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
-            composite_node = slice_logic.GetSliceCompositeNode()
+    def update_current_layout(self, layout: view_logic.Layout) -> None:
+        self.current_layout = layout
 
-            if volume:
-                composite_node.SetBackgroundVolumeID(volume.GetID())
-            else:
-                composite_node.SetBackgroundVolumeID(None)
+    def update_views_third_row_with_volume_diff(self) -> None:
 
-            composite_node.SetForegroundVolumeID(None)
-
-    def update_views_first_row_with_volume_fixed(self):
-
-        node_fixed = self.ui.inputSelector_fixed.currentNode()
-
-        self.update_views_with_volume(self.views_first_row, node_fixed)
-
-    def update_views_second_row_with_volume_moving(self):
-
-        node_moving = self.ui.inputSelector_moving.currentNode()
-
-        self.update_views_with_volume(self.views_second_row, node_moving)
-
-    def update_views_third_row_with_volume_diff(self):
-
-        node_fixed = self.ui.inputSelector_fixed.currentNode()
-        node_moving = self.ui.inputSelector_moving.currentNode()
-
-        if node_fixed is not None and node_moving is not None and self.node_transformation is not None:
+        if self.node_fixed is not None and self.node_moving is not None and self.node_transformation is not None:
             if self.node_diff is None:
-                self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed, "Difference")
+                self.node_diff = slicer.modules.volumes.logic(
+                ).CloneVolume(self.node_fixed, "Difference")
                 self.node_diff.SetName("Difference")
 
             if self.node_warped is not None:
                 slicer.mrmlScene.RemoveNode(self.node_warped)
 
-            self.node_warped = slicer.modules.volumes.logic().CloneVolume(node_moving, "Warped")
+            self.node_warped = slicer.modules.volumes.logic(
+            ).CloneVolume(self.node_moving, "Warped")
             self.node_warped.SetName("Warped")
-            utils.warp_moving_with_transform(node_moving,
+            utils.warp_moving_with_transform(self.node_moving,
                                              self.node_transformation,
                                              self.node_warped)
 
-            array_fixed = slicer.util.arrayFromVolume(node_fixed)
+            array_fixed = slicer.util.arrayFromVolume(self.node_fixed)
             array_warped = slicer.util.arrayFromVolume(self.node_warped)
 
             array_diff = array_fixed - array_warped
@@ -254,7 +229,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_diff.GetDisplayNode().SetWindow(2)
             self.node_diff.GetDisplayNode().SetThreshold(-1.0, 1.0)
 
-            self.update_views_with_volume(self.views_third_row, self.node_diff)
+            view_logic.update_views_with_volume(
+                self.views_third_row, self.node_diff)
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -323,20 +299,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
 
-        if self.current_layout == Layout.L_3X3:
+        if self.current_layout == view_logic.Layout.L_3X3:
             self.update_views_third_row_with_volume_diff()
 
-        self.update_views_first_row_with_volume_fixed()
-        self.update_views_second_row_with_volume_moving()
+        view_logic.update_views_with_volume(
+            self.views_first_row, self.node_fixed)
+        view_logic.update_views_with_volume(
+            self.views_second_row, self.node_moving)
         self._update_crosshair_transformation()
-
-    def on_button_2x3_clicked(self) -> None:
-        utils.set_2x3_layout()
-        self.current_layout = Layout.L_2X3
-
-    def on_button_3x3_clicked(self) -> None:
-        utils.set_3x3_layout()
-        self.current_layout = Layout.L_3X3
 
     def _synchronisation_checks(self) -> bool:
         """
@@ -409,12 +379,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui.synchronise_views_manually.setText("Synchronise views (l)")
 
         # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
-        offset_diff_red = utils.get_view_offset(
-            "Red1") - utils.get_view_offset("Red2")
-        offset_diff_green = utils.get_view_offset(
-            "Green1") - utils.get_view_offset("Green2")
-        offset_diff_yellow = utils.get_view_offset(
-            "Yellow1") - utils.get_view_offset("Yellow2")
+        offset_diff_red = view_logic.get_view_offset(
+            "Red1") - view_logic.get_view_offset("Red2")
+        offset_diff_green = view_logic.get_view_offset(
+            "Green1") - view_logic.get_view_offset("Green2")
+        offset_diff_yellow = view_logic.get_view_offset(
+            "Yellow1") - view_logic.get_view_offset("Yellow2")
 
         self.crosshair.offset_diffs = self.current_offset = [
             offset_diff_red, offset_diff_green, offset_diff_yellow]
@@ -510,10 +480,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.update_cursor_view()
 
     def _update_crosshair_transformation(self) -> None:
-        if self.crosshair is None:
-            return
+        if self.crosshair:
+            self.crosshair.node_transformation = self.node_transformation
 
-        self.crosshair.node_transformation = self.node_transformation()
+    @property
+    def node_fixed(self) -> Any:
+        return self.ui.inputSelector_fixed.currentNode()
+
+    @property
+    def node_moving(self) -> Any:
+        return self.ui.inputSelector_moving.currentNode()
 
     @property
     def node_crosshair(self) -> Any:
