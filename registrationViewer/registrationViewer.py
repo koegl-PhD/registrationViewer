@@ -3,7 +3,6 @@ import logging
 import functools
 import importlib
 
-from enum import Enum
 from typing import Optional, List, Any
 
 import ctk
@@ -24,18 +23,6 @@ from slicer.parameterNodeWrapper import (
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
 from registrationViewerLib import utils, crosshairs, baseline_loading, view_logic
-
-#
-# registrationViewer
-#
-
-
-class Layout(Enum):
-    L_1X2_RED = 801
-    L_1X2_GREEN = 802
-    L_1X2_YELLOW = 803
-    L_2X3 = 701
-    L_3X3 = 601
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -106,9 +93,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.views_first_row = ["Red1", "Green1", "Yellow1"]
         self.views_second_row = ["Red2", "Green2", "Yellow2"]
         self.views_third_row = ["Red3", "Green3", "Yellow3"]
+        self.views_double_red = ["Red4", "Red5"]
+        self.views_double_green = ["Green4", "Green5"]
+        self.views_double_yellow = ["Yellow4", "Yellow5"]
 
         self.views_all = self.views_first_row + \
-            self.views_second_row + self.views_third_row
+            self.views_second_row + self.views_third_row + \
+            self.views_double_red + self.views_double_green + self.views_double_yellow
 
         utils.create_shortcuts(('s', self.on_synchronise_views_wth_trasform),
                                ('l', self.on_synchronise_views_manually),
@@ -131,7 +122,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.node_warped = None
         self.node_diff = None
 
-        self.current_layout: Layout
+        self.current_layout: view_logic.Layout
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -164,8 +155,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._remove_custom_nodes()
 
+        view_logic.register_layout_callback(self.update_current_layout)
         view_logic.set_3x3_layout()
-        self.current_layout = Layout.L_3X3
 
         # set groups
         for i in range(3):
@@ -177,8 +168,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.views_third_row[i]).mrmlSliceNode().SetViewGroup(3)
 
         # Buttons
-        self.ui.button_2x3.connect("clicked(bool)", self.on_button_2x3_clicked)
-        self.ui.button_3x3.connect("clicked(bool)", self.on_button_3x3_clicked)
+        self.ui.button_2x3.connect("clicked(bool)", view_logic.set_2x3_layout)
+        self.ui.button_3x3.connect("clicked(bool)", view_logic.set_3x3_layout)
         self.ui.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui.synchronise_views_manually.connect(
@@ -205,6 +196,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         slicer.util.resetSliceViews()
 
         # utils.temp_load_data(self)
+
+    def update_current_layout(self, layout: view_logic.Layout) -> None:
+        self.current_layout = layout
 
     def update_views_third_row_with_volume_diff(self) -> None:
 
@@ -305,7 +299,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
 
-        if self.current_layout == Layout.L_3X3:
+        if self.current_layout == view_logic.Layout.L_3X3:
             self.update_views_third_row_with_volume_diff()
 
         view_logic.update_views_with_volume(
@@ -313,14 +307,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.update_views_with_volume(
             self.views_second_row, self.node_moving)
         self._update_crosshair_transformation()
-
-    def on_button_2x3_clicked(self) -> None:
-        view_logic.set_2x3_layout()
-        self.current_layout = Layout.L_2X3
-
-    def on_button_3x3_clicked(self) -> None:
-        view_logic.set_3x3_layout()
-        self.current_layout = Layout.L_3X3
 
     def _synchronisation_checks(self) -> bool:
         """

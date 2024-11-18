@@ -1,10 +1,27 @@
 
 
+from enum import Enum
 from typing import List, Literal
 
 from qt import QEvent, QObject
 import slicer
 from slicer import vtkMRMLScalarVolumeNode
+
+
+class Layout(Enum):
+    L_1X2_RED = 801
+    L_1X2_GREEN = 802
+    L_1X2_YELLOW = 803
+    L_2X3 = 701
+    L_3X3 = 601
+
+
+layout_callback = None
+
+
+def register_layout_callback(callback):
+    global layout_callback
+    layout_callback = callback
 
 
 def update_views_with_volume(views: List[str], volume: vtkMRMLScalarVolumeNode) -> None:
@@ -93,14 +110,14 @@ def set_1x2_layout(color: Literal["Red", "Green", "Yellow"]) -> None:
         <item>
             <layout type="horizontal">
                 <item>
-                    <view class="vtkMRMLSliceNode" singletontag="{color}4">
+                    <view class="vtkMRMLSliceNode" singletontag="{color}1">
                     <property name="orientation" action="default">{orientation}</property>
                     <property name="viewlabel" action="default">Fixed - {orientation.lower()}</property>
                     <property name="viewcolor" action="default">{hexColor}</property>
                     </view>
                 </item>
                 <item>
-                    <view class="vtkMRMLSliceNode" singletontag="{color}5">
+                    <view class="vtkMRMLSliceNode" singletontag="{color}2">
                     <property name="orientation" action="default">{orientation}</property>
                     <property name="viewlabel" action="default">Moving - {orientation.lower()}</property>
                     <property name="viewcolor" action="default">{hexColor}</property>
@@ -126,18 +143,23 @@ def set_1x2_layout(color: Literal["Red", "Green", "Yellow"]) -> None:
     event_filter = ViewClickFilter(to_layout="set_2x3_layout")
 
     # Install filter on all views
-    view_names = [f"{color}4", f"{color}5"]
+    view_names = [f"{color}1", f"{color}2"]
     for view_name in view_names:
         slice_widget = layoutManager.sliceWidget(view_name)
         if slice_widget:
             view_widget = slice_widget.sliceView()
             event_filter.add_view(view_name, view_widget)
             view_widget.installEventFilter(event_filter)
-            print(f"Installed event filter on {view_name}")
 
     # Keep a reference to the event filter - needs to be global so it won't be deleted
     global _event_filter
     _event_filter = event_filter
+
+    global layout_callback
+    if layout_callback:
+        layout_callback(Layout.L_1X2_RED if color == "Red" else
+                        Layout.L_1X2_GREEN if color == "Green" else
+                        Layout.L_1X2_YELLOW)
 
 
 def set_2x3_layout() -> None:
@@ -219,11 +241,14 @@ def set_2x3_layout() -> None:
             view_widget = slice_widget.sliceView()
             event_filter.add_view(view_name, view_widget)
             view_widget.installEventFilter(event_filter)
-            print(f"Installed event filter on {view_name}")
 
     # Keep a reference to the event filter
     global _event_filter
     _event_filter = event_filter
+
+    global layout_callback
+    if layout_callback:
+        layout_callback(Layout.L_2X3)
 
 
 def set_3x3_layout() -> None:
@@ -336,11 +361,14 @@ def set_3x3_layout() -> None:
             view_widget = slice_widget.sliceView()
             event_filter.add_view(view_name, view_widget)
             view_widget.installEventFilter(event_filter)
-            print(f"Installed event filter on {view_name}")
 
     # Keep a reference to the event filter
     global _event_filter
     _event_filter = event_filter
+
+    global layout_callback
+    if layout_callback:
+        layout_callback(Layout.L_3X3)
 
 
 def get_view_offset(view: str) -> float:
@@ -363,3 +391,8 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode = sliceLogic.GetSliceNode()
 
     sliceNode.SetSliceOffset(offset)
+
+
+#
+# registrationViewer
+#

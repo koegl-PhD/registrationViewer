@@ -140,11 +140,6 @@ class Crosshairs():
             offset = [-self.offset_diffs[i] for i in range(3)]
             offset[2] = -offset[2]
 
-        if offset != [0.0, 0.0, 0.0]:
-            print(f"normal offset: {self.offset_diffs}")
-            print(
-                f"adjust Offset: {offset} with direction: {offset_direction}\n")
-
         new_position = [new_position[0] + offset[2],
                         new_position[1] + offset[1],
                         new_position[2] + offset[0]]
