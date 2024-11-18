@@ -366,17 +366,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.synchronise_manually_pressed is True:
             print("pressed to synchronise manually")
             self.ui.synchronise_views_manually.setText(
-                "Unsynchronise views (l)")
+                "Link views (l)")
 
             self.use_transform = self.crosshair.use_transform = False
             self.ui.synchronise_views_with_transform.setText(
-                "Synchronise views (s)")
+                "Unlink views (s)")
             self.synchronise_with_displacement_pressed = False
 
         else:
             print("pressed to unsynchronise manually")
             self.node_crosshair.RemoveAllObservers()
-            self.ui.synchronise_views_manually.setText("Synchronise views (l)")
+            self.ui.synchronise_views_manually.setText("Link views (l)")
 
         # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
         offset_diff_red = view_logic.get_view_offset(
