@@ -308,6 +308,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.views_second_row, self.node_moving)
         self._update_crosshair_transformation()
 
+        for node in [self.node_fixed, self.node_moving]:
+            if node is not None:
+                display_node = node.GetDisplayNode()
+                if display_node is not None:
+                    display_node.SetAutoWindowLevel(False)
+                    display_node.SetWindow(0.148)
+                    display_node.SetLevel(0.301)
+
     def _synchronisation_checks(self) -> bool:
         """
         Internal helper method to validate synchronization prerequisites.
@@ -345,7 +353,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.use_transform = self.crosshair.use_transform = True
             self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
             self.crosshair.apply_offsets = False
-            self.ui.synchronise_views_manually.setText("Synchronise views (l)")
+            self.ui.synchronise_views_manually.setText("Link views (l)")
             self.synchronise_manually_pressed = False
 
         else:
@@ -366,11 +374,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.synchronise_manually_pressed is True:
             print("pressed to synchronise manually")
             self.ui.synchronise_views_manually.setText(
-                "Link views (l)")
+                "Unink views (l)")
 
             self.use_transform = self.crosshair.use_transform = False
             self.ui.synchronise_views_with_transform.setText(
-                "Unlink views (s)")
+                "Synchronise views (s)")
             self.synchronise_with_displacement_pressed = False
 
         else:
