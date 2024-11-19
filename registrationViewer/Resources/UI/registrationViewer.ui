@@ -184,6 +184,29 @@
      </property>
     </widget>
    </item>
+      <item>
+    <widget class="ctkCollapsibleButton" name="markupsCollapsibleButton">
+     <property name="text">
+      <string>Markups</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_2">
+      <item row="0" column="0">
+       <widget class="QPushButton" name="addRoiFixed">
+        <property name="text">
+         <string>Add ROI in fixed</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="addRoiMoving">
+        <property name="text">
+         <string>Add ROI in moving</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
