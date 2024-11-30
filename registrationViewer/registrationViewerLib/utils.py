@@ -91,3 +91,24 @@ def collapse_all_segmentations() -> None:
                 subjectHierarchyNode.SetItemExpanded(itemID, False)
                 # turn off visibility
                 node.SetDisplayVisibility(False)
+
+
+def set_window_level_and_threshold(node: slicer.vtkMRMLScalarVolumeNode,
+                                   window: float,
+                                   level: float,
+                                   threshold: Tuple[float, float]) -> None:
+
+    if not node:
+        return
+
+    displayNode = node.GetDisplayNode()
+
+    if not displayNode:
+        return
+
+    displayNode.AutoWindowLevelOff()
+    displayNode.SetWindow(window)
+    displayNode.SetLevel(level)
+
+    displayNode.ApplyThresholdOn()
+    displayNode.SetThreshold(threshold[0], threshold[1])
