@@ -391,8 +391,3 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode = sliceLogic.GetSliceNode()
 
     sliceNode.SetSliceOffset(offset)
-
-
-#
-# registrationViewer
-#
