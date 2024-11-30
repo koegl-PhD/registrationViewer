@@ -103,7 +103,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         utils.create_shortcuts(('s', self.on_synchronise_views_wth_trasform),
                                ('l', self.on_synchronise_views_manually),
-                               ('r', self.on_reset_views)
                                )
 
         self.use_transform = True
@@ -174,7 +173,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui.synchronise_views_manually.connect(
             "clicked(bool)", self.on_synchronise_views_manually)
-        self.ui.reset_views.connect("clicked(bool)", self.on_reset_views)
 
         # loading code
         baseline_loading.create_loading_ui(self)
@@ -399,55 +397,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.crosshair.offset_diffs = self.current_offset = [
             offset_diff_red, offset_diff_green, offset_diff_yellow]
         self.crosshair.apply_offsets = self.synchronise_manually_pressed
-
-    def on_reset_views(self) -> None:
-
-        if self.synchronise_with_displacement_pressed:
-            return
-
-        current_view = self.node_crosshair.GetCursorPositionXYZ([
-                                                                0]*3).GetName()
-
-        position: list[float] = [0., 0., 0.]
-        self.node_crosshair.GetCursorPositionRAS(position)
-
-        if '1' in current_view:  # jump slices in 2 and 3
-            # in plus views we should follow the cursor (that's why group 2)
-            slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                                position[1],
-                                                                position[2],
-                                                                False,
-                                                                self.group_second_row)
-            slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                                position[1],
-                                                                position[2],
-                                                                False,
-                                                                self.group_third_row)
-        elif '2' in current_view:  # jump slices in 1 and 3
-            slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                                position[1],
-                                                                position[2],
-                                                                False,
-                                                                self.group_first_row)
-            slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                                position[1],
-                                                                position[2],
-                                                                False,
-                                                                self.group_third_row)
-
-        elif '3' in current_view:  # jump slices in 1 and 2
-            slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                                position[1],
-                                                                position[2],
-                                                                False,
-                                                                self.group_first_row)
-            slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                                position[1],
-                                                                position[2],
-                                                                False,
-                                                                self.group_second_row)
-
-        self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
 
     def update_cursor_view(self) -> None:
 
