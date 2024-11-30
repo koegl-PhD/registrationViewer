@@ -124,9 +124,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_layout: 'view_logic.Layout'
 
-        self.node_roi_fixed = None
-        self.node_roi_moving = None
-
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -178,8 +175,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.synchronise_views_manually.connect(
             "clicked(bool)", self.on_synchronise_views_manually)
         self.ui.reset_views.connect("clicked(bool)", self.on_reset_views)
-        self.ui.addRoiFixed.connect("clicked(bool)", self.on_add_roi_fixed)
-        self.ui.addRoiMoving.connect("clicked(bool)", self.on_add_roi_moving)
 
         # loading code
         baseline_loading.create_loading_ui(self)
@@ -453,62 +448,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                                 self.group_second_row)
 
         self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
-
-    def on_add_roi_moving(self) -> None:
-        self.node_roi_moving = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsROINode")
-
-        self._configure_roi(self.views_second_row, self.node_roi_moving)
-
-    def on_add_roi_fixed(self) -> None:
-        self.node_roi_fixed = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsROINode")
-
-        self._configure_roi(self.views_first_row, self.node_roi_fixed)
-
-    def _configure_roi(self, views: List[str], node_roi) -> None:
-
-        if not views:
-            return
-        if not node_roi:
-            return
-
-        # geometry
-        offsets = [view_logic.get_view_offset(view) for view in views]
-        node_roi.SetCenter(-offsets[2],
-                           offsets[1],
-                           offsets[0])
-        node_roi.SetSize(10, 10, 10)
-
-        # display
-        node_display = node_roi.GetDisplayNode()
-        if not node_display:
-            return
-
-        node_display.SetOpacity(0.5)
-        node_display.SetFillOpacity(0)
-
-        node_display.SetTextScale(0.0)
-        node_display.SetUseGlyphScale(True)
-        node_display.SetGlyphScale(1)
-        node_display.SetInteractionHandleScale(1.5)
-
-        node_display.RotationHandleVisibilityOn()
-        node_display.TranslationHandleVisibilityOn()
-        node_display.ScaleHandleVisibilityOn()
-
-        layout_manager = slicer.app.layoutManager()
-
-        if not layout_manager:
-            return
-
-        for view in views:
-            view_widget = layout_manager.sliceWidget(view)
-
-            if not view_widget:
-                continue
-
-            node_display.AddViewNodeID(view_widget.mrmlSliceNode().GetID())
 
     def update_cursor_view(self) -> None:
 
