@@ -187,9 +187,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
 
-        self.dropWidget.load_data_from_dropped_folder("/home/fryderyk/Documents/code/registrationViewer/registrationViewer/Resources/Data/BSplineNiftyReg_6cc04c82-245e-4326-b117-fee51c3b6a50",
-                                                      "/data/LungCT_preprocessed_new",
-                                                      '0')
+        # self.dropWidget.load_data_from_dropped_folder("/home/fryderyk/Documents/code/registrationViewer/registrationViewer/Resources/Data/BSplineNiftyReg_6cc04c82-245e-4326-b117-fee51c3b6a50",
+        #                                               "/data/LungCT_preprocessed_new",
+        #                                               '0')
         utils.collapse_all_segmentations()
 
         view_logic.link_views(self.views_first_row)
@@ -312,6 +312,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.update_views_with_volume(
             self.views_second_row, self.node_moving)
         self._update_crosshair_transformation()
+
+        # set window, level and threshold for fixed and moving
+        for node in [self.node_fixed, self.node_moving]:
+            if node is None:
+                continue
+
+            utils.set_window_level_and_threshold(self.node_fixed,
+                                                 window=0.084,
+                                                 level=0.275,
+                                                 threshold=(0, 1))
 
     def _synchronisation_checks(self) -> bool:
         """
