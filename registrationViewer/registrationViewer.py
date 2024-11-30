@@ -321,6 +321,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                  level=329,
                                                  threshold=(-1024, 3071))
 
+        # reset field of view for view 0, 3 and 6
+        for view in [self.views_first_row[0], self.views_second_row[0], self.views_third_row[0]]:
+            slicer.app.layoutManager().sliceWidget(
+                view).sliceController().fitSliceToBackground()
+
     def _synchronisation_checks(self) -> bool:
         """
         Internal helper method to validate synchronization prerequisites.
