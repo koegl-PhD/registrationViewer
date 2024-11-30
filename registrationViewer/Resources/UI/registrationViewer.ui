@@ -177,13 +177,6 @@
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="QPushButton" name="reset_views">
-     <property name="text">
-      <string>Reset views (r)</string>
-     </property>
-    </widget>
-   </item>
       <item>
     <widget class="ctkCollapsibleButton" name="markupsCollapsibleButton">
      <property name="text">

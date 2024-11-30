@@ -22,7 +22,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import utils, crosshairs, baseline_loading, view_logic
+from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -80,10 +80,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTag = None
 
-        from registrationViewerLib import utils, crosshairs, baseline_loading, view_logic
+        from registrationViewerLib import utils, crosshairs, drop_data_loading, view_logic
         utils = importlib.reload(utils)
         crosshairs = importlib.reload(crosshairs)
-        baseline_loading = importlib.reload(baseline_loading)
+        drop_data_loading = importlib.reload(drop_data_loading)
         view_logic = importlib.reload(view_logic)
 
         self.group_first_row = 1
@@ -176,12 +176,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui.synchronise_views_manually.connect(
             "clicked(bool)", self.on_synchronise_views_manually)
-        self.ui.reset_views.connect("clicked(bool)", self.on_reset_views)
         self.ui.addRoiFixed.connect("clicked(bool)", self.on_add_roi_fixed)
         self.ui.addRoiMoving.connect("clicked(bool)", self.on_add_roi_moving)
 
         # loading code
-        baseline_loading.create_loading_ui(self)
+        drop_data_loading.create_loading_ui(self)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -317,10 +316,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             if node is None:
                 continue
 
-            utils.set_window_level_and_threshold(self.node_fixed,
-                                                 window=0.084,
-                                                 level=0.275,
-                                                 threshold=(0, 1))
+            utils.set_window_level_and_threshold(node,
+                                                 window=1036,
+                                                 level=329,
+                                                 threshold=(-1024, 3071))
+
+        # reset field of view for view 0, 3 and 6
+        for view in [self.views_first_row[0], self.views_second_row[0], self.views_third_row[0]]:
+            slicer.app.layoutManager().sliceWidget(
+                view).sliceController().fitSliceToBackground()
 
     def _synchronisation_checks(self) -> bool:
         """
@@ -518,7 +522,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_transformation(self) -> Any:
-
         return self.ui.inputSelector_transformation.currentNode()
 
 
