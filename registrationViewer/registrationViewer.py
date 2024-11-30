@@ -317,7 +317,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             if node is None:
                 continue
 
-            utils.set_window_level_and_threshold(self.node_fixed,
+            utils.set_window_level_and_threshold(node,
                                                  window=0.084,
                                                  level=0.275,
                                                  threshold=(0, 1))
