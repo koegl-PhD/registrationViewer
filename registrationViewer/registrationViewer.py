@@ -317,9 +317,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 continue
 
             utils.set_window_level_and_threshold(node,
-                                                 window=0.084,
-                                                 level=0.275,
-                                                 threshold=(0, 1))
+                                                 window=1036,
+                                                 level=329,
+                                                 threshold=(-1024, 3071))
 
     def _synchronisation_checks(self) -> bool:
         """
@@ -517,7 +517,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_transformation(self) -> Any:
-
         return self.ui.inputSelector_transformation.currentNode()
 
 
