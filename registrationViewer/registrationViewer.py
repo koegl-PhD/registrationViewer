@@ -200,6 +200,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # utils.temp_load_data(self)
 
+        view_logic.enable_scrolling_through_dragging()
+
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
 
