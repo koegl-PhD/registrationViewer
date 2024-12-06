@@ -394,7 +394,7 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode.SetSliceOffset(offset)
 
 
-def enable_scrolling_through_dragging():
+def enable_scrolling_through_dragging(sensitivity: float = 0.1):
     # Global dictionary to track dragging state for each view
     global dragging
     dragging = {}
@@ -423,7 +423,7 @@ def enable_scrolling_through_dragging():
                         current_view = position.GetName()
                         sliceLogic = slicer.app.layoutManager().sliceWidget(current_view).sliceLogic()
                         sliceOffset = sliceLogic.GetSliceOffset()
-                        newSliceOffset = sliceOffset - deltaY * 0.1  # Adjust sensitivity
+                        newSliceOffset = sliceOffset - deltaY * sensitivity
                         sliceLogic.SetSliceOffset(newSliceOffset)
 
         def endDrag(caller, event):
@@ -446,4 +446,38 @@ def enable_scrolling_through_dragging():
         interactor.AddObserver(vtk.vtkCommand.LeftButtonReleaseEvent, endDrag)
         interactor.AddObserver(vtk.vtkCommand.MouseMoveEvent, drag, 1.0)
 
-        print(f"Added drag scroll to {sliceViewName}")
+
+def disable_scrolling_through_dragging():
+    """
+    Disable scrolling through dragging by removing observers from slice views.
+
+    This function should be called after enable_scrolling_through_dragging() 
+    to remove the drag event observers.
+    """
+    sliceViewNames = ['Red1', 'Yellow1', 'Green1', 'Red2',
+                      'Yellow2', 'Green2', 'Red3', 'Yellow3', 'Green3']
+
+    for sliceViewName in sliceViewNames:
+        # Get the slice view from the layout manager
+        sliceWidget = slicer.app.layoutManager().sliceWidget(sliceViewName)
+
+        if sliceWidget:
+            # Get the interactor from the slice view
+            interactor = sliceWidget.sliceView().interactor()
+
+            # Remove the observers if they exist
+            if hasattr(interactor, 'startDragObserver'):
+                interactor.RemoveObserver(interactor.startDragObserver)
+                del interactor.startDragObserver
+
+            if hasattr(interactor, 'dragObserver'):
+                interactor.RemoveObserver(interactor.dragObserver)
+                del interactor.dragObserver
+
+            if hasattr(interactor, 'endDragObserver'):
+                interactor.RemoveObserver(interactor.endDragObserver)
+                del interactor.endDragObserver
+
+    # Clear the global dragging dictionary
+    global dragging
+    dragging.clear()
