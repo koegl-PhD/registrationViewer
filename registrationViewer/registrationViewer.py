@@ -239,6 +239,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
+        view_logic.disable_scrolling_through_dragging()
         self.removeObservers()
 
     def enter(self) -> None:
