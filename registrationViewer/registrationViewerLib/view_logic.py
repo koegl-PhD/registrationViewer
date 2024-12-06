@@ -1,5 +1,6 @@
 
 
+import vtk
 from enum import Enum
 from typing import List, Literal
 
@@ -391,3 +392,58 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode = sliceLogic.GetSliceNode()
 
     sliceNode.SetSliceOffset(offset)
+
+
+def enable_scrolling_through_dragging():
+    # Global dictionary to track dragging state for each view
+    global dragging
+    dragging = {}
+
+    sliceViewNames = ['Red1', 'Yellow1', 'Green1', 'Red2',
+                      'Yellow2', 'Green2', 'Red3', 'Yellow3', 'Green3']
+
+    def createDragHandlers(sliceViewName):
+        # Create a separate dragging state for each view
+        dragging[sliceViewName] = {"isDragging": False, "lastY": None}
+
+        def startDrag(caller, event):
+            dragging[sliceViewName]["isDragging"] = True
+            dragging[sliceViewName]["lastY"] = caller.GetEventPosition()[1]
+
+        def drag(caller, event):
+            if dragging[sliceViewName]["isDragging"]:
+                currentY = caller.GetEventPosition()[1]
+                deltaY = currentY - dragging[sliceViewName]["lastY"]
+                dragging[sliceViewName]["lastY"] = currentY
+
+                if abs(deltaY) > 0:
+                    position = slicer.util.getNode(
+                        "*Crosshair*").GetCursorPositionXYZ([0]*3)
+                    if position is not None:
+                        current_view = position.GetName()
+                        sliceLogic = slicer.app.layoutManager().sliceWidget(current_view).sliceLogic()
+                        sliceOffset = sliceLogic.GetSliceOffset()
+                        newSliceOffset = sliceOffset - deltaY * 0.1  # Adjust sensitivity
+                        sliceLogic.SetSliceOffset(newSliceOffset)
+
+        def endDrag(caller, event):
+            dragging[sliceViewName]["isDragging"] = False
+            dragging[sliceViewName]["lastY"] = None
+
+        return startDrag, drag, endDrag
+
+    # Loop through slice views and add event observers
+    for sliceViewName in sliceViewNames:
+        # Get the interactor for this slice view
+        interactor = slicer.app.layoutManager().sliceWidget(
+            sliceViewName).sliceView().interactor()
+
+        # Create handlers specific to this view
+        startDrag, drag, endDrag = createDragHandlers(sliceViewName)
+
+        # Add observers
+        interactor.AddObserver(vtk.vtkCommand.LeftButtonPressEvent, startDrag)
+        interactor.AddObserver(vtk.vtkCommand.LeftButtonReleaseEvent, endDrag)
+        interactor.AddObserver(vtk.vtkCommand.MouseMoveEvent, drag, 1.0)
+
+        print(f"Added drag scroll to {sliceViewName}")

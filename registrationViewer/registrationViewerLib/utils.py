@@ -89,8 +89,21 @@ def collapse_all_segmentations() -> None:
             node = subjectHierarchyNode.GetItemDataNode(itemID)
             if node and node.IsA("vtkMRMLSegmentationNode"):
                 subjectHierarchyNode.SetItemExpanded(itemID, False)
-                # turn off visibility
-                node.SetDisplayVisibility(False)
+
+
+def set_all_segmentation_visibility(visibility: bool) -> None:
+    subjectHierarchyNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+
+    if subjectHierarchyNode:
+        itemIDs = vtk.vtkIdList()
+        subjectHierarchyNode.GetItemChildren(
+            subjectHierarchyNode.GetSceneItemID(), itemIDs, True)
+
+        for i in range(itemIDs.GetNumberOfIds()):
+            itemID = itemIDs.GetId(i)
+            node = subjectHierarchyNode.GetItemDataNode(itemID)
+            if node and node.IsA("vtkMRMLSegmentationNode"):
+                node.SetDisplayVisibility(visibility)
 
 
 def set_window_level_and_threshold(node: slicer.vtkMRMLScalarVolumeNode,

@@ -200,6 +200,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # utils.temp_load_data(self)
 
+        view_logic.enable_scrolling_through_dragging()
+
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
 
@@ -325,6 +327,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         for view in [self.views_first_row[0], self.views_second_row[0], self.views_third_row[0]]:
             slicer.app.layoutManager().sliceWidget(
                 view).sliceController().fitSliceToBackground()
+
+        utils.collapse_all_segmentations()
+        utils.set_all_segmentation_visibility(True)
+
+        view_logic.link_views(self.views_first_row)
+        view_logic.link_views(self.views_second_row)
+        view_logic.link_views(self.views_third_row)
 
     def _synchronisation_checks(self) -> bool:
         """
@@ -483,6 +492,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_warped = None
         if self.crosshair is not None:
             self.crosshair.delete_crosshairs_and_folder()
+            self.crosshair = None
 
     def _are_nodes_selected(self) -> bool:
         return self.ui.inputSelector_fixed.currentNode() is not None and \
@@ -491,8 +501,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _set_up_crosshair(self, turn_synchronisation_on: bool) -> None:
         if self.crosshair is None:
-            # self.crosshair.delete_crosshairs_and_folder()
-
             self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_crosshair,
                                                    node_transformation=self.node_transformation,
                                                    use_transform=self.use_transform,
