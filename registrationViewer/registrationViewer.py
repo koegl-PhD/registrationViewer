@@ -328,6 +328,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.app.layoutManager().sliceWidget(
                 view).sliceController().fitSliceToBackground()
 
+        view_logic.link_views(self.views_first_row)
+        view_logic.link_views(self.views_second_row)
+        view_logic.link_views(self.views_third_row)
+
     def _synchronisation_checks(self) -> bool:
         """
         Internal helper method to validate synchronization prerequisites.
