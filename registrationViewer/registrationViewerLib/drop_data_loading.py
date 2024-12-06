@@ -88,21 +88,17 @@ class DropWidget(qt.QFrame):
                 paths[0],  # Use first dropped folder
             )
 
-        utils.collapse_all_segmentations()
-
     def load_data_from_dropped_folder(self, dropped_folder_path: str) -> None:
         """
         Load data from the specified directory structure
         """
 
         try:
-            dropped_folder_path = "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/0e5fp8GltvE/"
+            path_experiment = os.path.dirname(
+                os.path.dirname(dropped_folder_path))
 
-            path_experiment = os.path.join(
-                "/", *dropped_folder_path.split("/")[:-3])
-
-            studies = [f for f in os.listdir(os.path.join(dropped_folder_path, 'raw'))
-                       if os.path.isdir(os.path.join(dropped_folder_path, 'raw', f))]
+            studies = sorted([f for f in os.listdir(os.path.join(dropped_folder_path, 'raw'))
+                              if os.path.isdir(os.path.join(dropped_folder_path, 'raw', f))])
 
             path_volume_fixed = [
                 file for file in glob.glob(os.path.join(dropped_folder_path, 'raw', studies[1], '*.nii.gz'))
@@ -206,14 +202,12 @@ class DropWidget(qt.QFrame):
             for view in ['Red1', 'Green1', 'Yellow1']:
                 slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
                 disp_node_seg_fixed.AddViewNodeID(slice_node.GetID())
-            node_seg_fixed.SetDisplayVisibility(True)
 
             disp_node_seg_moving = node_seg_moving.GetDisplayNode()
             disp_node_seg_moving.RemoveAllViewNodeIDs()
             for view in ['Red2', 'Green2', 'Yellow2']:
                 slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
                 disp_node_seg_moving.AddViewNodeID(slice_node.GetID())
-            node_seg_moving.SetDisplayVisibility(True)
 
         except Exception as e:
             logging.error(f"Error loading data: {str(e)}")

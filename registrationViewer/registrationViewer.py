@@ -328,6 +328,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.app.layoutManager().sliceWidget(
                 view).sliceController().fitSliceToBackground()
 
+        utils.collapse_all_segmentations()
+        utils.set_all_segmentation_visibility(True)
+
         view_logic.link_views(self.views_first_row)
         view_logic.link_views(self.views_second_row)
         view_logic.link_views(self.views_third_row)
