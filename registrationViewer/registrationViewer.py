@@ -426,6 +426,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_warped = None
         if self.crosshair is not None:
             self.crosshair.delete_crosshairs_and_folder()
+            self.crosshair = None
 
     def _are_nodes_selected(self) -> bool:
         return self.ui.inputSelector_fixed.currentNode() is not None and \
@@ -434,8 +435,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _set_up_crosshair(self, turn_synchronisation_on: bool) -> None:
         if self.crosshair is None:
-            # self.crosshair.delete_crosshairs_and_folder()
-
             self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_crosshair,
                                                    node_transformation=self.node_transformation,
                                                    use_transform=self.use_transform,
