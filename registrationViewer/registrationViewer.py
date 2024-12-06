@@ -126,6 +126,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.node_roi_fixed = None
         self.node_roi_moving = None
 
+        self.ui_is_simple = False
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -170,6 +172,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.views_third_row[i]).mrmlSliceNode().SetViewGroup(3)
 
         # Buttons
+        self.ui.simple_ui.connect("clicked(bool)", self.on_simple_ui)
         self.ui.button_2x3.connect("clicked(bool)", view_logic.set_2x3_layout)
         self.ui.button_3x3.connect("clicked(bool)", view_logic.set_3x3_layout)
         self.ui.synchronise_views_with_transform.connect(
@@ -355,6 +358,34 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             return False
 
         return True
+
+    def on_simple_ui(self) -> None:
+
+        self.ui_is_simple = not self.ui_is_simple
+
+        utils.set_ui_simplification(self.ui_is_simple)
+
+        if self.ui_is_simple:
+            self.ui.simple_ui.setText("Advanced UI")
+            slicer.app.setStyleSheet("""
+                QWidget {
+                    background-color: #060f21;
+                    color: white;
+                }
+                QMainWindow {
+                    background-color: #060f21;
+                }
+                qSlicerLayoutManager {
+                    background-color: #060f21;
+                }
+                """)
+        else:
+            self.ui.simple_ui.setText("Simple UI")
+            slicer.app.setStyleSheet("""
+                QWidget {
+                color: black;
+                }
+                """)
 
     def on_synchronise_views_wth_trasform(self) -> None:
 

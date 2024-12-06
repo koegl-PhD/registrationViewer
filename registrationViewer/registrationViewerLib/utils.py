@@ -5,6 +5,38 @@ import slicer
 import vtk
 
 
+def set_ui_simplification(simple: bool) -> None:
+    """
+    Simplifies the UI by hiding the toolbar, module panel etc.
+    """
+
+    value = not simple
+
+    slicer.util.setMenuBarsVisible(value)
+
+    slicer.util.setToolbarsVisible(value)
+
+    # hide help section
+    slicer.util.setModuleHelpSectionVisible(value)
+
+    # hide the module panel
+    slicer.util.setModulePanelTitleVisible(value)
+
+    # hide data probe
+    slicer.util.setDataProbeVisible(value)
+
+    # hi ebar at the botto of the window
+    slicer.util.setStatusBarVisible(value)
+
+    slicer.util.setViewControllersVisible(value)
+
+    slicer.modules.registrationviewer.widgetRepresentation(
+    ).self().reloadCollapsibleButton.visible = value
+
+    # hide python console
+    slicer.util.setPythonConsoleVisible(value)
+
+
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
     """
     Creates and initializes shortcuts for the main window.

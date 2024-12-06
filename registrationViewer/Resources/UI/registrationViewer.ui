@@ -10,7 +10,64 @@
     <height>382</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+<layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_center">
+     <item>
+      <spacer name="horizontalSpacer_left">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizePolicy" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="simple_ui">
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="text">
+        <string>Simple UI</string>
+       </property>
+              <property name="styleSheet">
+        <string notr="true">
+         QPushButton {
+             background-color: #002a80;
+             color: white;
+             font-weight: bold;
+             border-radius: 5px;
+             padding: 5px;
+         }
+         QPushButton:hover {
+             background-color: #002a80; /* Darker blue for hover */
+         }
+         QPushButton:pressed {
+             background-color: #0e2147; /* Even darker blue for pressed */
+         }
+        </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_right">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizePolicy" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
    <item>
     <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton">
      <property name="text">
@@ -177,7 +234,7 @@
      </property>
     </widget>
    </item>
-      <item>
+   <item>
     <widget class="ctkCollapsibleButton" name="markupsCollapsibleButton">
      <property name="text">
       <string>Markups</string>
