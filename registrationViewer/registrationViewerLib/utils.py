@@ -34,7 +34,7 @@ def set_ui_simplification(simple: bool) -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    slicer.util.setPythonConsoleVisible(value)
+    slicer.util.setPythonConsoleVisible(True)
 
 
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
