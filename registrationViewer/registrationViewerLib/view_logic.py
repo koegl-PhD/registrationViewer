@@ -21,7 +21,7 @@ class Layout(Enum):
 layout_callback = None
 
 dragging = {}
-disable_sectra = False
+disable_sectra = True
 
 
 def register_layout_callback(callback):
@@ -399,8 +399,8 @@ def set_view_offset(view: str, offset: float) -> None:
 
 
 def enable_sectra_movements(volume_node, views: List[str],
-                            sensitivity: float = 0.1,
-                            sensitivity_middle=1.0):
+                            sensitivity_left: float = 0.1,
+                            sensitivity_middle=20.0):
 
     global disable_sectra
     disable_sectra = False
@@ -412,11 +412,17 @@ def enable_sectra_movements(volume_node, views: List[str],
                                "last_mouse_position": None}
 
         def start_letf_drag(caller, event):
+            if disable_sectra:
+                return
+
             dragging[view_name]["left_click_drag"] = True
             dragging[view_name]["middle_click_drag"] = False
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def start_middle_drag(caller, event):
+            if disable_sectra:
+                return
+
             dragging[view_name]["left_click_drag"] = False
             dragging[view_name]["middle_click_drag"] = True
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
@@ -425,9 +431,9 @@ def enable_sectra_movements(volume_node, views: List[str],
             current_mouse_position = caller.GetEventPosition()
 
             dx = (current_mouse_position[0] -
-                  dragging[view_name]["last_mouse_position"][0]) * sensitivity
+                  dragging[view_name]["last_mouse_position"][0]) * sensitivity_middle
             dy = (current_mouse_position[1] -
-                  dragging[view_name]["last_mouse_position"][1]) * sensitivity
+                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_middle
 
             dragging[view_name]["last_mouse_position"] = current_mouse_position
 
@@ -441,9 +447,9 @@ def enable_sectra_movements(volume_node, views: List[str],
             new_window = max(1, current_window - dx)
             new_level = current_level + dy
 
-            utils.set_window_level_and_threshold(
-                volume_node, new_window, new_level, threshold=(0, 255)
-            )
+            utils.set_window_level(volume_node,
+                                   new_window,
+                                   new_level)
 
         def _drag_left(caller, event):
             current_position = caller.GetEventPosition()
@@ -459,7 +465,7 @@ def enable_sectra_movements(volume_node, views: List[str],
                     current_view = position.GetName()
                     sliceLogic = slicer.app.layoutManager().sliceWidget(current_view).sliceLogic()
                     sliceOffset = sliceLogic.GetSliceOffset()
-                    newSliceOffset = sliceOffset - delta_y * sensitivity
+                    newSliceOffset = sliceOffset - delta_y * sensitivity_left
                     sliceLogic.SetSliceOffset(newSliceOffset)
 
         def drag(caller, event):
@@ -473,6 +479,9 @@ def enable_sectra_movements(volume_node, views: List[str],
                 _drag_left(caller, event)
 
         def drag_end(caller, event):
+            if disable_sectra:
+                return
+
             dragging[view_name]["middle_click_drag"] = False
             dragging[view_name]["left_click_drag"] = False
             dragging[view_name]["last_mouse_position"] = None
