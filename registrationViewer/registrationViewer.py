@@ -203,11 +203,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # utils.temp_load_data(self)
 
-        self.ui.inputSelector_fixed.setCurrentNode(slicer.util.loadVolume(
-            "/home/fryderyk/Downloads/temp/LungCT_0001_0000.nii.gz"))
-        self.ui.inputSelector_moving.setCurrentNode(slicer.util.loadVolume(
-            "/home/fryderyk/Downloads/temp/LungCT_0001_0001.nii.gz"))
-
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
 
