@@ -34,7 +34,7 @@ def set_ui_simplification(simple: bool) -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    slicer.util.setPythonConsoleVisible(True)
+    slicer.util.setPythonConsoleVisible(value)
 
 
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
@@ -143,6 +143,14 @@ def set_window_level_and_threshold(node: slicer.vtkMRMLScalarVolumeNode,
                                    level: float,
                                    threshold: Tuple[float, float]) -> None:
 
+    set_window_level(node, window, level)
+    set_threshold(node, threshold)
+
+
+def set_window_level(node: slicer.vtkMRMLScalarVolumeNode,
+                     window: float,
+                     level: float) -> None:
+
     if not node:
         return
 
@@ -154,6 +162,18 @@ def set_window_level_and_threshold(node: slicer.vtkMRMLScalarVolumeNode,
     displayNode.AutoWindowLevelOff()
     displayNode.SetWindow(window)
     displayNode.SetLevel(level)
+
+
+def set_threshold(node: slicer.vtkMRMLScalarVolumeNode,
+                  threshold: Tuple[float, float]) -> None:
+
+    if not node:
+        return
+
+    displayNode = node.GetDisplayNode()
+
+    if not displayNode:
+        return
 
     displayNode.ApplyThresholdOn()
     displayNode.SetThreshold(threshold[0], threshold[1])
