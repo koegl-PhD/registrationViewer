@@ -203,8 +203,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # utils.temp_load_data(self)
 
-        view_logic.enable_scrolling_through_dragging()
-
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
 
@@ -242,7 +240,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
-        view_logic.disable_scrolling_through_dragging()
+        view_logic.disable_sectra_movements()
         self.removeObservers()
 
     def enter(self) -> None:
@@ -379,6 +377,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     background-color: #060f21;
                 }
                 """)
+
+            view_logic.enable_sectra_movements(self.node_fixed,
+                                               self.views_first_row)
+            view_logic.enable_sectra_movements(self.node_moving,
+                                               self.views_second_row)
         else:
             self.ui.simple_ui.setText("Simple UI")
             slicer.app.setStyleSheet("""
@@ -386,6 +389,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 color: black;
                 }
                 """)
+
+            view_logic.disable_sectra_movements()
 
     def on_synchronise_views_wth_trasform(self) -> None:
 

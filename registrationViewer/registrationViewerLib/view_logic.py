@@ -7,6 +7,7 @@ from typing import List, Literal
 from qt import QEvent, QObject
 import slicer
 from slicer import vtkMRMLScalarVolumeNode
+import registrationViewerLib.utils as utils
 
 
 class Layout(Enum):
@@ -18,6 +19,9 @@ class Layout(Enum):
 
 
 layout_callback = None
+
+dragging = {}
+disable_sectra = True
 
 
 def register_layout_callback(callback):
@@ -394,90 +398,126 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode.SetSliceOffset(offset)
 
 
-def enable_scrolling_through_dragging(sensitivity: float = 0.1):
-    # Global dictionary to track dragging state for each view
-    global dragging
-    dragging = {}
+def enable_sectra_movements(volume_node, views: List[str],
+                            sensitivity_left: float = 0.1,
+                            sensitivity_middle=20.0):
 
-    sliceViewNames = ['Red1', 'Yellow1', 'Green1', 'Red2',
-                      'Yellow2', 'Green2', 'Red3', 'Yellow3', 'Green3']
+    global disable_sectra
+    disable_sectra = False
 
-    def createDragHandlers(sliceViewName):
-        # Create a separate dragging state for each view
-        dragging[sliceViewName] = {"isDragging": False, "lastY": None}
+    # Helper function to set up interaction for a single view
+    def createDragHandlers(view_name):
+        dragging[view_name] = {"left_click_drag": False,
+                               "middle_click_drag": False,
+                               "last_mouse_position": None}
 
-        def startDrag(caller, event):
-            dragging[sliceViewName]["isDragging"] = True
-            dragging[sliceViewName]["lastY"] = caller.GetEventPosition()[1]
+        def start_letf_drag(caller, event):
+            if disable_sectra:
+                return
+
+            dragging[view_name]["left_click_drag"] = True
+            dragging[view_name]["middle_click_drag"] = False
+            dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
+
+        def start_middle_drag(caller, event):
+            if disable_sectra:
+                return
+
+            dragging[view_name]["left_click_drag"] = False
+            dragging[view_name]["middle_click_drag"] = True
+            dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
+
+        def _drag_middle(caller, event):
+            current_mouse_position = caller.GetEventPosition()
+
+            dx = (current_mouse_position[0] -
+                  dragging[view_name]["last_mouse_position"][0]) * sensitivity_middle
+            dy = (current_mouse_position[1] -
+                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_middle
+
+            dragging[view_name]["last_mouse_position"] = current_mouse_position
+
+            displayNode = volume_node.GetDisplayNode()
+            if not displayNode:
+                return
+
+            current_window = displayNode.GetWindow()
+            current_level = displayNode.GetLevel()
+
+            new_window = max(1, current_window - dx)
+            new_level = current_level + dy
+
+            utils.set_window_level(volume_node,
+                                   new_window,
+                                   new_level)
+
+        def _drag_left(caller, event):
+            current_position = caller.GetEventPosition()
+
+            delta_y = current_position[1] - \
+                dragging[view_name]["last_mouse_position"][1]
+
+            dragging[view_name]["last_mouse_position"] = current_position
+
+            if abs(delta_y) > 0:
+                position = slicer.util.getNode("*Crosshair*").GetCursorPositionXYZ([0]*3)  # nopep8
+                if position is not None:
+                    current_view = position.GetName()
+                    sliceLogic = slicer.app.layoutManager().sliceWidget(current_view).sliceLogic()
+                    sliceOffset = sliceLogic.GetSliceOffset()
+                    newSliceOffset = sliceOffset - delta_y * sensitivity_left
+                    sliceLogic.SetSliceOffset(newSliceOffset)
 
         def drag(caller, event):
-            if dragging[sliceViewName]["isDragging"]:
-                currentY = caller.GetEventPosition()[1]
-                deltaY = currentY - dragging[sliceViewName]["lastY"]
-                dragging[sliceViewName]["lastY"] = currentY
 
-                if abs(deltaY) > 0:
-                    position = slicer.util.getNode(
-                        "*Crosshair*").GetCursorPositionXYZ([0]*3)
-                    if position is not None:
-                        current_view = position.GetName()
-                        sliceLogic = slicer.app.layoutManager().sliceWidget(current_view).sliceLogic()
-                        sliceOffset = sliceLogic.GetSliceOffset()
-                        newSliceOffset = sliceOffset - deltaY * sensitivity
-                        sliceLogic.SetSliceOffset(newSliceOffset)
+            if disable_sectra:
+                return
 
-        def endDrag(caller, event):
-            dragging[sliceViewName]["isDragging"] = False
-            dragging[sliceViewName]["lastY"] = None
+            if dragging[view_name]["middle_click_drag"] and volume_node:
+                _drag_middle(caller, event)
+            elif dragging[view_name]["left_click_drag"]:
+                _drag_left(caller, event)
 
-        return startDrag, drag, endDrag
+        def drag_end(caller, event):
+            if disable_sectra:
+                return
 
-    # Loop through slice views and add event observers
-    for sliceViewName in sliceViewNames:
-        # Get the interactor for this slice view
+            dragging[view_name]["middle_click_drag"] = False
+            dragging[view_name]["left_click_drag"] = False
+            dragging[view_name]["last_mouse_position"] = None
+
+        return start_letf_drag, start_middle_drag, drag, drag_end
+
+    # Loop through all provided views and set up interaction
+    for view_name in views:
+        createDragHandlers(view_name)
+
         interactor = slicer.app.layoutManager().sliceWidget(
-            sliceViewName).sliceView().interactor()
+            view_name).sliceView().interactor()
 
-        # Create handlers specific to this view
-        startDrag, drag, endDrag = createDragHandlers(sliceViewName)
+        # interactor.RemoveAllObservers()
 
-        # Add observers
-        interactor.AddObserver(vtk.vtkCommand.LeftButtonPressEvent, startDrag)
-        interactor.AddObserver(vtk.vtkCommand.LeftButtonReleaseEvent, endDrag)
-        interactor.AddObserver(vtk.vtkCommand.MouseMoveEvent, drag, 1.0)
+        if interactor.HasObserver(vtk.vtkCommand.MiddleButtonPressEvent):
+            interactor.RemoveObservers(vtk.vtkCommand.MiddleButtonPressEvent)
+
+        start_letf_drag, start_middle_drag, drag, drag_end = createDragHandlers(
+            view_name)
+
+        interactor.AddObserver(vtk.vtkCommand.LeftButtonPressEvent, start_letf_drag)  # nopep8
+        interactor.AddObserver(vtk.vtkCommand.MiddleButtonPressEvent, start_middle_drag)  # nopep8
+
+        interactor.AddObserver(vtk.vtkCommand.MouseMoveEvent, drag, 1.0)  # nopep8
+
+        interactor.AddObserver(vtk.vtkCommand.LeftButtonReleaseEvent, drag_end)  # nopep8
+        interactor.AddObserver(vtk.vtkCommand.MiddleButtonReleaseEvent, drag_end)  # nopep8
 
 
-def disable_scrolling_through_dragging():
+def disable_sectra_movements():
     """
     Disable scrolling through dragging by removing observers from slice views.
 
     This function should be called after enable_scrolling_through_dragging() 
     to remove the drag event observers.
     """
-    sliceViewNames = ['Red1', 'Yellow1', 'Green1', 'Red2',
-                      'Yellow2', 'Green2', 'Red3', 'Yellow3', 'Green3']
-
-    for sliceViewName in sliceViewNames:
-        # Get the slice view from the layout manager
-        sliceWidget = slicer.app.layoutManager().sliceWidget(sliceViewName)
-
-        if sliceWidget:
-            # Get the interactor from the slice view
-            interactor = sliceWidget.sliceView().interactor()
-
-            # Remove the observers if they exist
-            if hasattr(interactor, 'startDragObserver'):
-                interactor.RemoveObserver(interactor.startDragObserver)
-                del interactor.startDragObserver
-
-            if hasattr(interactor, 'dragObserver'):
-                interactor.RemoveObserver(interactor.dragObserver)
-                del interactor.dragObserver
-
-            if hasattr(interactor, 'endDragObserver'):
-                interactor.RemoveObserver(interactor.endDragObserver)
-                del interactor.endDragObserver
-
-    # Clear the global dragging dictionary
-    global dragging
-    dragging.clear()
+    global disable_sectra
+    disable_sectra = True
