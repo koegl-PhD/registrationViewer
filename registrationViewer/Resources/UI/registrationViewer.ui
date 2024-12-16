@@ -6,22 +6,34 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>447</width>
+    <width>300</width>
     <height>382</height>
    </rect>
   </property>
-<layout class="QVBoxLayout" name="verticalLayout">
+  <property name="maximumSize">
+   <size>
+    <width>500</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_center">
      <item>
       <spacer name="horizontalSpacer_left">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizePolicy" stdset="0">
+       <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
-         <height>20</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
       </spacer>
@@ -31,10 +43,7 @@
        <property name="layoutDirection">
         <enum>Qt::LeftToRight</enum>
        </property>
-       <property name="text">
-        <string>Simple UI</string>
-       </property>
-              <property name="styleSheet">
+       <property name="styleSheet">
         <string notr="true">
          QPushButton {
              background-color: #002a80;
@@ -51,17 +60,26 @@
          }
         </string>
        </property>
+       <property name="text">
+        <string>Simple UI</string>
+       </property>
       </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_right">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizePolicy" stdset="0">
+       <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
-         <height>20</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
       </spacer>

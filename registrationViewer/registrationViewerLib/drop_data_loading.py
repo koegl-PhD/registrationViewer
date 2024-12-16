@@ -14,6 +14,7 @@ import registrationViewerLib.utils as utils
 
 def create_loading_ui(self) -> None:
     configCollapsible = ctk.ctkCollapsibleButton()
+    configCollapsible.setMaximumWidth(500)  # Set maximum height to 400
     configCollapsible.text = "Folder Structure Configuration"
     self.layout.addWidget(configCollapsible)
 
