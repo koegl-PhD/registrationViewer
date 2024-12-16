@@ -400,7 +400,7 @@ def set_view_offset(view: str, offset: float) -> None:
 
 def enable_sectra_movements(volume_node, views: List[str],
                             sensitivity_left: float = 0.1,
-                            sensitivity_middle=20.0):
+                            sensitivity_middle=1.0):
 
     global disable_sectra
     disable_sectra = False

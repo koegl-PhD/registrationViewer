@@ -337,6 +337,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.link_views(self.views_second_row)
         view_logic.link_views(self.views_third_row)
 
+        if self.ui_is_simple:
+            view_logic.enable_sectra_movements(self.node_fixed,
+                                               self.views_first_row)
+            view_logic.enable_sectra_movements(self.node_moving,
+                                               self.views_second_row)
+
     def _synchronisation_checks(self) -> bool:
         """
         Internal helper method to validate synchronization prerequisites.
