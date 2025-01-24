@@ -212,9 +212,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_warped = slicer.modules.volumes.logic(
             ).CloneVolume(self.node_moving, "Warped")
             self.node_warped.SetName("Warped")
-            utils.warp_moving_with_transform(self.node_moving,
-                                             self.node_transformation,
-                                             self.node_warped)
+
+            utils.apply_and_harden_transform_to_node(
+                self.node_warped, self.node_transformation)
+            utils.resample_node_to_reference_node(
+                self.node_warped, self.node_fixed)
 
             array_fixed = slicer.util.arrayFromVolume(self.node_fixed)
             array_warped = slicer.util.arrayFromVolume(self.node_warped)
