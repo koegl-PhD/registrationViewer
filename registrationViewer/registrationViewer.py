@@ -239,7 +239,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_diff.GetDisplayNode().SetAutoThreshold(True)
 
             view_logic.update_views_with_volume(
+                self.views_first_row, self.node_fixed)
+            view_logic.update_views_with_volume(
+                self.views_second_row, self.node_moving)
+            view_logic.update_views_with_volume(
                 self.views_third_row, self.node_diff)
+
+            if self.ui_is_simple:
+                view_logic.enable_sectra_movements(self.node_diff,
+                                                   self.views_third_row)
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -345,6 +353,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                self.views_first_row)
             view_logic.enable_sectra_movements(self.node_moving,
                                                self.views_second_row)
+            view_logic.enable_sectra_movements(self.node_diff,
+                                               self.views_third_row)
 
     def _synchronisation_checks(self) -> bool:
         """
@@ -391,6 +401,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                self.views_first_row)
             view_logic.enable_sectra_movements(self.node_moving,
                                                self.views_second_row)
+            view_logic.enable_sectra_movements(self.node_diff,
+                                               self.views_third_row)
         else:
             self.ui.simple_ui.setText("Simple UI")
             slicer.app.setStyleSheet("""
