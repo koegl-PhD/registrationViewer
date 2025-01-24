@@ -227,9 +227,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
 
-            self.node_diff.GetDisplayNode().SetAutoWindowLevel(False)
-            self.node_diff.GetDisplayNode().SetWindow(2)
-            self.node_diff.GetDisplayNode().SetThreshold(-1.0, 1.0)
+            self.node_diff.GetDisplayNode().SetAutoWindowLevel(True)
+            self.node_diff.GetDisplayNode().SetAutoThreshold(True)
 
             view_logic.update_views_with_volume(
                 self.views_third_row, self.node_diff)
