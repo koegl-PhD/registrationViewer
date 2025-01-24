@@ -169,6 +169,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Buttons
         self.ui.button_2x3.connect("clicked(bool)", view_logic.set_2x3_layout)
         self.ui.button_3x3.connect("clicked(bool)", view_logic.set_3x3_layout)
+        self.ui.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
+            self.update_views_third_row_with_volume_diff))
         self.ui.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui.synchronise_views_manually.connect(
