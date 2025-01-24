@@ -169,6 +169,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Buttons
         self.ui.button_2x3.connect("clicked(bool)", view_logic.set_2x3_layout)
         self.ui.button_3x3.connect("clicked(bool)", view_logic.set_3x3_layout)
+        self.ui.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
+            self.update_views_third_row_with_volume_diff))
         self.ui.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui.synchronise_views_manually.connect(
@@ -212,9 +214,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_warped = slicer.modules.volumes.logic(
             ).CloneVolume(self.node_moving, "Warped")
             self.node_warped.SetName("Warped")
-            utils.warp_moving_with_transform(self.node_moving,
-                                             self.node_transformation,
-                                             self.node_warped)
+
+            utils.apply_and_harden_transform_to_node(
+                self.node_warped, self.node_transformation)
+            utils.resample_node_to_reference_node(
+                self.node_warped, self.node_fixed)
 
             array_fixed = slicer.util.arrayFromVolume(self.node_fixed)
             array_warped = slicer.util.arrayFromVolume(self.node_warped)
@@ -223,9 +227,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
 
-            self.node_diff.GetDisplayNode().SetAutoWindowLevel(False)
-            self.node_diff.GetDisplayNode().SetWindow(2)
-            self.node_diff.GetDisplayNode().SetThreshold(-1.0, 1.0)
+            self.node_diff.GetDisplayNode().SetAutoWindowLevel(True)
+            self.node_diff.GetDisplayNode().SetAutoThreshold(True)
 
             view_logic.update_views_with_volume(
                 self.views_third_row, self.node_diff)
