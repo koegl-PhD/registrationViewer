@@ -256,7 +256,7 @@ def set_2x3_layout() -> None:
         layout_callback(Layout.L_2X3)
 
 
-def set_3x3_layout() -> None:
+def set_3x3_layout(callback=None) -> None:
 
     customLayout = """
     <layout type="vertical" split="true">
@@ -374,6 +374,9 @@ def set_3x3_layout() -> None:
     global layout_callback
     if layout_callback:
         layout_callback(Layout.L_3X3)
+
+    if callback:
+        callback()
 
 
 def get_view_offset(view: str) -> float:
