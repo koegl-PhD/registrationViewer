@@ -98,15 +98,6 @@ def resample_node_to_reference_node(node_input: slicer.vtkMRMLScalarVolumeNode,
         slicer.modules.resamplescalarvectordwivolume, None, params)
 
 
-def warp_moving_with_transform(node_moving: slicer.vtkMRMLScalarVolumeNode,
-                               node_transform: slicer.vtkMRMLTransformNode,
-                               node_warped):
-
-    apply_and_harden_transform_to_node(node_warped, node_transform)
-
-    resample_node_to_reference_node(node_warped, node_moving)
-
-
 def collapse_all_segmentations() -> None:
 
     subjectHierarchyNode = slicer.mrmlScene.GetSubjectHierarchyNode()
@@ -121,35 +112,14 @@ def collapse_all_segmentations() -> None:
             node = subjectHierarchyNode.GetItemDataNode(itemID)
             if node and node.IsA("vtkMRMLSegmentationNode"):
                 subjectHierarchyNode.SetItemExpanded(itemID, False)
-
-
-def set_all_segmentation_visibility(visibility: bool) -> None:
-    subjectHierarchyNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-
-    if subjectHierarchyNode:
-        itemIDs = vtk.vtkIdList()
-        subjectHierarchyNode.GetItemChildren(
-            subjectHierarchyNode.GetSceneItemID(), itemIDs, True)
-
-        for i in range(itemIDs.GetNumberOfIds()):
-            itemID = itemIDs.GetId(i)
-            node = subjectHierarchyNode.GetItemDataNode(itemID)
-            if node and node.IsA("vtkMRMLSegmentationNode"):
-                node.SetDisplayVisibility(visibility)
+                # turn off visibility
+                node.SetDisplayVisibility(False)
 
 
 def set_window_level_and_threshold(node: slicer.vtkMRMLScalarVolumeNode,
                                    window: float,
                                    level: float,
                                    threshold: Tuple[float, float]) -> None:
-
-    set_window_level(node, window, level)
-    set_threshold(node, threshold)
-
-
-def set_window_level(node: slicer.vtkMRMLScalarVolumeNode,
-                     window: float,
-                     level: float) -> None:
 
     if not node:
         return
@@ -162,18 +132,6 @@ def set_window_level(node: slicer.vtkMRMLScalarVolumeNode,
     displayNode.AutoWindowLevelOff()
     displayNode.SetWindow(window)
     displayNode.SetLevel(level)
-
-
-def set_threshold(node: slicer.vtkMRMLScalarVolumeNode,
-                  threshold: Tuple[float, float]) -> None:
-
-    if not node:
-        return
-
-    displayNode = node.GetDisplayNode()
-
-    if not displayNode:
-        return
 
     displayNode.ApplyThresholdOn()
     displayNode.SetThreshold(threshold[0], threshold[1])
