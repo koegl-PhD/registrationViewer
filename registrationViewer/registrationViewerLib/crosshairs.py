@@ -12,7 +12,7 @@ class Crosshairs():
 
     def __init__(self,
                  node_cursor,
-                 node_transformation,
+                 node_transform_nonlinear,
                  node_transform_fixed,
                  node_transform_moving,
                  use_transform,
@@ -23,11 +23,16 @@ class Crosshairs():
         assert use_transform is not None, "Use transform is None"
 
         self.node_cursor = node_cursor
-        self.use_transform = use_transform
 
-        self.node_transformation = node_transformation
+        self.node_transform_nonlinear = node_transform_nonlinear
         self.node_transform_fixed = node_transform_fixed
         self.node_transform_moving = node_transform_moving
+
+        self.use_transform = use_transform
+
+        self.offset_diffs = offset_diffs
+        self.apply_offsets = apply_offsets
+
         self.cursor_view: str = ""
         self.reverse_transf_direction: bool = False
 
@@ -35,9 +40,6 @@ class Crosshairs():
         self.views_2 = ["Red2", "Green2", "Yellow2"]
         self.views_3 = ["Red3", "Green3", "Yellow3"]
         self.views = self.views_1 + self.views_2 + self.views_3
-
-        self.offset_diffs = offset_diffs
-        self.apply_offsets = apply_offsets
 
         self.create_crosshairs_and_folder()
 
@@ -211,19 +213,19 @@ class Crosshairs():
         # first move to fixed space, then deform then move back to moving space
 
         for node in crosshair_nodes:
-            if self.node_transformation:
+            if self.node_transform_nonlinear:
                 if invert:
                     node.ApplyTransform(
                         self.node_transform_fixed.GetTransformToParent())
                     node.ApplyTransform(
-                        self.node_transformation.GetTransformFromParent())
+                        self.node_transform_nonlinear.GetTransformFromParent())
                     node.ApplyTransform(
                         self.node_transform_moving.GetTransformFromParent())
                 else:
                     node.ApplyTransform(
                         self.node_transform_moving.GetTransformToParent())
                     node.ApplyTransform(
-                        self.node_transformation.GetTransformToParent())
+                        self.node_transform_nonlinear.GetTransformToParent())
                     node.ApplyTransform(
                         self.node_transform_fixed.GetTransformFromParent())
 
