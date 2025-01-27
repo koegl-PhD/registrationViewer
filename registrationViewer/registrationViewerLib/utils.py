@@ -5,6 +5,47 @@ import slicer
 import vtk
 
 
+def normalize_intensity(data):
+
+    return (data - data.min()) / (data.max() - data.min())
+
+
+def apply_black_to_white_lookup_table(volume_node):
+    import vtk
+    import numpy as np
+
+    # Create a vtkLookupTable for custom colors
+    lookup_table = vtk.vtkLookupTable()
+    lookup_table.SetNumberOfTableValues(256)  # 256 colors
+    lookup_table.SetRange(-1.0, 1.0)
+    lookup_table.Build()
+
+    # Populate the lookup table with logarithmic scaling
+    for i in range(256):
+        value = i / 255.0
+        intensity = abs(value - 0.5) * 2
+        lookup_table.SetTableValue(i,
+                                   intensity,
+                                   intensity,
+                                   intensity,
+                                   1.0)
+
+    # Create a vtkMRMLColorTableNode and set the lookup table
+    color_table_node = slicer.mrmlScene.AddNewNodeByClass(
+        "vtkMRMLColorTableNode", "BlackToWhiteColorTable")
+    color_table_node.SetAndObserveLookupTable(lookup_table)
+
+    # Get the display node for the volume
+    display_node = volume_node.GetDisplayNode()
+    if not display_node:
+        display_node = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLScalarVolumeDisplayNode")
+        volume_node.SetAndObserveDisplayNodeID(display_node.GetID())
+
+    # Assign the color table to the display node
+    display_node.SetAndObserveColorNodeID(color_table_node.GetID())
+
+
 def set_ui_simplification(simple: bool) -> None:
     """
     Simplifies the UI by hiding the toolbar, module panel etc.
@@ -58,14 +99,6 @@ def print_affine_matrix(transformNode):
         print("  ", [matrix.GetElement(row, col) for col in range(4)])
 
 
-def clone(node, name=""):
-    if name == "":
-        name = node.GetName() + "_Clone"
-    clonedNode = slicer.mrmlScene.AddNewNodeByClass(node.GetClassName(), name)
-    clonedNode.CopyContent(node)
-    return clonedNode
-
-
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
     """
     Creates and initializes shortcuts for the main window.
@@ -101,30 +134,34 @@ def temp_load_data(self):
 
 
 def apply_and_harden_transform_to_node(node_target: slicer.vtkMRMLNode,
-                                       node_transform: slicer.vtkMRMLTransformNode, ) -> None:
+                                       node_transform: slicer.vtkMRMLTransformNode,
+                                       invert: bool = False) -> None:
     """
     Applies the given transform to the target node and hardens it.
 
     @param node_target: The target node.
     @param node_transform: The transform node.
     """
-
-    node_target.SetAndObserveTransformNodeID(node_transform.GetID())
-
-    node_target.HardenTransform()
+    if invert:
+        node_target.ApplyTransform(node_transform.GetTransformFromParent())
+    else:
+        node_target.ApplyTransform(node_transform.GetTransformToParent())
 
 
 def resample_node_to_reference_node(node_input: slicer.vtkMRMLScalarVolumeNode,
                                     node_reference: slicer.vtkMRMLScalarVolumeNode) -> None:
-    params = {}
 
-    params["inputVolume"] = node_input
-    params["outputVolume"] = node_input
-    params["referenceVolume"] = node_reference
-    params["interpolationType"] = "linear"
+    params = {
+        "inputVolume": node_input,
+        "outputVolume": node_input,
+        "referenceVolume": node_reference,
+        "interpolationType": "linear"
+    }
 
-    slicer.cli.runSync(
-        slicer.modules.resamplescalarvectordwivolume, None, params)
+    slicer.cli.runSync(slicer.modules.resamplescalarvectordwivolume,
+                       None,
+                       params,
+                       update_display=False)
 
 
 def collapse_all_segmentations() -> None:
