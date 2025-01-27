@@ -13,6 +13,10 @@ class Crosshairs():
     def __init__(self,
                  node_cursor,
                  node_transformation,
+                 node_transform_fixed,
+                 node_transform_moving,
+                 node_transform_fixed_inv,
+                 node_transform_moving_inv,
                  use_transform,
                  offset_diffs: List[float],
                  apply_offsets: bool) -> None:
@@ -24,6 +28,10 @@ class Crosshairs():
         self.use_transform = use_transform
 
         self.node_transformation = node_transformation
+        self.node_transform_fixed = node_transform_fixed
+        self.node_transform_moving = node_transform_moving
+        self.node_transform_fixed_inv = node_transform_fixed_inv
+        self.node_transform_moving_inv = node_transform_moving_inv
         self.cursor_view: str = ""
         self.reverse_transf_direction: bool = False
 
@@ -106,22 +114,9 @@ class Crosshairs():
                                              initial_position)
 
         # now transform the crosshair to the new position
-        # first move to fixed space, then deform then move back to moving space
-        if self.use_transform:
-            if view_group == 2:
-                for node in crosshair_nodes:
-                    node.ApplyTransform(
-                        self.node_transform_fixed.GetTransformToParent())
-
         if self.use_transform:
             self.transform_crosshair_nodes(crosshair_nodes,
                                            not reverse_transf_direction)
-
-        if self.use_transform:
-            if view_group == 2:
-                for node in crosshair_nodes:
-                    node.ApplyTransform(
-                        self.node_transform_moving_inv.GetTransformToParent())
 
         new_position: list[float] = [0., 0., 0.]
         crosshair_nodes[0].GetNthControlPointPositionWorld(0,
@@ -217,15 +212,25 @@ class Crosshairs():
         """
         Transform every crosshair from the list of nodes with the current transformation.
         """
+        # first move to fixed space, then deform then move back to moving space
 
         for node in crosshair_nodes:
             if self.node_transformation:
                 if invert:
                     node.ApplyTransform(
+                        self.node_transform_fixed.GetTransformToParent())
+                    node.ApplyTransform(
                         self.node_transformation.GetTransformFromParent())
+                    node.ApplyTransform(
+                        self.node_transform_moving_inv.GetTransformToParent())
                 else:
                     node.ApplyTransform(
+                        self.node_transform_moving.GetTransformToParent())
+                    node.ApplyTransform(
                         self.node_transformation.GetTransformToParent())
+                    node.ApplyTransform(
+                        self.node_transform_fixed_inv.GetTransformToParent())
+
             else:
                 print("No transformation available")
 
