@@ -171,12 +171,14 @@ class DropWidget(qt.QFrame):
             node_seg_moving = slicer.util.loadSegmentation(path_seg_moving,
                                                            properties={'name': 'seg_moving'})
 
-            node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
-                                                             properties={'name': 't_fixed'})
-            node_transform_moving = slicer.util.loadTransform(path_transform_moving,
-                                                              properties={'name': 't_moving'})
-            node_deformation = slicer.util.loadTransform(path_deformation,
-                                                         properties={'name': 'd'})
+            node_transform_fixed = slicer.util.loadTransform(
+                path_transform_fixed)
+            node_transform_fixed.SetName('t_fixed')
+            node_transform_moving = slicer.util.loadTransform(
+                path_transform_moving)
+            node_transform_moving.SetName('t_moving')
+            node_deformation = slicer.util.loadTransform(path_deformation)
+            node_deformation.SetName('deformation')
 
             self.moduleWidget.node_transform_fixed = node_transform_fixed
             self.moduleWidget.node_transform_moving = node_transform_moving
