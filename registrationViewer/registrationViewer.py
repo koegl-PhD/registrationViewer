@@ -128,6 +128,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui_is_simple = False
 
+        self.node_transform_fixed = None
+        self.node_transform_moving = None
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -210,7 +213,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def update_views_third_row_with_volume_diff(self) -> None:
 
-        if self.node_fixed is not None and self.node_moving is not None and self.node_transformation is not None:
+        if self.node_fixed is not None and self.node_moving is not None and self.node_transform_nonlinear is not None:
             if self.node_diff is None:
                 self.node_diff = slicer.modules.volumes.logic(
                 ).CloneVolume(self.node_fixed, "Difference")
@@ -224,7 +227,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_warped.SetName("Warped")
 
             utils.apply_and_harden_transform_to_node(
-                self.node_warped, self.node_transformation)
+                self.node_warped, self.node_transform_nonlinear)
             utils.resample_node_to_reference_node(
                 self.node_warped, self.node_fixed)
 
@@ -370,9 +373,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.util.errorDisplay("No crosshair found")
             return False
 
-        if self.node_transformation is None:
-            slicer.util.errorDisplay("No transformation found")
-            return False
+        for transform in [self.node_transform_nonlinear, self.node_transform_fixed, self.node_transform_moving]:
+            if transform is None:
+                slicer.util.errorDisplay(f"Could not find transfrom \
+                                         {transform.GetName()}")
+                return False
 
         return True
 
@@ -560,10 +565,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def _set_up_crosshair(self, turn_synchronisation_on: bool) -> None:
         if self.crosshair is None:
             self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_crosshair,
-                                                   node_transformation=self.node_transformation,
+                                                   node_transform_nonlinear=self.node_transform_nonlinear,
+                                                   node_transform_fixed=self.node_transform_fixed,
+                                                   node_transform_moving=self.node_transform_moving,
                                                    use_transform=self.use_transform,
                                                    offset_diffs=self.current_offset,
-                                                   apply_offsets=self.synchronise_manually_pressed,)
+                                                   apply_offsets=self.synchronise_manually_pressed)
 
         if turn_synchronisation_on:
             self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
@@ -572,7 +579,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _update_crosshair_transformation(self) -> None:
         if self.crosshair:
-            self.crosshair.node_transformation = self.node_transformation
+            self.crosshair.node_transform_nonlinear = self.node_transform_nonlinear
+            self.crosshair.node_transform_fixed = self.node_transform_fixed
+            self.crosshair.node_transform_moving = self.node_transform_moving
 
     @property
     def node_fixed(self) -> Any:
@@ -587,7 +596,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return slicer.util.getNode("Crosshair")
 
     @property
-    def node_transformation(self) -> Any:
+    def node_transform_nonlinear(self) -> Any:
         return self.ui.inputSelector_transformation.currentNode()
 
 

@@ -12,7 +12,9 @@ class Crosshairs():
 
     def __init__(self,
                  node_cursor,
-                 node_transformation,
+                 node_transform_nonlinear,
+                 node_transform_fixed,
+                 node_transform_moving,
                  use_transform,
                  offset_diffs: List[float],
                  apply_offsets: bool) -> None:
@@ -21,9 +23,16 @@ class Crosshairs():
         assert use_transform is not None, "Use transform is None"
 
         self.node_cursor = node_cursor
+
+        self.node_transform_nonlinear = node_transform_nonlinear
+        self.node_transform_fixed = node_transform_fixed
+        self.node_transform_moving = node_transform_moving
+
         self.use_transform = use_transform
 
-        self.node_transformation = node_transformation
+        self.offset_diffs = offset_diffs
+        self.apply_offsets = apply_offsets
+
         self.cursor_view: str = ""
         self.reverse_transf_direction: bool = False
 
@@ -31,9 +40,6 @@ class Crosshairs():
         self.views_2 = ["Red2", "Green2", "Yellow2"]
         self.views_3 = ["Red3", "Green3", "Yellow3"]
         self.views = self.views_1 + self.views_2 + self.views_3
-
-        self.offset_diffs = offset_diffs
-        self.apply_offsets = apply_offsets
 
         self.create_crosshairs_and_folder()
 
@@ -87,17 +93,6 @@ class Crosshairs():
 
         return crosshair_node
 
-    @staticmethod
-    def reverse_transformation_direction(position, new_position):
-        """
-        Reverse the transformation direction.
-        """
-
-        position_difference = np.array(new_position) - np.array(position)
-        new_position = np.array(new_position) - 2*position_difference
-
-        return new_position
-
     def place_crosshair_with_transformation(self,
                                             view_group: int,
                                             crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
@@ -118,17 +113,12 @@ class Crosshairs():
 
         # now transform the crosshair to the new position
         if self.use_transform:
-            self.transform_crosshair_nodes(crosshair_nodes)
+            self.transform_crosshair_nodes(crosshair_nodes,
+                                           not reverse_transf_direction)
 
         new_position: list[float] = [0., 0., 0.]
         crosshair_nodes[0].GetNthControlPointPositionWorld(0,
                                                            new_position)
-
-        if not reverse_transf_direction:
-            # the new_position should be moved in the opposite direction
-            # for some reason the displacement is applied in the opposite direction
-            new_position = self.reverse_transformation_direction(initial_position,
-                                                                 new_position)
 
         # Apply offset
         if not self.apply_offsets or offset_direction == 'nan':
@@ -214,15 +204,31 @@ class Crosshairs():
             self.place_crosshair_without_transformation(view_group=3,
                                                         crosshair_nodes=self.crosshairs_3)
 
-    def transform_crosshair_nodes(self, crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode]) -> None:
+    def transform_crosshair_nodes(self,
+                                  crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
+                                  invert: bool) -> None:
         """
         Transform every crosshair from the list of nodes with the current transformation.
         """
+        # first move to fixed space, then deform then move back to moving space
 
         for node in crosshair_nodes:
-            if self.node_transformation:
-                node.ApplyTransform(
-                    self.node_transformation.GetTransformToParent())
+            if self.node_transform_nonlinear:
+                if invert:
+                    node.ApplyTransform(
+                        self.node_transform_fixed.GetTransformToParent())
+                    node.ApplyTransform(
+                        self.node_transform_nonlinear.GetTransformFromParent())
+                    node.ApplyTransform(
+                        self.node_transform_moving.GetTransformFromParent())
+                else:
+                    node.ApplyTransform(
+                        self.node_transform_moving.GetTransformToParent())
+                    node.ApplyTransform(
+                        self.node_transform_nonlinear.GetTransformToParent())
+                    node.ApplyTransform(
+                        self.node_transform_fixed.GetTransformFromParent())
+
             else:
                 print("No transformation available")
 

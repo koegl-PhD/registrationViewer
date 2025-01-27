@@ -37,6 +37,35 @@ def set_ui_simplification(simple: bool) -> None:
     slicer.util.setPythonConsoleVisible(value)
 
 
+def print_affine_matrix(transformNode):
+    """
+    Prints the affine matrix of a vtkMRMLLinearTransformNode.
+
+    Args:
+        transformNode (vtkMRMLLinearTransformNode): The transform node whose matrix is to be printed.
+    """
+    if not transformNode.IsA("vtkMRMLLinearTransformNode"):
+        print("Error: The provided node is not a vtkMRMLLinearTransformNode.")
+        return
+
+    # Retrieve the transformation matrix
+    matrix = vtk.vtkMatrix4x4()
+    transformNode.GetMatrixTransformToParent(matrix)
+
+    # Print the matrix in a readable format
+    print("Affine matrix:")
+    for row in range(4):
+        print("  ", [matrix.GetElement(row, col) for col in range(4)])
+
+
+def clone(node, name=""):
+    if name == "":
+        name = node.GetName() + "_Clone"
+    clonedNode = slicer.mrmlScene.AddNewNodeByClass(node.GetClassName(), name)
+    clonedNode.CopyContent(node)
+    return clonedNode
+
+
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
     """
     Creates and initializes shortcuts for the main window.
@@ -114,6 +143,21 @@ def collapse_all_segmentations() -> None:
                 subjectHierarchyNode.SetItemExpanded(itemID, False)
                 # turn off visibility
                 node.SetDisplayVisibility(False)
+
+
+def set_all_segmentation_visibility(visibility: bool) -> None:
+    subjectHierarchyNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+
+    if subjectHierarchyNode:
+        itemIDs = vtk.vtkIdList()
+        subjectHierarchyNode.GetItemChildren(
+            subjectHierarchyNode.GetSceneItemID(), itemIDs, True)
+
+        for i in range(itemIDs.GetNumberOfIds()):
+            itemID = itemIDs.GetId(i)
+            node = subjectHierarchyNode.GetItemDataNode(itemID)
+            if node and node.IsA("vtkMRMLSegmentationNode"):
+                node.SetDisplayVisibility(visibility)
 
 
 def set_window_level_and_threshold(node: slicer.vtkMRMLScalarVolumeNode,
