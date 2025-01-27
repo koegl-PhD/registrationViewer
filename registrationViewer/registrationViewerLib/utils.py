@@ -37,6 +37,14 @@ def set_ui_simplification(simple: bool) -> None:
     slicer.util.setPythonConsoleVisible(value)
 
 
+def clone(node, name=""):
+    if name == "":
+        name = node.GetName() + "_Clone"
+    clonedNode = slicer.mrmlScene.AddNewNodeByClass(node.GetClassName(), name)
+    clonedNode.CopyContent(node)
+    return clonedNode
+
+
 def create_shortcuts(*shortcuts: Tuple[str, Callable]) -> None:
     """
     Creates and initializes shortcuts for the main window.
