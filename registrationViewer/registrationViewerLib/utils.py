@@ -37,6 +37,27 @@ def set_ui_simplification(simple: bool) -> None:
     slicer.util.setPythonConsoleVisible(value)
 
 
+def print_affine_matrix(transformNode):
+    """
+    Prints the affine matrix of a vtkMRMLLinearTransformNode.
+
+    Args:
+        transformNode (vtkMRMLLinearTransformNode): The transform node whose matrix is to be printed.
+    """
+    if not transformNode.IsA("vtkMRMLLinearTransformNode"):
+        print("Error: The provided node is not a vtkMRMLLinearTransformNode.")
+        return
+
+    # Retrieve the transformation matrix
+    matrix = vtk.vtkMatrix4x4()
+    transformNode.GetMatrixTransformToParent(matrix)
+
+    # Print the matrix in a readable format
+    print("Affine matrix:")
+    for row in range(4):
+        print("  ", [matrix.GetElement(row, col) for col in range(4)])
+
+
 def clone(node, name=""):
     if name == "":
         name = node.GetName() + "_Clone"
