@@ -161,33 +161,25 @@ class DropWidget(qt.QFrame):
                 print(path_deformation)
                 raise Exception(f"Deformation path does not exist: {path_deformation}")  # nopep8
 
-            node_volume_fixed = slicer.util.loadVolume(
-                path_volume_fixed)
-            node_volume_moving = slicer.util.loadVolume(
-                path_volume_moving)
-            node_seg_fixed = slicer.util.loadSegmentation(
-                path_seg_fixed)
-            node_seg_moving = slicer.util.loadSegmentation(
-                path_seg_moving)
-            node_transform_fixed = slicer.util.loadTransform(
-                path_transform_fixed)
-            node_transform_moving = slicer.util.loadTransform(
-                path_transform_moving)
-            node_deformation = slicer.util.loadTransform(
-                path_deformation)
+            node_volume_fixed = slicer.util.loadVolume(path_volume_fixed,
+                                                       properties={'name': 'fixed'})
+            node_volume_moving = slicer.util.loadVolume(path_volume_moving,
+                                                        properties={'name': 'moving'})
 
-            # apply transforms to volumes and segs
-            utils.apply_and_harden_transform_to_node(
-                node_volume_fixed, node_transform_fixed)
-            utils.apply_and_harden_transform_to_node(
-                node_seg_fixed, node_transform_fixed)
-            slicer.mrmlScene.RemoveNode(node_transform_fixed)
+            node_seg_fixed = slicer.util.loadSegmentation(path_seg_fixed,
+                                                          properties={'name': 'seg_fixed'})
+            node_seg_moving = slicer.util.loadSegmentation(path_seg_moving,
+                                                           properties={'name': 'seg_moving'})
 
-            utils.apply_and_harden_transform_to_node(
-                node_volume_moving, node_transform_moving)
-            utils.apply_and_harden_transform_to_node(
-                node_seg_moving, node_transform_moving)
-            slicer.mrmlScene.RemoveNode(node_transform_moving)
+            node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
+                                                             properties={'name': 't_fixed'})
+            node_transform_moving = slicer.util.loadTransform(path_transform_moving,
+                                                              properties={'name': 't_moving'})
+            node_deformation = slicer.util.loadTransform(path_deformation,
+                                                         properties={'name': 'd'})
+
+            self.moduleWidget.node_transform_fixed = node_transform_fixed
+            self.moduleWidget.node_transform_moving = node_transform_moving
 
             self.moduleWidget.ui.inputSelector_fixed.setCurrentNode(
                 node_volume_fixed)
