@@ -11,16 +11,14 @@ class Crosshairs():
     """
 
     def __init__(self,
-                 node_cursor,
-                 node_transform_nonlinear,
-                 node_transform_fixed,
-                 node_transform_moving,
-                 use_transform,
+                 node_cursor: slicer.vtkMRMLCrosshairNode,
+                 node_transform_nonlinear: slicer.vtkMRMLGridTransformNode,
+                 node_transform_fixed: slicer.vtkMRMLLinearTransformNode,
+                 node_transform_moving: slicer.vtkMRMLLinearTransformNode,
+                 use_transform: bool,
+                 use_only_linear_transform: bool,
                  offset_diffs: List[float],
                  apply_offsets: bool) -> None:
-
-        assert node_cursor is not None, "Cursor node is None"
-        assert use_transform is not None, "Use transform is None"
 
         self.node_cursor = node_cursor
 
@@ -29,6 +27,7 @@ class Crosshairs():
         self.node_transform_moving = node_transform_moving
 
         self.use_transform = use_transform
+        self.use_only_linear_transform = use_only_linear_transform
 
         self.offset_diffs = offset_diffs
         self.apply_offsets = apply_offsets
@@ -217,15 +216,17 @@ class Crosshairs():
                 if invert:
                     node.ApplyTransform(
                         self.node_transform_fixed.GetTransformToParent())
-                    node.ApplyTransform(
-                        self.node_transform_nonlinear.GetTransformFromParent())
+                    if not self.use_only_linear_transform:
+                        node.ApplyTransform(
+                            self.node_transform_nonlinear.GetTransformFromParent())
                     node.ApplyTransform(
                         self.node_transform_moving.GetTransformFromParent())
                 else:
                     node.ApplyTransform(
                         self.node_transform_moving.GetTransformToParent())
-                    node.ApplyTransform(
-                        self.node_transform_nonlinear.GetTransformToParent())
+                    if not self.use_only_linear_transform:
+                        node.ApplyTransform(
+                            self.node_transform_nonlinear.GetTransformToParent())
                     node.ApplyTransform(
                         self.node_transform_fixed.GetTransformFromParent())
 
