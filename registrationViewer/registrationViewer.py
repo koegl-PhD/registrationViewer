@@ -219,78 +219,109 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def update_views_third_row_with_volume_diff(self) -> None:
 
-        if self.node_fixed is not None and \
-           self.node_moving is not None and \
-           self.node_transform_nonlinear is not None:
+        try:
 
-            offset_red1 = view_logic.get_view_offset("Red1")
-            offset_green1 = view_logic.get_view_offset("Green1")
-            offset_yellow1 = view_logic.get_view_offset("Yellow1")
+            if self.node_fixed is not None and \
+                    self.node_moving is not None and \
+                    self.node_transform_nonlinear is not None:
 
-            self.node_fixed_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_fixed,
-                                                                                                 "Fixed with affine")
-            utils.apply_and_harden_transform_to_node(self.node_fixed_transformed_with_affine,
-                                                     self.node_transform_fixed)
+                title = "Creating difference view..."
+                slicer.progressWindow = slicer.util.createProgressDialog()
+                slicer.progressWindow.show()
+                slicer.progressWindow.activateWindow()
+                slicer.progressWindow.setValue(0)
+                slicer.progressWindow.setLabelText(title)
+                slicer.app.processEvents()
 
-            self.node_moving_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_moving,
-                                                                                                  "Moving with affine")
-            utils.apply_and_harden_transform_to_node(self.node_moving_transformed_with_affine,
-                                                     self.node_transform_moving)
+                offset_red1 = view_logic.get_view_offset("Red1")
+                offset_green1 = view_logic.get_view_offset("Green1")
+                offset_yellow1 = view_logic.get_view_offset("Yellow1")
 
-            if self.node_diff is None:
-                self.node_diff = slicer.modules.volumes.logic().CloneVolume(self.node_fixed_transformed_with_affine,
-                                                                            "Difference")
+                self.node_fixed_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_fixed,
+                                                                                                     "Fixed with affine")
+                utils.apply_and_harden_transform_to_node(self.node_fixed_transformed_with_affine,
+                                                         self.node_transform_fixed)
 
-            if self.node_moving_warped is not None:
-                slicer.mrmlScene.RemoveNode(self.node_moving_warped)
+                self.node_moving_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_moving,
+                                                                                                      "Moving with affine")
+                utils.apply_and_harden_transform_to_node(self.node_moving_transformed_with_affine,
+                                                         self.node_transform_moving)
 
-            self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(self.node_moving_transformed_with_affine,
-                                                                                 "Warped")
+                if not utils.update_progress_window(20, title):
+                    return
 
-            utils.apply_and_harden_transform_to_node(
-                self.node_moving_warped, self.node_transform_nonlinear)
-            utils.resample_node_to_reference_node(
-                self.node_moving_warped, self.node_fixed_transformed_with_affine)
+                if self.node_diff is None:
+                    self.node_diff = slicer.modules.volumes.logic().CloneVolume(self.node_fixed_transformed_with_affine,
+                                                                                "Difference")
 
-            array_fixed = slicer.util.arrayFromVolume(
-                self.node_fixed_transformed_with_affine)
-            array_warped = slicer.util.arrayFromVolume(self.node_moving_warped)
+                if self.node_moving_warped is not None:
+                    slicer.mrmlScene.RemoveNode(self.node_moving_warped)
 
-            array_fixed = utils.normalize_intensity(array_fixed)
-            array_warped = utils.normalize_intensity(array_warped)
+                self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(self.node_moving_transformed_with_affine,
+                                                                                     "Warped")
 
-            array_diff = array_fixed - array_warped
+                if not utils.update_progress_window(40, title):
+                    return
 
-            slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
+                utils.apply_and_harden_transform_to_node(
+                    self.node_moving_warped, self.node_transform_nonlinear)
+                utils.resample_node_to_reference_node(
+                    self.node_moving_warped, self.node_fixed_transformed_with_affine)
 
-            utils.apply_and_harden_transform_to_node(self.node_diff,
-                                                     self.node_transform_fixed,
-                                                     invert=True)
+                if not utils.update_progress_window(60, title):
+                    return
 
-            view_logic.update_views_with_volume(
-                self.views_third_row, self.node_diff)
+                array_fixed = slicer.util.arrayFromVolume(
+                    self.node_fixed_transformed_with_affine)
+                array_warped = slicer.util.arrayFromVolume(
+                    self.node_moving_warped)
 
-            slicer.mrmlScene.RemoveNode(
-                self.node_fixed_transformed_with_affine)
-            slicer.mrmlScene.RemoveNode(
-                self.node_moving_transformed_with_affine)
+                array_fixed = utils.normalize_intensity(array_fixed)
+                array_warped = utils.normalize_intensity(array_warped)
 
-            if self.ui_is_simple:
-                view_logic.enable_sectra_movements(self.node_diff,
-                                                   self.views_third_row)
+                array_diff = array_fixed - array_warped
 
-            slicer.util.resetSliceViews()
+                slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
 
-            view_logic.set_view_offset("Red3", offset_red1)
-            view_logic.set_view_offset("Green3", offset_green1)
-            view_logic.set_view_offset("Yellow3", offset_yellow1)
+                if not utils.update_progress_window(80, title):
+                    return
 
-            utils.apply_black_to_white_lookup_table_with_log(self.node_diff)
+                utils.apply_and_harden_transform_to_node(self.node_diff,
+                                                         self.node_transform_fixed,
+                                                         invert=True)
 
-            utils.set_window_level_and_threshold(self.node_diff,
-                                                 window=1.20,
-                                                 level=0.0,
-                                                 threshold=(-2, 2))
+                view_logic.update_views_with_volume(
+                    self.views_third_row, self.node_diff)
+
+                slicer.mrmlScene.RemoveNode(
+                    self.node_fixed_transformed_with_affine)
+                slicer.mrmlScene.RemoveNode(
+                    self.node_moving_transformed_with_affine)
+
+                if self.ui_is_simple:
+                    view_logic.enable_sectra_movements(self.node_diff,
+                                                       self.views_third_row)
+
+                slicer.util.resetSliceViews()
+
+                view_logic.set_view_offset("Red3", offset_red1)
+                view_logic.set_view_offset("Green3", offset_green1)
+                view_logic.set_view_offset("Yellow3", offset_yellow1)
+
+                utils.apply_black_to_white_lookup_table(
+                    self.node_diff)
+
+                utils.set_window_level_and_threshold(self.node_diff,
+                                                     window=1.20,
+                                                     level=0.0,
+                                                     threshold=(-2, 2))
+
+                slicer.progressWindow.close()
+
+        except Exception as e:
+            slicer.progressWindow.close()
+            logging.error(f"Error loading data: {str(e)}")
+            slicer.util.errorDisplay(f"Error loading data: {str(e)}")
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""

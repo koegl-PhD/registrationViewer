@@ -5,6 +5,17 @@ import slicer
 import vtk
 
 
+def update_progress_window(progress: int, message: str) -> bool:
+    if slicer.progressWindow.wasCanceled:
+        slicer.progressWindow.close()
+        return False
+
+    slicer.progressWindow.setLabelText(message)
+    slicer.progressWindow.setValue(progress)
+
+    return True
+
+
 def normalize_intensity(data):
 
     return (data - data.min()) / (data.max() - data.min())
@@ -202,6 +213,14 @@ def set_window_level_and_threshold(node: slicer.vtkMRMLScalarVolumeNode,
                                    level: float,
                                    threshold: Tuple[float, float]) -> None:
 
+    set_window_level(node, window, level)
+    set_threshold(node, threshold)
+
+
+def set_window_level(node: slicer.vtkMRMLScalarVolumeNode,
+                     window: float,
+                     level: float) -> None:
+
     if not node:
         return
 
@@ -213,6 +232,18 @@ def set_window_level_and_threshold(node: slicer.vtkMRMLScalarVolumeNode,
     displayNode.AutoWindowLevelOff()
     displayNode.SetWindow(window)
     displayNode.SetLevel(level)
+
+
+def set_threshold(node: slicer.vtkMRMLScalarVolumeNode,
+                  threshold: Tuple[float, float]) -> None:
+
+    if not node:
+        return
+
+    displayNode = node.GetDisplayNode()
+
+    if not displayNode:
+        return
 
     displayNode.ApplyThresholdOn()
     displayNode.SetThreshold(threshold[0], threshold[1])

@@ -95,6 +95,14 @@ class DropWidget(qt.QFrame):
         """
 
         try:
+            slicer.progressWindow = slicer.util.createProgressDialog()
+            slicer.progressWindow.show()
+            slicer.progressWindow.activateWindow()
+            slicer.progressWindow.setValue(0)
+            slicer.progressWindow.setLabelText(
+                f"Loading data...")
+            slicer.app.processEvents()
+
             path_experiment = os.path.dirname(
                 os.path.dirname(dropped_folder_path))
 
@@ -161,24 +169,50 @@ class DropWidget(qt.QFrame):
                 print(path_deformation)
                 raise Exception(f"Deformation path does not exist: {path_deformation}")  # nopep8
 
-            node_volume_fixed = slicer.util.loadVolume(path_volume_fixed,
-                                                       properties={'name': 'fixed'})
-            node_volume_moving = slicer.util.loadVolume(path_volume_moving,
-                                                        properties={'name': 'moving'})
+            if utils.update_progress_window(0, f"Loading fixed volume..."):
+                node_volume_fixed = slicer.util.loadVolume(path_volume_fixed,
+                                                           properties={'name': 'fixed'})
+            else:
+                return
 
-            node_seg_fixed = slicer.util.loadSegmentation(path_seg_fixed,
-                                                          properties={'name': 'seg_fixed'})
-            node_seg_moving = slicer.util.loadSegmentation(path_seg_moving,
-                                                           properties={'name': 'seg_moving'})
+            if utils.update_progress_window(10, f"Loading moving volume..."):
+                node_volume_moving = slicer.util.loadVolume(path_volume_moving,
+                                                            properties={'name': 'moving'})
+            else:
+                return
 
-            node_transform_fixed = slicer.util.loadTransform(
-                path_transform_fixed)
-            node_transform_fixed.SetName('t_fixed')
-            node_transform_moving = slicer.util.loadTransform(
-                path_transform_moving)
-            node_transform_moving.SetName('t_moving')
-            node_deformation = slicer.util.loadTransform(path_deformation)
-            node_deformation.SetName('deformation')
+            if utils.update_progress_window(20, f"Loading fixed segmentation..."):
+                node_seg_fixed = slicer.util.loadSegmentation(path_seg_fixed,
+                                                              properties={'name': 'seg_fixed'})
+            else:
+                return
+
+            if utils.update_progress_window(30, f"Loading moving segmentation..."):
+                node_seg_moving = slicer.util.loadSegmentation(path_seg_moving,
+                                                               properties={'name': 'seg_moving'})
+            else:
+                return
+
+            if utils.update_progress_window(40, f"Loading fixed transform..."):
+                node_transform_fixed = slicer.util.loadTransform(
+                    path_transform_fixed)
+                node_transform_fixed.SetName('t_fixed')
+            else:
+                return
+
+            if utils.update_progress_window(50, f"Loading moving transform..."):
+                node_transform_moving = slicer.util.loadTransform(
+                    path_transform_moving)
+                node_transform_moving.SetName('t_moving')
+            else:
+                return
+
+            if utils.update_progress_window(60, f"Loading deformation..."):
+                node_deformation = slicer.util.loadTransform(path_deformation)
+                node_deformation.SetName('deformation')
+            else:
+                slicer.progressWindow.close()
+                return
 
             self.moduleWidget.node_transform_fixed = node_transform_fixed
             self.moduleWidget.node_transform_moving = node_transform_moving
@@ -204,6 +238,9 @@ class DropWidget(qt.QFrame):
                 slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
                 disp_node_seg_moving.AddViewNodeID(slice_node.GetID())
 
+            slicer.progressWindow.close()
+
         except Exception as e:
+            slicer.progressWindow.close()
             logging.error(f"Error loading data: {str(e)}")
             slicer.util.errorDisplay(f"Error loading data: {str(e)}")
