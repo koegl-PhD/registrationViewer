@@ -87,17 +87,6 @@ class Crosshairs():
 
         return crosshair_node
 
-    @staticmethod
-    def reverse_transformation_direction(position, new_position):
-        """
-        Reverse the transformation direction.
-        """
-
-        position_difference = np.array(new_position) - np.array(position)
-        new_position = np.array(new_position) - 2*position_difference
-
-        return new_position
-
     def place_crosshair_with_transformation(self,
                                             view_group: int,
                                             crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
@@ -117,18 +106,26 @@ class Crosshairs():
                                              initial_position)
 
         # now transform the crosshair to the new position
+        # first move to fixed space, then deform then move back to moving space
         if self.use_transform:
-            self.transform_crosshair_nodes(crosshair_nodes)
+            if view_group == 2:
+                for node in crosshair_nodes:
+                    node.ApplyTransform(
+                        self.node_transform_fixed.GetTransformToParent())
+
+        if self.use_transform:
+            self.transform_crosshair_nodes(crosshair_nodes,
+                                           not reverse_transf_direction)
+
+        if self.use_transform:
+            if view_group == 2:
+                for node in crosshair_nodes:
+                    node.ApplyTransform(
+                        self.node_transform_moving_inv.GetTransformToParent())
 
         new_position: list[float] = [0., 0., 0.]
         crosshair_nodes[0].GetNthControlPointPositionWorld(0,
                                                            new_position)
-
-        if not reverse_transf_direction:
-            # the new_position should be moved in the opposite direction
-            # for some reason the displacement is applied in the opposite direction
-            new_position = self.reverse_transformation_direction(initial_position,
-                                                                 new_position)
 
         # Apply offset
         if not self.apply_offsets or offset_direction == 'nan':
@@ -214,15 +211,21 @@ class Crosshairs():
             self.place_crosshair_without_transformation(view_group=3,
                                                         crosshair_nodes=self.crosshairs_3)
 
-    def transform_crosshair_nodes(self, crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode]) -> None:
+    def transform_crosshair_nodes(self,
+                                  crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
+                                  invert: bool) -> None:
         """
         Transform every crosshair from the list of nodes with the current transformation.
         """
 
         for node in crosshair_nodes:
             if self.node_transformation:
-                node.ApplyTransform(
-                    self.node_transformation.GetTransformToParent())
+                if invert:
+                    node.ApplyTransform(
+                        self.node_transformation.GetTransformFromParent())
+                else:
+                    node.ApplyTransform(
+                        self.node_transformation.GetTransformToParent())
             else:
                 print("No transformation available")
 
