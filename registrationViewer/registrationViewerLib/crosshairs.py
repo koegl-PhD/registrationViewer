@@ -15,8 +15,6 @@ class Crosshairs():
                  node_transformation,
                  node_transform_fixed,
                  node_transform_moving,
-                 node_transform_fixed_inv,
-                 node_transform_moving_inv,
                  use_transform,
                  offset_diffs: List[float],
                  apply_offsets: bool) -> None:
@@ -30,8 +28,6 @@ class Crosshairs():
         self.node_transformation = node_transformation
         self.node_transform_fixed = node_transform_fixed
         self.node_transform_moving = node_transform_moving
-        self.node_transform_fixed_inv = node_transform_fixed_inv
-        self.node_transform_moving_inv = node_transform_moving_inv
         self.cursor_view: str = ""
         self.reverse_transf_direction: bool = False
 
@@ -222,14 +218,14 @@ class Crosshairs():
                     node.ApplyTransform(
                         self.node_transformation.GetTransformFromParent())
                     node.ApplyTransform(
-                        self.node_transform_moving_inv.GetTransformToParent())
+                        self.node_transform_moving.GetTransformFromParent())
                 else:
                     node.ApplyTransform(
                         self.node_transform_moving.GetTransformToParent())
                     node.ApplyTransform(
                         self.node_transformation.GetTransformToParent())
                     node.ApplyTransform(
-                        self.node_transform_fixed_inv.GetTransformToParent())
+                        self.node_transform_fixed.GetTransformFromParent())
 
             else:
                 print("No transformation available")
