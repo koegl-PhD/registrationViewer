@@ -5,6 +5,17 @@ import slicer
 import vtk
 
 
+def update_progress_window(progress: int, message: str) -> bool:
+    if slicer.progressWindow.wasCanceled:
+        slicer.progressWindow.close()
+        return False
+
+    slicer.progressWindow.setLabelText(message)
+    slicer.progressWindow.setValue(progress)
+
+    return True
+
+
 def normalize_intensity(data):
 
     return (data - data.min()) / (data.max() - data.min())
