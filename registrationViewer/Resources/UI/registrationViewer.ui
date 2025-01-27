@@ -252,6 +252,24 @@
      </property>
     </widget>
    </item>
+
+
+   <item>
+    <widget class="QCheckBox" name="linearTransformationCheckBox">
+     <property name="text">
+      <string>Use only linear transformation</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignHCenter</set>
+     </property>
+     <property name="addEnabled">
+         <bool>false</bool>
+    </property>
+    </widget>
+   </item>
+
+
+
    <item>
     <widget class="ctkCollapsibleButton" name="markupsCollapsibleButton">
      <property name="text">
