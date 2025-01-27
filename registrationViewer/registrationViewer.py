@@ -106,6 +106,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                )
 
         self.use_transform = True
+        self.use_only_linear_transform = False
         self.reverse_transformation_direction = True
         self.current_offset = [0.0, 0.0, 0.0]
 
@@ -184,6 +185,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui.synchronise_views_manually.connect(
             "clicked(bool)", self.on_synchronise_views_manually)
+        self.ui.linearTransformationCheckBox.toggled.connect(
+            self.on_linear_only)
         self.ui.addRoiFixed.connect("clicked(bool)", self.on_add_roi_fixed)
         self.ui.addRoiMoving.connect("clicked(bool)", self.on_add_roi_moving)
 
@@ -205,6 +208,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.set_2x3_layout()
 
         slicer.util.resetSliceViews()
+        self.ui.linearTransformationCheckBox.setEnabled(False)
 
         # utils.temp_load_data(self)
 
@@ -373,11 +377,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.util.errorDisplay("No crosshair found")
             return False
 
-        for transform in [self.node_transform_nonlinear, self.node_transform_fixed, self.node_transform_moving]:
-            if transform is None:
-                slicer.util.errorDisplay(f"Could not find transfrom \
-                                         {transform.GetName()}")
-                return False
+        if self.node_transform_nonlinear is None:
+            slicer.util.errorDisplay("No nonlinear transform found")
+            return False
+
+        if self.node_transform_fixed is None:
+            slicer.util.errorDisplay("No fixed linear transform found")
+            return False
+
+        if self.node_transform_moving is None:
+            slicer.util.errorDisplay("No moving linear transform found")
+            return False
 
         return True
 
@@ -433,6 +443,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 "Unsynchronise views (s)")
 
             self.use_transform = self.crosshair.use_transform = True
+            self.crosshair.use_only_linear_transform = self.use_only_linear_transform
+
             self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
             self.crosshair.apply_offsets = False
             self.ui.synchronise_views_manually.setText("Link views (l)")
@@ -479,6 +491,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.crosshair.offset_diffs = self.current_offset = [
             offset_diff_red, offset_diff_green, offset_diff_yellow]
         self.crosshair.apply_offsets = self.synchronise_manually_pressed
+
+    def on_linear_only(self) -> None:
+        print("linear only")
+        self.use_only_linear_transform = self.crosshair.use_only_linear_transform = not self.use_only_linear_transform
 
     def on_add_roi_moving(self) -> None:
         self.node_roi_moving = slicer.mrmlScene.AddNewNodeByClass(
@@ -569,8 +585,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                    node_transform_fixed=self.node_transform_fixed,
                                                    node_transform_moving=self.node_transform_moving,
                                                    use_transform=self.use_transform,
+                                                   use_only_linear_transform=self.use_only_linear_transform,
                                                    offset_diffs=self.current_offset,
                                                    apply_offsets=self.synchronise_manually_pressed)
+
+        self.ui.linearTransformationCheckBox.setEnabled(True)
 
         if turn_synchronisation_on:
             self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
