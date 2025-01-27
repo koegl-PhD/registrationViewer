@@ -119,7 +119,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.cursor_view: str = ""
 
-        self.node_warped = None
+        self.node_fixed_transformed_with_affine = None
+        self.node_moving_transformed_with_affine = None
+        self.node_moving_warped = None
         self.node_diff = None
 
         self.current_layout: 'view_logic.Layout'
@@ -217,44 +219,78 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def update_views_third_row_with_volume_diff(self) -> None:
 
-        if self.node_fixed is not None and self.node_moving is not None and self.node_transform_nonlinear is not None:
+        if self.node_fixed is not None and \
+           self.node_moving is not None and \
+           self.node_transform_nonlinear is not None:
+
+            offset_red1 = view_logic.get_view_offset("Red1")
+            offset_green1 = view_logic.get_view_offset("Green1")
+            offset_yellow1 = view_logic.get_view_offset("Yellow1")
+
+            self.node_fixed_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_fixed,
+                                                                                                 "Fixed with affine")
+            utils.apply_and_harden_transform_to_node(self.node_fixed_transformed_with_affine,
+                                                     self.node_transform_fixed)
+
+            self.node_moving_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_moving,
+                                                                                                  "Moving with affine")
+            utils.apply_and_harden_transform_to_node(self.node_moving_transformed_with_affine,
+                                                     self.node_transform_moving)
+
             if self.node_diff is None:
-                self.node_diff = slicer.modules.volumes.logic(
-                ).CloneVolume(self.node_fixed, "Difference")
-                self.node_diff.SetName("Difference")
+                self.node_diff = slicer.modules.volumes.logic().CloneVolume(self.node_fixed_transformed_with_affine,
+                                                                            "Difference")
 
-            if self.node_warped is not None:
-                slicer.mrmlScene.RemoveNode(self.node_warped)
+            if self.node_moving_warped is not None:
+                slicer.mrmlScene.RemoveNode(self.node_moving_warped)
 
-            self.node_warped = slicer.modules.volumes.logic(
-            ).CloneVolume(self.node_moving, "Warped")
-            self.node_warped.SetName("Warped")
+            self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(self.node_moving_transformed_with_affine,
+                                                                                 "Warped")
 
             utils.apply_and_harden_transform_to_node(
-                self.node_warped, self.node_transform_nonlinear)
+                self.node_moving_warped, self.node_transform_nonlinear)
             utils.resample_node_to_reference_node(
-                self.node_warped, self.node_fixed)
+                self.node_moving_warped, self.node_fixed_transformed_with_affine)
 
-            array_fixed = slicer.util.arrayFromVolume(self.node_fixed)
-            array_warped = slicer.util.arrayFromVolume(self.node_warped)
+            array_fixed = slicer.util.arrayFromVolume(
+                self.node_fixed_transformed_with_affine)
+            array_warped = slicer.util.arrayFromVolume(self.node_moving_warped)
+
+            array_fixed = utils.normalize_intensity(array_fixed)
+            array_warped = utils.normalize_intensity(array_warped)
 
             array_diff = array_fixed - array_warped
 
             slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
 
-            self.node_diff.GetDisplayNode().SetAutoWindowLevel(True)
-            self.node_diff.GetDisplayNode().SetAutoThreshold(True)
+            utils.apply_and_harden_transform_to_node(self.node_diff,
+                                                     self.node_transform_fixed,
+                                                     invert=True)
 
             view_logic.update_views_with_volume(
-                self.views_first_row, self.node_fixed)
-            view_logic.update_views_with_volume(
-                self.views_second_row, self.node_moving)
-            view_logic.update_views_with_volume(
                 self.views_third_row, self.node_diff)
+
+            slicer.mrmlScene.RemoveNode(
+                self.node_fixed_transformed_with_affine)
+            slicer.mrmlScene.RemoveNode(
+                self.node_moving_transformed_with_affine)
 
             if self.ui_is_simple:
                 view_logic.enable_sectra_movements(self.node_diff,
                                                    self.views_third_row)
+
+            slicer.util.resetSliceViews()
+
+            view_logic.set_view_offset("Red3", offset_red1)
+            view_logic.set_view_offset("Green3", offset_green1)
+            view_logic.set_view_offset("Yellow3", offset_yellow1)
+
+            utils.apply_black_to_white_lookup_table_with_log(self.node_diff)
+
+            utils.set_window_level_and_threshold(self.node_diff,
+                                                 window=1.20,
+                                                 level=0.0,
+                                                 threshold=(-2, 2))
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -566,9 +602,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.node_diff is not None:
             slicer.mrmlScene.RemoveNode(self.node_diff)
             self.node_diff = None
-        if self.node_warped is not None:
-            slicer.mrmlScene.RemoveNode(self.node_warped)
-            self.node_warped = None
+        if self.node_moving_warped is not None:
+            slicer.mrmlScene.RemoveNode(self.node_moving_warped)
+            self.node_moving_warped = None
         if self.crosshair is not None:
             self.crosshair.delete_crosshairs_and_folder()
             self.crosshair = None
