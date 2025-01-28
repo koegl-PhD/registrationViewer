@@ -158,6 +158,15 @@ def apply_and_harden_transform_to_node(node_target: slicer.vtkMRMLNode,
     else:
         node_target.ApplyTransform(node_transform.GetTransformToParent())
 
+def normalize_node(node: slicer.vtkMRMLScalarVolumeNode) -> slicer.vtkMRMLScalarVolumeNode:
+
+    array = slicer.util.arrayFromVolume(node)
+    array = normalize_intensity(array)
+
+    slicer.util.updateVolumeFromArray(node, array)
+
+    return node
+
 
 def resample_node_to_reference_node(node_input: slicer.vtkMRMLScalarVolumeNode,
                                     node_reference: slicer.vtkMRMLScalarVolumeNode) -> None:
