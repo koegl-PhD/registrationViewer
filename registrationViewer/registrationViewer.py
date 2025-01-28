@@ -5,6 +5,8 @@ import importlib
 
 from typing import Optional, List, Any
 
+import numpy as np
+
 import ctk
 import slicer.util
 import vtk
@@ -259,12 +261,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
                 self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(self.node_moving_transformed_with_affine,
                                                                                      "Warped")
-
                 if not utils.update_progress_window(40, title):
                     return
 
                 utils.apply_and_harden_transform_to_node(
                     self.node_moving_warped, self.node_transform_nonlinear)
+                self.node_moving_warped = utils.normalize_node(
+                    self.node_moving_warped)
+                self.node_fixed_transformed_with_affine = utils.normalize_node(
+                    self.node_fixed_transformed_with_affine)
                 utils.resample_node_to_reference_node(
                     self.node_moving_warped, self.node_fixed_transformed_with_affine)
 
@@ -276,10 +281,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 array_warped = slicer.util.arrayFromVolume(
                     self.node_moving_warped)
 
-                array_fixed = utils.normalize_intensity(array_fixed)
-                array_warped = utils.normalize_intensity(array_warped)
-
-                array_diff = array_fixed - array_warped
+                array_diff = np.abs(array_fixed - array_warped)
 
                 slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
 
@@ -308,13 +310,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 view_logic.set_view_offset("Green3", offset_green1)
                 view_logic.set_view_offset("Yellow3", offset_yellow1)
 
-                utils.apply_black_to_white_lookup_table(
-                    self.node_diff)
-
                 utils.set_window_level_and_threshold(self.node_diff,
-                                                     window=1.20,
-                                                     level=0.0,
-                                                     threshold=(-2, 2))
+                                                     window=0.78,
+                                                     level=0.37,
+                                                     threshold=(0, 1))
 
                 slicer.progressWindow.close()
 
