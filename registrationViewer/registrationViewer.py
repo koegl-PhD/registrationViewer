@@ -121,8 +121,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.cursor_view: str = ""
 
-        self.node_fixed_transformed_with_affine = None
-        self.node_moving_transformed_with_affine = None
         self.node_moving_warped = None
         self.node_diff = None
 
@@ -242,27 +240,27 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 offset_green1 = view_logic.get_view_offset("Green1")
                 offset_yellow1 = view_logic.get_view_offset("Yellow1")
 
-                self.node_fixed_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_fixed,
-                                                                                                     "Fixed with affine")
-                utils.apply_and_harden_transform_to_node(self.node_fixed_transformed_with_affine,
+                node_fixed_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_fixed,
+                                                                                                "Fixed with affine")
+                utils.apply_and_harden_transform_to_node(node_fixed_transformed_with_affine,
                                                          self.node_transform_fixed)
 
-                self.node_moving_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_moving,
-                                                                                                      "Moving with affine")
-                utils.apply_and_harden_transform_to_node(self.node_moving_transformed_with_affine,
+                node_moving_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_moving,
+                                                                                                 "Moving with affine")
+                utils.apply_and_harden_transform_to_node(node_moving_transformed_with_affine,
                                                          self.node_transform_moving)
 
                 if not utils.update_progress_window(20, title):
                     return
 
                 if self.node_diff is None:
-                    self.node_diff = slicer.modules.volumes.logic().CloneVolume(self.node_fixed_transformed_with_affine,
+                    self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed_transformed_with_affine,
                                                                                 "Difference")
 
                 if self.node_moving_warped is not None:
                     slicer.mrmlScene.RemoveNode(self.node_moving_warped)
 
-                self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(self.node_moving_transformed_with_affine,
+                self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(node_moving_transformed_with_affine,
                                                                                      "Warped")
                 if not utils.update_progress_window(40, title):
                     return
@@ -271,16 +269,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     self.node_moving_warped, self.node_transform_nonlinear)
                 self.node_moving_warped = utils.normalize_node(
                     self.node_moving_warped)
-                self.node_fixed_transformed_with_affine = utils.normalize_node(
-                    self.node_fixed_transformed_with_affine)
+                node_fixed_transformed_with_affine = utils.normalize_node(
+                    node_fixed_transformed_with_affine)
                 utils.resample_node_to_reference_node(
-                    self.node_moving_warped, self.node_fixed_transformed_with_affine)
+                    self.node_moving_warped, node_fixed_transformed_with_affine)
 
                 if not utils.update_progress_window(60, title):
                     return
 
                 array_fixed = slicer.util.arrayFromVolume(
-                    self.node_fixed_transformed_with_affine)
+                    node_fixed_transformed_with_affine)
                 array_warped = slicer.util.arrayFromVolume(
                     self.node_moving_warped)
 
@@ -299,9 +297,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     self.views_third_row, self.node_diff)
 
                 slicer.mrmlScene.RemoveNode(
-                    self.node_fixed_transformed_with_affine)
+                    node_fixed_transformed_with_affine)
                 slicer.mrmlScene.RemoveNode(
-                    self.node_moving_transformed_with_affine)
+                    node_moving_transformed_with_affine)
 
                 if self.ui_is_simple:
                     view_logic.enable_sectra_movements(self.node_diff,
