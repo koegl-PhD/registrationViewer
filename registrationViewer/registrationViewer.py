@@ -136,6 +136,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.node_transform_fixed = None
         self.node_transform_moving = None
 
+        self.node_seg_fixed = None
+        self.node_seg_moving = None
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
