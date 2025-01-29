@@ -2,7 +2,8 @@
 
 import vtk
 from enum import Enum
-from typing import List, Literal
+
+from typing import List, Literal, Tuple
 
 from qt import QEvent, QObject
 import slicer
@@ -524,3 +525,50 @@ def disable_sectra_movements():
     """
     global disable_sectra
     disable_sectra = True
+
+
+def configure_roi(node_roi: slicer.vtkMRMLMarkupsROINode,
+                  views: List[str],
+                  size: Tuple[int, int, int] = (20, 20, 20)) -> None:
+
+    if not views:
+        return
+    if not node_roi:
+        return
+
+    # geometry
+    offsets = [get_view_offset(view) for view in views]
+    node_roi.SetCenter(-offsets[2],
+                       offsets[1],
+                       offsets[0])
+    node_roi.SetSize(size)
+
+    # display
+    node_display = node_roi.GetDisplayNode()
+    if not node_display:
+        return
+
+    node_display.SetOpacity(0.5)
+    node_display.SetFillOpacity(0)
+
+    node_display.SetTextScale(0.0)
+    node_display.SetUseGlyphScale(True)
+    node_display.SetGlyphScale(1)
+    node_display.SetInteractionHandleScale(1.5)
+
+    node_display.RotationHandleVisibilityOn()
+    node_display.TranslationHandleVisibilityOn()
+    node_display.ScaleHandleVisibilityOn()
+
+    layout_manager = slicer.app.layoutManager()
+
+    if not layout_manager:
+        return
+
+    for view in views:
+        view_widget = layout_manager.sliceWidget(view)
+
+        if not view_widget:
+            continue
+
+        node_display.AddViewNodeID(view_widget.mrmlSliceNode().GetID())

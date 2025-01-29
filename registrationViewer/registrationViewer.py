@@ -126,9 +126,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_layout: 'view_logic.Layout'
 
-        self.node_roi_fixed = None
-        self.node_roi_moving = None
-
         self.ui_is_simple = False
 
         self.node_transform_fixed = None
@@ -139,6 +136,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # we need to store our tags so we can specifically remove only them
         self.crosshair_custom_observer_tags = []
+
+        # ANNOTAIONTS
+        self.annotation_roi_lymphnode_fixed = None
+        self.annotation_roi_lymphnode_moving = None
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -197,8 +198,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.on_linear_only)
         self.ui.remove_all_data.connect(
             "clicked(bool)", self.on_remove_all_data)
-        self.ui.addRoiFixed.connect("clicked(bool)", self.on_add_roi_fixed)
-        self.ui.addRoiMoving.connect("clicked(bool)", self.on_add_roi_moving)
+
+        # ANOOTATIONS
+        self.ui.addLymphnodeRoiFixed.connect(
+            "clicked(bool)", self.on_add_lymphnode_roi_fixed)
+        self.ui.addLymphnodeRoiMoving.connect(
+            "clicked(bool)", self.on_add_lymphnode_roi_moving)
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -602,61 +607,41 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.mrmlScene.RemoveNode(self.node_seg_moving)
             self.node_seg_moving = None
 
-    def on_add_roi_moving(self) -> None:
-        self.node_roi_moving = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsROINode")
+    def on_add_lymphnode_roi_moving(self) -> None:
 
-        self._configure_roi(self.views_second_row, self.node_roi_moving)
+        if self.annotation_roi_lymphnode_moving is not None:
+            if utils.show_warning_popup("Moving lymphnode ROI already exists",
+                                        "Do you want to overwrite it?"):
+                slicer.mrmlScene.RemoveNode(
+                    self.annotation_roi_lymphnode_moving)
+            else:
+                return
 
-    def on_add_roi_fixed(self) -> None:
-        self.node_roi_fixed = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsROINode")
+        name = self.node_moving.GetName() + "_roi_lymphnode"
 
-        self._configure_roi(self.views_first_row, self.node_roi_fixed)
+        self.annotation_roi_lymphnode_moving = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLMarkupsROINode", name)
 
-    def _configure_roi(self, views: List[str], node_roi) -> None:
+        view_logic.configure_roi(self.annotation_roi_lymphnode_moving,
+                                 self.views_second_row)
 
-        if not views:
-            return
-        if not node_roi:
-            return
+    def on_add_lymphnode_roi_fixed(self) -> None:
 
-        # geometry
-        offsets = [view_logic.get_view_offset(view) for view in views]
-        node_roi.SetCenter(-offsets[2],
-                           offsets[1],
-                           offsets[0])
-        node_roi.SetSize(10, 10, 10)
+        if self.annotation_roi_lymphnode_fixed is not None:
+            if utils.show_warning_popup("Fixed lymphnode ROI already exists",
+                                        "Do you want to overwrite it?"):
+                slicer.mrmlScene.RemoveNode(
+                    self.annotation_roi_lymphnode_fixed)
+            else:
+                return
 
-        # display
-        node_display = node_roi.GetDisplayNode()
-        if not node_display:
-            return
+        name = self.node_fixed.GetName() + "_roi_lymphnode"
 
-        node_display.SetOpacity(0.5)
-        node_display.SetFillOpacity(0)
+        self.annotation_roi_lymphnode_fixed = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLMarkupsROINode", name)
 
-        node_display.SetTextScale(0.0)
-        node_display.SetUseGlyphScale(True)
-        node_display.SetGlyphScale(1)
-        node_display.SetInteractionHandleScale(1.5)
-
-        node_display.RotationHandleVisibilityOn()
-        node_display.TranslationHandleVisibilityOn()
-        node_display.ScaleHandleVisibilityOn()
-
-        layout_manager = slicer.app.layoutManager()
-
-        if not layout_manager:
-            return
-
-        for view in views:
-            view_widget = layout_manager.sliceWidget(view)
-
-            if not view_widget:
-                continue
-
-            node_display.AddViewNodeID(view_widget.mrmlSliceNode().GetID())
+        view_logic.configure_roi(self.annotation_roi_lymphnode_fixed,
+                                 self.views_first_row)
 
     def update_cursor_view(self) -> None:
 
