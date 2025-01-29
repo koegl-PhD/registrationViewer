@@ -218,17 +218,10 @@ class DropWidget(qt.QFrame):
                 node_deformation)
 
             # set visibility of segmentation nodes
-            disp_node_seg_fixed = self.moduleWidget.node_seg_fixed.GetDisplayNode()
-            disp_node_seg_fixed.RemoveAllViewNodeIDs()
-            for view in ['Red1', 'Green1', 'Yellow1']:
-                slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
-                disp_node_seg_fixed.AddViewNodeID(slice_node.GetID())
-
-            disp_node_seg_moving = self.moduleWidget.node_seg_moving.GetDisplayNode()
-            disp_node_seg_moving.RemoveAllViewNodeIDs()
-            for view in ['Red2', 'Green2', 'Yellow2']:
-                slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
-                disp_node_seg_moving.AddViewNodeID(slice_node.GetID())
+            utils.show_node_only_in_views(self.moduleWidget.node_seg_fixed,
+                                          ['Red1', 'Green1', 'Yellow1'])
+            utils.show_node_only_in_views(self.moduleWidget.node_seg_moving,
+                                          ['Red2', 'Green2', 'Yellow2'])
 
             slicer.progressWindow.close()
 

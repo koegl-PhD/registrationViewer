@@ -276,6 +276,15 @@ def show_warning_popup(content: str,
         return False
 
 
+def show_info_popup(content: str, title: str = "Information") -> None:
+    msgBox = qt.QMessageBox()
+    msgBox.setIcon(qt.QMessageBox.Information)
+    msgBox.setWindowTitle(title)
+    msgBox.setText(content)
+    msgBox.setStandardButtons(qt.QMessageBox.Ok)  # Only "OK" button
+    msgBox.exec_()
+
+
 def has_control_point_with_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
                                 name: str) -> bool:
 
@@ -293,3 +302,19 @@ def remove_control_point_by_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNod
         if node_fiducial.GetNthControlPointLabel(i) == name:
             node_fiducial.RemoveNthControlPoint(i)
             return
+
+
+def show_node_only_in_views(node, views: List[str]) -> None:
+
+    if node is None:
+        return
+
+    disp_node = node.GetDisplayNode()
+    if not disp_node:
+        return
+
+    disp_node.RemoveAllViewNodeIDs()
+
+    for view in views:
+        slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
+        disp_node.AddViewNodeID(slice_node.GetID())
