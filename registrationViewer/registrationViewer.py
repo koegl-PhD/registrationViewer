@@ -211,6 +211,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # ANOOTATIONS
         self.ui.saveAnnotations.connect("clicked(bool)",
                                         self.on_save_annotations)
+        self.ui.clearAnnotations.connect("clicked(bool)",
+                                         self.on_clear_annotations)
 
         self.ui.addLymphnodeRoiFixed.connect("clicked(bool)",
                                              lambda: self.on_add_roi_lymphnode('fixed'))
@@ -729,6 +731,49 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # show message with Ok only that saving is done
         utils.show_info_popup("Annotations saved")
+
+    def on_clear_annotations(self) -> None:
+        if not self.annotations_already_saved:
+            if not utils.show_warning_popup("Annotations not saved yet.",
+                                            "Do you want to clear them?"):
+                return
+        else:
+            if not utils.show_warning_popup("Annotations already saved.",
+                                            "Do you want to clear them?"):
+                return
+
+        if self.annotation_fixed_roi_lymphnode is not None:
+            slicer.mrmlScene.RemoveNode(self.annotation_fixed_roi_lymphnode)
+            self.annotation_fixed_roi_lymphnode = None
+            self.ui.lymphnodeRoiFixedCheckbox.setChecked(False)
+
+        if self.annotation_moving_roi_lymphnode is not None:
+            slicer.mrmlScene.RemoveNode(self.annotation_moving_roi_lymphnode)
+            self.annotation_moving_roi_lymphnode = None
+            self.ui.increasedLymphnodeCheckBox.setEnabled(False)
+            self.ui.increasedLymphnodeCheckBox.setChecked(False)
+            self.ui.lymphnodeRoiMovingCheckbox.setChecked(False)
+
+        if self.annotation_fixed_points is not None:
+            slicer.mrmlScene.RemoveNode(self.annotation_fixed_points)
+            self.annotation_fixed_points = None
+            self.ui.carotisgabelPointFixedCheckbox.setChecked(False)
+            self.ui.abgangavertebralisPointFixedCheckbox.setChecked(False)
+
+        if self.annotation_moving_points is not None:
+            slicer.mrmlScene.RemoveNode(self.annotation_moving_points)
+            self.annotation_moving_points = None
+            self.ui.carotisgabelPointMovingCheckbox.setChecked(False)
+            self.ui.abgangavertebralisPointMovingCheckbox.setChecked(False)
+
+        if self.annotation_fixed_roi_recurrence is not None:
+            slicer.mrmlScene.RemoveNode(self.annotation_fixed_roi_recurrence)
+            self.annotation_fixed_roi_recurrence = None
+            self.ui.recurrencePresentCheckBox.setChecked(False)
+            self.ui.recurrenceRoiFixedCheckbox.setChecked(False)
+            self.ui.addRecurrenceRoiFixed.setEnabled(False)
+
+        self.annotations_already_saved = False
 
     def on_add_roi_lymphnode(self, image: Literal['fixed', 'moving']) -> None:
         if image not in ['fixed', 'moving']:
