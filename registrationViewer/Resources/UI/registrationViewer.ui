@@ -297,6 +297,12 @@
         <property name="enabled">
             <bool>false</bool>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
         </widget>
       </item>
       <item row="1" column="1">
@@ -313,6 +319,12 @@
         <property name="enabled">
             <bool>false</bool>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
         </widget>
       </item>
       <item row="2" column="1">
@@ -338,6 +350,12 @@
         <property name="enabled">
             <bool>false</bool>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
         </widget>
       </item>
       <item row="3" column="1">
@@ -354,6 +372,12 @@
         <property name="enabled">
             <bool>false</bool>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
         </widget>
         </item>
       <item row="4" column="1">
@@ -370,6 +394,12 @@
         <property name="enabled">
             <bool>false</bool>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
         </widget>
         </item>
       <item row="5" column="1">
@@ -386,6 +416,12 @@
         <property name="enabled">
             <bool>false</bool>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
         </widget>
         </item>
       <item row="6" column="1">
@@ -401,17 +437,15 @@
         <property name="enabled">
             <bool>false</bool>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
         </widget>
         </item>
-      <item row="7" column="1">
-        <widget class="QCheckBox" name="recurrencePresentCheckBox">
-        <property name="text">
-            <string>Recurrence present</string>
-        </property>
-        </widget>
-      </item>
-
-    <item row="7" column="2">
+        <item row="7" column="1">
        <widget class="QPushButton" name="addRecurrenceRoiFixed">
         <property name="text">
          <string>Add recurrence ROI in fixed</string>
@@ -421,6 +455,15 @@
         </property>
        </widget>
       </item>
+      <item row="7" column="2">
+        <widget class="QCheckBox" name="recurrencePresentCheckBox">
+        <property name="text">
+            <string>Recurrence present</string>
+        </property>
+        </widget>
+      </item>
+
+
 
 
 
