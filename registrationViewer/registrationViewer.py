@@ -1,7 +1,8 @@
-import time
-import logging
 import functools
 import importlib
+import logging
+import os
+import time
 
 from typing import Optional, List, Any, Literal
 
@@ -138,6 +139,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.crosshair_custom_observer_tags = []
 
         # ANNOTAIONTS
+        self.annotations_save_path = "/home/koeglf/data/try_new_preprocessing/annotations/"
+        self.annotations_already_saved = False
         self.annotation_roi_lymphnode_fixed = None
         self.annotation_roi_lymphnode_moving = None
         self.annotation_bool_lymphnode_increased = False
@@ -205,6 +208,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_remove_all_data)
 
         # ANOOTATIONS
+        self.ui.saveAnnotations.connect("clicked(bool)",
+                                        self.on_save_annotations)
+
         self.ui.addLymphnodeRoiFixed.connect("clicked(bool)",
                                              lambda: self.on_add_roi_lymphnode('fixed'))
         self.ui.addLymphnodeRoiMoving.connect("clicked(bool)",
@@ -628,6 +634,83 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.mrmlScene.RemoveNode(self.node_seg_moving)
             self.node_seg_moving = None
 
+    def on_save_annotations(self) -> None:
+
+        if self.annotations_already_saved:
+            if not utils.show_warning_popup("Annotations already saved",
+                                            "Do you want to overwrite them?"):
+                return
+
+        # example name volume: XPqt2AtrAMc~2_followup_LleziZ9eAbs~201_hals_pv_08_i6_b_idose_6
+        name_volume_fixed = str(self.node_fixed.GetName())
+        name_volume_moving = str(self.node_moving.GetName())
+        temp = name_volume_fixed.split("~")
+        name_patient = temp[0]
+        name_study = temp[1]
+
+        # check if all annotations are present
+        if self.annotation_roi_lymphnode_fixed is None:
+            slicer.util.errorDisplay("Please add fixed lymphnode ROI")
+            return
+        if self.annotation_roi_lymphnode_moving is None:
+            slicer.util.errorDisplay("Please add moving lymphnode ROI")
+            return
+
+        if self.annotation_points is None or self.annotation_points.GetNumberOfControlPoints() == 0:
+            slicer.util.errorDisplay("Please add annotation points")
+            return
+
+        if not utils.has_control_point_with_name(self.annotation_points, f"point_carotisgabel_{name_volume_fixed}"):
+            slicer.util.errorDisplay(
+                "Please add carotisgabel point for fixed volume")
+            return
+        if not utils.has_control_point_with_name(self.annotation_points, f"point_carotisgabel_{name_volume_moving}"):
+            slicer.util.errorDisplay(
+                "Please add carotisgabel point for moving volume")
+            return
+
+        if not utils.has_control_point_with_name(self.annotation_points, f"point_abgangavertebralis_{name_volume_fixed}"):
+            slicer.util.errorDisplay(
+                "Please add abgangavertebralis point for fixed volume")
+            return
+        if not utils.has_control_point_with_name(self.annotation_points, f"point_abgangavertebralis_{name_volume_moving}"):
+            slicer.util.errorDisplay(
+                "Please add abgangavertebralis point for moving volume")
+            return
+
+        if self.annotation_roi_lymphnode_moving and self.annotation_bool_lymphnode_increased is False:
+            if not utils.show_warning_popup(f"Did you check for increased lymphnode size?",
+                                            "(Click OK to continue saving)"):
+                return
+
+        if self.annotation_roi_recurrence is None:
+            if not utils.show_warning_popup(f"Did you check for recurrence?",
+                                            "(Click OK to continue saving)"):
+                return
+
+        path_patient = self.annotations_save_path + name_patient
+        if not os.path.exists(path_patient):
+            os.makedirs(path_patient)
+
+        slicer.util.saveNode(self.annotation_roi_lymphnode_fixed, path_patient +
+                             f"/{self.annotation_roi_lymphnode_fixed.GetName()}.mrk.json")
+        slicer.util.saveNode(self.annotation_roi_lymphnode_moving, path_patient +
+                             f"/{self.annotation_roi_lymphnode_moving.GetName()}.mrk.json")
+        with open(path_patient + f"/{self.annotation_roi_lymphnode_moving.GetName()}.txt", "w") as f:
+            f.write(str(self.annotation_bool_lymphnode_increased))
+
+        slicer.util.saveNode(self.annotation_points, path_patient +
+                             f"/{self.annotation_points.GetName()}.mrk.json")
+
+        with open(path_patient + f"/recurrence_exists.txt", "w") as f:
+            f.write(str(self.annotation_roi_recurrence is not None))
+
+        if self.annotation_roi_recurrence is not None:
+            slicer.util.saveNode(self.annotation_roi_recurrence, path_patient +
+                                 f"/{self.annotation_roi_recurrence.GetName()}.mrk.json")
+
+        self.annotations_already_saved = True
+
     def on_add_roi_lymphnode(self, image: Literal['fixed', 'moving']) -> None:
         if image not in ['fixed', 'moving']:
             raise ValueError("image must be either 'fixed' or 'moving'")
@@ -674,7 +757,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             return
 
         self.annotation_points = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsFiducialNode", "Points")
+            "vtkMRMLMarkupsFiducialNode", f"points_{self.node_fixed.GetName().split('~')[0]}")
 
         self.annotation_points.GetDisplayNode().SetGlyphScale(1)
         self.annotation_points.GetDisplayNode().SetTextScale(2)
