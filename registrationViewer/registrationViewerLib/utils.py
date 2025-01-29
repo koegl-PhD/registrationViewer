@@ -158,6 +158,7 @@ def apply_and_harden_transform_to_node(node_target: slicer.vtkMRMLNode,
     else:
         node_target.ApplyTransform(node_transform.GetTransformToParent())
 
+
 def normalize_node(node: slicer.vtkMRMLScalarVolumeNode) -> slicer.vtkMRMLScalarVolumeNode:
 
     array = slicer.util.arrayFromVolume(node)
@@ -256,3 +257,20 @@ def set_threshold(node: slicer.vtkMRMLScalarVolumeNode,
 
     displayNode.ApplyThresholdOn()
     displayNode.SetThreshold(threshold[0], threshold[1])
+
+
+def show_warning_popup(content: str,
+                       question: str):
+    msgBox = qt.QMessageBox()
+    msgBox.setIcon(qt.QMessageBox.Warning)
+    msgBox.setText(content)
+    msgBox.setInformativeText(question)
+    msgBox.setStandardButtons(qt.QMessageBox.Ok | qt.QMessageBox.Cancel)
+    msgBox.setDefaultButton(qt.QMessageBox.Cancel)
+
+    response = msgBox.exec_()
+
+    if response == qt.QMessageBox.Ok:
+        return True
+    else:
+        return False
