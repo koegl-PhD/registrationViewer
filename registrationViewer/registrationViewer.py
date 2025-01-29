@@ -137,6 +137,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.node_seg_fixed = None
         self.node_seg_moving = None
 
+        # we need to store our tags so we can specifically remove only them
+        self.crosshair_custom_observer_tags = []
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -161,7 +164,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.addObserver(slicer.mrmlScene,
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
-        self.node_crosshair.RemoveAllObservers()
+        self._remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui.synchronise_views_with_transform.setText(
             "Synchronise views (s)")
@@ -348,7 +351,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def onSceneStartClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just before the scene is closed."""
 
-        self.node_crosshair.RemoveAllObservers()
+        self._remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui.synchronise_views_with_transform.setText(
             "Synchronise views (s)")
@@ -521,7 +524,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         else:
             print("pressed to unsynchronise")
-            self.node_crosshair.RemoveAllObservers()
+            self._remove_custom_observers_from_crosshair()
             self.ui.synchronise_views_with_transform.setText(
                 "Synchronise views (s)")
 
@@ -546,7 +549,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         else:
             print("pressed to unsynchronise manually")
-            self.node_crosshair.RemoveAllObservers()
+            self._remove_custom_observers_from_crosshair()
             self.ui.synchronise_views_manually.setText("Link views (l)")
 
         # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
@@ -662,8 +665,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             if position is not None:
                 self.crosshair.cursor_view = position.GetName()
 
-        self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                        functools.partial(wrapper, self))
+        observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
+                                                       functools.partial(wrapper, self))
+        self.crosshair_custom_observer_tags.append(observer_tag)
 
     def _remove_custom_nodes(self) -> None:
         if self.node_diff is not None:
@@ -695,8 +699,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.linearTransformationCheckBox.setEnabled(True)
 
         if turn_synchronisation_on:
-            self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                            self.crosshair.on_mouse_moved_place_crosshair)
+            observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
+                                                           self.crosshair.on_mouse_moved_place_crosshair)
+            self.crosshair_custom_observer_tags.append(observer_tag)
             self.update_cursor_view()
 
     def _update_crosshair_transformation(self) -> None:
@@ -704,6 +709,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair.node_transform_nonlinear = self.node_transform_nonlinear
             self.crosshair.node_transform_fixed = self.node_transform_fixed
             self.crosshair.node_transform_moving = self.node_transform_moving
+
+    def _remove_custom_observers_from_crosshair(self) -> None:
+        for observer_tag in self.crosshair_custom_observer_tags:
+            self.node_crosshair.RemoveObserver(observer_tag)
+
+        self.crosshair_custom_observer_tags.clear()
 
     @property
     def node_fixed(self) -> Any:
