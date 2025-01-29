@@ -192,6 +192,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views_manually)
         self.ui.linearTransformationCheckBox.toggled.connect(
             self.on_linear_only)
+        self.ui.remove_all_data.connect(
+            "clicked(bool)", self.on_remove_all_data)
         self.ui.addRoiFixed.connect("clicked(bool)", self.on_add_roi_fixed)
         self.ui.addRoiMoving.connect("clicked(bool)", self.on_add_roi_moving)
 
@@ -562,6 +564,40 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def on_linear_only(self) -> None:
         print("linear only")
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = not self.use_only_linear_transform
+
+    def on_remove_all_data(self) -> None:
+        if self.node_fixed is not None:
+            slicer.mrmlScene.RemoveNode(self.node_fixed)
+
+        if self.node_moving is not None:
+            slicer.mrmlScene.RemoveNode(self.node_moving)
+
+        if self.node_transform_nonlinear is not None:
+            slicer.mrmlScene.RemoveNode(self.node_transform_nonlinear)
+
+        if self.node_diff is not None:
+            slicer.mrmlScene.RemoveNode(self.node_diff)
+            self.node_diff = None
+
+        if self.node_moving_warped is not None:
+            slicer.mrmlScene.RemoveNode(self.node_moving_warped)
+            self.node_moving_warped = None
+
+        if self.node_transform_fixed is not None:
+            slicer.mrmlScene.RemoveNode(self.node_transform_fixed)
+            self.node_transform_fixed = None
+
+        if self.node_transform_moving is not None:
+            slicer.mrmlScene.RemoveNode(self.node_transform_moving)
+            self.node_transform_moving = None
+
+        if self.node_seg_fixed is not None:
+            slicer.mrmlScene.RemoveNode(self.node_seg_fixed)
+            self.node_seg_fixed = None
+
+        if self.node_seg_moving is not None:
+            slicer.mrmlScene.RemoveNode(self.node_seg_moving)
+            self.node_seg_moving = None
 
     def on_add_roi_moving(self) -> None:
         self.node_roi_moving = slicer.mrmlScene.AddNewNodeByClass(
