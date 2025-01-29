@@ -144,6 +144,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.annotation_points = None
 
+        self.annotation_roi_recurrence = None
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -218,6 +220,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                         lambda: self.on_add_annotation_point('abgangavertebralis', 'fixed'))
         self.ui.addAbgangavertebralisPointMoving.connect("clicked(bool)",
                                                          lambda: self.on_add_annotation_point('abgangavertebralis', 'moving'))
+
+        self.ui.recurrencePresentCheckBox.toggled.connect(
+            self.on_recurrence_present)
+        self.ui.addRecurrenceRoiFixed.connect("clicked(bool)",
+                                              self.on_add_roi_recurrence)
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -697,6 +704,47 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.annotation_points.AddControlPointWorld([-pos[2], pos[1], pos[0]],
                                                     name)
+
+    def on_recurrence_present(self) -> None:
+
+        print(f"is checked: {self.ui.recurrencePresentCheckBox.isChecked()}")
+
+        if self.ui.recurrencePresentCheckBox.isChecked():
+            self.ui.addRecurrenceRoiFixed.setEnabled(True)
+            return
+
+        # trying to uncheck - only allow with warning
+        if self.ui.recurrencePresentCheckBox.isChecked() is False:
+            if self.annotation_roi_recurrence is None:
+                self.ui.addRecurrenceRoiFixed.setEnabled(False)
+            else:
+                if utils.show_warning_popup(f"You alreday created a ROI for the recurrence.",
+                                            "Do you want to remove it?"):
+                    slicer.mrmlScene.RemoveNode(
+                        self.annotation_roi_recurrence)
+                    self.annotation_roi_recurrence = None
+                    self.ui.addRecurrenceRoiFixed.setEnabled(False)
+                else:
+                    self.ui.recurrencePresentCheckBox.setChecked(True)
+                    self.ui.addRecurrenceRoiFixed.setEnabled(True)
+
+    def on_add_roi_recurrence(self) -> None:
+
+        name = str("roi_recurrence_" + self.node_moving.GetName())
+
+        if self.annotation_roi_recurrence is not None:
+            if utils.show_warning_popup(f"ROI {name.capitalize()} already exists",
+                                        "Do you want to overwrite it?"):
+                slicer.mrmlScene.RemoveNode(
+                    self.annotation_roi_recurrence)
+            else:
+                return
+
+        self.annotation_roi_recurrence = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLMarkupsROINode", name)
+
+        view_logic.configure_roi(
+            self.annotation_roi_recurrence, self.views_first_row)
 
     def update_cursor_view(self) -> None:
 
