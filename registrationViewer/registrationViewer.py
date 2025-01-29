@@ -203,21 +203,21 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_remove_all_data)
 
         # ANOOTATIONS
-        self.ui.addLymphnodeRoiFixed.connect(
-            "clicked(bool)", self.on_add_lymphnode_roi_fixed)
-        self.ui.addLymphnodeRoiMoving.connect(
-            "clicked(bool)", self.on_add_lymphnode_roi_moving)
+        self.ui.addLymphnodeRoiFixed.connect("clicked(bool)",
+                                             lambda: self.on_add_roi_lymphnode('fixed'))
+        self.ui.addLymphnodeRoiMoving.connect("clicked(bool)",
+                                              lambda: self.on_add_roi_lymphnode('moving'))
         self.ui.increasedLymphnodeCheckBox.toggled.connect(
             self.on_lymphnode_increased)
 
         self.ui.addCarotisgabelPointFixed.connect("clicked(bool)",
-                                                  lambda: self.on_add_annotaiton_point('carotisgabel', 'fixed'))
+                                                  lambda: self.on_add_annotation_point('carotisgabel', 'fixed'))
         self.ui.addCarotisgabelPointMoving.connect("clicked(bool)",
-                                                   lambda: self.on_add_annotaiton_point('carotisgabel', 'moving'))
+                                                   lambda: self.on_add_annotation_point('carotisgabel', 'moving'))
         self.ui.addAbgangavertebralisPointFixed.connect("clicked(bool)",
-                                                        lambda: self.on_add_annotaiton_point('abgangavertebralis', 'fixed'))
+                                                        lambda: self.on_add_annotation_point('abgangavertebralis', 'fixed'))
         self.ui.addAbgangavertebralisPointMoving.connect("clicked(bool)",
-                                                         lambda: self.on_add_annotaiton_point('abgangavertebralis', 'moving'))
+                                                         lambda: self.on_add_annotation_point('abgangavertebralis', 'moving'))
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -621,49 +621,44 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.mrmlScene.RemoveNode(self.node_seg_moving)
             self.node_seg_moving = None
 
-    def on_add_lymphnode_roi_fixed(self) -> None:
+    def on_add_roi_lymphnode(self, image: Literal['fixed', 'moving']) -> None:
+        if image not in ['fixed', 'moving']:
+            raise ValueError("image must be either 'fixed' or 'moving'")
 
-        name = str("roi_lymphnode_" + self.node_fixed.GetName())
+        if image == 'fixed':
+            volume_name = self.node_fixed.GetName()
+            views = self.views_first_row
+            node_annotation = self.annotation_roi_lymphnode_fixed
+        else:
+            volume_name = self.node_moving.GetName()
+            views = self.views_second_row
+            node_annotation = self.annotation_roi_lymphnode_moving
 
-        if self.annotation_roi_lymphnode_fixed is not None:
+        name = str("roi_lymphnode_" + volume_name)
+
+        if node_annotation is not None:
             if utils.show_warning_popup(f"ROI {name.capitalize()} already exists",
                                         "Do you want to overwrite it?"):
                 slicer.mrmlScene.RemoveNode(
-                    self.annotation_roi_lymphnode_fixed)
+                    node_annotation)
+                if image == 'moving':
+                    self.ui.increasedLymphnodeCheckBox.setEnabled(False)
             else:
                 return
 
-        self.annotation_roi_lymphnode_fixed = slicer.mrmlScene.AddNewNodeByClass(
+        new_annotation = slicer.mrmlScene.AddNewNodeByClass(
             "vtkMRMLMarkupsROINode", name)
 
-        view_logic.configure_roi(self.annotation_roi_lymphnode_fixed,
-                                 self.views_first_row)
+        view_logic.configure_roi(new_annotation, views)
 
-    def on_add_lymphnode_roi_moving(self) -> None:
-
-        name = str("roi_lymphnode_" + self.node_moving.GetName())
-
-        if self.annotation_roi_lymphnode_moving is not None:
-            if utils.show_warning_popup(f"ROI {name.capitalize()} already exists",
-                                        "Do you want to overwrite it?"):
-                slicer.mrmlScene.RemoveNode(
-                    self.annotation_roi_lymphnode_moving)
-
-                self.ui.increasedLymphnodeCheckBox.setEnabled(False)
-            else:
-                return
-
-        self.annotation_roi_lymphnode_moving = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsROINode", name)
-
-        view_logic.configure_roi(self.annotation_roi_lymphnode_moving,
-                                 self.views_second_row)
-
-        self.ui.increasedLymphnodeCheckBox.setEnabled(True)
+        if image == 'fixed':
+            self.annotation_roi_lymphnode_fixed = new_annotation
+        else:
+            self.annotation_roi_lymphnode_moving = new_annotation
+            self.ui.increasedLymphnodeCheckBox.setEnabled(True)
 
     def on_lymphnode_increased(self) -> None:
         self.annotation_bool_lymphnode_increased = not self.annotation_bool_lymphnode_increased
-        print(self.annotation_bool_lymphnode_increased)
 
     def _add_point_list(self) -> None:
         if self.annotation_points:
@@ -675,7 +670,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.annotation_points.GetDisplayNode().SetGlyphScale(1)
         self.annotation_points.GetDisplayNode().SetTextScale(2)
 
-    def on_add_annotaiton_point(self, point_name: str, image: Literal['fixed', 'moving']) -> None:
+    def on_add_annotation_point(self, point_name: str, image: Literal['fixed', 'moving']) -> None:
         if image not in ['fixed', 'moving']:
             raise ValueError("image must be either 'fixed' or 'moving'")
 
