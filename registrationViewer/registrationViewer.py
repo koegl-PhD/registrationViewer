@@ -660,9 +660,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if image == 'fixed':
             self.annotation_roi_lymphnode_fixed = new_annotation
+            self.ui.lymphnodeRoiFixedCheckbox.setChecked(True)
         else:
             self.annotation_roi_lymphnode_moving = new_annotation
             self.ui.increasedLymphnodeCheckBox.setEnabled(True)
+            self.ui.lymphnodeRoiMovingCheckbox.setChecked(True)
 
     def on_lymphnode_increased(self) -> None:
         self.annotation_bool_lymphnode_increased = not self.annotation_bool_lymphnode_increased
@@ -677,7 +679,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.annotation_points.GetDisplayNode().SetGlyphScale(1)
         self.annotation_points.GetDisplayNode().SetTextScale(2)
 
-    def on_add_annotation_point(self, point_name: str, image: Literal['fixed', 'moving']) -> None:
+    def on_add_annotation_point(
+            self,
+            point_name: Literal['carotisgabel', 'abgangavertebralis'],
+            image: Literal['fixed', 'moving']
+    ) -> None:
         if image not in ['fixed', 'moving']:
             raise ValueError("image must be either 'fixed' or 'moving'")
 
@@ -705,9 +711,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.annotation_points.AddControlPointWorld([-pos[2], pos[1], pos[0]],
                                                     name)
 
-    def on_recurrence_present(self) -> None:
+        if image == 'fixed' and point_name == 'carotisgabel':
+            self.ui.carotisgabelPointFixedCheckbox.setChecked(True)
+        elif image == 'moving' and point_name == 'carotisgabel':
+            self.ui.carotisgabelPointMovingCheckbox.setChecked(True)
+        elif image == 'fixed' and point_name == 'abgangavertebralis':
+            self.ui.abgangavertebralisPointFixedCheckbox.setChecked(True)
+        elif image == 'moving' and point_name == 'abgangavertebralis':
+            self.ui.abgangavertebralisPointMovingCheckbox.setChecked(True)
 
-        print(f"is checked: {self.ui.recurrencePresentCheckBox.isChecked()}")
+    def on_recurrence_present(self) -> None:
+        self.ui.recurrenceRoiFixedCheckbox.setChecked(True)
 
         if self.ui.recurrencePresentCheckBox.isChecked():
             self.ui.addRecurrenceRoiFixed.setEnabled(True)
