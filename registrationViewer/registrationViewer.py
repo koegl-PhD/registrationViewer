@@ -3,7 +3,7 @@ import logging
 import functools
 import importlib
 
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Literal
 
 import numpy as np
 
@@ -142,6 +142,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.annotation_roi_lymphnode_moving = None
         self.annotation_bool_lymphnode_increased = False
 
+        self.annotation_points = None
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -207,6 +209,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_add_lymphnode_roi_moving)
         self.ui.increasedLymphnodeCheckBox.toggled.connect(
             self.on_lymphnode_increased)
+
+        self.ui.addCarotisgabelPointFixed.connect("clicked(bool)",
+                                                  lambda: self.on_add_annotaiton_point('carotisgabel', 'fixed'))
+        self.ui.addCarotisgabelPointMoving.connect("clicked(bool)",
+                                                   lambda: self.on_add_annotaiton_point('carotisgabel', 'moving'))
+        self.ui.addAbgangavertebralisPointFixed.connect("clicked(bool)",
+                                                        lambda: self.on_add_annotaiton_point('abgangavertebralis', 'fixed'))
+        self.ui.addAbgangavertebralisPointMoving.connect("clicked(bool)",
+                                                         lambda: self.on_add_annotaiton_point('abgangavertebralis', 'moving'))
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -612,15 +623,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_add_lymphnode_roi_fixed(self) -> None:
 
+        name = str("roi_lymphnode_" + self.node_fixed.GetName())
+
         if self.annotation_roi_lymphnode_fixed is not None:
-            if utils.show_warning_popup("Fixed lymphnode ROI already exists",
+            if utils.show_warning_popup(f"ROI {name.capitalize()} already exists",
                                         "Do you want to overwrite it?"):
                 slicer.mrmlScene.RemoveNode(
                     self.annotation_roi_lymphnode_fixed)
             else:
                 return
-
-        name = self.node_fixed.GetName() + "_roi_lymphnode"
 
         self.annotation_roi_lymphnode_fixed = slicer.mrmlScene.AddNewNodeByClass(
             "vtkMRMLMarkupsROINode", name)
@@ -630,8 +641,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_add_lymphnode_roi_moving(self) -> None:
 
+        name = str("roi_lymphnode_" + self.node_moving.GetName())
+
         if self.annotation_roi_lymphnode_moving is not None:
-            if utils.show_warning_popup("Moving lymphnode ROI already exists",
+            if utils.show_warning_popup(f"ROI {name.capitalize()} already exists",
                                         "Do you want to overwrite it?"):
                 slicer.mrmlScene.RemoveNode(
                     self.annotation_roi_lymphnode_moving)
@@ -639,8 +652,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.ui.increasedLymphnodeCheckBox.setEnabled(False)
             else:
                 return
-
-        name = self.node_moving.GetName() + "_roi_lymphnode"
 
         self.annotation_roi_lymphnode_moving = slicer.mrmlScene.AddNewNodeByClass(
             "vtkMRMLMarkupsROINode", name)
@@ -653,6 +664,44 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def on_lymphnode_increased(self) -> None:
         self.annotation_bool_lymphnode_increased = not self.annotation_bool_lymphnode_increased
         print(self.annotation_bool_lymphnode_increased)
+
+    def _add_point_list(self) -> None:
+        if self.annotation_points:
+            return
+
+        self.annotation_points = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLMarkupsFiducialNode", "Points")
+
+        self.annotation_points.GetDisplayNode().SetGlyphScale(1)
+        self.annotation_points.GetDisplayNode().SetTextScale(2)
+
+    def on_add_annotaiton_point(self, point_name: str, image: Literal['fixed', 'moving']) -> None:
+        if image not in ['fixed', 'moving']:
+            raise ValueError("image must be either 'fixed' or 'moving'")
+
+        self._add_point_list()
+
+        if image == 'fixed':
+            volume_name = self.node_fixed.GetName()
+            views = self.views_first_row
+        else:
+            volume_name = self.node_moving.GetName()
+            views = self.views_second_row
+
+        name = "point_" + point_name + '_' + volume_name
+
+        if utils.has_control_point_with_name(self.annotation_points, name):
+            if utils.show_warning_popup(f"Point {point_name.capitalize()} already exists",
+                                        "Do you want to overwrite it?"):
+                utils.remove_control_point_by_name(self.annotation_points,
+                                                   name)
+            else:
+                return
+
+        pos = [view_logic.get_view_offset(view) for view in views]  # nopep8
+
+        self.annotation_points.AddControlPointWorld([-pos[2], pos[1], pos[0]],
+                                                    name)
 
     def update_cursor_view(self) -> None:
 

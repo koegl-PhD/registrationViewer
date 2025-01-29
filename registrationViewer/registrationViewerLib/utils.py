@@ -274,3 +274,22 @@ def show_warning_popup(content: str,
         return True
     else:
         return False
+
+
+def has_control_point_with_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
+                                name: str) -> bool:
+
+    for i in range(node_fiducial.GetNumberOfControlPoints()):
+        if node_fiducial.GetNthControlPointLabel(i) == name:
+            return True
+
+    return False
+
+
+def remove_control_point_by_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
+                                 name: str) -> None:
+
+    for i in range(node_fiducial.GetNumberOfControlPoints()):
+        if node_fiducial.GetNthControlPointLabel(i) == name:
+            node_fiducial.RemoveNthControlPoint(i)
+            return

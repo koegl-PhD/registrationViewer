@@ -551,7 +551,7 @@ def configure_roi(node_roi: slicer.vtkMRMLMarkupsROINode,
     node_display.SetOpacity(0.5)
     node_display.SetFillOpacity(0)
 
-    node_display.SetTextScale(0.0)
+    node_display.SetTextScale(2.0)
     node_display.SetUseGlyphScale(True)
     node_display.SetGlyphScale(1)
     node_display.SetInteractionHandleScale(1.5)
