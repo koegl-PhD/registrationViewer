@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>300</width>
-    <height>382</height>
+    <height>402</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -22,7 +22,7 @@
      <item>
       <spacer name="horizontalSpacer_left">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -68,7 +68,7 @@
      <item>
       <spacer name="horizontalSpacer_right">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -252,24 +252,23 @@
      </property>
     </widget>
    </item>
-
-
    <item>
     <widget class="QCheckBox" name="linearTransformationCheckBox">
      <property name="text">
       <string>Use only linear transformation</string>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignHCenter</set>
+     <property name="addEnabled" stdset="0">
+      <bool>false</bool>
      </property>
-     <property name="addEnabled">
-         <bool>false</bool>
-    </property>
     </widget>
    </item>
-
-
-
+   <item>
+    <widget class="QPushButton" name="remove_all_data">
+     <property name="text">
+      <string>Remove all data</string>
+     </property>
+    </widget>
+   </item>
    <item>
     <widget class="ctkCollapsibleButton" name="markupsCollapsibleButton">
      <property name="text">

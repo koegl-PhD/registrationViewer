@@ -182,28 +182,28 @@ class DropWidget(qt.QFrame):
                 return
 
             if utils.update_progress_window(20, f"Loading fixed segmentation..."):
-                node_seg_fixed = slicer.util.loadSegmentation(path_seg_fixed,
-                                                              properties={'name': 'seg_fixed'})
+                self.moduleWidget.node_seg_fixed = slicer.util.loadSegmentation(path_seg_fixed,
+                                                                                properties={'name': 'seg_fixed'})
             else:
                 return
 
             if utils.update_progress_window(30, f"Loading moving segmentation..."):
-                node_seg_moving = slicer.util.loadSegmentation(path_seg_moving,
-                                                               properties={'name': 'seg_moving'})
+                self.moduleWidget.node_seg_moving = slicer.util.loadSegmentation(path_seg_moving,
+                                                                                 properties={'name': 'seg_moving'})
             else:
                 return
 
             if utils.update_progress_window(40, f"Loading fixed transform..."):
-                node_transform_fixed = slicer.util.loadTransform(
+                self.moduleWidget.node_transform_fixed = slicer.util.loadTransform(
                     path_transform_fixed)
-                node_transform_fixed.SetName('t_fixed')
+                self.moduleWidget.node_transform_fixed.SetName('t_fixed')
             else:
                 return
 
             if utils.update_progress_window(50, f"Loading moving transform..."):
-                node_transform_moving = slicer.util.loadTransform(
+                self.moduleWidget.node_transform_moving = slicer.util.loadTransform(
                     path_transform_moving)
-                node_transform_moving.SetName('t_moving')
+                self.moduleWidget.node_transform_moving.SetName('t_moving')
             else:
                 return
 
@@ -214,9 +214,6 @@ class DropWidget(qt.QFrame):
                 slicer.progressWindow.close()
                 return
 
-            self.moduleWidget.node_transform_fixed = node_transform_fixed
-            self.moduleWidget.node_transform_moving = node_transform_moving
-
             self.moduleWidget.ui.inputSelector_fixed.setCurrentNode(
                 node_volume_fixed)
             self.moduleWidget.ui.inputSelector_moving.setCurrentNode(
@@ -226,13 +223,13 @@ class DropWidget(qt.QFrame):
                 node_deformation)
 
             # set visibility of segmentation nodes
-            disp_node_seg_fixed = node_seg_fixed.GetDisplayNode()
+            disp_node_seg_fixed = self.moduleWidget.node_seg_fixed.GetDisplayNode()
             disp_node_seg_fixed.RemoveAllViewNodeIDs()
             for view in ['Red1', 'Green1', 'Yellow1']:
                 slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
                 disp_node_seg_fixed.AddViewNodeID(slice_node.GetID())
 
-            disp_node_seg_moving = node_seg_moving.GetDisplayNode()
+            disp_node_seg_moving = self.moduleWidget.node_seg_moving.GetDisplayNode()
             disp_node_seg_moving.RemoveAllViewNodeIDs()
             for view in ['Red2', 'Green2', 'Yellow2']:
                 slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
