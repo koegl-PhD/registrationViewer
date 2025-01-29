@@ -140,6 +140,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # ANNOTAIONTS
         self.annotation_roi_lymphnode_fixed = None
         self.annotation_roi_lymphnode_moving = None
+        self.annotation_bool_lymphnode_increased = False
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -204,6 +205,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_add_lymphnode_roi_fixed)
         self.ui.addLymphnodeRoiMoving.connect(
             "clicked(bool)", self.on_add_lymphnode_roi_moving)
+        self.ui.increasedLymphnodeCheckBox.toggled.connect(
+            self.on_lymphnode_increased)
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -607,24 +610,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.mrmlScene.RemoveNode(self.node_seg_moving)
             self.node_seg_moving = None
 
-    def on_add_lymphnode_roi_moving(self) -> None:
-
-        if self.annotation_roi_lymphnode_moving is not None:
-            if utils.show_warning_popup("Moving lymphnode ROI already exists",
-                                        "Do you want to overwrite it?"):
-                slicer.mrmlScene.RemoveNode(
-                    self.annotation_roi_lymphnode_moving)
-            else:
-                return
-
-        name = self.node_moving.GetName() + "_roi_lymphnode"
-
-        self.annotation_roi_lymphnode_moving = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsROINode", name)
-
-        view_logic.configure_roi(self.annotation_roi_lymphnode_moving,
-                                 self.views_second_row)
-
     def on_add_lymphnode_roi_fixed(self) -> None:
 
         if self.annotation_roi_lymphnode_fixed is not None:
@@ -642,6 +627,32 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         view_logic.configure_roi(self.annotation_roi_lymphnode_fixed,
                                  self.views_first_row)
+
+    def on_add_lymphnode_roi_moving(self) -> None:
+
+        if self.annotation_roi_lymphnode_moving is not None:
+            if utils.show_warning_popup("Moving lymphnode ROI already exists",
+                                        "Do you want to overwrite it?"):
+                slicer.mrmlScene.RemoveNode(
+                    self.annotation_roi_lymphnode_moving)
+
+                self.ui.increasedLymphnodeCheckBox.setEnabled(False)
+            else:
+                return
+
+        name = self.node_moving.GetName() + "_roi_lymphnode"
+
+        self.annotation_roi_lymphnode_moving = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLMarkupsROINode", name)
+
+        view_logic.configure_roi(self.annotation_roi_lymphnode_moving,
+                                 self.views_second_row)
+
+        self.ui.increasedLymphnodeCheckBox.setEnabled(True)
+
+    def on_lymphnode_increased(self) -> None:
+        self.annotation_bool_lymphnode_increased = not self.annotation_bool_lymphnode_increased
+        print(self.annotation_bool_lymphnode_increased)
 
     def update_cursor_view(self) -> None:
 
