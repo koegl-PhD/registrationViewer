@@ -312,8 +312,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 view_logic.set_view_offset("Yellow3", offset_yellow1)
 
                 utils.set_window_level_and_threshold(self.node_diff,
-                                                     window=0.78,
-                                                     level=0.37,
+                                                     window=0.43,
+                                                     level=0.16,
                                                      threshold=(0, 1))
 
                 slicer.progressWindow.close()
