@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>468</width>
-    <height>605</height>
+    <width>300</width>
+    <height>402</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -275,193 +275,156 @@
       <string>Annotations</string>
      </property>
      <layout class="QGridLayout" name="formLayout_2">
-      <item row="6" column="0">
-       <widget class="QCheckBox" name="abgangavertebralisPointFixedCheckbox">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>20</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="2">
-       <widget class="QCheckBox" name="recurrencePresentCheckBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Recurrence present</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QPushButton" name="addCarotisgabelPointMoving">
-        <property name="text">
-         <string>Add Carotisgabel point in moving</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QPushButton" name="addLymphnodeRoiMoving">
-        <property name="text">
-         <string>Add lymph ROI in moving</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QCheckBox" name="increasedLymphnodeCheckBox">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Increased in size</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="1">
-       <widget class="QPushButton" name="addRecurrenceRoiFixed">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Add recurrence ROI in fixed</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QCheckBox" name="carotisgabelPointMovingCheckbox">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>20</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="1">
-       <widget class="QPushButton" name="addAbgangavertebralisPointMoving">
-        <property name="text">
-         <string>Add Abgang A. vertebralis point in moving</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QCheckBox" name="lymphnodeRoiMovingCheckbox">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>20</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QCheckBox" name="abgangavertebralisPointMovingCheckbox">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>20</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QPushButton" name="addCarotisgabelPointFixed">
-        <property name="text">
-         <string>Add Carotisgabel point in fixed</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QCheckBox" name="recurrenceRoiFixedCheckbox">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>20</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QPushButton" name="clearAnnotations">
-        <property name="text">
-         <string>Clear</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="lymphnodeRoiFixedCheckbox">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>20</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="addLymphnodeRoiFixed">
-        <property name="text">
-         <string>Add lymph ROI in fixed</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QCheckBox" name="carotisgabelPointFixedCheckbox">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>20</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
+      
+        <item row="0" column="1">
        <widget class="QPushButton" name="saveAnnotations">
         <property name="text">
          <string>Save</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
+
+        <item row="0" column="2">
+       <widget class="QPushButton" name="clearAnnotations">
+        <property name="text">
+         <string>Clear</string>
+        </property>
+       </widget>
+      </item>
+
+     <item row="1" column="0">
+        <widget class="QCheckBox" name="lymphnodeRoiFixedCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="addLymphnodeRoiFixed">
+        <property name="text">
+         <string>Add lymph ROI in fixed</string>
+        </property>
+       </widget>
+      </item>
+
+            
+     <item row="2" column="0">
+        <widget class="QCheckBox" name="lymphnodeRoiMovingCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="addLymphnodeRoiMoving">
+        <property name="text">
+         <string>Add lymph ROI in moving</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+        <widget class="QCheckBox" name="increasedLymphnodeCheckBox">
+        <property name="text">
+            <string>Increased in size</string>
+        </property>
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        </widget>
+      </item>
+
+     <item row="3" column="0">
+        <widget class="QCheckBox" name="carotisgabelPointFixedCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="addCarotisgabelPointFixed">
+        <property name="text">
+         <string>Add Carotisgabel point in fixed</string>
+        </property>
+       </widget>
+      </item>
+    
+
+      <item row="4" column="0">
+        <widget class="QCheckBox" name="carotisgabelPointMovingCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        </widget>
+        </item>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="addCarotisgabelPointMoving">
+        <property name="text">
+         <string>Add Carotisgabel point in moving</string>
+        </property>
+       </widget>
+      </item>
+
+    
+      <item row="5" column="0">
+        <widget class="QCheckBox" name="abgangavertebralisPointFixedCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        </widget>
+        </item>
+      <item row="5" column="1">
        <widget class="QPushButton" name="addAbgangavertebralisPointFixed">
         <property name="text">
          <string>Add Abgang A. vertebralis point in fixed</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+
+      
+      <item row="6" column="0">
+        <widget class="QCheckBox" name="abgangavertebralisPointMovingCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        </widget>
+        </item>
+      <item row="6" column="1">
+       <widget class="QPushButton" name="addAbgangavertebralisPointMoving">
+        <property name="text">
+         <string>Add Abgang A. vertebralis point in moving</string>
         </property>
        </widget>
       </item>
+
+      <item row="7" column="0">
+        <widget class="QCheckBox" name="recurrenceRoiFixedCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        </widget>
+        </item>
+      <item row="7" column="1">
+        <widget class="QCheckBox" name="recurrencePresentCheckBox">
+        <property name="text">
+            <string>Recurrence present</string>
+        </property>
+        </widget>
+      </item>
+
+    <item row="7" column="2">
+       <widget class="QPushButton" name="addRecurrenceRoiFixed">
+        <property name="text">
+         <string>Add recurrence ROI in fixed</string>
+        </property>
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+
+
+
+
      </layout>
     </widget>
    </item>
