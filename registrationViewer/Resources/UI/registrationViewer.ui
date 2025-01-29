@@ -270,22 +270,22 @@
     </widget>
    </item>
    <item>
-    <widget class="ctkCollapsibleButton" name="markupsCollapsibleButton">
+    <widget class="ctkCollapsibleButton" name="annotationsCollapsibleButton">
      <property name="text">
-      <string>Markups</string>
+      <string>Annotations</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">
-       <widget class="QPushButton" name="addRoiFixed">
+       <widget class="QPushButton" name="addLymphnodeRoiFixed">
         <property name="text">
-         <string>Add ROI in fixed</string>
+         <string>Add lymph node ROI in fixed</string>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QPushButton" name="addRoiMoving">
+       <widget class="QPushButton" name="addLymphnodeRoiMoving">
         <property name="text">
-         <string>Add ROI in moving</string>
+         <string>Add lymph node ROI in moving</string>
         </property>
        </widget>
       </item>
