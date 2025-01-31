@@ -86,11 +86,51 @@
      </item>
     </layout>
    </item>
+
+
+     <item>
+    <widget class="ctkCollapsibleButton" name="studyCollapsibleButton">
+     <property name="text">
+      <string>Study setup</string>
+     </property>
+     <property name="collapsed">
+      <bool>false</bool>
+      </property>
+
+     <layout class="QGridLayout" name="girdLayout_22">
+
+     <item row="10" column="0">
+        <widget class="QCheckBox" name="radiologistSetCheckBox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
+        </widget>
+      </item>
+      
+     </layout>
+
+    </widget>
+   </item>
+
+
+
+
+
+
    <item>
     <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton">
      <property name="text">
       <string>Inputs</string>
      </property>
+     <property name="collapsed">
+      <bool>true</bool>
+      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">
        <widget class="QLabel" name="label_2">
@@ -194,6 +234,7 @@
      </layout>
     </widget>
    </item>
+   
    <item>
     <widget class="qMRMLLayoutWidget" name="MRMLLayoutWidget"/>
    </item>
@@ -215,6 +256,9 @@
      <property name="text">
       <string>Controls</string>
      </property>
+     <property name="collapsed">
+      <bool>true</bool>
+      </property>
     <layout class="QFormLayout" name="formLayout_2">
      <item row="0" column="0">
       <widget class="QLabel" name="label_4">
