@@ -247,9 +247,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
 
-        # self.dropWidget.load_data_from_dropped_folder("/home/fryderyk/Documents/code/registrationViewer/registrationViewer/Resources/Data/BSplineNiftyReg_6cc04c82-245e-4326-b117-fee51c3b6a50",
-        #                                               "/data/LungCT_preprocessed_new",
-        #                                               '0')
         utils.collapse_all_segmentations()
 
         view_logic.link_views(self.views_first_row)
@@ -261,6 +258,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         slicer.util.resetSliceViews()
         self.ui.linearTransformationCheckBox.setEnabled(False)
 
+        self.dropWidget.load_data_from_dropped_folder(
+            "/home/koeglf/data/try_new_preprocessing/SerielleCTs_nii_forHumans/xYbaegYf_mw")
         # utils.temp_load_data(self)
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
@@ -548,9 +547,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.synchronise_with_displacement_pressed = not self.synchronise_with_displacement_pressed
 
-        self._set_up_crosshair(self.synchronise_with_displacement_pressed)
-
         if self.synchronise_with_displacement_pressed is True:
+            self._set_up_crosshair(self.synchronise_with_displacement_pressed)
             print("pressed to synchronise")
             self.ui.synchronise_views_with_transform.setText(
                 "Unsynchronise views (s)")
@@ -576,9 +574,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.synchronise_manually_pressed = not self.synchronise_manually_pressed
 
-        self._set_up_crosshair(self.synchronise_manually_pressed)
-
         if self.synchronise_manually_pressed is True:
+            self._set_up_crosshair(self.synchronise_manually_pressed)
             print("pressed to synchronise manually")
             self.ui.synchronise_views_manually.setText(
                 "Unink views (l)")
@@ -993,15 +990,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui.inputSelector_transformation.currentNode() is not None
 
     def _set_up_crosshair(self, turn_synchronisation_on: bool) -> None:
-        if self.crosshair is None:
-            self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_crosshair,
-                                                   node_transform_nonlinear=self.node_transform_nonlinear,
-                                                   node_transform_fixed=self.node_transform_fixed,
-                                                   node_transform_moving=self.node_transform_moving,
-                                                   use_transform=self.use_transform,
-                                                   use_only_linear_transform=self.use_only_linear_transform,
-                                                   offset_diffs=self.current_offset,
-                                                   apply_offsets=self.synchronise_manually_pressed)
+        if self.crosshair:
+            self.crosshair.delete_crosshairs_and_folder()
+
+        self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_crosshair,
+                                               node_transform_nonlinear=self.node_transform_nonlinear,
+                                               node_transform_fixed=self.node_transform_fixed,
+                                               node_transform_moving=self.node_transform_moving,
+                                               use_transform=self.use_transform,
+                                               use_only_linear_transform=self.use_only_linear_transform,
+                                               offset_diffs=self.current_offset,
+                                               apply_offsets=self.synchronise_manually_pressed)
 
         self.ui.linearTransformationCheckBox.setEnabled(True)
 
