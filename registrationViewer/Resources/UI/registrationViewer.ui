@@ -197,7 +197,24 @@
    <item>
     <widget class="qMRMLLayoutWidget" name="MRMLLayoutWidget"/>
    </item>
+         <item row="0" column="0" colspan="2">
+    <widget class="QPushButton" name="synchronise_views_general">
+     <property name="text">
+      <string>Synchronise views (s)</string>
+     </property>
+    <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred"/>
+    </property>
+     <property name="visible">
+      <bool>false</bool>
+      </property>
+    </widget>
+   </item>
    <item>
+    <widget class="ctkCollapsibleButton" name="controlsCollapsibleButton">
+     <property name="text">
+      <string>Controls</string>
+     </property>
     <layout class="QFormLayout" name="formLayout_2">
      <item row="0" column="0">
       <widget class="QLabel" name="label_4">
@@ -236,23 +253,25 @@
        </item>
       </layout>
      </item>
-    </layout>
-   </item>
-   <item>
+      <item row="20" column="0" colspan="2">
     <widget class="QPushButton" name="synchronise_views_with_transform">
      <property name="text">
-      <string>Synchronise views (s)</string>
+      <string>Synchronise views with transform (s)</string>
      </property>
     </widget>
    </item>
-   <item>
+      <item row="30" column="0" colspan="2">
     <widget class="QPushButton" name="synchronise_views_manually">
      <property name="text">
-      <string>Link views (l)</string>
+      <string>Synchronise views manually (l)</string>
      </property>
+     <property name="visible">
+      <bool>false</bool>
+      </property>
     </widget>
    </item>
-   <item>
+
+      <item row="40" column="0" colspan="2">
     <widget class="QCheckBox" name="linearTransformationCheckBox">
      <property name="text">
       <string>Use only linear transformation</string>
@@ -262,11 +281,14 @@
      </property>
     </widget>
    </item>
-   <item>
+      <item row="50" column="0" colspan="2">
     <widget class="QPushButton" name="remove_all_data">
      <property name="text">
       <string>Remove all data</string>
      </property>
+    </widget>
+   </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -274,6 +296,9 @@
      <property name="text">
       <string>Annotations</string>
      </property>
+     <property name="collapsed">
+      <bool>true</bool>
+      </property>
      <layout class="QGridLayout" name="formLayout_2">
 
         <item row="0" column="1">
