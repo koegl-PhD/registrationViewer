@@ -160,6 +160,9 @@
        <property name="text">
         <string>Start study</string>
        </property>
+       <property name="visible">
+        <bool>false</bool>
+        </property>
       </widget>
      </item>
 
@@ -185,7 +188,34 @@
     </layout>
    </item>
 
-   
+        <item>
+
+
+     <layout class="QGridLayout" name="girdLayout_22">
+
+      <item row="0" column="0">
+       <widget class="QLabel" name="current_case_label">
+        <property name="text">
+         <string>Case 1/9</string>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+
+
+
+
+      
+     </layout>
+
+   </item>
+
+
+
+
+
 
 
 

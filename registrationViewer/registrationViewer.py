@@ -216,6 +216,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui.start_study_button.toolTip = "Please set radiologist ID first"
         self.ui.radiologistIDTextEdit.textChanged.connect(_on_text_changed)
 
+        self.ui.start_study_by_user_button.connect("clicked(bool)",
+                                                   self.on_user_start_study)
+
         # Buttons
         self.ui.simple_ui.connect("clicked(bool)", self.on_simple_ui)
         self.ui.button_2x3.connect("clicked(bool)", view_logic.set_2x3_layout)
@@ -602,6 +605,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             mainWindow.findChild(
                 qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
             self.ui.start_study_by_user_button.setVisible(False)
+
+    def on_user_start_study(self) -> None:
+        self.ui.current_case_label.setVisible(True)
 
     def on_synchronise_views_wth_trasform(self) -> None:
 
@@ -1068,6 +1074,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # self.ui.remove_all_data.setVisible(False)
         self.ui.annotationsCollapsibleButton.setHidden(True)
         self.loadingCollapsible.setHidden(True)
+
+        self.ui.current_case_label.setVisible(False)
 
     def show_module_parts_for_user_study(self) -> None:
         self.ui.studyCollapsibleButton.setHidden(False)
