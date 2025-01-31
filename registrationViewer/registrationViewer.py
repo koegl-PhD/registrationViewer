@@ -258,8 +258,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         slicer.util.resetSliceViews()
         self.ui.linearTransformationCheckBox.setEnabled(False)
 
-        self.dropWidget.load_data_from_dropped_folder(
-            "/home/koeglf/data/try_new_preprocessing/SerielleCTs_nii_forHumans/xYbaegYf_mw")
+        # self.dropWidget.load_data_from_dropped_folder(
+        #     "/home/koeglf/data/try_new_preprocessing/SerielleCTs_nii_forHumans/xYbaegYf_mw")
         # utils.temp_load_data(self)
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
@@ -450,10 +450,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             if node is None:
                 continue
 
-            utils.set_window_level_and_threshold(node,
-                                                 window=1036,
-                                                 level=329,
-                                                 threshold=(-1024, 3071))
+            range_of_volume = utils.get_range_of_values(node)
+
+            if not (range_of_volume[0] >= -1 and range_of_volume[1] <= 2):
+                utils.set_window_level_and_threshold(node,
+                                                     window=1036,
+                                                     level=329,
+                                                     threshold=(-1024, 3071))
 
         # reset field of view for view 0, 3 and 6
         for view in [self.views_first_row[0], self.views_second_row[0], self.views_third_row[0]]:
@@ -491,14 +494,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if self.node_transform_nonlinear is None:
             slicer.util.errorDisplay("No nonlinear transform found")
-            return False
-
-        if self.node_transform_fixed is None:
-            slicer.util.errorDisplay("No fixed linear transform found")
-            return False
-
-        if self.node_transform_moving is None:
-            slicer.util.errorDisplay("No moving linear transform found")
             return False
 
         return True

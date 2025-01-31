@@ -153,6 +153,10 @@ def apply_and_harden_transform_to_node(node_target: slicer.vtkMRMLNode,
     @param node_target: The target node.
     @param node_transform: The transform node.
     """
+
+    if not node_transform or not node_target:
+        return
+
     if invert:
         node_target.ApplyTransform(node_transform.GetTransformFromParent())
     else:
@@ -318,3 +322,8 @@ def show_node_only_in_views(node, views: List[str]) -> None:
     for view in views:
         slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
         disp_node.AddViewNodeID(slice_node.GetID())
+
+
+def get_range_of_values(node: slicer.vtkMRMLScalarVolumeNode) -> Tuple[float, float]:
+    array = slicer.util.arrayFromVolume(node)
+    return array.min(), array.max()
