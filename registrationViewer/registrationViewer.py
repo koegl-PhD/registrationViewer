@@ -258,8 +258,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         slicer.util.resetSliceViews()
         self.ui.linearTransformationCheckBox.setEnabled(False)
 
-        self.dropWidget.load_data_from_dropped_folder(
-            "/home/koeglf/data/try_new_preprocessing/SerielleCTs_nii_forHumans/xYbaegYf_mw")
+        # self.dropWidget.load_data_from_dropped_folder(
+        #     "/home/koeglf/data/try_new_preprocessing/SerielleCTs_nii_forHumans/xYbaegYf_mw")
         # utils.temp_load_data(self)
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
@@ -491,14 +491,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if self.node_transform_nonlinear is None:
             slicer.util.errorDisplay("No nonlinear transform found")
-            return False
-
-        if self.node_transform_fixed is None:
-            slicer.util.errorDisplay("No fixed linear transform found")
-            return False
-
-        if self.node_transform_moving is None:
-            slicer.util.errorDisplay("No moving linear transform found")
             return False
 
         return True

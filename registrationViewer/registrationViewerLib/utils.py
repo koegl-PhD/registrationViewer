@@ -153,6 +153,10 @@ def apply_and_harden_transform_to_node(node_target: slicer.vtkMRMLNode,
     @param node_target: The target node.
     @param node_transform: The transform node.
     """
+
+    if not node_transform or not node_target:
+        return
+
     if invert:
         node_target.ApplyTransform(node_transform.GetTransformFromParent())
     else:
