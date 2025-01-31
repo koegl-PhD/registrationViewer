@@ -197,6 +197,19 @@
    <item>
     <widget class="qMRMLLayoutWidget" name="MRMLLayoutWidget"/>
    </item>
+         <item row="0" column="0" colspan="2">
+    <widget class="QPushButton" name="synchronise_views_general">
+     <property name="text">
+      <string>Synchronise views (s)</string>
+     </property>
+    <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred"/>
+    </property>
+     <property name="visible">
+      <bool>false</bool>
+      </property>
+    </widget>
+   </item>
    <item>
     <widget class="ctkCollapsibleButton" name="controlsCollapsibleButton">
      <property name="text">
@@ -240,21 +253,25 @@
        </item>
       </layout>
      </item>
-      <item row="2" column="0" colspan="2">
+      <item row="20" column="0" colspan="2">
     <widget class="QPushButton" name="synchronise_views_with_transform">
      <property name="text">
       <string>Synchronise views with transform (s)</string>
      </property>
     </widget>
    </item>
-      <item row="3" column="0" colspan="2">
+      <item row="30" column="0" colspan="2">
     <widget class="QPushButton" name="synchronise_views_manually">
      <property name="text">
       <string>Synchronise views manually (l)</string>
      </property>
+     <property name="visible">
+      <bool>false</bool>
+      </property>
     </widget>
    </item>
-      <item row="4" column="0" colspan="2">
+
+      <item row="40" column="0" colspan="2">
     <widget class="QCheckBox" name="linearTransformationCheckBox">
      <property name="text">
       <string>Use only linear transformation</string>
@@ -264,7 +281,7 @@
      </property>
     </widget>
    </item>
-      <item row="5" column="0" colspan="2">
+      <item row="50" column="0" colspan="2">
     <widget class="QPushButton" name="remove_all_data">
      <property name="text">
       <string>Remove all data</string>
@@ -279,6 +296,9 @@
      <property name="text">
       <string>Annotations</string>
      </property>
+     <property name="collapsed">
+      <bool>true</bool>
+      </property>
      <layout class="QGridLayout" name="formLayout_2">
 
         <item row="0" column="1">

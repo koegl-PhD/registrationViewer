@@ -107,7 +107,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         utils.create_shortcuts(('t', self.on_synchronise_views_wth_trasform),
                                ('m', self.on_synchronise_views_manually),
-                               )
+                               ('s', self.on_synchronise_views_general))
+
+        self.transformation_mode: 'utils.TransformationMode' = utils.TransformationMode.NON_LINEAR
 
         self.use_transform = True
         self.use_only_linear_transform = False
@@ -204,6 +206,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui.synchronise_views_manually.connect(
             "clicked(bool)", self.on_synchronise_views_manually)
+        self.ui.synchronise_views_general.connect(
+            "clicked(bool)", self.on_synchronise_views_general)
         self.ui.linearTransformationCheckBox.toggled.connect(
             self.on_linear_only)
         self.ui.remove_all_data.connect(
@@ -504,6 +508,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         utils.set_ui_simplification(self.ui_is_simple)
 
+        self.ui.synchronise_views_general.setVisible(self.ui_is_simple)
+        mainWindow = slicer.util.mainWindow()
+
         if self.ui_is_simple:
             self.ui.simple_ui.setText("Advanced UI")
             slicer.app.setStyleSheet("""
@@ -525,6 +532,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                self.views_second_row)
             view_logic.enable_sectra_movements(self.node_diff,
                                                self.views_third_row)
+            self.hide_module_parts_for_user_study()
+
+            mainWindow.findChild(
+                qt.QWidget, "PanelDockWidget").setMaximumWidth(200)
         else:
             self.ui.simple_ui.setText("Simple UI")
             slicer.app.setStyleSheet("""
@@ -534,6 +545,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 """)
 
             view_logic.disable_sectra_movements()
+            self.show_module_parts_for_user_study()
+            mainWindow.findChild(
+                qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
 
     def on_synchronise_views_wth_trasform(self) -> None:
 
@@ -547,6 +561,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             print("pressed to synchronise")
             self.ui.synchronise_views_with_transform.setText(
                 "Unsynchronise views with transform (t)")
+            self.ui.synchronise_views_general.setText(
+                "Unsynchronise views (s)")
 
             self.use_transform = self.crosshair.use_transform = True
             self.crosshair.use_only_linear_transform = self.use_only_linear_transform
@@ -556,12 +572,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui.synchronise_views_manually.setText(
                 "Synchronise views manually (m)")
             self.synchronise_manually_pressed = False
-
         else:
             print("pressed to unsynchronise")
             self._remove_custom_observers_from_crosshair()
             self.ui.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
+            self.ui.synchronise_views_general.setText(
+                "Synchronise views (s)")
             self.ui.linearTransformationCheckBox.setEnabled(False)
 
     def on_synchronise_views_manually(self, views: List[List[str]] = None) -> None:
@@ -600,6 +617,30 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.crosshair.offset_diffs = self.current_offset = [
             offset_diff_red, offset_diff_green, offset_diff_yellow]
         self.crosshair.apply_offsets = self.synchronise_manually_pressed
+
+    def on_synchronise_views_general(self) -> None:
+
+        if not self._synchronisation_checks():
+            return
+
+        if self.transformation_mode == utils.TransformationMode.NONE:
+            pass
+        elif self.transformation_mode == utils.TransformationMode.LINEAR:
+            self.on_synchronise_views_wth_trasform()
+            self.use_only_linear_transform = self.crosshair.use_only_linear_transform = True
+            self.ui.linearTransformationCheckBox.setChecked(True)
+        elif self.transformation_mode == utils.TransformationMode.NON_LINEAR:
+            self.on_synchronise_views_wth_trasform()
+            self.use_only_linear_transform = self.crosshair.use_only_linear_transform = False
+            self.ui.linearTransformationCheckBox.setChecked(False)
+        else:
+            raise ValueError("Unknown transformation mode")
+
+        if self.synchronise_with_displacement_pressed:
+            self.ui.synchronise_views_general.setText(
+                "Unsynchronise views (s)")
+        else:
+            self.ui.synchronise_views_general.setText("Synchronise views (s)")
 
     def on_linear_only(self) -> None:
         print("linear only")
@@ -963,9 +1004,31 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def hide_module_parts_for_user_study(self) -> None:
         self.ui.inputsCollapsibleButton.setHidden(True)
-        self.ui.label_4.setVisible(False)
-        self.ui.button_2x3.setVisible(False)
-        self.ui.button_3x3.setVisible(False)
+        self.ui.controlsCollapsibleButton.setHidden(True)
+        # self.ui.label_4.setVisible(False)
+        # self.ui.button_2x3.setVisible(False)
+        # self.ui.button_3x3.setVisible(False)
+        # self.ui.synchronise_views_with_transform.setVisible(False)
+        # self.ui.linearTransformationCheckBox.setVisible(False)
+        # self.ui.remove_all_data.setVisible(False)
+        self.ui.annotationsCollapsibleButton.setHidden(True)
+        self.loadingCollapsible.setHidden(True)
+        # self.ui.
+        # self.ui.
+        # self.ui.
+        # self.ui.
+
+    def show_module_parts_for_user_study(self) -> None:
+        self.ui.inputsCollapsibleButton.setHidden(False)
+        self.ui.controlsCollapsibleButton.setHidden(False)
+        # self.ui.label_4.setVisible(True)
+        # self.ui.button_2x3.setVisible(True)
+        # self.ui.button_3x3.setVisible(True)
+        # self.ui.synchronise_views_with_transform.setVisible(True)
+        # self.ui.linearTransformationCheckBox.setVisible(True)
+        # self.ui.remove_all_data.setVisible(True)
+        self.ui.annotationsCollapsibleButton.setHidden(False)
+        self.loadingCollapsible.setHidden(False)
         # self.ui.
         # self.ui.
         # self.ui.

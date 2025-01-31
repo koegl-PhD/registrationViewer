@@ -1,8 +1,16 @@
+from enum import Enum
+
 from typing import Tuple, Callable, List
 
 import qt
 import slicer
 import vtk
+
+
+class TransformationMode(Enum):
+    NONE = 0
+    LINEAR = 1
+    NON_LINEAR = 2
 
 
 def update_progress_window(progress: int, message: str) -> bool:
