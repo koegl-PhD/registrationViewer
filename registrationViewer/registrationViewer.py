@@ -1,5 +1,6 @@
 import functools
 import importlib
+import json
 import logging
 import os
 import time
@@ -704,6 +705,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                             "(Click OK to continue saving)"):
                 return
 
+        if not utils.show_warning_popup("Have you set the window, level and threshold?",
+                                        "(Click OK to continue saving)"):
+            return
+
         path_patient = self.annotations_save_path + name_patient
         if not os.path.exists(path_patient):
             os.makedirs(path_patient)
@@ -726,6 +731,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.annotation_fixed_roi_recurrence is not None:
             slicer.util.saveNode(self.annotation_fixed_roi_recurrence, path_patient +
                                  f"/{self.annotation_fixed_roi_recurrence.GetName()}.mrk.json")
+
+        disp_node_fixed = self.node_fixed.GetDisplayNode()
+        w_l_t_fixed = {'window': disp_node_fixed.GetWindow(),
+                       'level': disp_node_fixed.GetLevel(),
+                       'threshold': [disp_node_fixed.GetLowerThreshold(), disp_node_fixed.GetUpperThreshold()]}
+        with open(path_patient + f"/window_level_threshold_{self.node_fixed.GetName()}.json", "w") as f:
+            json.dump(w_l_t_fixed, f)
+
+        disp_node_moving = self.node_moving.GetDisplayNode()
+        w_l_t_moving = {'window': disp_node_moving.GetWindow(),
+                        'level': disp_node_moving.GetLevel(),
+                        'threshold': [disp_node_moving.GetLowerThreshold(), disp_node_moving.GetUpperThreshold()]}
+        with open(path_patient + f"/window_level_threshold_{self.node_moving.GetName()}.json", "w") as f:
+            json.dump(w_l_t_moving, f)
 
         self.annotations_already_saved = True
 
