@@ -288,6 +288,21 @@ def show_warning_popup(content: str,
         return False
 
 
+def show_question_popup(content: str) -> bool:
+    msgBox = qt.QMessageBox()
+    msgBox.setIcon(qt.QMessageBox.Question)
+    msgBox.setText(content)
+    msgBox.setStandardButtons(qt.QMessageBox.Yes | qt.QMessageBox.No)
+    msgBox.setDefaultButton(qt.QMessageBox.No)
+
+    response = msgBox.exec_()
+
+    if response == qt.QMessageBox.Yes:
+        return True
+    else:
+        return False
+
+
 def show_info_popup(content: str, title: str = "Information") -> None:
     msgBox = qt.QMessageBox()
     msgBox.setIcon(qt.QMessageBox.Information)

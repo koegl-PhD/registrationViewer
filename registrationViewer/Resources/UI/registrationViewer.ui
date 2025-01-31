@@ -114,21 +114,35 @@
       </item>
 
       <item row="10" column="1">
-       <widget class="QPlainTextEdit" name="plainTextEdit">
+       <widget class="QTextEdit" name="radiologistIDTextEdit">
        <property name="maximumSize">
           <size>
-          <width>50</width>
-          <height>20</height>
+          <width>150</width>
+          <height>25</height>
          </size>
          </property>
        </widget>
       </item>
 
       <item row="10" column="2" colspan="1">
-        <widget class="QPushButton" name="set_radiologist_id">
+        <widget class="QPushButton" name="set_radiologist_id_button">
         <property name="text">
           <string>Set radiologist's ID</string>
         </property>
+        </widget>
+      </item>
+
+      <item row="15" column="0" colspan="3">
+        <widget class="QPushButton" name="start_study_button">
+        <property name="text">
+          <string>START STUDY</string>
+        </property>
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Please set radiologist ID first</string>
+         </property>
         </widget>
       </item>
 
