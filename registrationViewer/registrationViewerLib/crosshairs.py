@@ -133,7 +133,6 @@ class Crosshairs():
                         new_position[1] + offset[1],
                         new_position[2] + offset[0]]
 
-        # in plus views we should follow the transformed cursor (that's why group 2)
         slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
                                                             new_position[1],
                                                             new_position[2],
@@ -153,7 +152,6 @@ class Crosshairs():
         initial_position: list[float] = [0., 0., 0.]
         self.node_cursor.GetCursorPositionRAS(initial_position)
 
-        # in plus views we should follow the cursor (that's why group 2)
         slicer.modules.markups.logic().JumpSlicesToLocation(initial_position[0],
                                                             initial_position[1],
                                                             initial_position[2],
