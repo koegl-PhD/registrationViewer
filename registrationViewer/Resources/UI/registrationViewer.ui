@@ -38,6 +38,7 @@
        </property>
       </spacer>
      </item>
+
      <item>
       <widget class="QPushButton" name="simple_ui">
        <property name="layoutDirection">
@@ -65,6 +66,7 @@
        </property>
       </widget>
      </item>
+
      <item>
       <spacer name="horizontalSpacer_right">
        <property name="sizePolicy">
@@ -86,11 +88,214 @@
      </item>
     </layout>
    </item>
+
+      <item>
+       <widget class="QLabel" name="label_12">
+       </widget>
+       </item>
+
+    <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+          <property name="styleSheet">
+        <string notr="true">
+         QFrame { 
+          color: white;
+          background-color: white;
+          height: 2px;
+          }
+        </string>
+       </property>
+       </widget>
+      </item>
+
+        <item>
+       <widget class="QLabel" name="label_112">
+       </widget>
+    </item>
+
+  <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_center2">
+     <item>
+      <spacer name="horizontalSpacer_left2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+
+     <item>
+      <widget class="QPushButton" name="start_study_by_user_button">
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">
+         QPushButton {
+             background-color: #038011;
+             color: white;
+             font-weight: bold;
+             border-radius: 5px;
+             padding: 5px;
+         }
+         QPushButton:pressed {
+             background-color: #0e4214; /* Even darker blue for pressed */
+         }
+        </string>
+       </property>
+       <property name="text">
+        <string>Start study</string>
+       </property>
+       <property name="visible">
+        <bool>false</bool>
+        </property>
+      </widget>
+     </item>
+
+     <item>
+      <spacer name="horizontalSpacer_right2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+
+        <item>
+
+
+     <layout class="QGridLayout" name="girdLayout_22">
+
+      <item row="0" column="0">
+       <widget class="QLabel" name="current_case_label">
+        <property name="text">
+         <string>Case 1/9</string>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+
+
+
+
+      
+     </layout>
+
+   </item>
+
+
+
+
+
+
+
+
+     <item>
+    <widget class="ctkCollapsibleButton" name="studyCollapsibleButton">
+     <property name="text">
+      <string>Study setup</string>
+     </property>
+     <property name="collapsed">
+      <bool>false</bool>
+      </property>
+
+     <layout class="QGridLayout" name="girdLayout_22">
+
+     <item row="10" column="0">
+        <widget class="QCheckBox" name="radiologistSetCheckBox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
+        </widget>
+      </item>
+
+      <item row="10" column="1">
+       <widget class="QTextEdit" name="radiologistIDTextEdit">
+       <property name="maximumSize">
+          <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+         </property>
+       </widget>
+      </item>
+
+      <item row="10" column="2" colspan="1">
+        <widget class="QPushButton" name="set_radiologist_id_button">
+        <property name="text">
+          <string>Set radiologist's ID</string>
+        </property>
+        </widget>
+      </item>
+
+      <item row="15" column="0" colspan="3">
+        <widget class="QPushButton" name="start_study_button">
+        <property name="text">
+          <string>START STUDY</string>
+        </property>
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Please set radiologist ID first</string>
+         </property>
+        </widget>
+      </item>
+
+      
+     </layout>
+
+    </widget>
+   </item>
+
+
+
+
+
+
    <item>
     <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton">
      <property name="text">
       <string>Inputs</string>
      </property>
+     <property name="collapsed">
+      <bool>true</bool>
+      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">
        <widget class="QLabel" name="label_2">
@@ -194,6 +399,7 @@
      </layout>
     </widget>
    </item>
+   
    <item>
     <widget class="qMRMLLayoutWidget" name="MRMLLayoutWidget"/>
    </item>
@@ -215,6 +421,9 @@
      <property name="text">
       <string>Controls</string>
      </property>
+     <property name="collapsed">
+      <bool>true</bool>
+      </property>
     <layout class="QFormLayout" name="formLayout_2">
      <item row="0" column="0">
       <widget class="QLabel" name="label_4">

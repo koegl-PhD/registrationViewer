@@ -1,0 +1,62 @@
+{
+    "path_study": "/home/koeglf/data/debugging/",
+    "path_study_output": "/home/koeglf/data/debugging/study_output/",
+    "path_study_input_volumes": "/home/koeglf/data/debugging/SerielleCTs_nii_forHumans/",
+    "path_study_input_registrations": "/home/koeglf/data/debugging/SerielleCTs_nii_forHumans_registrations/",
+    "participants": {
+        "rad_1": {
+            "name": "John Smith",
+            "ids_patients_transformation_none": [
+                "0e5fp8GltvE",
+                "fNvYEk8SSJs",
+                "LB9oATPd0mE"
+            ],
+            "ids_patients_transformation_linear": [
+                "SzZUcvM5JpU",
+                "TMxGak0IQOg",
+                "TwU508CCA9Y"
+            ],
+            "ids_patients_transformation_nonolinear": [
+                "ujm2W15FqLc",
+                "XPqt2AtrAMc",
+                "xYbaegYf_mw"
+            ]
+        },
+        "rad_2": {
+            "name": "Jane Doe",
+            "ids_patients_transformation_none": [
+                "SzZUcvM5JpU",
+                "TMxGak0IQOg",
+                "TwU508CCA9Y"
+            ],
+            "ids_patients_transformation_linear": [
+                "ujm2W15FqLc",
+                "XPqt2AtrAMc",
+                "xYbaegYf_mw"
+            ],
+            "ids_patients_transformation_nonolinear": [
+                "0e5fp8GltvE",
+                "fNvYEk8SSJs",
+                "LB9oATPd0mE"
+            ]
+        },
+        "rad_3": {
+            "name": "Max Mustermann",
+            "ids_patients_transformation_none": [
+                "ujm2W15FqLc",
+                "XPqt2AtrAMc",
+                "xYbaegYf_mw"
+            ],
+            "ids_patients_transformation_linear": [
+                "0e5fp8GltvE",
+                "fNvYEk8SSJs",
+                "LB9oATPd0mE"
+            ],
+            "ids_patients_transformation_nonolinear": [
+                "SzZUcvM5JpU",
+                "TMxGak0IQOg",
+                "TwU508CCA9Y"
+            ]
+        }
+    }
+}

@@ -26,7 +26,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading
+from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading, study_loading
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -84,11 +84,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTag = None
 
-        from registrationViewerLib import utils, crosshairs, drop_data_loading, view_logic
+        from registrationViewerLib import utils, crosshairs, drop_data_loading, view_logic, study_loading
         utils = importlib.reload(utils)
         crosshairs = importlib.reload(crosshairs)
         drop_data_loading = importlib.reload(drop_data_loading)
         view_logic = importlib.reload(view_logic)
+        study_loading = importlib.reload(study_loading)
 
         self.group_first_row = 1
         self.group_second_row = 2
@@ -141,7 +142,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # we need to store our tags so we can specifically remove only them
         self.crosshair_custom_observer_tags = []
 
-        # ANNOTAIONTS
+        # ANNOTATIONS
         self.annotations_save_path = "/home/koeglf/data/try_new_preprocessing/annotations/"
         self.annotations_already_saved = False
         self.annotation_fixed_roi_lymphnode = None
@@ -152,6 +153,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.annotation_moving_points = None
 
         self.annotation_fixed_roi_recurrence = None
+
+        # STUDY
+        self.path_study_data_master: str = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
+        self.study_data_master: 'study_loading.StudyData' = study_loading.StudyData(
+            self.path_study_data_master)
+        self.current_radiologist_id: str = ""
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -195,6 +202,22 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.views_second_row[i]).mrmlSliceNode().SetViewGroup(2)
             slicer.app.layoutManager().sliceWidget(
                 self.views_third_row[i]).mrmlSliceNode().SetViewGroup(3)
+
+        # CONNECTIONS
+        # Study
+        self.ui.set_radiologist_id_button.connect("clicked(bool)",
+                                                  self.on_set_radiologist_id)
+        self.ui.start_study_button.connect("clicked(bool)",
+                                           self.on_start_study)
+
+        def _on_text_changed():
+            self.ui.start_study_button.setEnabled(False)
+            self.ui.radiologistSetCheckBox.setChecked(False)
+            self.ui.start_study_button.toolTip = "Please set radiologist ID first"
+        self.ui.radiologistIDTextEdit.textChanged.connect(_on_text_changed)
+
+        self.ui.start_study_by_user_button.connect("clicked(bool)",
+                                                   self.on_user_start_study)
 
         # Buttons
         self.ui.simple_ui.connect("clicked(bool)", self.on_simple_ui)
@@ -502,13 +525,44 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         return True
 
+    # CONNECTOINS
+
+    def on_set_radiologist_id(self) -> None:
+
+        radiologist_id: str = str(self.ui.radiologistIDTextEdit.toPlainText())
+
+        if radiologist_id == "":
+            slicer.util.errorDisplay("Please enter radiologist ID")
+            return
+
+        if not self.study_data_master.participants.__contains__(radiologist_id):
+            slicer.util.errorDisplay(
+                "Radiologist ID not found in study data master")
+            return
+
+        radiologist_name = self.study_data_master.participants[radiologist_id]["name"]
+
+        if not utils.show_question_popup(f"Are you sure {radiologist_name} is the desired participant?"):
+            return
+
+        self.current_radiologist_id = radiologist_id
+
+        self.ui.start_study_button.setEnabled(True)
+        self.ui.radiologistSetCheckBox.setChecked(True)
+        self.ui.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
+
+    def on_start_study(self) -> None:
+        self.on_simple_ui()
+
+        # do this after the first case is loaded
+        # self.ui.synchronise_views_general.setVisible(self.ui_is_simple)
+
     def on_simple_ui(self) -> None:
 
         self.ui_is_simple = not self.ui_is_simple
 
         utils.set_ui_simplification(self.ui_is_simple)
 
-        self.ui.synchronise_views_general.setVisible(self.ui_is_simple)
         mainWindow = slicer.util.mainWindow()
 
         if self.ui_is_simple:
@@ -536,6 +590,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             mainWindow.findChild(
                 qt.QWidget, "PanelDockWidget").setMaximumWidth(200)
+
+            self.ui.start_study_by_user_button.setVisible(True)
         else:
             self.ui.simple_ui.setText("Simple UI")
             slicer.app.setStyleSheet("""
@@ -548,6 +604,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.show_module_parts_for_user_study()
             mainWindow.findChild(
                 qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
+            self.ui.start_study_by_user_button.setVisible(False)
+
+    def on_user_start_study(self) -> None:
+        self.ui.current_case_label.setVisible(True)
 
     def on_synchronise_views_wth_trasform(self) -> None:
 
@@ -1003,6 +1063,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 annotation.GetDisplayNode().SetVisibility(visibility)
 
     def hide_module_parts_for_user_study(self) -> None:
+        self.ui.studyCollapsibleButton.setHidden(True)
         self.ui.inputsCollapsibleButton.setHidden(True)
         self.ui.controlsCollapsibleButton.setHidden(True)
         # self.ui.label_4.setVisible(False)
@@ -1013,12 +1074,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # self.ui.remove_all_data.setVisible(False)
         self.ui.annotationsCollapsibleButton.setHidden(True)
         self.loadingCollapsible.setHidden(True)
-        # self.ui.
-        # self.ui.
-        # self.ui.
-        # self.ui.
+
+        self.ui.current_case_label.setVisible(False)
 
     def show_module_parts_for_user_study(self) -> None:
+        self.ui.studyCollapsibleButton.setHidden(False)
         self.ui.inputsCollapsibleButton.setHidden(False)
         self.ui.controlsCollapsibleButton.setHidden(False)
         # self.ui.label_4.setVisible(True)
@@ -1029,10 +1089,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # self.ui.remove_all_data.setVisible(True)
         self.ui.annotationsCollapsibleButton.setHidden(False)
         self.loadingCollapsible.setHidden(False)
-        # self.ui.
-        # self.ui.
-        # self.ui.
-        # self.ui.
 
     def update_cursor_view(self) -> None:
 

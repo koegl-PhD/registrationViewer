@@ -18,6 +18,7 @@ def create_loading_ui(self) -> None:
     configCollapsible.text = "Load patient data"
     self.loadingCollapsible = configCollapsible
     self.layout.addWidget(configCollapsible)
+    configCollapsible.collapsed = True
 
     # Create collapsible layout
     collapsibleLayout = qt.QVBoxLayout(configCollapsible)
