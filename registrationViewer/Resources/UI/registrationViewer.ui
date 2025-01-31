@@ -38,6 +38,7 @@
        </property>
       </spacer>
      </item>
+
      <item>
       <widget class="QPushButton" name="simple_ui">
        <property name="layoutDirection">
@@ -65,6 +66,7 @@
        </property>
       </widget>
      </item>
+
      <item>
       <spacer name="horizontalSpacer_right">
        <property name="sizePolicy">
@@ -86,6 +88,105 @@
      </item>
     </layout>
    </item>
+
+      <item>
+       <widget class="QLabel" name="label_12">
+       </widget>
+       </item>
+
+    <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+          <property name="styleSheet">
+        <string notr="true">
+         QFrame { 
+          color: white;
+          background-color: white;
+          height: 2px;
+          }
+        </string>
+       </property>
+       </widget>
+      </item>
+
+        <item>
+       <widget class="QLabel" name="label_112">
+       </widget>
+    </item>
+
+  <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_center2">
+     <item>
+      <spacer name="horizontalSpacer_left2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+
+     <item>
+      <widget class="QPushButton" name="start_study_by_user_button">
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">
+         QPushButton {
+             background-color: #038011;
+             color: white;
+             font-weight: bold;
+             border-radius: 5px;
+             padding: 5px;
+         }
+         QPushButton:pressed {
+             background-color: #0e4214; /* Even darker blue for pressed */
+         }
+        </string>
+       </property>
+       <property name="text">
+        <string>Start study</string>
+       </property>
+      </widget>
+     </item>
+
+     <item>
+      <spacer name="horizontalSpacer_right2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+
+   
+
 
 
      <item>

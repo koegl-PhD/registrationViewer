@@ -551,13 +551,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def on_start_study(self) -> None:
         self.on_simple_ui()
 
+        # do this after the first case is loaded
+        # self.ui.synchronise_views_general.setVisible(self.ui_is_simple)
+
     def on_simple_ui(self) -> None:
 
         self.ui_is_simple = not self.ui_is_simple
 
         utils.set_ui_simplification(self.ui_is_simple)
 
-        self.ui.synchronise_views_general.setVisible(self.ui_is_simple)
         mainWindow = slicer.util.mainWindow()
 
         if self.ui_is_simple:
@@ -585,6 +587,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             mainWindow.findChild(
                 qt.QWidget, "PanelDockWidget").setMaximumWidth(200)
+
+            self.ui.start_study_by_user_button.setVisible(True)
         else:
             self.ui.simple_ui.setText("Simple UI")
             slicer.app.setStyleSheet("""
@@ -597,6 +601,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.show_module_parts_for_user_study()
             mainWindow.findChild(
                 qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
+            self.ui.start_study_by_user_button.setVisible(False)
 
     def on_synchronise_views_wth_trasform(self) -> None:
 
@@ -1063,10 +1068,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # self.ui.remove_all_data.setVisible(False)
         self.ui.annotationsCollapsibleButton.setHidden(True)
         self.loadingCollapsible.setHidden(True)
-        # self.ui.
-        # self.ui.
-        # self.ui.
-        # self.ui.
 
     def show_module_parts_for_user_study(self) -> None:
         self.ui.studyCollapsibleButton.setHidden(False)
@@ -1080,10 +1081,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # self.ui.remove_all_data.setVisible(True)
         self.ui.annotationsCollapsibleButton.setHidden(False)
         self.loadingCollapsible.setHidden(False)
-        # self.ui.
-        # self.ui.
-        # self.ui.
-        # self.ui.
 
     def update_cursor_view(self) -> None:
 
