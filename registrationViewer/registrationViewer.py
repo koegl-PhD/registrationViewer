@@ -105,8 +105,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.views_second_row + self.views_third_row  # + \
         # self.views_double_red + self.views_double_green + self.views_double_yellow
 
-        utils.create_shortcuts(('s', self.on_synchronise_views_wth_trasform),
-                               ('l', self.on_synchronise_views_manually),
+        utils.create_shortcuts(('t', self.on_synchronise_views_wth_trasform),
+                               ('m', self.on_synchronise_views_manually),
                                )
 
         self.use_transform = True
@@ -178,7 +178,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui.synchronise_views_with_transform.setText(
-            "Synchronise views (s)")
+            "Synchronise views with transform (t)")
 
         self._remove_custom_nodes()
 
@@ -394,7 +394,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui.synchronise_views_with_transform.setText(
-            "Synchronise views (s)")
+            "Synchronise views with transform (t)")
 
         self._remove_custom_nodes()
 
@@ -546,21 +546,23 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._set_up_crosshair(self.synchronise_with_displacement_pressed)
             print("pressed to synchronise")
             self.ui.synchronise_views_with_transform.setText(
-                "Unsynchronise views (s)")
+                "Unsynchronise views with transform (t)")
 
             self.use_transform = self.crosshair.use_transform = True
             self.crosshair.use_only_linear_transform = self.use_only_linear_transform
 
             self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
             self.crosshair.apply_offsets = False
-            self.ui.synchronise_views_manually.setText("Link views (l)")
+            self.ui.synchronise_views_manually.setText(
+                "Synchronise views manually (m)")
             self.synchronise_manually_pressed = False
 
         else:
             print("pressed to unsynchronise")
             self._remove_custom_observers_from_crosshair()
             self.ui.synchronise_views_with_transform.setText(
-                "Synchronise views (s)")
+                "Synchronise views with transform (t)")
+            self.ui.linearTransformationCheckBox.setEnabled(False)
 
     def on_synchronise_views_manually(self, views: List[List[str]] = None) -> None:
 
@@ -573,17 +575,19 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._set_up_crosshair(self.synchronise_manually_pressed)
             print("pressed to synchronise manually")
             self.ui.synchronise_views_manually.setText(
-                "Unink views (l)")
+                "Unsynchronise views manually (m)")
 
             self.use_transform = self.crosshair.use_transform = False
             self.ui.synchronise_views_with_transform.setText(
-                "Synchronise views (s)")
+                "Synchronise views with transform (t)")
             self.synchronise_with_displacement_pressed = False
+            self.ui.linearTransformationCheckBox.setEnabled(False)
 
         else:
             print("pressed to unsynchronise manually")
             self._remove_custom_observers_from_crosshair()
-            self.ui.synchronise_views_manually.setText("Link views (l)")
+            self.ui.synchronise_views_manually.setText(
+                "Synchronise views manually (m)")
 
         # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
         offset_diff_red = view_logic.get_view_offset(
@@ -956,6 +960,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                            self.annotation_fixed_roi_recurrence]:
             if annotation is not None:
                 annotation.GetDisplayNode().SetVisibility(visibility)
+
+    def hide_module_parts_for_user_study(self) -> None:
+        self.ui.inputsCollapsibleButton.setHidden(True)
+        self.ui.label_4.setVisible(False)
+        self.ui.button_2x3.setVisible(False)
+        self.ui.button_3x3.setVisible(False)
+        # self.ui.
+        # self.ui.
+        # self.ui.
+        # self.ui.
 
     def update_cursor_view(self) -> None:
 

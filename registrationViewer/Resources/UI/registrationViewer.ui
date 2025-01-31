@@ -243,14 +243,14 @@
       <item row="2" column="0" colspan="2">
     <widget class="QPushButton" name="synchronise_views_with_transform">
      <property name="text">
-      <string>Synchronise views (s)</string>
+      <string>Synchronise views with transform (s)</string>
      </property>
     </widget>
    </item>
       <item row="3" column="0" colspan="2">
     <widget class="QPushButton" name="synchronise_views_manually">
      <property name="text">
-      <string>Link views (l)</string>
+      <string>Synchronise views manually (l)</string>
      </property>
     </widget>
    </item>
