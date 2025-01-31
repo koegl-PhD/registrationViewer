@@ -158,6 +158,7 @@ def apply_and_harden_transform_to_node(node_target: slicer.vtkMRMLNode,
     else:
         node_target.ApplyTransform(node_transform.GetTransformToParent())
 
+
 def normalize_node(node: slicer.vtkMRMLScalarVolumeNode) -> slicer.vtkMRMLScalarVolumeNode:
 
     array = slicer.util.arrayFromVolume(node)
@@ -256,3 +257,64 @@ def set_threshold(node: slicer.vtkMRMLScalarVolumeNode,
 
     displayNode.ApplyThresholdOn()
     displayNode.SetThreshold(threshold[0], threshold[1])
+
+
+def show_warning_popup(content: str,
+                       question: str):
+    msgBox = qt.QMessageBox()
+    msgBox.setIcon(qt.QMessageBox.Warning)
+    msgBox.setText(content)
+    msgBox.setInformativeText(question)
+    msgBox.setStandardButtons(qt.QMessageBox.Ok | qt.QMessageBox.Cancel)
+    msgBox.setDefaultButton(qt.QMessageBox.Cancel)
+
+    response = msgBox.exec_()
+
+    if response == qt.QMessageBox.Ok:
+        return True
+    else:
+        return False
+
+
+def show_info_popup(content: str, title: str = "Information") -> None:
+    msgBox = qt.QMessageBox()
+    msgBox.setIcon(qt.QMessageBox.Information)
+    msgBox.setWindowTitle(title)
+    msgBox.setText(content)
+    msgBox.setStandardButtons(qt.QMessageBox.Ok)  # Only "OK" button
+    msgBox.exec_()
+
+
+def has_control_point_with_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
+                                name: str) -> bool:
+
+    for i in range(node_fiducial.GetNumberOfControlPoints()):
+        if node_fiducial.GetNthControlPointLabel(i) == name:
+            return True
+
+    return False
+
+
+def remove_control_point_by_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
+                                 name: str) -> None:
+
+    for i in range(node_fiducial.GetNumberOfControlPoints()):
+        if node_fiducial.GetNthControlPointLabel(i) == name:
+            node_fiducial.RemoveNthControlPoint(i)
+            return
+
+
+def show_node_only_in_views(node, views: List[str]) -> None:
+
+    if node is None:
+        return
+
+    disp_node = node.GetDisplayNode()
+    if not disp_node:
+        return
+
+    disp_node.RemoveAllViewNodeIDs()
+
+    for view in views:
+        slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
+        disp_node.AddViewNodeID(slice_node.GetID())
