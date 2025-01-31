@@ -197,11 +197,6 @@
    <item>
     <widget class="qMRMLLayoutWidget" name="MRMLLayoutWidget"/>
    </item>
-
-
-
-
-
    <item>
     <widget class="ctkCollapsibleButton" name="controlsCollapsibleButton">
      <property name="text">
@@ -245,24 +240,21 @@
        </item>
       </layout>
      </item>
-    </layout>
-    </widget>
-   </item>
-   <item>
+      <item row="2" column="0" colspan="2">
     <widget class="QPushButton" name="synchronise_views_with_transform">
      <property name="text">
       <string>Synchronise views (s)</string>
      </property>
     </widget>
    </item>
-   <item>
+      <item row="3" column="0" colspan="2">
     <widget class="QPushButton" name="synchronise_views_manually">
      <property name="text">
       <string>Link views (l)</string>
      </property>
     </widget>
    </item>
-   <item>
+      <item row="4" column="0" colspan="2">
     <widget class="QCheckBox" name="linearTransformationCheckBox">
      <property name="text">
       <string>Use only linear transformation</string>
@@ -272,26 +264,16 @@
      </property>
     </widget>
    </item>
-   <item>
+      <item row="5" column="0" colspan="2">
     <widget class="QPushButton" name="remove_all_data">
      <property name="text">
       <string>Remove all data</string>
      </property>
     </widget>
    </item>
-
-
-
-
-
-
-
-
-
-
-
-
-   
+     </layout>
+    </widget>
+   </item>
    <item>
     <widget class="ctkCollapsibleButton" name="annotationsCollapsibleButton">
      <property name="text">
