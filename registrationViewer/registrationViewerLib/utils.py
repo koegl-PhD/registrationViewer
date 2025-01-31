@@ -322,3 +322,8 @@ def show_node_only_in_views(node, views: List[str]) -> None:
     for view in views:
         slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
         disp_node.AddViewNodeID(slice_node.GetID())
+
+
+def get_range_of_values(node: slicer.vtkMRMLScalarVolumeNode) -> Tuple[float, float]:
+    array = slicer.util.arrayFromVolume(node)
+    return array.min(), array.max()
