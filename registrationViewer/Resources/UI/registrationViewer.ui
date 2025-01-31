@@ -197,7 +197,16 @@
    <item>
     <widget class="qMRMLLayoutWidget" name="MRMLLayoutWidget"/>
    </item>
+
+
+
+
+
    <item>
+    <widget class="ctkCollapsibleButton" name="controlsCollapsibleButton">
+     <property name="text">
+      <string>Controls</string>
+     </property>
     <layout class="QFormLayout" name="formLayout_2">
      <item row="0" column="0">
       <widget class="QLabel" name="label_4">
@@ -237,6 +246,7 @@
       </layout>
      </item>
     </layout>
+    </widget>
    </item>
    <item>
     <widget class="QPushButton" name="synchronise_views_with_transform">
@@ -269,6 +279,19 @@
      </property>
     </widget>
    </item>
+
+
+
+
+
+
+
+
+
+
+
+
+   
    <item>
     <widget class="ctkCollapsibleButton" name="annotationsCollapsibleButton">
      <property name="text">
