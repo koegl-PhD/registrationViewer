@@ -1,7 +1,5 @@
 from enum import Enum
 
-import registrationViewerLib.task_descriptions as task_descriptions
-
 
 class Task(Enum):
     NONE = 0

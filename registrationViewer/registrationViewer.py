@@ -82,7 +82,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # needed for parameter node observation
         VTKObservationMixin.__init__(self)
         self._parameterNode: Optional[registrationViewerParameterNode] = None
-        self._parameterNodeGuiTag = None
+        self._parameterNodeGuiTag_main = None
+        self._parameterNodeGuiTag_sub_1 = None
+        self._parameterNodeGuiTag_sub_2 = None
+        self._parameterNodeGuiTag_sub_3 = None
 
         from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study_loading
         utils = importlib.reload(utils)
@@ -167,6 +170,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # UI sub components
         self.ui_sub_1 = None
         self.ui_sub_2 = None
+        self.ui_sub_3 = None
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -177,24 +181,42 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.layout.addWidget(mainWidget)
         self.ui = slicer.util.childWidgetVariables(mainWidget)
 
-        subWidget1 = slicer.util.loadUI(
+        sub_widget_1 = slicer.util.loadUI(
             self.resourcePath("UI/subComponent1.ui"))
-        subWidget2 = slicer.util.loadUI(
+        sub_widget_2 = slicer.util.loadUI(
             self.resourcePath("UI/subComponent2.ui"))
+        sub_widget_3 = slicer.util.loadUI(
+            self.resourcePath("UI/subComponent3.ui"))
 
-        self.ui.subWidget1Placeholder.layout().addWidget(subWidget1)
-        self.ui.subWidget2Placeholder.layout().addWidget(subWidget2)
+        self.ui.subWidgetPlaceholder_1.layout().addWidget(sub_widget_1)
+        self.ui.subWidgetPlaceholder_2.layout().addWidget(sub_widget_2)
+        self.ui.subWidgetPlaceholder_3.layout().addWidget(sub_widget_3)
+
+        self.ui_sub_1 = slicer.util.childWidgetVariables(sub_widget_1)
+        self.ui_sub_2 = slicer.util.childWidgetVariables(sub_widget_2)
+        self.ui_sub_3 = slicer.util.childWidgetVariables(sub_widget_3)
+
+        slicer.app.processEvents()  # Ensures all widgets are fully rendered
 
         # Set MRML scene for main UI (but not generic QWidgets)
         mainWidget.setMRMLScene(slicer.mrmlScene)
 
         # If sub-widgets contain MRML-aware widgets, set the scene for them
-        for widget in [subWidget1, subWidget2]:
+        for widget in [sub_widget_1, sub_widget_2, sub_widget_3]:
             for child in widget.findChildren(slicer.qMRMLWidget):
                 child.setMRMLScene(slicer.mrmlScene)
 
-        self.ui_sub_1 = slicer.util.childWidgetVariables(subWidget1)
-        self.ui_sub_2 = slicer.util.childWidgetVariables(subWidget2)
+        for selector in [self.ui_sub_3.inputSelector_fixed,
+                         self.ui_sub_3.inputSelector_moving,
+                         self.ui_sub_3.inputSelector_transformation]:
+            selector.setMRMLScene(slicer.mrmlScene)
+
+        mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
+                           self.ui_sub_3.inputSelector_fixed.setMRMLScene)
+        mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
+                           self.ui_sub_3.inputSelector_moving.setMRMLScene)
+        mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
+                           self.ui_sub_3.inputSelector_transformation.setMRMLScene)
 
         """
         # Load widget from .ui file (created by Qt Designer).
@@ -449,9 +471,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called each time the user opens a different module."""
         # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
         if self._parameterNode:
-            self._parameterNode.disconnectGui(  # type: ignore
-                self._parameterNodeGuiTag)
-            self._parameterNodeGuiTag = None
+            self._disconnect_gui()
+            self._clear_parameter_node_gui_tags()
+
             self.removeObserver(
                 self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
 
@@ -488,18 +510,38 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """
 
         if self._parameterNode:
-            self._parameterNode.disconnectGui(  # type: ignore
-                self._parameterNodeGuiTag)
+            self._disconnect_gui()
             self.removeObserver(
                 self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
             # ui element that needs connection.
-            self._parameterNodeGuiTag = self._parameterNode.connectGui(  # type: ignore
-                self.ui)
+            self._connect_gui()
             self.addObserver(self._parameterNode,
                              vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
+
+    def _connect_gui(self) -> None:
+        self._parameterNodeGuiTag_main = self._parameterNode.connectGui(  # type: ignore
+            self.ui)
+        self._parameterNodeGuiTag_sub_1 = self._parameterNode.connectGui(  # type: ignore
+            self.ui_sub_1)
+        self._parameterNodeGuiTag_sub_2 = self._parameterNode.connectGui(  # type: ignore
+            self.ui_sub_2)
+        self._parameterNodeGuiTag_sub_3 = self._parameterNode.connectGui(  # type: ignore
+            self.ui_sub_3)
+
+    def _disconnect_gui(self) -> None:
+        self._parameterNode.disconnectGui(self._parameterNodeGuiTag_main)
+        self._parameterNode.disconnectGui(self._parameterNodeGuiTag_sub_1)
+        self._parameterNode.disconnectGui(self._parameterNodeGuiTag_sub_2)
+        self._parameterNode.disconnectGui(self._parameterNodeGuiTag_sub_3)
+
+    def _clear_parameter_node_gui_tags(self) -> None:
+        self._parameterNodeGuiTag_main = None
+        self._parameterNodeGuiTag_sub_1 = None
+        self._parameterNodeGuiTag_sub_2 = None
+        self._parameterNodeGuiTag_sub_3 = None
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
 
@@ -566,7 +608,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return True
 
     # CONNECTOINS
-
     def on_set_radiologist_id(self) -> None:
         print('setting')
         radiologist_id: str = str(
@@ -1167,9 +1208,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair = None
 
     def _are_nodes_selected(self) -> bool:
-        return self.ui.inputSelector_fixed.currentNode() is not None and \
-            self.ui.inputSelector_moving.currentNode() is not None and \
-            self.ui.inputSelector_transformation.currentNode() is not None
+        return self.ui_sub_3.inputSelector_fixed.currentNode() is not None and \
+            self.ui_sub_3.inputSelector_moving.currentNode() is not None and \
+            self.ui_sub_3.inputSelector_transformation.currentNode() is not None
 
     def _set_up_crosshair(self, turn_synchronisation_on: bool) -> None:
         if self.crosshair:
@@ -1206,11 +1247,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_fixed(self) -> Any:
-        return self.ui.inputSelector_fixed.currentNode()
+        return self.ui_sub_3.inputSelector_fixed.currentNode()
 
     @property
     def node_moving(self) -> Any:
-        return self.ui.inputSelector_moving.currentNode()
+        return self.ui_sub_3.inputSelector_moving.currentNode()
 
     @property
     def node_crosshair(self) -> Any:
@@ -1218,7 +1259,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_transform_nonlinear(self) -> Any:
-        return self.ui.inputSelector_transformation.currentNode()
+        return self.ui_sub_3.inputSelector_transformation.currentNode()
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):

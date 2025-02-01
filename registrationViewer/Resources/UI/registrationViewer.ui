@@ -19,21 +19,29 @@
   <layout class="QVBoxLayout" name="verticalLayout">
 
 
-     <!-- START subWidget1Placeholder -->
+     <!-- START subWidgetPlaceholder_1 -->
    <item>
-    <widget class="QWidget" name="subWidget1Placeholder">
+    <widget class="QWidget" name="subWidgetPlaceholder_1">
      <layout class="QVBoxLayout" name="verticalLayout_sub1"/>
     </widget>
    </item>
-     <!-- END subWidget1Placeholder -->
+     <!-- END subWidgetPlaceholder_1 -->
 
-   <!-- START subWidget2Placeholder -->
+   <!-- START subWidgetPlaceholder_2 -->
    <item>
-    <widget class="QWidget" name="subWidget2Placeholder">
+    <widget class="QWidget" name="subWidgetPlaceholder_2">
      <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
     </widget>
    </item>
-   <!-- END subWidget2Placeholder -->
+   <!-- END subWidgetPlaceholder_2 -->
+
+   <!-- START subWidgetPlaceholder_3 -->
+   <item>
+    <widget class="QWidget" name="subWidgetPlaceholder_3">
+     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
+    </widget>
+   </item>
+   <!-- END subWidgetPlaceholder_3 -->
 
       <item>
        <widget class="QLabel" name="label_12">
@@ -229,123 +237,6 @@
    </item>
 
 
-
-
-
-
-
-
-   <item>
-    <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton">
-     <property name="text">
-      <string>Inputs</string>
-     </property>
-     <property name="collapsed">
-      <bool>true</bool>
-      </property>
-     <layout class="QFormLayout" name="formLayout_2">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Fixed volume:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="qMRMLNodeComboBox" name="inputSelector_fixed">
-        <property name="toolTip">
-         <string>Pick the fixed volume.</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist notr="true">
-          <string>vtkMRMLScalarVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="hideChildNodeTypes">
-         <stringlist notr="true"/>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="interactionNodeSingletonTag">
-         <string notr="true"/>
-        </property>
-        <property name="SlicerParameterName" stdset="0">
-         <string>volume_fixed</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Moving volume:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="qMRMLNodeComboBox" name="inputSelector_moving">
-        <property name="toolTip">
-         <string>Pick the moving volume.</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist notr="true">
-          <string>vtkMRMLScalarVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="SlicerParameterName" stdset="0">
-         <string>volume_moving</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Transformation:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="qMRMLNodeComboBox" name="inputSelector_transformation">
-        <property name="toolTip">
-         <string>Pick the transformation between moving and fixed.</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist notr="true">
-          <string>vtkMRMLTransformNode</string>
-         </stringlist>
-        </property>
-        <property name="hideChildNodeTypes">
-         <stringlist notr="true"/>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="interactionNodeSingletonTag">
-         <string notr="true"/>
-        </property>
-        <property name="SlicerParameterName" stdset="0">
-         <string>transformation</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
    
    <item>
     <widget class="qMRMLLayoutWidget" name="MRMLLayoutWidget"/>
@@ -736,54 +627,4 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>registrationViewer</sender>
-   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
-   <receiver>inputSelector_fixed</receiver>
-   <slot>setMRMLScene(vtkMRMLScene*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>122</x>
-     <y>132</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>248</x>
-     <y>61</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>registrationViewer</sender>
-   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
-   <receiver>inputSelector_moving</receiver>
-   <slot>setMRMLScene(vtkMRMLScene*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>122</x>
-     <y>132</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>248</x>
-     <y>61</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>registrationViewer</sender>
-   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
-   <receiver>inputSelector_transformation</receiver>
-   <slot>setMRMLScene(vtkMRMLScene*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>122</x>
-     <y>132</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>248</x>
-     <y>61</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
 </ui>
