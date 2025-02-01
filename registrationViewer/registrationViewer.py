@@ -164,11 +164,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.study_points = None
 
-        # UI sub components
-        self.ui_sub_1 = None
-        self.ui_sub_2 = None
-        self.ui_sub_3 = None
-
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -180,7 +175,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.all_uis = [self.ui]
 
-        for i in range(1, 5):  # 1-based index
+        num_sub_components = len([f for f in os.listdir(self.resourcePath(
+            "UI")) if "subComponent" in f and not 'TEMPLATE' in f])
+
+        for i in range(1, num_sub_components + 1):  # 1-based index
             setattr(self,
                     f"sub_widget_{i}",
                     slicer.util.loadUI(self.resourcePath(f"UI/subComponent{i}.ui")))
@@ -285,36 +283,36 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_remove_all_data)
 
         # ANOOTATIONS
-        self.ui.saveAnnotations.connect("clicked(bool)",
-                                        self.on_save_annotations)
-        self.ui.clearAnnotations.connect("clicked(bool)",
-                                         self.on_clear_annotations)
+        self.ui_sub_5.saveAnnotations.connect("clicked(bool)",
+                                              self.on_save_annotations)
+        self.ui_sub_5.clearAnnotations.connect("clicked(bool)",
+                                               self.on_clear_annotations)
 
-        self.ui.addLymphnodeRoiFixed.connect("clicked(bool)",
-                                             lambda: self.on_add_roi_lymphnode('fixed'))
-        self.ui.addLymphnodeRoiMoving.connect("clicked(bool)",
-                                              lambda: self.on_add_roi_lymphnode('moving'))
-        self.ui.increasedLymphnodeCheckBox.toggled.connect(
+        self.ui_sub_5.addLymphnodeRoiFixed.connect("clicked(bool)",
+                                                   lambda: self.on_add_roi_lymphnode('fixed'))
+        self.ui_sub_5.addLymphnodeRoiMoving.connect("clicked(bool)",
+                                                    lambda: self.on_add_roi_lymphnode('moving'))
+        self.ui_sub_5.increasedLymphnodeCheckBox.toggled.connect(
             self.on_lymphnode_increased)
 
-        self.ui.addCarotisgabelPointFixed.connect("clicked(bool)",
-                                                  lambda: self.on_add_annotation_point_fixed('carotisgabel'))
-        self.ui.addCarotisgabelPointMoving.connect("clicked(bool)",
-                                                   lambda: self.on_add_annotation_point_moving('carotisgabel'))
-        self.ui.addAbgangavertebralisPointFixed.connect("clicked(bool)",
-                                                        lambda: self.on_add_annotation_point_fixed('abgangavertebralis'))
-        self.ui.addAbgangavertebralisPointMoving.connect("clicked(bool)",
-                                                         lambda: self.on_add_annotation_point_moving('abgangavertebralis'))
+        self.ui_sub_5.addCarotisgabelPointFixed.connect("clicked(bool)",
+                                                        lambda: self.on_add_annotation_point_fixed('carotisgabel'))
+        self.ui_sub_5.addCarotisgabelPointMoving.connect("clicked(bool)",
+                                                         lambda: self.on_add_annotation_point_moving('carotisgabel'))
+        self.ui_sub_5.addAbgangavertebralisPointFixed.connect("clicked(bool)",
+                                                              lambda: self.on_add_annotation_point_fixed('abgangavertebralis'))
+        self.ui_sub_5.addAbgangavertebralisPointMoving.connect("clicked(bool)",
+                                                               lambda: self.on_add_annotation_point_moving('abgangavertebralis'))
 
-        self.ui.recurrencePresentCheckBox.toggled.connect(
+        self.ui_sub_5.recurrencePresentCheckBox.toggled.connect(
             self.on_recurrence_present)
-        self.ui.addRecurrenceRoiFixed.connect("clicked(bool)",
-                                              self.on_add_roi_recurrence)
+        self.ui_sub_5.addRecurrenceRoiFixed.connect("clicked(bool)",
+                                                    self.on_add_roi_recurrence)
 
-        self.ui.hideAnnotations.connect("clicked(bool)",
-                                        lambda: self.on_set_annotations_visibility(False))
-        self.ui.showAnnotations.connect("clicked(bool)",
-                                        lambda: self.on_set_annotations_visibility(True))
+        self.ui_sub_5.hideAnnotations.connect("clicked(bool)",
+                                              lambda: self.on_set_annotations_visibility(False))
+        self.ui_sub_5.showAnnotations.connect("clicked(bool)",
+                                              lambda: self.on_set_annotations_visibility(True))
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -331,7 +329,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.set_2x3_layout()
 
         slicer.util.resetSliceViews()
-        self.ui.linearTransformationCheckBox.setEnabled(False)
+        self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
         # self.dropWidget.load_data_from_dropped_folder(
         #     "/home/koeglf/data/try_new_preprocessing/SerielleCTs_nii_forHumans/xYbaegYf_mw")
@@ -520,7 +518,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNodeGuiTags = []
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
-        print(f"current node {self.node_fixed.GetName()}")
+
         if self.current_layout == view_logic.Layout.L_3X3:
             self.update_views_third_row_with_volume_diff()
 
@@ -681,10 +679,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         pass
 
     def on_synchronise_views_wth_trasform(self) -> None:
-
-        print("synchronise with transform")
-        return
-
         if not self._synchronisation_checks():
             return
 
@@ -713,7 +707,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 "Synchronise views with transform (t)")
             self.ui.synchronise_views_general.setText(
                 "Synchronise views (s)")
-            self.ui.linearTransformationCheckBox.setEnabled(False)
+            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
     def on_synchronise_views_manually(self, views: List[List[str]] = None) -> None:
 
@@ -732,7 +726,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
             self.synchronise_with_displacement_pressed = False
-            self.ui.linearTransformationCheckBox.setEnabled(False)
+            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
         else:
             print("pressed to unsynchronise manually")
@@ -762,11 +756,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         elif self.transformation_mode == utils.TransformationMode.LINEAR:
             self.on_synchronise_views_wth_trasform()
             self.use_only_linear_transform = self.crosshair.use_only_linear_transform = True
-            self.ui.linearTransformationCheckBox.setChecked(True)
+            self.ui_sub_4.linearTransformationCheckBox.setChecked(True)
         elif self.transformation_mode == utils.TransformationMode.NON_LINEAR:
             self.on_synchronise_views_wth_trasform()
             self.use_only_linear_transform = self.crosshair.use_only_linear_transform = False
-            self.ui.linearTransformationCheckBox.setChecked(False)
+            self.ui_sub_4.linearTransformationCheckBox.setChecked(False)
         else:
             raise ValueError("Unknown transformation mode")
 
@@ -866,7 +860,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                             "(Click OK to continue saving)"):
                 return
 
-        if self.annotation_fixed_roi_recurrence is None and self.ui.recurrencePresentCheckBox.isChecked():
+        if self.annotation_fixed_roi_recurrence is None and self.ui_sub_5.recurrencePresentCheckBox.isChecked():
             utils.show_info_popup(
                 f"You marked that there is a recurrence, but did not add a ROI for it.\nExiting saving.")
             return
@@ -935,33 +929,35 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.annotation_fixed_roi_lymphnode is not None:
             slicer.mrmlScene.RemoveNode(self.annotation_fixed_roi_lymphnode)
             self.annotation_fixed_roi_lymphnode = None
-            self.ui.lymphnodeRoiFixedCheckbox.setChecked(False)
+            self.ui_sub_5.lymphnodeRoiFixedCheckbox.setChecked(False)
 
         if self.annotation_moving_roi_lymphnode is not None:
             slicer.mrmlScene.RemoveNode(self.annotation_moving_roi_lymphnode)
             self.annotation_moving_roi_lymphnode = None
-            self.ui.increasedLymphnodeCheckBox.setEnabled(False)
-            self.ui.increasedLymphnodeCheckBox.setChecked(False)
-            self.ui.lymphnodeRoiMovingCheckbox.setChecked(False)
+            self.ui_sub_5.increasedLymphnodeCheckBox.setEnabled(False)
+            self.ui_sub_5.increasedLymphnodeCheckBox.setChecked(False)
+            self.ui_sub_5.lymphnodeRoiMovingCheckbox.setChecked(False)
 
         if self.annotation_fixed_points is not None:
             slicer.mrmlScene.RemoveNode(self.annotation_fixed_points)
             self.annotation_fixed_points = None
-            self.ui.carotisgabelPointFixedCheckbox.setChecked(False)
-            self.ui.abgangavertebralisPointFixedCheckbox.setChecked(False)
+            self.ui_sub_5.carotisgabelPointFixedCheckbox.setChecked(False)
+            self.ui_sub_5.abgangavertebralisPointFixedCheckbox.setChecked(
+                False)
 
         if self.annotation_moving_points is not None:
             slicer.mrmlScene.RemoveNode(self.annotation_moving_points)
             self.annotation_moving_points = None
-            self.ui.carotisgabelPointMovingCheckbox.setChecked(False)
-            self.ui.abgangavertebralisPointMovingCheckbox.setChecked(False)
+            self.ui_sub_5.carotisgabelPointMovingCheckbox.setChecked(False)
+            self.ui_sub_5.abgangavertebralisPointMovingCheckbox.setChecked(
+                False)
 
         if self.annotation_fixed_roi_recurrence is not None:
             slicer.mrmlScene.RemoveNode(self.annotation_fixed_roi_recurrence)
             self.annotation_fixed_roi_recurrence = None
-            self.ui.recurrencePresentCheckBox.setChecked(False)
-            self.ui.recurrenceRoiFixedCheckbox.setChecked(False)
-            self.ui.addRecurrenceRoiFixed.setEnabled(False)
+            self.ui_sub_5.recurrencePresentCheckBox.setChecked(False)
+            self.ui_sub_5.recurrenceRoiFixedCheckbox.setChecked(False)
+            self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(False)
 
         self.annotations_already_saved = False
 
@@ -986,7 +982,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 slicer.mrmlScene.RemoveNode(
                     node_annotation)
                 if image == 'moving':
-                    self.ui.increasedLymphnodeCheckBox.setEnabled(False)
+                    self.ui_sub_5.increasedLymphnodeCheckBox.setEnabled(False)
             else:
                 return
 
@@ -997,11 +993,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if image == 'fixed':
             self.annotation_fixed_roi_lymphnode = new_annotation
-            self.ui.lymphnodeRoiFixedCheckbox.setChecked(True)
+            self.ui_sub_5.lymphnodeRoiFixedCheckbox.setChecked(True)
         else:
             self.annotation_moving_roi_lymphnode = new_annotation
-            self.ui.increasedLymphnodeCheckBox.setEnabled(True)
-            self.ui.lymphnodeRoiMovingCheckbox.setChecked(True)
+            self.ui_sub_5.increasedLymphnodeCheckBox.setEnabled(True)
+            self.ui_sub_5.lymphnodeRoiMovingCheckbox.setChecked(True)
 
     def on_lymphnode_increased(self) -> None:
         self.annotation_bool_lymphnode_increased = not self.annotation_bool_lymphnode_increased
@@ -1047,9 +1043,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                           name)
 
         if point_name == 'carotisgabel':
-            self.ui.carotisgabelPointFixedCheckbox.setChecked(True)
+            self.ui_sub_5.carotisgabelPointFixedCheckbox.setChecked(True)
         else:
-            self.ui.abgangavertebralisPointFixedCheckbox.setChecked(True)
+            self.ui_sub_5.abgangavertebralisPointFixedCheckbox.setChecked(True)
 
         utils.show_node_only_in_views(self.annotation_fixed_points,
                                       self.views_first_row)
@@ -1079,32 +1075,33 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                            name)
 
         if point_name == 'carotisgabel':
-            self.ui.carotisgabelPointMovingCheckbox.setChecked(True)
+            self.ui_sub_5.carotisgabelPointMovingCheckbox.setChecked(True)
         else:
-            self.ui.abgangavertebralisPointMovingCheckbox.setChecked(True)
+            self.ui_sub_5.abgangavertebralisPointMovingCheckbox.setChecked(
+                True)
 
         utils.show_node_only_in_views(self.annotation_moving_points,
                                       self.views_second_row)
 
     def on_recurrence_present(self) -> None:
-        if self.ui.recurrencePresentCheckBox.isChecked():
-            self.ui.addRecurrenceRoiFixed.setEnabled(True)
+        if self.ui_sub_5.recurrencePresentCheckBox.isChecked():
+            self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(True)
             return
 
         # trying to uncheck - only allow with warning
-        if self.ui.recurrencePresentCheckBox.isChecked() is False:
+        if self.ui_sub_5.recurrencePresentCheckBox.isChecked() is False:
             if self.annotation_fixed_roi_recurrence is None:
-                self.ui.addRecurrenceRoiFixed.setEnabled(False)
+                self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(False)
             else:
                 if utils.show_warning_popup(f"You alreday created a ROI for the recurrence.",
                                             "Do you want to remove it?"):
                     slicer.mrmlScene.RemoveNode(
                         self.annotation_fixed_roi_recurrence)
                     self.annotation_fixed_roi_recurrence = None
-                    self.ui.addRecurrenceRoiFixed.setEnabled(False)
+                    self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(False)
                 else:
-                    self.ui.recurrencePresentCheckBox.setChecked(True)
-                    self.ui.addRecurrenceRoiFixed.setEnabled(True)
+                    self.ui_sub_5.recurrencePresentCheckBox.setChecked(True)
+                    self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(True)
 
     def on_add_roi_recurrence(self) -> None:
 
@@ -1124,7 +1121,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.configure_roi(
             self.annotation_fixed_roi_recurrence, self.views_first_row)
 
-        self.ui.recurrenceRoiFixedCheckbox.setChecked(True)
+        self.ui_sub_5.recurrenceRoiFixedCheckbox.setChecked(True)
 
     def on_set_annotations_visibility(self, visibility: bool) -> None:
 
@@ -1137,31 +1134,31 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 annotation.GetDisplayNode().SetVisibility(visibility)
 
     def hide_module_parts_for_user_study(self) -> None:
-        self.ui.studyCollapsibleButton.setHidden(True)
-        self.ui.inputsCollapsibleButton.setHidden(True)
-        self.ui.controlsCollapsibleButton.setHidden(True)
+        self.ui_sub_2.studyCollapsibleButton.setHidden(True)
+        self.ui_sub_3.inputsCollapsibleButton.setHidden(True)
+        self.ui_sub_4.controlsCollapsibleButton.setHidden(True)
         # self.ui.label_4.setVisible(False)
         # self.ui.button_2x3.setVisible(False)
         # self.ui.button_3x3.setVisible(False)
         # self.ui_sub_4.synchronise_views_with_transform.setVisible(False)
-        # self.ui.linearTransformationCheckBox.setVisible(False)
+        # self.ui_sub_4.linearTransformationCheckBox.setVisible(False)
         # self.ui.remove_all_data.setVisible(False)
-        self.ui.annotationsCollapsibleButton.setHidden(True)
+        self.ui_sub_5.annotationsCollapsibleButton.setHidden(True)
         self.loadingCollapsible.setHidden(True)
 
         self.ui.current_case_label.setVisible(False)
 
     def show_module_parts_for_user_study(self) -> None:
-        self.ui.studyCollapsibleButton.setHidden(False)
-        self.ui.inputsCollapsibleButton.setHidden(False)
-        self.ui.controlsCollapsibleButton.setHidden(False)
+        self.ui_sub_2.studyCollapsibleButton.setHidden(False)
+        self.ui_sub_3.inputsCollapsibleButton.setHidden(False)
+        self.ui_sub_4.controlsCollapsibleButton.setHidden(False)
         # self.ui.label_4.setVisible(True)
         # self.ui.button_2x3.setVisible(True)
         # self.ui.button_3x3.setVisible(True)
         # self.ui_sub_4.synchronise_views_with_transform.setVisible(True)
-        # self.ui.linearTransformationCheckBox.setVisible(True)
+        # self.ui_sub_4.linearTransformationCheckBox.setVisible(True)
         # self.ui.remove_all_data.setVisible(True)
-        self.ui.annotationsCollapsibleButton.setHidden(False)
+        self.ui_sub_5.annotationsCollapsibleButton.setHidden(False)
         self.loadingCollapsible.setHidden(False)
 
     def update_cursor_view(self) -> None:
@@ -1204,7 +1201,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                offset_diffs=self.current_offset,
                                                apply_offsets=self.synchronise_manually_pressed)
 
-        self.ui.linearTransformationCheckBox.setEnabled(True)
+        self.ui_sub_4.linearTransformationCheckBox.setEnabled(True)
 
         if turn_synchronisation_on:
             observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
