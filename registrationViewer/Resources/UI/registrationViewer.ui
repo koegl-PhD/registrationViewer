@@ -43,6 +43,14 @@
    </item>
    <!-- END subWidgetPlaceholder_3 -->
 
+   <!-- START subWidgetPlaceholder_4 -->
+   <item>
+    <widget class="QWidget" name="subWidgetPlaceholder_4">
+     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
+    </widget>
+   </item>
+   <!-- END subWidgetPlaceholder_4 -->
+
       <item>
        <widget class="QLabel" name="label_12">
        </widget>
@@ -254,90 +262,7 @@
       </property>
     </widget>
    </item>
-   <item>
-    <widget class="ctkCollapsibleButton" name="controlsCollapsibleButton">
-     <property name="text">
-      <string>Controls</string>
-     </property>
-     <property name="collapsed">
-      <bool>true</bool>
-      </property>
-    <layout class="QFormLayout" name="formLayout_2">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string> View:    </string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <layout class="QFormLayout" name="viewsLayout">
-       <item row="0" column="0">
-        <widget class="QPushButton" name="button_2x3">
-         <property name="maximumSize">
-          <size>
-           <width>50</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>2x3</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QPushButton" name="button_3x3">
-         <property name="maximumSize">
-          <size>
-           <width>50</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>3x3</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-      <item row="20" column="0" colspan="2">
-    <widget class="QPushButton" name="synchronise_views_with_transform">
-     <property name="text">
-      <string>Synchronise views with transform (s)</string>
-     </property>
-    </widget>
-   </item>
-      <item row="30" column="0" colspan="2">
-    <widget class="QPushButton" name="synchronise_views_manually">
-     <property name="text">
-      <string>Synchronise views manually (l)</string>
-     </property>
-     <property name="visible">
-      <bool>false</bool>
-      </property>
-    </widget>
-   </item>
 
-      <item row="40" column="0" colspan="2">
-    <widget class="QCheckBox" name="linearTransformationCheckBox">
-     <property name="text">
-      <string>Use only linear transformation</string>
-     </property>
-     <property name="addEnabled" stdset="0">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-      <item row="50" column="0" colspan="2">
-    <widget class="QPushButton" name="remove_all_data">
-     <property name="text">
-      <string>Remove all data</string>
-     </property>
-    </widget>
-   </item>
-     </layout>
-    </widget>
-   </item>
    <item>
     <widget class="ctkCollapsibleButton" name="annotationsCollapsibleButton">
      <property name="text">

@@ -178,22 +178,22 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.layout.addWidget(mainWidget)
         self.ui = slicer.util.childWidgetVariables(mainWidget)
 
-        sub_widget_1 = slicer.util.loadUI(
-            self.resourcePath("UI/subComponent1.ui"))
-        sub_widget_2 = slicer.util.loadUI(
-            self.resourcePath("UI/subComponent2.ui"))
-        sub_widget_3 = slicer.util.loadUI(
-            self.resourcePath("UI/subComponent3.ui"))
+        self.all_uis = [self.ui]
 
-        self.ui.subWidgetPlaceholder_1.layout().addWidget(sub_widget_1)
-        self.ui.subWidgetPlaceholder_2.layout().addWidget(sub_widget_2)
-        self.ui.subWidgetPlaceholder_3.layout().addWidget(sub_widget_3)
+        for i in range(1, 5):  # 1-based index
+            setattr(self,
+                    f"sub_widget_{i}",
+                    slicer.util.loadUI(self.resourcePath(f"UI/subComponent{i}.ui")))
 
-        self.ui_sub_1 = slicer.util.childWidgetVariables(sub_widget_1)
-        self.ui_sub_2 = slicer.util.childWidgetVariables(sub_widget_2)
-        self.ui_sub_3 = slicer.util.childWidgetVariables(sub_widget_3)
+            placeholder = getattr(self.ui, f"subWidgetPlaceholder_{i}")
+            sub_widget = getattr(self, f"sub_widget_{i}")
+            placeholder.layout().addWidget(sub_widget)
 
-        self.all_uis = [self.ui, self.ui_sub_1, self.ui_sub_2, self.ui_sub_3]
+            setattr(self,
+                    f"ui_sub_{i}",
+                    slicer.util.childWidgetVariables(sub_widget))
+
+            self.all_uis.append(getattr(self, f"ui_sub_{i}"))
 
         slicer.app.processEvents()  # Ensures all widgets are fully rendered
 
@@ -201,7 +201,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         mainWidget.setMRMLScene(slicer.mrmlScene)
 
         # If sub-widgets contain MRML-aware widgets, set the scene for them
-        for widget in [sub_widget_1, sub_widget_2, sub_widget_3]:
+        for widget in [self.sub_widget_1, self.sub_widget_2, self.sub_widget_3, self.sub_widget_4]:
             for child in widget.findChildren(slicer.qMRMLWidget):
                 child.setMRMLScene(slicer.mrmlScene)
 
@@ -227,7 +227,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
-        self.ui.synchronise_views_with_transform.setText(
+        self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
 
         self._remove_custom_nodes()
@@ -269,19 +269,19 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Buttons
         self.ui_sub_1.simple_ui.connect("clicked(bool)", self.on_simple_ui)
-        self.ui.button_2x3.connect("clicked(bool)", view_logic.set_2x3_layout)
-        self.ui.button_3x3.connect("clicked(bool)", view_logic.set_3x3_layout)
-        self.ui.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
+        self.ui_sub_4.button_2x3.connect(
+            "clicked(bool)", view_logic.set_2x3_layout)
+        self.ui_sub_4.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
             self.update_views_third_row_with_volume_diff))
-        self.ui.synchronise_views_with_transform.connect(
+        self.ui_sub_4.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
-        self.ui.synchronise_views_manually.connect(
+        self.ui_sub_4.synchronise_views_manually.connect(
             "clicked(bool)", self.on_synchronise_views_manually)
         self.ui.synchronise_views_general.connect(
             "clicked(bool)", self.on_synchronise_views_general)
-        self.ui.linearTransformationCheckBox.toggled.connect(
+        self.ui_sub_4.linearTransformationCheckBox.toggled.connect(
             self.on_linear_only)
-        self.ui.remove_all_data.connect(
+        self.ui_sub_4.remove_all_data.connect(
             "clicked(bool)", self.on_remove_all_data)
 
         # ANOOTATIONS
@@ -468,7 +468,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
-        self.ui.synchronise_views_with_transform.setText(
+        self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
 
         self._remove_custom_nodes()
@@ -520,7 +520,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNodeGuiTags = []
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
-        print(f"current node{self.node_fixed.GetName()}")
+        print(f"current node {self.node_fixed.GetName()}")
         if self.current_layout == view_logic.Layout.L_3X3:
             self.update_views_third_row_with_volume_diff()
 
@@ -682,6 +682,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_synchronise_views_wth_trasform(self) -> None:
 
+        print("synchronise with transform")
+        return
+
         if not self._synchronisation_checks():
             return
 
@@ -690,7 +693,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.synchronise_with_displacement_pressed is True:
             self._set_up_crosshair(self.synchronise_with_displacement_pressed)
             print("pressed to synchronise")
-            self.ui.synchronise_views_with_transform.setText(
+            self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Unsynchronise views with transform (t)")
             self.ui.synchronise_views_general.setText(
                 "Unsynchronise views (s)")
@@ -700,13 +703,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
             self.crosshair.apply_offsets = False
-            self.ui.synchronise_views_manually.setText(
+            self.ui_sub_4.synchronise_views_manually.setText(
                 "Synchronise views manually (m)")
             self.synchronise_manually_pressed = False
         else:
             print("pressed to unsynchronise")
             self._remove_custom_observers_from_crosshair()
-            self.ui.synchronise_views_with_transform.setText(
+            self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
             self.ui.synchronise_views_general.setText(
                 "Synchronise views (s)")
@@ -722,11 +725,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.synchronise_manually_pressed is True:
             self._set_up_crosshair(self.synchronise_manually_pressed)
             print("pressed to synchronise manually")
-            self.ui.synchronise_views_manually.setText(
+            self.ui_sub_4.synchronise_views_manually.setText(
                 "Unsynchronise views manually (m)")
 
             self.use_transform = self.crosshair.use_transform = False
-            self.ui.synchronise_views_with_transform.setText(
+            self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
             self.synchronise_with_displacement_pressed = False
             self.ui.linearTransformationCheckBox.setEnabled(False)
@@ -734,7 +737,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         else:
             print("pressed to unsynchronise manually")
             self._remove_custom_observers_from_crosshair()
-            self.ui.synchronise_views_manually.setText(
+            self.ui_sub_4.synchronise_views_manually.setText(
                 "Synchronise views manually (m)")
 
         # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
@@ -1140,7 +1143,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # self.ui.label_4.setVisible(False)
         # self.ui.button_2x3.setVisible(False)
         # self.ui.button_3x3.setVisible(False)
-        # self.ui.synchronise_views_with_transform.setVisible(False)
+        # self.ui_sub_4.synchronise_views_with_transform.setVisible(False)
         # self.ui.linearTransformationCheckBox.setVisible(False)
         # self.ui.remove_all_data.setVisible(False)
         self.ui.annotationsCollapsibleButton.setHidden(True)
@@ -1155,7 +1158,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # self.ui.label_4.setVisible(True)
         # self.ui.button_2x3.setVisible(True)
         # self.ui.button_3x3.setVisible(True)
-        # self.ui.synchronise_views_with_transform.setVisible(True)
+        # self.ui_sub_4.synchronise_views_with_transform.setVisible(True)
         # self.ui.linearTransformationCheckBox.setVisible(True)
         # self.ui.remove_all_data.setVisible(True)
         self.ui.annotationsCollapsibleButton.setHidden(False)
