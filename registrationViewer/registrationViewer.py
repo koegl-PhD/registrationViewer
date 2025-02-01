@@ -256,14 +256,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_2.radiologistIDTextEdit.textChanged.connect(
             _on_text_changed)
 
-        self.ui.start_study_by_user_button.connect("clicked(bool)",
-                                                   self.on_user_start_study)
+        self.ui_sub_6.start_study_by_user_button.connect("clicked(bool)",
+                                                         self.on_user_start_study)
 
-        self.ui.study_next_task_button.connect("clicked(bool)",
-                                               self.on_next_task)
+        self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
+                                                     self.on_next_task)
 
-        self.ui.study_add_point_button.connect("clicked(bool)",
-                                               self.on_study_add_point)
+        self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
+                                                     self.on_study_add_point)
 
         # Buttons
         self.ui_sub_1.simple_ui.connect("clicked(bool)", self.on_simple_ui)
@@ -275,7 +275,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui_sub_4.synchronise_views_manually.connect(
             "clicked(bool)", self.on_synchronise_views_manually)
-        self.ui.synchronise_views_general.connect(
+        self.ui_sub_6.synchronise_views_general.connect(
             "clicked(bool)", self.on_synchronise_views_general)
         self.ui_sub_4.linearTransformationCheckBox.toggled.connect(
             self.on_linear_only)
@@ -612,7 +612,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         print("Warning: reomve this default an drestore simple ui")
         self.current_radiologist_id = "rad_1"
 
-        self.ui.start_study_by_user_button.setVisible(True)
+        self.ui_sub_6.start_study_by_user_button.setVisible(True)
 
     def on_simple_ui(self) -> None:
 
@@ -648,7 +648,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             mainWindow.findChild(
                 qt.QWidget, "PanelDockWidget").setMaximumWidth(200)
 
-            self.ui.start_study_by_user_button.setVisible(True)
+            self.ui_sub_6.start_study_by_user_button.setVisible(True)
         else:
             self.ui_sub_1.simple_ui.setText("Simple UI")
             slicer.app.setStyleSheet("""
@@ -661,16 +661,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.show_module_parts_for_user_study()
             mainWindow.findChild(
                 qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
-            self.ui.start_study_by_user_button.setVisible(False)
+            self.ui_sub_6.start_study_by_user_button.setVisible(False)
 
     def on_user_start_study(self) -> None:
-        self.ui.current_case_label.setVisible(True)
+        self.ui_sub_6.current_case_label.setVisible(True)
         # do this after the first case is loaded
-        # self.ui.synchronise_views_general.setVisible(self.ui_is_simple)
-        self.ui.study_current_task_description_label.setVisible(True)
+        # self.ui_sub_6.synchronise_views_general.setVisible(self.ui_is_simple)
+        self.ui_sub_6.study_current_task_description_label.setVisible(True)
         tasks.show_task_lymph_node(self.ui)
         self.current_task = tasks.Task.LYMPH_NODE
-        self.ui.study_next_task_button.setVisible(True)
+        self.ui_sub_6.study_next_task_button.setVisible(True)
 
     def on_next_task(self) -> None:
         pass
@@ -689,7 +689,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             print("pressed to synchronise")
             self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Unsynchronise views with transform (t)")
-            self.ui.synchronise_views_general.setText(
+            self.ui_sub_6.synchronise_views_general.setText(
                 "Unsynchronise views (s)")
 
             self.use_transform = self.crosshair.use_transform = True
@@ -705,7 +705,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._remove_custom_observers_from_crosshair()
             self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
-            self.ui.synchronise_views_general.setText(
+            self.ui_sub_6.synchronise_views_general.setText(
                 "Synchronise views (s)")
             self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
@@ -765,10 +765,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             raise ValueError("Unknown transformation mode")
 
         if self.synchronise_with_displacement_pressed:
-            self.ui.synchronise_views_general.setText(
+            self.ui_sub_6.synchronise_views_general.setText(
                 "Unsynchronise views (s)")
         else:
-            self.ui.synchronise_views_general.setText("Synchronise views (s)")
+            self.ui_sub_6.synchronise_views_general.setText(
+                "Synchronise views (s)")
 
     def on_linear_only(self) -> None:
         print("linear only")
@@ -1137,29 +1138,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_2.studyCollapsibleButton.setHidden(True)
         self.ui_sub_3.inputsCollapsibleButton.setHidden(True)
         self.ui_sub_4.controlsCollapsibleButton.setHidden(True)
-        # self.ui.label_4.setVisible(False)
-        # self.ui.button_2x3.setVisible(False)
-        # self.ui.button_3x3.setVisible(False)
-        # self.ui_sub_4.synchronise_views_with_transform.setVisible(False)
-        # self.ui_sub_4.linearTransformationCheckBox.setVisible(False)
-        # self.ui.remove_all_data.setVisible(False)
         self.ui_sub_5.annotationsCollapsibleButton.setHidden(True)
         self.loadingCollapsible.setHidden(True)
 
-        self.ui.current_case_label.setVisible(False)
+        self.ui_sub_6.current_case_label.setVisible(False)
+        self.ui_sub_6.Form_user_study.setHidden(False)
 
     def show_module_parts_for_user_study(self) -> None:
         self.ui_sub_2.studyCollapsibleButton.setHidden(False)
         self.ui_sub_3.inputsCollapsibleButton.setHidden(False)
         self.ui_sub_4.controlsCollapsibleButton.setHidden(False)
-        # self.ui.label_4.setVisible(True)
-        # self.ui.button_2x3.setVisible(True)
-        # self.ui.button_3x3.setVisible(True)
-        # self.ui_sub_4.synchronise_views_with_transform.setVisible(True)
-        # self.ui_sub_4.linearTransformationCheckBox.setVisible(True)
-        # self.ui.remove_all_data.setVisible(True)
         self.ui_sub_5.annotationsCollapsibleButton.setHidden(False)
         self.loadingCollapsible.setHidden(False)
+
+        self.ui_sub_6.Form_user_study.setHidden(True)
 
     def update_cursor_view(self) -> None:
 
