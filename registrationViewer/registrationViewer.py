@@ -164,10 +164,39 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.study_points = None
 
+        # UI sub components
+        self.ui_sub_1 = None
+        self.ui_sub_2 = None
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
 
+        mainWidget = slicer.util.loadUI(
+            self.resourcePath("UI/registrationViewer.ui"))
+        self.layout.addWidget(mainWidget)
+        self.ui = slicer.util.childWidgetVariables(mainWidget)
+
+        subWidget1 = slicer.util.loadUI(
+            self.resourcePath("UI/subComponent1.ui"))
+        subWidget2 = slicer.util.loadUI(
+            self.resourcePath("UI/subComponent2.ui"))
+
+        self.ui.subWidget1Placeholder.layout().addWidget(subWidget1)
+        self.ui.subWidget2Placeholder.layout().addWidget(subWidget2)
+
+        # Set MRML scene for main UI (but not generic QWidgets)
+        mainWidget.setMRMLScene(slicer.mrmlScene)
+
+        # If sub-widgets contain MRML-aware widgets, set the scene for them
+        for widget in [subWidget1, subWidget2]:
+            for child in widget.findChildren(slicer.qMRMLWidget):
+                child.setMRMLScene(slicer.mrmlScene)
+
+        self.ui_sub_1 = slicer.util.childWidgetVariables(subWidget1)
+        self.ui_sub_2 = slicer.util.childWidgetVariables(subWidget2)
+
+        """
         # Load widget from .ui file (created by Qt Designer).
         # Additional widgets can be instantiated manually and added to self.layout.
         uiWidget = slicer.util.loadUI(
@@ -179,7 +208,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
         # "setMRMLScene(vtkMRMLScene*)" slot.
         uiWidget.setMRMLScene(slicer.mrmlScene)
-
+        """
         # Connections
 
         # These connections ensure that we update parameter node when scene is closed
@@ -230,7 +259,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                self.on_study_add_point)
 
         # Buttons
-        self.ui.simple_ui.connect("clicked(bool)", self.on_simple_ui)
+        self.ui_sub_1.simple_ui.connect("clicked(bool)", self.on_simple_ui)
         self.ui.button_2x3.connect("clicked(bool)", view_logic.set_2x3_layout)
         self.ui.button_3x3.connect("clicked(bool)", view_logic.set_3x3_layout)
         self.ui.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
@@ -577,7 +606,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         mainWindow = slicer.util.mainWindow()
 
         if self.ui_is_simple:
-            self.ui.simple_ui.setText("Advanced UI")
+            self.ui_sub_1.simple_ui.setText("Advanced UI")
             slicer.app.setStyleSheet("""
                 QWidget {
                     background-color: #060f21;
@@ -604,7 +633,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             self.ui.start_study_by_user_button.setVisible(True)
         else:
-            self.ui.simple_ui.setText("Simple UI")
+            self.ui_sub_1.simple_ui.setText("Simple UI")
             slicer.app.setStyleSheet("""
                 QWidget {
                 color: black;
