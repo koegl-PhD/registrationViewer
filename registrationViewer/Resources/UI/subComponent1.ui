@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>200</height>
+   </rect>
+  </property>
+
+    <!-- START horizontalLayout_center -->
+    <layout class="QHBoxLayout" name="horizontalLayout_center">
+
+     <!-- START horizontalSpacer_left -->
+     <item>
+      <spacer name="horizontalSpacer_left">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <!-- END horizontalSpacer_left -->
+     
+     <!-- START simple_ui -->
+     <item>
+      <widget class="QPushButton" name="simple_ui">
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">
+         QPushButton {
+             background-color: #002a80;
+             color: white;
+             font-weight: bold;
+             border-radius: 5px;
+             padding: 5px;
+         }
+         QPushButton:hover {
+             background-color: #002a80; /* Darker blue for hover */
+         }
+         QPushButton:pressed {
+             background-color: #0e2147; /* Even darker blue for pressed */
+         }
+        </string>
+       </property>
+       <property name="text">
+        <string>Simple UI</string>
+       </property>
+      </widget>
+     </item>
+     <!-- END simple_ui -->
+
+     <!-- START horizontalSpacer_right -->
+     <item>
+      <spacer name="horizontalSpacer_right">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <!-- END horizontalSpacer_right -->
+     
+    </layout>
+   <!-- END horizontalLayout_center -->
+
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -147,9 +147,10 @@ def temp_load_data(self):
     slicer.mrmlScene.AddNode(node_transformation)
 
     # set the nodes
-    self.ui.inputSelector_fixed.setCurrentNode(node_volume_fixed)
-    self.ui.inputSelector_moving.setCurrentNode(node_volume_moving)
-    self.ui.inputSelector_transformation.setCurrentNode(node_transformation)
+    self.ui_sub_3.inputSelector_fixed.setCurrentNode(node_volume_fixed)
+    self.ui_sub_3.inputSelector_moving.setCurrentNode(node_volume_moving)
+    self.ui_sub_3.inputSelector_transformation.setCurrentNode(
+        node_transformation)
 
 
 def apply_and_harden_transform_to_node(node_target: slicer.vtkMRMLNode,

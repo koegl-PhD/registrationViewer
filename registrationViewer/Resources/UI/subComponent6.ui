@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form_user_study">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>200</height>
+   </rect>
+  </property>
+
+      <!-- START horizontalLayout_center -->
+    <layout class="QHBoxLayout" name="horizontalLayout_center">
+
+    <!-- START label_12 -->
+      <item>
+       <widget class="QLabel" name="label_12">
+       </widget>
+       </item>
+    <!-- END label_12 -->
+
+    <!-- START line -->
+    <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+          <property name="styleSheet">
+        <string notr="true">
+         QFrame { 
+          color: white;
+          background-color: white;
+          height: 2px;
+          }
+        </string>
+       </property>
+       </widget>
+      </item>
+    <!-- END line -->
+
+    <!-- START label_112 -->
+        <item>
+       <widget class="QLabel" name="label_112">
+       </widget>
+    </item>
+    <!-- END label_112 -->
+
+  
+   <!-- START centered button -->
+   <!-- START horizontalLayout_center2 -->
+  <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_center2">
+     <item>
+      <spacer name="horizontalSpacer_left2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+   <!-- END horizontalLayout_center2 -->
+
+   <!-- START start_study_by_user_button -->
+     <item>
+      <widget class="QPushButton" name="start_study_by_user_button">
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">
+         QPushButton {
+             background-color: #038011;
+             color: white;
+             font-weight: bold;
+             border-radius: 5px;
+             padding: 5px;
+         }
+         QPushButton:pressed {
+             background-color: #0e4214;
+         }
+        </string>
+       </property>
+       <property name="text">
+        <string>Start study</string>
+       </property>
+       <property name="visible">
+        <bool>false</bool>
+        </property>
+      </widget>
+     </item>
+   <!-- END start_study_by_user_button -->
+
+   <!-- START horizontalSpacer_right2 -->
+     <item>
+      <spacer name="horizontalSpacer_right2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <!-- END horizontalSpacer_right2 -->
+   <!-- END centered button -->
+
+   <!-- START line -->
+   <item row="10" column="0" colspan="3">
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+          <property name="styleSheet">
+        <string notr="true">
+         QFrame { 
+          color: white;
+          background-color: white;
+          }
+        </string>
+       </property>
+       </widget>
+      </item>
+   <!-- END line -->
+
+   <!-- START synchronise_views_general -->
+   <item>
+    <widget class="qMRMLLayoutWidget" name="MRMLLayoutWidget"/>
+   </item>
+         <item row="0" column="0" colspan="2">
+    <widget class="QPushButton" name="synchronise_views_general">
+     <property name="text">
+      <string>Synchronise views (s)</string>
+     </property>
+    <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred"/>
+    </property>
+     <property name="visible">
+      <bool>false</bool>
+      </property>
+    </widget>
+   </item>
+   <!-- END synchronise_views_general -->
+
+   <!-- START gridLayout_22 -->
+      <item>
+      <layout class="QGridLayout" name="gridLayout_22">
+
+   <!-- START current_case_label -->
+      <item row="0" column="0" colspan="3">
+      <widget class="QLabel" name="current_case_label">
+         <property name="text">
+            <string>Case 1/9</string>
+         </property>
+         <property name="visible">
+            <bool>false</bool>
+         </property>
+         <property name="alignment">
+            <set>Qt::AlignCenter</set>
+         </property>
+      </widget>
+      </item>
+   <!-- END current_case_label -->
+
+   <!-- START line -->
+      <item row="10" column="0" colspan="3">
+         <widget class="Line" name="line">
+         <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+         </property>
+            <property name="styleSheet">
+         <string notr="true">
+            QFrame { 
+            color: white;
+            background-color: white;
+            }
+         </string>
+         </property>
+         </widget>
+      </item>
+   <!-- END line -->
+
+   <!-- START study_current_task_description_label -->
+   <item row="13" column="0" colspan="3">
+      <widget class="QLabel" name="study_current_task_description_label">
+         <property name="text">
+            <string>default task text</string>
+         </property>
+         <property name="visible">
+            <bool>false</bool>
+         </property>
+         <property name="alignment">
+            <set>Qt::AlignCenter</set>
+         </property>
+      </widget>
+   </item>
+   <!-- END study_current_task_description_label -->
+
+   <!-- START study_add_point_button -->
+   <item row="15" column="0" colspan="0">
+      <widget class="QPushButton" name="study_add_point_button">
+      <property name="text">
+         <string>default add point text</string>
+      </property>
+      <property name="visible">
+         <bool>false</bool>
+      </property>
+      </widget>
+   </item>  
+   <!-- END study_add_point_button -->
+
+   <!-- START study_next_task_button -->
+      <item row="20" column="1" colspan="1">
+         <widget class="QPushButton" name="study_next_task_button">
+         <property name="text">
+            <string>Next task</string>
+         </property>
+               <property name="visible">
+         <bool>false</bool>
+         </property>
+         </widget>
+      </item>
+   <!-- END study_next_task_button -->
+
+      </layout>
+      </item>
+   <!-- END gridLayout_22 -->
+
+    </layout>
+   <!-- END horizontalLayout_center -->
+
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

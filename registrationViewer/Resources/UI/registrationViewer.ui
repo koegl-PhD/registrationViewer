@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>registrationViewer</class>
+ <widget class="qMRMLWidget" name="registrationViewer">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>300</width>
+    <height>402</height>
+   </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>500</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+
+
+     <!-- START subWidgetPlaceholder_1 -->
+   <item>
+    <widget class="QWidget" name="subWidgetPlaceholder_1">
+     <layout class="QVBoxLayout" name="verticalLayout_sub1"/>
+    </widget>
+   </item>
+     <!-- END subWidgetPlaceholder_1 -->
+
+   <!-- START subWidgetPlaceholder_2 -->
+   <item>
+    <widget class="QWidget" name="subWidgetPlaceholder_2">
+     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
+    </widget>
+   </item>
+   <!-- END subWidgetPlaceholder_2 -->
+
+   <!-- START subWidgetPlaceholder_3 -->
+   <item>
+    <widget class="QWidget" name="subWidgetPlaceholder_3">
+     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
+    </widget>
+   </item>
+   <!-- END subWidgetPlaceholder_3 -->
+
+   <!-- START subWidgetPlaceholder_4 -->
+   <item>
+    <widget class="QWidget" name="subWidgetPlaceholder_4">
+     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
+    </widget>
+   </item>
+   <!-- END subWidgetPlaceholder_4 -->
+
+   <!-- START subWidgetPlaceholder_5 -->
+   <item>
+    <widget class="QWidget" name="subWidgetPlaceholder_5">
+     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
+    </widget>
+   </item>
+   <!-- END subWidgetPlaceholder_5 -->
+
+   <!-- START subWidgetPlaceholder_6 -->
+   <item>
+    <widget class="QWidget" name="subWidgetPlaceholder_6">
+     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
+    </widget>
+   </item>
+   <!-- END subWidgetPlaceholder_6 -->
+
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ctkCollapsibleButton</class>
+   <extends>QWidget</extends>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLLayoutWidget</class>
+   <extends>QWidget</extends>
+   <header>qMRMLLayoutWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLNodeComboBox</class>
+   <extends>QWidget</extends>
+   <header>qMRMLNodeComboBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLWidget</class>
+   <extends>QWidget</extends>
+   <header>qMRMLWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+</ui>

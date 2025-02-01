@@ -82,7 +82,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # needed for parameter node observation
         VTKObservationMixin.__init__(self)
         self._parameterNode: Optional[registrationViewerParameterNode] = None
-        self._parameterNodeGuiTag = None
+        self._parameterNodeGuiTags = []
 
         from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study_loading
         utils = importlib.reload(utils)
@@ -168,17 +168,52 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
 
-        # Load widget from .ui file (created by Qt Designer).
-        # Additional widgets can be instantiated manually and added to self.layout.
-        uiWidget = slicer.util.loadUI(
+        mainWidget = slicer.util.loadUI(
             self.resourcePath("UI/registrationViewer.ui"))
-        self.layout.addWidget(uiWidget)
-        self.ui = slicer.util.childWidgetVariables(uiWidget)
+        self.layout.addWidget(mainWidget)
+        self.ui = slicer.util.childWidgetVariables(mainWidget)
 
-        # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
-        # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
-        # "setMRMLScene(vtkMRMLScene*)" slot.
-        uiWidget.setMRMLScene(slicer.mrmlScene)
+        self.all_uis = [self.ui]
+
+        num_sub_components = len([f for f in os.listdir(self.resourcePath(
+            "UI")) if "subComponent" in f and not 'TEMPLATE' in f])
+
+        for i in range(1, num_sub_components + 1):  # 1-based index
+            setattr(self,
+                    f"sub_widget_{i}",
+                    slicer.util.loadUI(self.resourcePath(f"UI/subComponent{i}.ui")))
+
+            placeholder = getattr(self.ui, f"subWidgetPlaceholder_{i}")
+            sub_widget = getattr(self, f"sub_widget_{i}")
+            placeholder.layout().addWidget(sub_widget)
+
+            setattr(self,
+                    f"ui_sub_{i}",
+                    slicer.util.childWidgetVariables(sub_widget))
+
+            self.all_uis.append(getattr(self, f"ui_sub_{i}"))
+
+        slicer.app.processEvents()  # Ensures all widgets are fully rendered
+
+        # Set MRML scene for main UI (but not generic QWidgets)
+        mainWidget.setMRMLScene(slicer.mrmlScene)
+
+        # If sub-widgets contain MRML-aware widgets, set the scene for them
+        for widget in [self.sub_widget_1, self.sub_widget_2, self.sub_widget_3, self.sub_widget_4]:
+            for child in widget.findChildren(slicer.qMRMLWidget):
+                child.setMRMLScene(slicer.mrmlScene)
+
+        for selector in [self.ui_sub_3.inputSelector_fixed,
+                         self.ui_sub_3.inputSelector_moving,
+                         self.ui_sub_3.inputSelector_transformation]:
+            selector.setMRMLScene(slicer.mrmlScene)
+
+        mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
+                           self.ui_sub_3.inputSelector_fixed.setMRMLScene)
+        mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
+                           self.ui_sub_3.inputSelector_moving.setMRMLScene)
+        mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
+                           self.ui_sub_3.inputSelector_transformation.setMRMLScene)
 
         # Connections
 
@@ -190,7 +225,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
-        self.ui.synchronise_views_with_transform.setText(
+        self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
 
         self._remove_custom_nodes()
@@ -209,74 +244,75 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # CONNECTIONS
         # Study
-        self.ui.set_radiologist_id_button.connect("clicked(bool)",
-                                                  self.on_set_radiologist_id)
-        self.ui.start_study_button.connect("clicked(bool)",
-                                           self.on_start_study)
+        self.ui_sub_2.set_radiologist_id_button.connect("clicked(bool)",
+                                                        self.on_set_radiologist_id)
+        self.ui_sub_2.start_study_button.connect("clicked(bool)",
+                                                 self.on_start_study)
 
         def _on_text_changed():
-            self.ui.start_study_button.setEnabled(False)
-            self.ui.radiologistSetCheckBox.setChecked(False)
-            self.ui.start_study_button.toolTip = "Please set radiologist ID first"
-        self.ui.radiologistIDTextEdit.textChanged.connect(_on_text_changed)
+            self.ui_sub_2.start_study_button.setEnabled(False)
+            self.ui_sub_2.radiologistSetCheckBox.setChecked(False)
+            self.ui_sub_2.start_study_button.toolTip = "Please set radiologist ID first"
+        self.ui_sub_2.radiologistIDTextEdit.textChanged.connect(
+            _on_text_changed)
 
-        self.ui.start_study_by_user_button.connect("clicked(bool)",
-                                                   self.on_user_start_study)
+        self.ui_sub_6.start_study_by_user_button.connect("clicked(bool)",
+                                                         self.on_user_start_study)
 
-        self.ui.study_next_task_button.connect("clicked(bool)",
-                                               self.on_next_task)
+        self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
+                                                     self.on_next_task)
 
-        self.ui.study_add_point_button.connect("clicked(bool)",
-                                               self.on_study_add_point)
+        self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
+                                                     self.on_study_add_point)
 
         # Buttons
-        self.ui.simple_ui.connect("clicked(bool)", self.on_simple_ui)
-        self.ui.button_2x3.connect("clicked(bool)", view_logic.set_2x3_layout)
-        self.ui.button_3x3.connect("clicked(bool)", view_logic.set_3x3_layout)
-        self.ui.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
+        self.ui_sub_1.simple_ui.connect("clicked(bool)", self.on_simple_ui)
+        self.ui_sub_4.button_2x3.connect(
+            "clicked(bool)", view_logic.set_2x3_layout)
+        self.ui_sub_4.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
             self.update_views_third_row_with_volume_diff))
-        self.ui.synchronise_views_with_transform.connect(
+        self.ui_sub_4.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
-        self.ui.synchronise_views_manually.connect(
+        self.ui_sub_4.synchronise_views_manually.connect(
             "clicked(bool)", self.on_synchronise_views_manually)
-        self.ui.synchronise_views_general.connect(
+        self.ui_sub_6.synchronise_views_general.connect(
             "clicked(bool)", self.on_synchronise_views_general)
-        self.ui.linearTransformationCheckBox.toggled.connect(
+        self.ui_sub_4.linearTransformationCheckBox.toggled.connect(
             self.on_linear_only)
-        self.ui.remove_all_data.connect(
+        self.ui_sub_4.remove_all_data.connect(
             "clicked(bool)", self.on_remove_all_data)
 
         # ANOOTATIONS
-        self.ui.saveAnnotations.connect("clicked(bool)",
-                                        self.on_save_annotations)
-        self.ui.clearAnnotations.connect("clicked(bool)",
-                                         self.on_clear_annotations)
+        self.ui_sub_5.saveAnnotations.connect("clicked(bool)",
+                                              self.on_save_annotations)
+        self.ui_sub_5.clearAnnotations.connect("clicked(bool)",
+                                               self.on_clear_annotations)
 
-        self.ui.addLymphnodeRoiFixed.connect("clicked(bool)",
-                                             lambda: self.on_add_roi_lymphnode('fixed'))
-        self.ui.addLymphnodeRoiMoving.connect("clicked(bool)",
-                                              lambda: self.on_add_roi_lymphnode('moving'))
-        self.ui.increasedLymphnodeCheckBox.toggled.connect(
+        self.ui_sub_5.addLymphnodeRoiFixed.connect("clicked(bool)",
+                                                   lambda: self.on_add_roi_lymphnode('fixed'))
+        self.ui_sub_5.addLymphnodeRoiMoving.connect("clicked(bool)",
+                                                    lambda: self.on_add_roi_lymphnode('moving'))
+        self.ui_sub_5.increasedLymphnodeCheckBox.toggled.connect(
             self.on_lymphnode_increased)
 
-        self.ui.addCarotisgabelPointFixed.connect("clicked(bool)",
-                                                  lambda: self.on_add_annotation_point_fixed('carotisgabel'))
-        self.ui.addCarotisgabelPointMoving.connect("clicked(bool)",
-                                                   lambda: self.on_add_annotation_point_moving('carotisgabel'))
-        self.ui.addAbgangavertebralisPointFixed.connect("clicked(bool)",
-                                                        lambda: self.on_add_annotation_point_fixed('abgangavertebralis'))
-        self.ui.addAbgangavertebralisPointMoving.connect("clicked(bool)",
-                                                         lambda: self.on_add_annotation_point_moving('abgangavertebralis'))
+        self.ui_sub_5.addCarotisgabelPointFixed.connect("clicked(bool)",
+                                                        lambda: self.on_add_annotation_point_fixed('carotisgabel'))
+        self.ui_sub_5.addCarotisgabelPointMoving.connect("clicked(bool)",
+                                                         lambda: self.on_add_annotation_point_moving('carotisgabel'))
+        self.ui_sub_5.addAbgangavertebralisPointFixed.connect("clicked(bool)",
+                                                              lambda: self.on_add_annotation_point_fixed('abgangavertebralis'))
+        self.ui_sub_5.addAbgangavertebralisPointMoving.connect("clicked(bool)",
+                                                               lambda: self.on_add_annotation_point_moving('abgangavertebralis'))
 
-        self.ui.recurrencePresentCheckBox.toggled.connect(
+        self.ui_sub_5.recurrencePresentCheckBox.toggled.connect(
             self.on_recurrence_present)
-        self.ui.addRecurrenceRoiFixed.connect("clicked(bool)",
-                                              self.on_add_roi_recurrence)
+        self.ui_sub_5.addRecurrenceRoiFixed.connect("clicked(bool)",
+                                                    self.on_add_roi_recurrence)
 
-        self.ui.hideAnnotations.connect("clicked(bool)",
-                                        lambda: self.on_set_annotations_visibility(False))
-        self.ui.showAnnotations.connect("clicked(bool)",
-                                        lambda: self.on_set_annotations_visibility(True))
+        self.ui_sub_5.hideAnnotations.connect("clicked(bool)",
+                                              lambda: self.on_set_annotations_visibility(False))
+        self.ui_sub_5.showAnnotations.connect("clicked(bool)",
+                                              lambda: self.on_set_annotations_visibility(True))
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -293,7 +329,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.set_2x3_layout()
 
         slicer.util.resetSliceViews()
-        self.ui.linearTransformationCheckBox.setEnabled(False)
+        self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
         # self.dropWidget.load_data_from_dropped_folder(
         #     "/home/koeglf/data/try_new_preprocessing/SerielleCTs_nii_forHumans/xYbaegYf_mw")
@@ -419,9 +455,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called each time the user opens a different module."""
         # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
         if self._parameterNode:
-            self._parameterNode.disconnectGui(  # type: ignore
-                self._parameterNodeGuiTag)
-            self._parameterNodeGuiTag = None
+            self._disconnect_gui()
+            self._clear_parameter_node_gui_tags()
+
             self.removeObserver(
                 self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
 
@@ -430,7 +466,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
-        self.ui.synchronise_views_with_transform.setText(
+        self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
 
         self._remove_custom_nodes()
@@ -458,18 +494,28 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """
 
         if self._parameterNode:
-            self._parameterNode.disconnectGui(  # type: ignore
-                self._parameterNodeGuiTag)
+            self._disconnect_gui()
             self.removeObserver(
                 self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
             # ui element that needs connection.
-            self._parameterNodeGuiTag = self._parameterNode.connectGui(  # type: ignore
-                self.ui)
+            self._connect_gui()
             self.addObserver(self._parameterNode,
                              vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
+
+    def _connect_gui(self) -> None:
+        for ui in self.all_uis:
+            self._parameterNodeGuiTags.append(
+                self._parameterNode.connectGui(ui))
+
+    def _disconnect_gui(self) -> None:
+        for tag in self._parameterNodeGuiTags:
+            self._parameterNode.disconnectGui(tag)
+
+    def _clear_parameter_node_gui_tags(self) -> None:
+        self._parameterNodeGuiTags = []
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
 
@@ -536,10 +582,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return True
 
     # CONNECTOINS
-
     def on_set_radiologist_id(self) -> None:
-
-        radiologist_id: str = str(self.ui.radiologistIDTextEdit.toPlainText())
+        print('setting')
+        radiologist_id: str = str(
+            self.ui_sub_2.radiologistIDTextEdit.toPlainText())
 
         if radiologist_id == "":
             slicer.util.errorDisplay("Please enter radiologist ID")
@@ -557,16 +603,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_radiologist_id = radiologist_id
 
-        self.ui.start_study_button.setEnabled(True)
-        self.ui.radiologistSetCheckBox.setChecked(True)
-        self.ui.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
+        self.ui_sub_2.start_study_button.setEnabled(True)
+        self.ui_sub_2.radiologistSetCheckBox.setChecked(True)
+        self.ui_sub_2.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
 
     def on_start_study(self) -> None:
         # self.on_simple_ui()
         print("Warning: reomve this default an drestore simple ui")
         self.current_radiologist_id = "rad_1"
 
-        self.ui.start_study_by_user_button.setVisible(True)
+        self.ui_sub_6.start_study_by_user_button.setVisible(True)
 
     def on_simple_ui(self) -> None:
 
@@ -577,7 +623,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         mainWindow = slicer.util.mainWindow()
 
         if self.ui_is_simple:
-            self.ui.simple_ui.setText("Advanced UI")
+            self.ui_sub_1.simple_ui.setText("Advanced UI")
             slicer.app.setStyleSheet("""
                 QWidget {
                     background-color: #060f21;
@@ -602,9 +648,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             mainWindow.findChild(
                 qt.QWidget, "PanelDockWidget").setMaximumWidth(200)
 
-            self.ui.start_study_by_user_button.setVisible(True)
+            self.ui_sub_6.start_study_by_user_button.setVisible(True)
         else:
-            self.ui.simple_ui.setText("Simple UI")
+            self.ui_sub_1.simple_ui.setText("Simple UI")
             slicer.app.setStyleSheet("""
                 QWidget {
                 color: black;
@@ -615,16 +661,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.show_module_parts_for_user_study()
             mainWindow.findChild(
                 qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
-            self.ui.start_study_by_user_button.setVisible(False)
+            self.ui_sub_6.start_study_by_user_button.setVisible(False)
 
     def on_user_start_study(self) -> None:
-        self.ui.current_case_label.setVisible(True)
+        self.ui_sub_6.current_case_label.setVisible(True)
         # do this after the first case is loaded
-        # self.ui.synchronise_views_general.setVisible(self.ui_is_simple)
-        self.ui.study_current_task_description_label.setVisible(True)
+        # self.ui_sub_6.synchronise_views_general.setVisible(self.ui_is_simple)
+        self.ui_sub_6.study_current_task_description_label.setVisible(True)
         tasks.show_task_lymph_node(self.ui)
         self.current_task = tasks.Task.LYMPH_NODE
-        self.ui.study_next_task_button.setVisible(True)
+        self.ui_sub_6.study_next_task_button.setVisible(True)
 
     def on_next_task(self) -> None:
         pass
@@ -633,7 +679,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         pass
 
     def on_synchronise_views_wth_trasform(self) -> None:
-
         if not self._synchronisation_checks():
             return
 
@@ -642,9 +687,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.synchronise_with_displacement_pressed is True:
             self._set_up_crosshair(self.synchronise_with_displacement_pressed)
             print("pressed to synchronise")
-            self.ui.synchronise_views_with_transform.setText(
+            self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Unsynchronise views with transform (t)")
-            self.ui.synchronise_views_general.setText(
+            self.ui_sub_6.synchronise_views_general.setText(
                 "Unsynchronise views (s)")
 
             self.use_transform = self.crosshair.use_transform = True
@@ -652,17 +697,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
             self.crosshair.apply_offsets = False
-            self.ui.synchronise_views_manually.setText(
+            self.ui_sub_4.synchronise_views_manually.setText(
                 "Synchronise views manually (m)")
             self.synchronise_manually_pressed = False
         else:
             print("pressed to unsynchronise")
             self._remove_custom_observers_from_crosshair()
-            self.ui.synchronise_views_with_transform.setText(
+            self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
-            self.ui.synchronise_views_general.setText(
+            self.ui_sub_6.synchronise_views_general.setText(
                 "Synchronise views (s)")
-            self.ui.linearTransformationCheckBox.setEnabled(False)
+            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
     def on_synchronise_views_manually(self, views: List[List[str]] = None) -> None:
 
@@ -674,19 +719,19 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.synchronise_manually_pressed is True:
             self._set_up_crosshair(self.synchronise_manually_pressed)
             print("pressed to synchronise manually")
-            self.ui.synchronise_views_manually.setText(
+            self.ui_sub_4.synchronise_views_manually.setText(
                 "Unsynchronise views manually (m)")
 
             self.use_transform = self.crosshair.use_transform = False
-            self.ui.synchronise_views_with_transform.setText(
+            self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
             self.synchronise_with_displacement_pressed = False
-            self.ui.linearTransformationCheckBox.setEnabled(False)
+            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
         else:
             print("pressed to unsynchronise manually")
             self._remove_custom_observers_from_crosshair()
-            self.ui.synchronise_views_manually.setText(
+            self.ui_sub_4.synchronise_views_manually.setText(
                 "Synchronise views manually (m)")
 
         # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
@@ -711,19 +756,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         elif self.transformation_mode == utils.TransformationMode.LINEAR:
             self.on_synchronise_views_wth_trasform()
             self.use_only_linear_transform = self.crosshair.use_only_linear_transform = True
-            self.ui.linearTransformationCheckBox.setChecked(True)
+            self.ui_sub_4.linearTransformationCheckBox.setChecked(True)
         elif self.transformation_mode == utils.TransformationMode.NON_LINEAR:
             self.on_synchronise_views_wth_trasform()
             self.use_only_linear_transform = self.crosshair.use_only_linear_transform = False
-            self.ui.linearTransformationCheckBox.setChecked(False)
+            self.ui_sub_4.linearTransformationCheckBox.setChecked(False)
         else:
             raise ValueError("Unknown transformation mode")
 
         if self.synchronise_with_displacement_pressed:
-            self.ui.synchronise_views_general.setText(
+            self.ui_sub_6.synchronise_views_general.setText(
                 "Unsynchronise views (s)")
         else:
-            self.ui.synchronise_views_general.setText("Synchronise views (s)")
+            self.ui_sub_6.synchronise_views_general.setText(
+                "Synchronise views (s)")
 
     def on_linear_only(self) -> None:
         print("linear only")
@@ -815,7 +861,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                             "(Click OK to continue saving)"):
                 return
 
-        if self.annotation_fixed_roi_recurrence is None and self.ui.recurrencePresentCheckBox.isChecked():
+        if self.annotation_fixed_roi_recurrence is None and self.ui_sub_5.recurrencePresentCheckBox.isChecked():
             utils.show_info_popup(
                 f"You marked that there is a recurrence, but did not add a ROI for it.\nExiting saving.")
             return
@@ -884,33 +930,35 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.annotation_fixed_roi_lymphnode is not None:
             slicer.mrmlScene.RemoveNode(self.annotation_fixed_roi_lymphnode)
             self.annotation_fixed_roi_lymphnode = None
-            self.ui.lymphnodeRoiFixedCheckbox.setChecked(False)
+            self.ui_sub_5.lymphnodeRoiFixedCheckbox.setChecked(False)
 
         if self.annotation_moving_roi_lymphnode is not None:
             slicer.mrmlScene.RemoveNode(self.annotation_moving_roi_lymphnode)
             self.annotation_moving_roi_lymphnode = None
-            self.ui.increasedLymphnodeCheckBox.setEnabled(False)
-            self.ui.increasedLymphnodeCheckBox.setChecked(False)
-            self.ui.lymphnodeRoiMovingCheckbox.setChecked(False)
+            self.ui_sub_5.increasedLymphnodeCheckBox.setEnabled(False)
+            self.ui_sub_5.increasedLymphnodeCheckBox.setChecked(False)
+            self.ui_sub_5.lymphnodeRoiMovingCheckbox.setChecked(False)
 
         if self.annotation_fixed_points is not None:
             slicer.mrmlScene.RemoveNode(self.annotation_fixed_points)
             self.annotation_fixed_points = None
-            self.ui.carotisgabelPointFixedCheckbox.setChecked(False)
-            self.ui.abgangavertebralisPointFixedCheckbox.setChecked(False)
+            self.ui_sub_5.carotisgabelPointFixedCheckbox.setChecked(False)
+            self.ui_sub_5.abgangavertebralisPointFixedCheckbox.setChecked(
+                False)
 
         if self.annotation_moving_points is not None:
             slicer.mrmlScene.RemoveNode(self.annotation_moving_points)
             self.annotation_moving_points = None
-            self.ui.carotisgabelPointMovingCheckbox.setChecked(False)
-            self.ui.abgangavertebralisPointMovingCheckbox.setChecked(False)
+            self.ui_sub_5.carotisgabelPointMovingCheckbox.setChecked(False)
+            self.ui_sub_5.abgangavertebralisPointMovingCheckbox.setChecked(
+                False)
 
         if self.annotation_fixed_roi_recurrence is not None:
             slicer.mrmlScene.RemoveNode(self.annotation_fixed_roi_recurrence)
             self.annotation_fixed_roi_recurrence = None
-            self.ui.recurrencePresentCheckBox.setChecked(False)
-            self.ui.recurrenceRoiFixedCheckbox.setChecked(False)
-            self.ui.addRecurrenceRoiFixed.setEnabled(False)
+            self.ui_sub_5.recurrencePresentCheckBox.setChecked(False)
+            self.ui_sub_5.recurrenceRoiFixedCheckbox.setChecked(False)
+            self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(False)
 
         self.annotations_already_saved = False
 
@@ -935,7 +983,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 slicer.mrmlScene.RemoveNode(
                     node_annotation)
                 if image == 'moving':
-                    self.ui.increasedLymphnodeCheckBox.setEnabled(False)
+                    self.ui_sub_5.increasedLymphnodeCheckBox.setEnabled(False)
             else:
                 return
 
@@ -946,11 +994,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if image == 'fixed':
             self.annotation_fixed_roi_lymphnode = new_annotation
-            self.ui.lymphnodeRoiFixedCheckbox.setChecked(True)
+            self.ui_sub_5.lymphnodeRoiFixedCheckbox.setChecked(True)
         else:
             self.annotation_moving_roi_lymphnode = new_annotation
-            self.ui.increasedLymphnodeCheckBox.setEnabled(True)
-            self.ui.lymphnodeRoiMovingCheckbox.setChecked(True)
+            self.ui_sub_5.increasedLymphnodeCheckBox.setEnabled(True)
+            self.ui_sub_5.lymphnodeRoiMovingCheckbox.setChecked(True)
 
     def on_lymphnode_increased(self) -> None:
         self.annotation_bool_lymphnode_increased = not self.annotation_bool_lymphnode_increased
@@ -996,9 +1044,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                           name)
 
         if point_name == 'carotisgabel':
-            self.ui.carotisgabelPointFixedCheckbox.setChecked(True)
+            self.ui_sub_5.carotisgabelPointFixedCheckbox.setChecked(True)
         else:
-            self.ui.abgangavertebralisPointFixedCheckbox.setChecked(True)
+            self.ui_sub_5.abgangavertebralisPointFixedCheckbox.setChecked(True)
 
         utils.show_node_only_in_views(self.annotation_fixed_points,
                                       self.views_first_row)
@@ -1028,32 +1076,33 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                            name)
 
         if point_name == 'carotisgabel':
-            self.ui.carotisgabelPointMovingCheckbox.setChecked(True)
+            self.ui_sub_5.carotisgabelPointMovingCheckbox.setChecked(True)
         else:
-            self.ui.abgangavertebralisPointMovingCheckbox.setChecked(True)
+            self.ui_sub_5.abgangavertebralisPointMovingCheckbox.setChecked(
+                True)
 
         utils.show_node_only_in_views(self.annotation_moving_points,
                                       self.views_second_row)
 
     def on_recurrence_present(self) -> None:
-        if self.ui.recurrencePresentCheckBox.isChecked():
-            self.ui.addRecurrenceRoiFixed.setEnabled(True)
+        if self.ui_sub_5.recurrencePresentCheckBox.isChecked():
+            self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(True)
             return
 
         # trying to uncheck - only allow with warning
-        if self.ui.recurrencePresentCheckBox.isChecked() is False:
+        if self.ui_sub_5.recurrencePresentCheckBox.isChecked() is False:
             if self.annotation_fixed_roi_recurrence is None:
-                self.ui.addRecurrenceRoiFixed.setEnabled(False)
+                self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(False)
             else:
                 if utils.show_warning_popup(f"You alreday created a ROI for the recurrence.",
                                             "Do you want to remove it?"):
                     slicer.mrmlScene.RemoveNode(
                         self.annotation_fixed_roi_recurrence)
                     self.annotation_fixed_roi_recurrence = None
-                    self.ui.addRecurrenceRoiFixed.setEnabled(False)
+                    self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(False)
                 else:
-                    self.ui.recurrencePresentCheckBox.setChecked(True)
-                    self.ui.addRecurrenceRoiFixed.setEnabled(True)
+                    self.ui_sub_5.recurrencePresentCheckBox.setChecked(True)
+                    self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(True)
 
     def on_add_roi_recurrence(self) -> None:
 
@@ -1073,7 +1122,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.configure_roi(
             self.annotation_fixed_roi_recurrence, self.views_first_row)
 
-        self.ui.recurrenceRoiFixedCheckbox.setChecked(True)
+        self.ui_sub_5.recurrenceRoiFixedCheckbox.setChecked(True)
 
     def on_set_annotations_visibility(self, visibility: bool) -> None:
 
@@ -1086,32 +1135,23 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 annotation.GetDisplayNode().SetVisibility(visibility)
 
     def hide_module_parts_for_user_study(self) -> None:
-        self.ui.studyCollapsibleButton.setHidden(True)
-        self.ui.inputsCollapsibleButton.setHidden(True)
-        self.ui.controlsCollapsibleButton.setHidden(True)
-        # self.ui.label_4.setVisible(False)
-        # self.ui.button_2x3.setVisible(False)
-        # self.ui.button_3x3.setVisible(False)
-        # self.ui.synchronise_views_with_transform.setVisible(False)
-        # self.ui.linearTransformationCheckBox.setVisible(False)
-        # self.ui.remove_all_data.setVisible(False)
-        self.ui.annotationsCollapsibleButton.setHidden(True)
+        self.ui_sub_2.studyCollapsibleButton.setHidden(True)
+        self.ui_sub_3.inputsCollapsibleButton.setHidden(True)
+        self.ui_sub_4.controlsCollapsibleButton.setHidden(True)
+        self.ui_sub_5.annotationsCollapsibleButton.setHidden(True)
         self.loadingCollapsible.setHidden(True)
 
-        self.ui.current_case_label.setVisible(False)
+        self.ui_sub_6.current_case_label.setVisible(False)
+        self.ui_sub_6.Form_user_study.setHidden(False)
 
     def show_module_parts_for_user_study(self) -> None:
-        self.ui.studyCollapsibleButton.setHidden(False)
-        self.ui.inputsCollapsibleButton.setHidden(False)
-        self.ui.controlsCollapsibleButton.setHidden(False)
-        # self.ui.label_4.setVisible(True)
-        # self.ui.button_2x3.setVisible(True)
-        # self.ui.button_3x3.setVisible(True)
-        # self.ui.synchronise_views_with_transform.setVisible(True)
-        # self.ui.linearTransformationCheckBox.setVisible(True)
-        # self.ui.remove_all_data.setVisible(True)
-        self.ui.annotationsCollapsibleButton.setHidden(False)
+        self.ui_sub_2.studyCollapsibleButton.setHidden(False)
+        self.ui_sub_3.inputsCollapsibleButton.setHidden(False)
+        self.ui_sub_4.controlsCollapsibleButton.setHidden(False)
+        self.ui_sub_5.annotationsCollapsibleButton.setHidden(False)
         self.loadingCollapsible.setHidden(False)
+
+        self.ui_sub_6.Form_user_study.setHidden(True)
 
     def update_cursor_view(self) -> None:
 
@@ -1136,9 +1176,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair = None
 
     def _are_nodes_selected(self) -> bool:
-        return self.ui.inputSelector_fixed.currentNode() is not None and \
-            self.ui.inputSelector_moving.currentNode() is not None and \
-            self.ui.inputSelector_transformation.currentNode() is not None
+        return self.ui_sub_3.inputSelector_fixed.currentNode() is not None and \
+            self.ui_sub_3.inputSelector_moving.currentNode() is not None and \
+            self.ui_sub_3.inputSelector_transformation.currentNode() is not None
 
     def _set_up_crosshair(self, turn_synchronisation_on: bool) -> None:
         if self.crosshair:
@@ -1153,7 +1193,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                offset_diffs=self.current_offset,
                                                apply_offsets=self.synchronise_manually_pressed)
 
-        self.ui.linearTransformationCheckBox.setEnabled(True)
+        self.ui_sub_4.linearTransformationCheckBox.setEnabled(True)
 
         if turn_synchronisation_on:
             observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
@@ -1175,11 +1215,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_fixed(self) -> Any:
-        return self.ui.inputSelector_fixed.currentNode()
+        return self.ui_sub_3.inputSelector_fixed.currentNode()
 
     @property
     def node_moving(self) -> Any:
-        return self.ui.inputSelector_moving.currentNode()
+        return self.ui_sub_3.inputSelector_moving.currentNode()
 
     @property
     def node_crosshair(self) -> Any:
@@ -1187,7 +1227,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_transform_nonlinear(self) -> Any:
-        return self.ui.inputSelector_transformation.currentNode()
+        return self.ui_sub_3.inputSelector_transformation.currentNode()
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
