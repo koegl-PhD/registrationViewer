@@ -162,7 +162,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.current_radiologist_id: str = ""
         self.current_task: 'tasks.Task' = tasks.Task.NONE
 
-        self.study_points = None
+        self.study_node_points = {
+            tasks.Task.LYMPH_NODE: None,
+            tasks.Task.CAROTIS_GABEL: None,
+            tasks.Task.A_VERTEBRALIS: None,
+            tasks.Task.RECURRENCE: None
+        }
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -263,10 +268,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                      self.on_next_task)
 
         self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
-                                                     self.on_study_add_point)
+                                                     self.on_study_add_annotation_point)
 
         # Buttons
-        self.ui_sub_1.simple_ui.connect("clicked(bool)", self.on_simple_ui)
+        self.ui_sub_1.simple_ui_button.connect(
+            "clicked(bool)", self.on_simple_ui)
         self.ui_sub_4.button_2x3.connect(
             "clicked(bool)", view_logic.set_2x3_layout)
         self.ui_sub_4.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
@@ -583,7 +589,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     # CONNECTOINS
     def on_set_radiologist_id(self) -> None:
-        print('setting')
+
         radiologist_id: str = str(
             self.ui_sub_2.radiologistIDTextEdit.toPlainText())
 
@@ -608,10 +614,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_2.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
 
     def on_start_study(self) -> None:
-        # self.on_simple_ui()
-        print("Warning: reomve this default an drestore simple ui")
-        self.current_radiologist_id = "rad_1"
-
+        self.current_radiologist_id = 'rad_1'
+        self.on_simple_ui()
         self.ui_sub_6.start_study_by_user_button.setVisible(True)
 
     def on_simple_ui(self) -> None:
@@ -623,7 +627,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         mainWindow = slicer.util.mainWindow()
 
         if self.ui_is_simple:
-            self.ui_sub_1.simple_ui.setText("Advanced UI")
+            self.ui_sub_1.simple_ui_button.setText("Advanced UI")
             slicer.app.setStyleSheet("""
                 QWidget {
                     background-color: #060f21;
@@ -646,11 +650,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.hide_module_parts_for_user_study()
 
             mainWindow.findChild(
-                qt.QWidget, "PanelDockWidget").setMaximumWidth(200)
+                qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
 
             self.ui_sub_6.start_study_by_user_button.setVisible(True)
         else:
-            self.ui_sub_1.simple_ui.setText("Simple UI")
+            self.ui_sub_1.simple_ui_button.setText("Simple UI")
             slicer.app.setStyleSheet("""
                 QWidget {
                 color: black;
@@ -664,19 +668,53 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6.start_study_by_user_button.setVisible(False)
 
     def on_user_start_study(self) -> None:
-        self.ui_sub_6.current_case_label.setVisible(True)
-        # do this after the first case is loaded
-        # self.ui_sub_6.synchronise_views_general.setVisible(self.ui_is_simple)
-        self.ui_sub_6.study_current_task_description_label.setVisible(True)
-        tasks.show_task_lymph_node(self.ui)
+        """
+        this should:
+        1. load data (in such a way that it is not displayed)
+        1. show task description
+        1. when data is loaded a button to start task should be displayed
+        1. when task is started data should be shown
+
+        """
         self.current_task = tasks.Task.LYMPH_NODE
-        self.ui_sub_6.study_next_task_button.setVisible(True)
+        tasks.show_generic_task_ui(self.ui_sub_6,
+                                   self.current_task,
+                                   1,
+                                   9)
 
     def on_next_task(self) -> None:
         pass
 
-    def on_study_add_point(self) -> None:
-        pass
+    def on_study_add_annotation_point(self,) -> None:
+
+        volume_name = self.node_fixed.GetName()
+
+        if self.study_node_points[self.current_task] is not None:
+            if utils.show_warning_popup(f"Point {self.current_task.value} already exists",
+                                        "Do you want to overwrite it?"):
+                slicer.mrmlScene.RemoveNode(
+                    self.study_node_points[self.current_task])
+                self.study_node_points[self.current_task] = None
+            else:
+                return
+
+        if self.study_node_points[self.current_task] is None:
+            self.study_node_points[self.current_task] = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLMarkupsFiducialNode", f"{self.current_task.value}_{self.current_radiologist_id}_{volume_name}")
+            self.study_node_points[self.current_task].GetDisplayNode(
+            ).SetGlyphScale(1)
+            self.study_node_points[self.current_task].GetDisplayNode(
+            ).SetTextScale(2)
+
+        pos = [view_logic.get_view_offset(view) for view in self.views_first_row]  # nopep8
+
+        self.study_node_points[self.current_task].AddControlPointWorld([-pos[2], pos[1], pos[0]],
+                                                                       'p')
+
+        utils.show_node_only_in_views(self.study_node_points[self.current_task],
+                                      self.views_first_row)
+
+        self.ui_sub_6.study_next_task_button.setVisible(True)
 
     def on_synchronise_views_wth_trasform(self) -> None:
         if not self._synchronisation_checks():
@@ -1135,6 +1173,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 annotation.GetDisplayNode().SetVisibility(visibility)
 
     def hide_module_parts_for_user_study(self) -> None:
+        self.ui_sub_1.simple_ui_button.setHidden(False)
         self.ui_sub_2.studyCollapsibleButton.setHidden(True)
         self.ui_sub_3.inputsCollapsibleButton.setHidden(True)
         self.ui_sub_4.controlsCollapsibleButton.setHidden(True)
