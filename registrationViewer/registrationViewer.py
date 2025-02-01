@@ -26,7 +26,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading, study_loading
+from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading, study_loading, tasks
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -84,12 +84,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTag = None
 
-        from registrationViewerLib import utils, crosshairs, drop_data_loading, view_logic, study_loading
+        from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study_loading
         utils = importlib.reload(utils)
         crosshairs = importlib.reload(crosshairs)
         drop_data_loading = importlib.reload(drop_data_loading)
         view_logic = importlib.reload(view_logic)
         study_loading = importlib.reload(study_loading)
+        tasks = importlib.reload(tasks)
 
         self.group_first_row = 1
         self.group_second_row = 2
@@ -159,6 +160,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_data_master: 'study_loading.StudyData' = study_loading.StudyData(
             self.path_study_data_master)
         self.current_radiologist_id: str = ""
+        self.current_task: 'tasks.Task' = tasks.Task.NONE
+
+        self.study_points = None
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -218,6 +222,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui.start_study_by_user_button.connect("clicked(bool)",
                                                    self.on_user_start_study)
+
+        self.ui.study_next_task_button.connect("clicked(bool)",
+                                               self.on_next_task)
+
+        self.ui.study_add_point_button.connect("clicked(bool)",
+                                               self.on_study_add_point)
 
         # Buttons
         self.ui.simple_ui.connect("clicked(bool)", self.on_simple_ui)
@@ -552,10 +562,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
 
     def on_start_study(self) -> None:
-        self.on_simple_ui()
+        # self.on_simple_ui()
+        print("Warning: reomve this default an drestore simple ui")
+        self.current_radiologist_id = "rad_1"
 
-        # do this after the first case is loaded
-        # self.ui.synchronise_views_general.setVisible(self.ui_is_simple)
+        self.ui.start_study_by_user_button.setVisible(True)
 
     def on_simple_ui(self) -> None:
 
@@ -608,6 +619,18 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_user_start_study(self) -> None:
         self.ui.current_case_label.setVisible(True)
+        # do this after the first case is loaded
+        # self.ui.synchronise_views_general.setVisible(self.ui_is_simple)
+        self.ui.study_current_task_description_label.setVisible(True)
+        tasks.show_task_lymph_node(self.ui)
+        self.current_task = tasks.Task.LYMPH_NODE
+        self.ui.study_next_task_button.setVisible(True)
+
+    def on_next_task(self) -> None:
+        pass
+
+    def on_study_add_point(self) -> None:
+        pass
 
     def on_synchronise_views_wth_trasform(self) -> None:
 

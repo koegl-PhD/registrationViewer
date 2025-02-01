@@ -116,6 +116,11 @@
        </widget>
     </item>
 
+  
+  
+  
+  
+  
   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_center2">
      <item>
@@ -188,29 +193,96 @@
     </layout>
    </item>
 
+
+          <item row="10" column="0" colspan="3">
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+          <property name="styleSheet">
+        <string notr="true">
+         QFrame { 
+          color: white;
+          background-color: white;
+          }
+        </string>
+       </property>
+       </widget>
+      </item>
+
         <item>
-
-
      <layout class="QGridLayout" name="girdLayout_22">
+<item row="0" column="0" colspan="3">
+  <widget class="QLabel" name="current_case_label">
+    <property name="text">
+      <string>Case 1/9</string>
+    </property>
+    <property name="visible">
+      <bool>false</bool>
+    </property>
+    <property name="alignment">
+      <set>Qt::AlignCenter</set>
+    </property>
+  </widget>
+</item>
 
-      <item row="0" column="0">
-       <widget class="QLabel" name="current_case_label">
-        <property name="text">
-         <string>Case 1/9</string>
+          <item row="10" column="0" colspan="3">
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <property name="visible">
-         <bool>false</bool>
-        </property>
+          <property name="styleSheet">
+        <string notr="true">
+         QFrame { 
+          color: white;
+          background-color: white;
+          }
+        </string>
+       </property>
        </widget>
       </item>
 
 
+    <item row="13" column="0" colspan="3">
+  <widget class="QLabel" name="study_current_task_description_label">
+    <property name="text">
+      <string>default task text</string>
+    </property>
+    <property name="visible">
+      <bool>false</bool>
+    </property>
+    <property name="alignment">
+      <set>Qt::AlignCenter</set>
+    </property>
+  </widget>
+</item>
 
+      <item row="15" column="0" colspan="0">
+        <widget class="QPushButton" name="study_add_point_button">
+        <property name="text">
+          <string>default add point text</string>
+        </property>
+    <property name="visible">
+      <bool>false</bool>
+    </property>
+        </widget>
+      </item>  
 
-      
+            <item row="20" column="1" colspan="1">
+        <widget class="QPushButton" name="study_next_task_button">
+        <property name="text">
+          <string>Next task</string>
+        </property>
+            <property name="visible">
+      <bool>false</bool>
+    </property>
+        </widget>
+      </item>
+
      </layout>
-
    </item>
+
+
 
 
 
@@ -252,6 +324,9 @@
           <height>25</height>
          </size>
          </property>
+             <property name="plainText">
+      <string>rad_1</string>
+    </property>
        </widget>
       </item>
 
@@ -269,7 +344,7 @@
           <string>START STUDY</string>
         </property>
         <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
         </property>
         <property name="toolTip">
          <string>Please set radiologist ID first</string>
