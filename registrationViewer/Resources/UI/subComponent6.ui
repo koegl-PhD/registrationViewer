@@ -185,24 +185,6 @@
       </item>
    <!-- END current_case_label -->
 
-   <!-- START line -->
-      <item row="10" column="0" colspan="3">
-         <widget class="Line" name="line">
-         <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-         </property>
-            <property name="styleSheet">
-         <string notr="true">
-            QFrame { 
-            color: white;
-            background-color: white;
-            }
-         </string>
-         </property>
-         </widget>
-      </item>
-   <!-- END line -->
-
    <!-- START study_current_task_description_label -->
    <item row="13" column="0" colspan="3">
       <widget class="QLabel" name="study_current_task_description_label">
