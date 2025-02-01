@@ -13,7 +13,7 @@
      <layout class="QGridLayout" name="gridLayout_22">
 
     <!-- START radiologistSetCheckBox -->
-     <item row="10" column="0">
+     <item row="0" column="0" alignment="Qt::AlignTop">
         <widget class="QCheckBox" name="radiologistSetCheckBox">
         <property name="enabled">
             <bool>false</bool>
@@ -29,7 +29,7 @@
     <!-- END radiologistSetCheckBox -->
 
     <!-- START radiologistIDTextEdit -->
-      <item row="10" column="1">
+      <item row="0" column="1" alignment="Qt::AlignTop">
        <widget class="QTextEdit" name="radiologistIDTextEdit">
        <property name="maximumSize">
           <size>
@@ -46,7 +46,7 @@
 
 
     <!-- START set_radiologist_id_button -->
-      <item row="10" column="2" colspan="1">
+      <item row="0" column="2" colspan="1" alignment="Qt::AlignTop">
         <widget class="QPushButton" name="set_radiologist_id_button">
         <property name="text">
           <string>Set radiologist's ID</string>
@@ -57,7 +57,7 @@
 
 
     <!-- START start_study_button -->
-      <item row="15" column="0" colspan="3">
+      <item row="1" column="0" colspan="3" alignment="Qt::AlignTop">
         <widget class="QPushButton" name="start_study_button">
         <property name="text">
           <string>START STUDY</string>
