@@ -82,10 +82,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # needed for parameter node observation
         VTKObservationMixin.__init__(self)
         self._parameterNode: Optional[registrationViewerParameterNode] = None
-        self._parameterNodeGuiTag_main = None
-        self._parameterNodeGuiTag_sub_1 = None
-        self._parameterNodeGuiTag_sub_2 = None
-        self._parameterNodeGuiTag_sub_3 = None
+        self._parameterNodeGuiTags = []
 
         from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study_loading
         utils = importlib.reload(utils)
@@ -196,6 +193,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_2 = slicer.util.childWidgetVariables(sub_widget_2)
         self.ui_sub_3 = slicer.util.childWidgetVariables(sub_widget_3)
 
+        self.all_uis = [self.ui, self.ui_sub_1, self.ui_sub_2, self.ui_sub_3]
+
         slicer.app.processEvents()  # Ensures all widgets are fully rendered
 
         # Set MRML scene for main UI (but not generic QWidgets)
@@ -218,19 +217,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
                            self.ui_sub_3.inputSelector_transformation.setMRMLScene)
 
-        """
-        # Load widget from .ui file (created by Qt Designer).
-        # Additional widgets can be instantiated manually and added to self.layout.
-        uiWidget = slicer.util.loadUI(
-            self.resourcePath("UI/registrationViewer.ui"))
-        self.layout.addWidget(uiWidget)
-        self.ui = slicer.util.childWidgetVariables(uiWidget)
-
-        # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
-        # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
-        # "setMRMLScene(vtkMRMLScene*)" slot.
-        uiWidget.setMRMLScene(slicer.mrmlScene)
-        """
         # Connections
 
         # These connections ensure that we update parameter node when scene is closed
@@ -522,29 +508,19 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                              vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
 
     def _connect_gui(self) -> None:
-        self._parameterNodeGuiTag_main = self._parameterNode.connectGui(  # type: ignore
-            self.ui)
-        self._parameterNodeGuiTag_sub_1 = self._parameterNode.connectGui(  # type: ignore
-            self.ui_sub_1)
-        self._parameterNodeGuiTag_sub_2 = self._parameterNode.connectGui(  # type: ignore
-            self.ui_sub_2)
-        self._parameterNodeGuiTag_sub_3 = self._parameterNode.connectGui(  # type: ignore
-            self.ui_sub_3)
+        for ui in self.all_uis:
+            self._parameterNodeGuiTags.append(
+                self._parameterNode.connectGui(ui))
 
     def _disconnect_gui(self) -> None:
-        self._parameterNode.disconnectGui(self._parameterNodeGuiTag_main)
-        self._parameterNode.disconnectGui(self._parameterNodeGuiTag_sub_1)
-        self._parameterNode.disconnectGui(self._parameterNodeGuiTag_sub_2)
-        self._parameterNode.disconnectGui(self._parameterNodeGuiTag_sub_3)
+        for tag in self._parameterNodeGuiTags:
+            self._parameterNode.disconnectGui(tag)
 
     def _clear_parameter_node_gui_tags(self) -> None:
-        self._parameterNodeGuiTag_main = None
-        self._parameterNodeGuiTag_sub_1 = None
-        self._parameterNodeGuiTag_sub_2 = None
-        self._parameterNodeGuiTag_sub_3 = None
+        self._parameterNodeGuiTags = []
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
-
+        print(f"current node{self.node_fixed.GetName()}")
         if self.current_layout == view_logic.Layout.L_3X3:
             self.update_views_third_row_with_volume_diff()
 
