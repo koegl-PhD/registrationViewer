@@ -10,7 +10,11 @@
     <height>200</height>
    </rect>
   </property>
+
+    <!-- START horizontalLayout_center -->
     <layout class="QHBoxLayout" name="horizontalLayout_center">
+
+     <!-- START horizontalSpacer_left -->
      <item>
       <spacer name="horizontalSpacer_left">
        <property name="sizePolicy">
@@ -30,7 +34,9 @@
        </property>
       </spacer>
      </item>
-
+     <!-- END horizontalSpacer_left -->
+     
+     <!-- START simple_ui -->
      <item>
       <widget class="QPushButton" name="simple_ui">
        <property name="layoutDirection">
@@ -58,7 +64,9 @@
        </property>
       </widget>
      </item>
+     <!-- END simple_ui -->
 
+     <!-- START horizontalSpacer_right -->
      <item>
       <spacer name="horizontalSpacer_right">
        <property name="sizePolicy">
@@ -78,8 +86,11 @@
        </property>
       </spacer>
      </item>
+     <!-- END horizontalSpacer_right -->
      
     </layout>
+   <!-- END horizontalLayout_center -->
+
  </widget>
  <resources/>
  <connections/>

@@ -238,16 +238,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # CONNECTIONS
         # Study
-        self.ui.set_radiologist_id_button.connect("clicked(bool)",
-                                                  self.on_set_radiologist_id)
-        self.ui.start_study_button.connect("clicked(bool)",
-                                           self.on_start_study)
+        self.ui_sub_2.set_radiologist_id_button.connect("clicked(bool)",
+                                                        self.on_set_radiologist_id)
+        self.ui_sub_2.start_study_button.connect("clicked(bool)",
+                                                 self.on_start_study)
 
         def _on_text_changed():
-            self.ui.start_study_button.setEnabled(False)
-            self.ui.radiologistSetCheckBox.setChecked(False)
-            self.ui.start_study_button.toolTip = "Please set radiologist ID first"
-        self.ui.radiologistIDTextEdit.textChanged.connect(_on_text_changed)
+            self.ui_sub_2.start_study_button.setEnabled(False)
+            self.ui_sub_2.radiologistSetCheckBox.setChecked(False)
+            self.ui_sub_2.start_study_button.toolTip = "Please set radiologist ID first"
+        self.ui_sub_2.radiologistIDTextEdit.textChanged.connect(
+            _on_text_changed)
 
         self.ui.start_study_by_user_button.connect("clicked(bool)",
                                                    self.on_user_start_study)
@@ -567,8 +568,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     # CONNECTOINS
 
     def on_set_radiologist_id(self) -> None:
-
-        radiologist_id: str = str(self.ui.radiologistIDTextEdit.toPlainText())
+        print('setting')
+        radiologist_id: str = str(
+            self.ui_sub_2.radiologistIDTextEdit.toPlainText())
 
         if radiologist_id == "":
             slicer.util.errorDisplay("Please enter radiologist ID")
@@ -586,9 +588,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_radiologist_id = radiologist_id
 
-        self.ui.start_study_button.setEnabled(True)
-        self.ui.radiologistSetCheckBox.setChecked(True)
-        self.ui.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
+        self.ui_sub_2.start_study_button.setEnabled(True)
+        self.ui_sub_2.radiologistSetCheckBox.setChecked(True)
+        self.ui_sub_2.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
 
     def on_start_study(self) -> None:
         # self.on_simple_ui()
