@@ -94,7 +94,7 @@ def set_ui_simplification(simple: bool) -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    slicer.util.setPythonConsoleVisible(value)
+    # slicer.util.setPythonConsoleVisible(value)
 
 
 def print_affine_matrix(transformNode):

@@ -38,7 +38,7 @@
      
      <!-- START simple_ui -->
      <item>
-      <widget class="QPushButton" name="simple_ui">
+      <widget class="QPushButton" name="simple_ui_button">
        <property name="layoutDirection">
         <enum>Qt::LeftToRight</enum>
        </property>
