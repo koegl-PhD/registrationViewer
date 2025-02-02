@@ -158,7 +158,7 @@
    <item row="3" column="1" colspan="1"  >
       <widget class="QPushButton" name="study_add_point_button">
       <property name="text">
-         <string>default add point text</string>
+         <string>Add point</string>
       </property>
       <property name="visible">
          <bool>false</bool>
@@ -166,6 +166,22 @@
       </widget>
    </item>  
    <!-- END study_add_point_button -->
+
+   <!-- START increasedLymphnodeCheckBox -->
+      <item row="3" column="2">
+        <widget class="QCheckBox" name="increasedLymphnodeCheckBox">
+        <property name="text">
+            <string>Increased in size</string>
+        </property>
+        <property name="enabled">
+            <bool>true</bool>
+        </property>
+        <property name="visible">
+            <bool>false</bool>
+        </property>
+        </widget>
+      </item>
+   <!-- END increasedLymphnodeCheckBox -->
 
    <!-- START study_next_task_button -->
       <item row="4" column="1" colspan="1"  >
@@ -179,6 +195,19 @@
          </widget>
       </item>
    <!-- END study_next_task_button -->
+
+   <!-- START study_next_patient_button -->
+      <item row="5" column="1" colspan="1"  >
+         <widget class="QPushButton" name="study_next_patient_button">
+         <property name="text">
+            <string>Next patient</string>
+         </property>
+         <property name="visible">
+         <bool>false</bool>
+         </property>
+         </widget>
+      </item>
+   <!-- END study_next_patient_button -->
 
       </layout>
       </item>
