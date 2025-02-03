@@ -2,6 +2,10 @@ from dataclasses import dataclass, field
 from collections import defaultdict
 import json
 
+from typing import List, Tuple
+
+from registrationViewerLib.tasks import TransformType
+
 path = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
 
 
@@ -25,7 +29,7 @@ class StudyData:
         for rad_id, info in self.participants.items():
             for transform_type in ["ids_patients_transformation_none",
                                    "ids_patients_transformation_linear",
-                                   "ids_patients_transformation_nonolinear"]:
+                                   "ids_patients_transformation_nonlinear"]:
                 for patient_id in info.get(transform_type, []):
                     reversed_mapping[patient_id].append(rad_id)
 
@@ -37,3 +41,20 @@ class StudyData:
 
         with open(json_path, "w") as f:
             json.dump(self.data, f, indent=4)
+
+    def patient_list(self, rad_id: str) -> List[Tuple[TransformType, str]]:
+
+        participant = self.participants.get(rad_id, None)
+        if participant is None:
+            raise ValueError(f"Rad id {rad_id} not found in data")
+
+        result = []
+
+        for transform_type in ["ids_patients_transformation_nonlinear",
+                               "ids_patients_transformation_linear",
+                               "ids_patients_transformation_none"]:
+            for patient in participant[transform_type]:
+                result.append(
+                    (TransformType(transform_type.split("_")[-1]), patient))
+
+        return result

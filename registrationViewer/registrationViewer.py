@@ -5,7 +5,7 @@ import logging
 import os
 import time
 
-from typing import Optional, List, Any, Literal
+from typing import Optional, List, Any, Literal, Dict, List, Union, Tuple
 
 import numpy as np
 
@@ -159,15 +159,31 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.path_study_data_master: str = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
         self.study_data_master: 'study_loading.StudyData' = study_loading.StudyData(
             self.path_study_data_master)
+        self.current_data_dict: Dict[str,
+                                     Dict[str, Union[str, List[str]]]] = {}
+
         self.current_radiologist_id: str = ""
-        self.current_task: 'tasks.Task' = tasks.Task.NONE
+
+        self.current_patient_idx: int = -1
+
+        self.current_task_idx: int = -1
+        self.tasks = [tasks.Task.LYMPH_NODE,
+                      tasks.Task.CAROTIS_GABEL,
+                      tasks.Task.A_VERTEBRALIS,
+                      tasks.Task.RECURRENCE]
 
         self.study_node_points = {
-            tasks.Task.LYMPH_NODE: None,
-            tasks.Task.CAROTIS_GABEL: None,
-            tasks.Task.A_VERTEBRALIS: None,
-            tasks.Task.RECURRENCE: None
+            self.tasks[0]: None,
+            self.tasks[1]: None,
+            self.tasks[2]: None,
+            self.tasks[3]: None
         }
+
+        # task specific
+        self.study_lymphnode_size: Literal["Size same",
+                                           "Size increased",
+                                           "Size decreased"] = "Size same"
+        self.study_recurrence_present = False
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -263,12 +279,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui_sub_6.start_study_by_user_button.connect("clicked(bool)",
                                                          self.on_user_start_study)
-
-        self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
-                                                     self.on_next_task)
-
         self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
                                                      self.on_study_add_annotation_point)
+        self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
+                                                     self.on_next_task)
+        self.ui_sub_6.study_next_patient_button.connect("clicked(bool)",
+                                                        self.on_study_next_patient)
+        self.ui_sub_6.study_checkbox.toggled.connect(
+            self.on_study_checkbox)
+        self.ui_sub_6.study_dropdown.currentIndexChanged.connect(
+            self.on_study_selection_changed)
 
         # Buttons
         self.ui_sub_1.simple_ui_button.connect(
@@ -337,9 +357,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         slicer.util.resetSliceViews()
         self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
-        # self.dropWidget.load_data_from_dropped_folder(
-        #     "/home/koeglf/data/try_new_preprocessing/SerielleCTs_nii_forHumans/xYbaegYf_mw")
+        self.dropWidget.load_data_from_dropped_folder(
+            "/home/koeglf/data/debugging/SerielleCTs_nii_forHumans/LB9oATPd0mE")
         # utils.temp_load_data(self)
+
+        slicer.util.setDataProbeVisible(False)
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
@@ -613,6 +635,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_2.radiologistSetCheckBox.setChecked(True)
         self.ui_sub_2.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
 
+        self.current_patient_list = self.study_data_master.patient_list(self.current_radiologist_id)  # nopep8
+        self.current_patient_idx = 0
+
     def on_start_study(self) -> None:
         self.current_radiologist_id = 'rad_1'
         self.on_simple_ui()
@@ -622,24 +647,24 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui_is_simple = not self.ui_is_simple
 
-        utils.set_ui_simplification(self.ui_is_simple)
+        # utils.set_ui_simplification(self.ui_is_simple)
 
         mainWindow = slicer.util.mainWindow()
 
         if self.ui_is_simple:
             self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-            slicer.app.setStyleSheet("""
-                QWidget {
-                    background-color: #060f21;
-                    color: white;
-                }
-                QMainWindow {
-                    background-color: #060f21;
-                }
-                qSlicerLayoutManager {
-                    background-color: #060f21;
-                }
-                """)
+            # slicer.app.setStyleSheet("""
+            #     QWidget {
+            #         background-color: #060f21;
+            #         color: white;
+            #     }
+            #     QMainWindow {
+            #         background-color: #060f21;
+            #     }
+            #     qSlicerLayoutManager {
+            #         background-color: #060f21;
+            #     }
+            #     """)
 
             view_logic.enable_sectra_movements(self.node_fixed,
                                                self.views_first_row)
@@ -655,11 +680,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6.start_study_by_user_button.setVisible(True)
         else:
             self.ui_sub_1.simple_ui_button.setText("Simple UI")
-            slicer.app.setStyleSheet("""
-                QWidget {
-                color: black;
-                }
-                """)
+            # slicer.app.setStyleSheet("""
+            #     QWidget {
+            #     color: black;
+            #     }
+            #     """)
 
             view_logic.disable_sectra_movements()
             self.show_module_parts_for_user_study()
@@ -676,16 +701,88 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         1. when task is started data should be shown
 
         """
-        self.current_task = tasks.Task.LYMPH_NODE
+        self.ui_sub_6.start_study_by_user_button.setVisible(False)
+
+        self.current_task_idx = -1
+        self.current_patient_idx = -1
+
+        self.on_study_next_patient()
+
+    def on_study_next_patient(self) -> None:
+
+        self.study_save_annotations()
+        self.study_clear_annotations()
+
+        self.current_patient_idx += 1
+        self.current_task_idx = -1
+
+        self.ui_sub_6.study_next_patient_button.setVisible(False)
+        self.ui_sub_6.study_next_task_button.setVisible(True)
+
+        self.ui_sub_6.current_case_label.setText(
+            self.current_patient_list[self.current_patient_idx][1])
+
+        self.on_next_task()
+
+    def on_next_task(self) -> None:
+        self.ui_sub_6.study_next_task_button.setEnabled(False)
+        self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
+
+        self.study_save_annotations(specific_task=self.current_task)
+
+        self.current_task_idx += 1
+
+        if self.current_task_idx == 0:
+            self.show_task_lymphnode()
+        elif self.current_task_idx == 1:
+            self.show_task_carotisgabel()
+        elif self.current_task_idx == 2:
+            self.show_task_avertebralis()
+        elif self.current_task_idx == 3:
+            self.show_task_recurrence()
+            self.ui_sub_6.study_next_patient_button.setVisible(True)
+            self.ui_sub_6.study_next_patient_button.setEnabled(True)
+            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+            self.ui_sub_6.study_next_task_button.setVisible(False)
+
+    def show_task_lymphnode(self) -> None:
+        self.ui_sub_6.study_checkbox.setVisible(False)
+        self.ui_sub_6.study_dropdown.setVisible(True)
+
         tasks.show_generic_task_ui(self.ui_sub_6,
-                                   self.current_task,
+                                   tasks.Task.LYMPH_NODE,
                                    1,
                                    9)
 
-    def on_next_task(self) -> None:
-        pass
+    def show_task_carotisgabel(self) -> None:
+        self.ui_sub_6.study_checkbox.setVisible(False)
+        self.ui_sub_6.study_dropdown.setVisible(False)
 
-    def on_study_add_annotation_point(self,) -> None:
+        tasks.show_generic_task_ui(self.ui_sub_6,
+                                   tasks.Task.CAROTIS_GABEL,
+                                   1,
+                                   9)
+
+    def show_task_avertebralis(self) -> None:
+        self.ui_sub_6.study_checkbox.setVisible(False)
+        self.ui_sub_6.study_dropdown.setVisible(False)
+
+        tasks.show_generic_task_ui(self.ui_sub_6,
+                                   tasks.Task.A_VERTEBRALIS,
+                                   1,
+                                   9)
+
+    def show_task_recurrence(self) -> None:
+        self.ui_sub_6.study_checkbox.setVisible(True)
+        self.ui_sub_6.study_dropdown.setVisible(False)
+        self.ui_sub_6.study_checkbox.setText("Recurrence exists")
+
+        tasks.show_generic_task_ui(self.ui_sub_6,
+                                   tasks.Task.RECURRENCE,
+                                   1,
+                                   9)
+
+    def on_study_add_annotation_point(self) -> None:
 
         volume_name = self.node_fixed.GetName()
 
@@ -714,7 +811,143 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         utils.show_node_only_in_views(self.study_node_points[self.current_task],
                                       self.views_first_row)
 
-        self.ui_sub_6.study_next_task_button.setVisible(True)
+        if self.current_task_idx == 3:
+            self.ui_sub_6.study_next_patient_button.setEnabled(True)
+            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+            self.ui_sub_6.study_checkbox.setChecked(True)
+        else:
+            self.ui_sub_6.study_next_task_button.setEnabled(True)
+            self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
+
+    def on_study_checkbox(self) -> None:
+        if self.current_task != tasks.Task.RECURRENCE:
+            return
+
+        self.study_recurrence_present = not self.study_recurrence_present
+
+        point = self.study_node_points[tasks.Task.RECURRENCE]
+
+        print(f"checkbox {self.study_recurrence_present=}")
+        print(f"point is none = {point == None}")
+
+        if self.study_recurrence_present:
+            if point is None:
+                self.ui_sub_6.study_next_patient_button.setEnabled(False)
+                self.ui_sub_6.study_next_patient_button.toolTip = "Please add annotation point first"  # nopep8
+
+            else:
+                self.ui_sub_6.study_next_patient_button.setEnabled(True)
+                self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+
+        else:
+            if point is not None:
+                if utils.show_warning_popup(f"Do you want to remove the point you already set for the recurrence?",
+                                            ""):
+                    slicer.mrmlScene.RemoveNode(point)
+                    self.study_node_points[tasks.Task.RECURRENCE] = None
+                else:
+                    self.ui_sub_6.study_checkbox.setChecked(True)
+
+            self.ui_sub_6.study_next_patient_button.setEnabled(True)
+            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+
+    def on_study_selection_changed(self) -> None:
+        if self.current_task == tasks.Task.LYMPH_NODE:
+
+            if self.ui_sub_6.study_dropdown.currentText == "Size increased":
+                self.study_lymphnode_size = "Size increased"
+            elif self.ui_sub_6.study_dropdown.currentText == "Size decreased":
+                self.study_lymphnode_size = "Size decreased"
+            elif self.ui_sub_6.study_dropdown.currentText == "Size same":
+                self.study_lymphnode_size = "Size same"
+            else:
+                raise ValueError("Unknown lymphnode size")
+
+    def study_save_annotations(self, specific_task: Optional[tasks.Task] = None) -> None:
+
+        if self.current_task_idx < 0:
+            return
+
+        path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient[1]}"  # nopep8
+        if not os.path.exists(path_patient):
+            os.makedirs(path_patient)
+
+        if specific_task is None or specific_task == tasks.Task.LYMPH_NODE:
+            self.study_save_lymphnode(path_patient)
+        if specific_task is None or specific_task == tasks.Task.CAROTIS_GABEL:
+            self.study_save_carotisgabel(path_patient)
+        if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS:
+            self.study_save_avertebralis(path_patient)
+        if specific_task is None or specific_task == tasks.Task.RECURRENCE:
+            self.study_save_recurrence(path_patient)
+
+    def study_save_lymphnode(self, path_patient: str) -> None:
+
+        point = self.study_node_points[tasks.Task.LYMPH_NODE]
+
+        if point is None:
+            slicer.util.errorDisplay(
+                F"point {tasks.Task.LYMPH_NODE.value} is missing")
+            return
+
+        slicer.util.saveNode(point,
+                             path_patient + f"/{point.GetName()}.mrk.json")
+
+        with open(path_patient + f"/lymphnode_size.txt", "w") as f:
+            f.write(str(self.study_lymphnode_size))
+
+    def study_save_carotisgabel(self, path_patient: str) -> None:
+        point = self.study_node_points[tasks.Task.CAROTIS_GABEL]
+
+        if point is None:
+            slicer.util.errorDisplay(
+                F"point {tasks.Task.CAROTIS_GABEL.value} is missing")
+            return
+
+        slicer.util.saveNode(point,
+                             path_patient + f"/{point.GetName()}.mrk.json")
+
+    def study_save_avertebralis(self, path_patient: str) -> None:
+        point = self.study_node_points[tasks.Task.A_VERTEBRALIS]
+
+        if point is None:
+            slicer.util.errorDisplay(
+                F"point {tasks.Task.A_VERTEBRALIS.value} is missing")
+            return
+
+        slicer.util.saveNode(point,
+                             path_patient + f"/{point.GetName()}.mrk.json")
+
+    def study_save_recurrence(self, path_patient: str) -> None:
+        point = self.study_node_points[tasks.Task.RECURRENCE]
+        print(f"saving {self.study_recurrence_present=}")
+        if self.study_recurrence_present:
+            if point is None:
+                slicer.util.errorDisplay(
+                    F"point {tasks.Task.RECURRENCE.value} is missing")
+                return
+
+            slicer.util.saveNode(point,
+                                 path_patient + f"/{point.GetName()}.mrk.json")
+
+        with open(path_patient + f"/recurrence_present.txt", "w") as f:
+            f.write(str(self.study_recurrence_present))
+
+    def study_clear_annotations(self) -> None:
+        print('clearing')
+        if self.current_task_idx <= 0:
+            return
+
+        for task, point in self.study_node_points.items():
+            if point is not None:
+                slicer.mrmlScene.RemoveNode(point)
+                self.study_node_points[task] = None
+
+        self.study_lymphnode_size = ""
+        self.study_recurrence_present = False
+
+        self.ui_sub_6.study_checkbox.setChecked(False)
+        self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
     def on_synchronise_views_wth_trasform(self) -> None:
         if not self._synchronisation_checks():
@@ -1267,6 +1500,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     @property
     def node_transform_nonlinear(self) -> Any:
         return self.ui_sub_3.inputSelector_transformation.currentNode()
+
+    @property
+    def current_task(self) -> tasks.Task:
+        return self.tasks[self.current_task_idx]
+
+    @property
+    def current_patient(self) -> Tuple[study_loading.TransformType, str]:
+
+        return self.current_patient_list[self.current_patient_idx]
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
