@@ -26,7 +26,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading, study_loading, tasks
+from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading, study_loading, tasks, loading_bar
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -84,13 +84,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTags = []
 
-        from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study_loading
+        from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study_loading, loading_bar
         utils = importlib.reload(utils)
         crosshairs = importlib.reload(crosshairs)
         drop_data_loading = importlib.reload(drop_data_loading)
         view_logic = importlib.reload(view_logic)
         study_loading = importlib.reload(study_loading)
         tasks = importlib.reload(tasks)
+        loading_bar = importlib.reload(loading_bar)
 
         self.group_first_row = 1
         self.group_second_row = 2
@@ -359,7 +360,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.dropWidget.load_data_from_dropped_folder(
             "/home/koeglf/data/debugging/SerielleCTs_nii_forHumans/LB9oATPd0mE")
-        # utils.temp_load_data(self)
+        # # utils.temp_load_data(self)
 
         slicer.util.setDataProbeVisible(False)
 
@@ -701,6 +702,25 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         1. when task is started data should be shown
 
         """
+        loading_bar.create_loading_bar(
+            self,
+            len(self.study_data_master.patient_list(
+                self.current_radiologist_id)),
+            1,
+            'Current case',
+            'above'
+        )
+        self.study_progress_bar_patients = self.progress_bar_1
+
+        loading_bar.create_loading_bar(
+            self,
+            4,
+            2,
+            'Current task',
+            'above'
+        )
+        self.study_progress_bar_tasks = self.progress_bar_2
+
         self.ui_sub_6.start_study_by_user_button.setVisible(False)
 
         self.current_task_idx = -1
@@ -714,6 +734,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_clear_annotations()
 
         self.current_patient_idx += 1
+        self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
         self.current_task_idx = -1
 
         self.ui_sub_6.study_next_patient_button.setVisible(False)
@@ -731,6 +752,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_save_annotations(specific_task=self.current_task)
 
         self.current_task_idx += 1
+        self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
 
         if self.current_task_idx == 0:
             self.show_task_lymphnode()

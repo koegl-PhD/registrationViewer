@@ -14,11 +14,20 @@
       <!-- START horizontalLayout_center -->
     <layout class="QGridLayout" name="horizontalLayout_center">
 
-
+      <item row="0" column="0" colspan="3">
+         <widget class="QWidget" name="progress_bar_placeholder">
+            <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                  </sizepolicy>
+            </property>
+         </widget>
+      </item>
   
    <!-- START centered button -->
    <!-- START horizontalLayout_center2 -->
-   <item row="0" alignment="Qt::AlignTop">
+   <item row="1" alignment="Qt::AlignTop">
     <layout class="QHBoxLayout" name="horizontalLayout_center2">
      <item>
       <spacer name="horizontalSpacer_left2">
@@ -42,7 +51,7 @@
    <!-- END horizontalLayout_center2 -->
 
    <!-- START start_study_by_user_button -->
-     <item>
+     <item row="1">
       <widget class="QPushButton" name="start_study_by_user_button">
        <property name="layoutDirection">
         <enum>Qt::LeftToRight</enum>
@@ -72,7 +81,7 @@
    <!-- END start_study_by_user_button -->
 
    <!-- START horizontalSpacer_right2 -->
-     <item>
+     <item row="1">
       <spacer name="horizontalSpacer_right2">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
