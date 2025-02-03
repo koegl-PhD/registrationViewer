@@ -164,7 +164,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_radiologist_id: str = ""
 
-        self.current_patient_idx: int = 0
+        self.current_patient_idx: int = -1
 
         self.current_task_idx: int = -1
         self.tasks = [tasks.Task.LYMPH_NODE,
@@ -701,19 +701,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         1. when task is started data should be shown
 
         """
-
         self.ui_sub_6.start_study_by_user_button.setVisible(False)
-        self.ui_sub_6.study_next_patient_button.setVisible(False)
-        self.ui_sub_6.study_next_task_button.setVisible(True)
 
-        self.ui_sub_6.current_case_label.setText(
-            self.current_patient_list[self.current_patient_idx][1])
+        self.current_task_idx = -1
+        self.current_patient_idx = -1
 
-        self.on_next_task()
+        self.on_study_next_patient()
 
     def on_study_next_patient(self) -> None:
 
-        # save all annotations and then remove them
         self.study_save_annotations()
         self.study_clear_annotations()
 
@@ -722,6 +718,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui_sub_6.study_next_patient_button.setVisible(False)
         self.ui_sub_6.study_next_task_button.setVisible(True)
+        self.ui_sub_6.study_next_task_button.setEnabled(False)
 
         self.ui_sub_6.current_case_label.setText(
             self.current_patient_list[self.current_patient_idx][1])
@@ -729,6 +726,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.on_next_task()
 
     def on_next_task(self) -> None:
+        self.ui_sub_6.study_next_task_button.setEnabled(False)
+
+        self.study_save_annotations(specific_task=self.current_task)
+
         self.current_task_idx += 1
 
         if self.current_task_idx == 0:
@@ -740,6 +741,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         elif self.current_task_idx == 3:
             self.show_task_recurrence()
             self.ui_sub_6.study_next_patient_button.setVisible(True)
+            self.ui_sub_6.study_next_patient_button.setEnabled(True)
             self.ui_sub_6.study_next_task_button.setVisible(False)
 
     def show_task_lymphnode(self) -> None:
@@ -808,10 +810,39 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         utils.show_node_only_in_views(self.study_node_points[self.current_task],
                                       self.views_first_row)
 
+        if self.current_task_idx == 3:
+            self.ui_sub_6.study_next_patient_button.setEnabled(True)
+            self.ui_sub_6.study_checkbox.setChecked(True)
+        else:
+            self.ui_sub_6.study_next_task_button.setEnabled(True)
+
     def on_study_checkbox(self) -> None:
-        if self.current_task == tasks.Task.RECURRENCE:
-            self.study_recurrence_present = not self.study_recurrence_present
-            print(f"recurrence: {self.study_recurrence_present}")
+        if self.current_task != tasks.Task.RECURRENCE:
+            return
+
+        self.study_recurrence_present = not self.study_recurrence_present
+
+        point = self.study_node_points[tasks.Task.RECURRENCE]
+
+        print(f"checkbox {self.study_recurrence_present=}")
+        print(f"point is none = {point == None}")
+
+        if self.study_recurrence_present:
+            if point is None:
+                self.ui_sub_6.study_next_patient_button.setEnabled(False)
+            else:
+                self.ui_sub_6.study_next_patient_button.setEnabled(True)
+
+        else:
+            if point is not None:
+                if utils.show_warning_popup(f"Do you want to remove the point you already set for the recurrence?",
+                                            ""):
+                    slicer.mrmlScene.RemoveNode(point)
+                    self.study_node_points[tasks.Task.RECURRENCE] = None
+                else:
+                    self.ui_sub_6.study_checkbox.setChecked(True)
+
+            self.ui_sub_6.study_next_patient_button.setEnabled(True)
 
     def on_study_selection_changed(self) -> None:
         if self.current_task == tasks.Task.LYMPH_NODE:
@@ -825,29 +856,80 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             else:
                 raise ValueError("Unknown lymphnode size")
 
-    def study_save_annotations(self) -> None:
+    def study_save_annotations(self, specific_task: Optional[tasks.Task] = None) -> None:
+
+        if self.current_task_idx < 0:
+            return
 
         path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient[1]}"  # nopep8
         if not os.path.exists(path_patient):
             os.makedirs(path_patient)
 
-        self.study_node_points
+        if specific_task is None or specific_task == tasks.Task.LYMPH_NODE:
+            self.study_save_lymphnode(path_patient)
+        if specific_task is None or specific_task == tasks.Task.CAROTIS_GABEL:
+            self.study_save_carotisgabel(path_patient)
+        if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS:
+            self.study_save_avertebralis(path_patient)
+        if specific_task is None or specific_task == tasks.Task.RECURRENCE:
+            self.study_save_recurrence(path_patient)
 
-        for task, point in self.study_node_points.items():
-            if point is None:
-                slicer.util.errorDisplay(F"point {task.value} is missing")
-                continue
+    def study_save_lymphnode(self, path_patient: str) -> None:
 
-            slicer.util.saveNode(point,
-                                 path_patient + f"/{point.GetName()}.mrk.json")
+        point = self.study_node_points[tasks.Task.LYMPH_NODE]
+
+        if point is None:
+            slicer.util.errorDisplay(
+                F"point {tasks.Task.LYMPH_NODE.value} is missing")
+            return
+
+        slicer.util.saveNode(point,
+                             path_patient + f"/{point.GetName()}.mrk.json")
 
         with open(path_patient + f"/lymphnode_size.txt", "w") as f:
             f.write(str(self.study_lymphnode_size))
+
+    def study_save_carotisgabel(self, path_patient: str) -> None:
+        point = self.study_node_points[tasks.Task.CAROTIS_GABEL]
+
+        if point is None:
+            slicer.util.errorDisplay(
+                F"point {tasks.Task.CAROTIS_GABEL.value} is missing")
+            return
+
+        slicer.util.saveNode(point,
+                             path_patient + f"/{point.GetName()}.mrk.json")
+
+    def study_save_avertebralis(self, path_patient: str) -> None:
+        point = self.study_node_points[tasks.Task.A_VERTEBRALIS]
+
+        if point is None:
+            slicer.util.errorDisplay(
+                F"point {tasks.Task.A_VERTEBRALIS.value} is missing")
+            return
+
+        slicer.util.saveNode(point,
+                             path_patient + f"/{point.GetName()}.mrk.json")
+
+    def study_save_recurrence(self, path_patient: str) -> None:
+        point = self.study_node_points[tasks.Task.RECURRENCE]
+        print(f"saving {self.study_recurrence_present=}")
+        if self.study_recurrence_present:
+            if point is None:
+                slicer.util.errorDisplay(
+                    F"point {tasks.Task.RECURRENCE.value} is missing")
+                return
+
+            slicer.util.saveNode(point,
+                                 path_patient + f"/{point.GetName()}.mrk.json")
 
         with open(path_patient + f"/recurrence_present.txt", "w") as f:
             f.write(str(self.study_recurrence_present))
 
     def study_clear_annotations(self) -> None:
+        print('clearing')
+        if self.current_task_idx <= 0:
+            return
 
         for task, point in self.study_node_points.items():
             if point is not None:
@@ -858,6 +940,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_recurrence_present = False
 
         self.ui_sub_6.study_checkbox.setChecked(False)
+        self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
     def on_synchronise_views_wth_trasform(self) -> None:
         if not self._synchronisation_checks():
