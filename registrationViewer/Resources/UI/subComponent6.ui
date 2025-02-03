@@ -167,11 +167,11 @@
    </item>  
    <!-- END study_add_point_button -->
 
-   <!-- START increasedLymphnodeCheckBox -->
-      <item row="3" column="2">
-        <widget class="QCheckBox" name="increasedLymphnodeCheckBox">
+   <!-- START study_checkbox -->
+   <item row="3" column="2" colspan="1">
+        <widget class="QCheckBox" name="study_checkbox">
         <property name="text">
-            <string>Increased in size</string>
+            <string>Recurrence present</string>
         </property>
         <property name="enabled">
             <bool>true</bool>
@@ -181,7 +181,32 @@
         </property>
         </widget>
       </item>
-   <!-- END increasedLymphnodeCheckBox -->
+   <!-- END study_checkbox -->
+
+   <!-- START dropdown menu -->
+   <item row="3" column="2" colspan="1">
+      <widget class="QComboBox" name="study_dropdown">
+         <property name="visible">
+            <bool>false</bool>
+         </property>
+         <item>
+            <property name="text">
+               <string>Size same</string>
+            </property>
+         </item>
+         <item>
+            <property name="text">
+               <string>Size increased</string>
+            </property>
+         </item>
+         <item>
+            <property name="text">
+               <string>Size decreased</string>
+            </property>
+         </item>
+      </widget>
+   </item>
+   <!-- END dropdown menu -->
 
    <!-- START study_next_task_button -->
       <item row="4" column="1" colspan="1"  >

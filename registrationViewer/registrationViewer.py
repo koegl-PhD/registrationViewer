@@ -5,7 +5,7 @@ import logging
 import os
 import time
 
-from typing import Optional, List, Any, Literal, Dict, List, Union
+from typing import Optional, List, Any, Literal, Dict, List, Union, Tuple
 
 import numpy as np
 
@@ -166,7 +166,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_patient_idx: int = 0
 
-        self.current_task_idx: int = 0
+        self.current_task_idx: int = -1
         self.tasks = [tasks.Task.LYMPH_NODE,
                       tasks.Task.CAROTIS_GABEL,
                       tasks.Task.A_VERTEBRALIS,
@@ -180,7 +180,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         }
 
         # task specific
-        self.study_lymphnode_increased = False
+        self.study_lymphnode_size: Literal["Size same",
+                                           "Size increased",
+                                           "Size decreased"] = "Size same"
+        self.study_recurrence_present = False
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -282,8 +285,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                      self.on_next_task)
         self.ui_sub_6.study_next_patient_button.connect("clicked(bool)",
                                                         self.on_study_next_patient)
-        self.ui_sub_6.increasedLymphnodeCheckBox.toggled.connect(
-            self.on_study_lymphnode_increased)
+        self.ui_sub_6.study_checkbox.toggled.connect(
+            self.on_study_checkbox)
+        self.ui_sub_6.study_dropdown.currentIndexChanged.connect(
+            self.on_study_selection_changed)
 
         # Buttons
         self.ui_sub_1.simple_ui_button.connect(
@@ -642,24 +647,24 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui_is_simple = not self.ui_is_simple
 
-        utils.set_ui_simplification(self.ui_is_simple)
+        # utils.set_ui_simplification(self.ui_is_simple)
 
         mainWindow = slicer.util.mainWindow()
 
         if self.ui_is_simple:
             self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-            slicer.app.setStyleSheet("""
-                QWidget {
-                    background-color: #060f21;
-                    color: white;
-                }
-                QMainWindow {
-                    background-color: #060f21;
-                }
-                qSlicerLayoutManager {
-                    background-color: #060f21;
-                }
-                """)
+            # slicer.app.setStyleSheet("""
+            #     QWidget {
+            #         background-color: #060f21;
+            #         color: white;
+            #     }
+            #     QMainWindow {
+            #         background-color: #060f21;
+            #     }
+            #     qSlicerLayoutManager {
+            #         background-color: #060f21;
+            #     }
+            #     """)
 
             view_logic.enable_sectra_movements(self.node_fixed,
                                                self.views_first_row)
@@ -675,11 +680,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6.start_study_by_user_button.setVisible(True)
         else:
             self.ui_sub_1.simple_ui_button.setText("Simple UI")
-            slicer.app.setStyleSheet("""
-                QWidget {
-                color: black;
-                }
-                """)
+            # slicer.app.setStyleSheet("""
+            #     QWidget {
+            #     color: black;
+            #     }
+            #     """)
 
             view_logic.disable_sectra_movements()
             self.show_module_parts_for_user_study()
@@ -696,10 +701,24 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         1. when task is started data should be shown
 
         """
-        tasks.show_generic_task_ui(self.ui_sub_6,
-                                   self.current_task,
-                                   1,
-                                   9)
+
+        self.ui_sub_6.start_study_by_user_button.setVisible(False)
+        self.ui_sub_6.study_next_patient_button.setVisible(False)
+        self.ui_sub_6.study_next_task_button.setVisible(True)
+
+        self.ui_sub_6.current_case_label.setText(
+            self.current_patient_list[self.current_patient_idx][1])
+
+        self.on_next_task()
+
+    def on_study_next_patient(self) -> None:
+
+        # save all annotations and then remove them
+        self.study_save_annotations()
+        self.study_clear_annotations()
+
+        self.current_patient_idx += 1
+        self.current_task_idx = -1
 
         self.ui_sub_6.study_next_patient_button.setVisible(False)
         self.ui_sub_6.study_next_task_button.setVisible(True)
@@ -707,27 +726,58 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_6.current_case_label.setText(
             self.current_patient_list[self.current_patient_idx][1])
 
-        self.ui_sub_6.increasedLymphnodeCheckBox.setEnabled(True)
-        self.ui_sub_6.increasedLymphnodeCheckBox.setVisible(True)
-
-    def on_study_next_patient(self) -> None:
-        self.current_patient_idx += 1
-        self.current_task_idx = 0
-
         self.on_next_task()
 
     def on_next_task(self) -> None:
-        self.ui_sub_6.increasedLymphnodeCheckBox.setVisible(False)
         self.current_task_idx += 1
 
+        if self.current_task_idx == 0:
+            self.show_task_lymphnode()
+        elif self.current_task_idx == 1:
+            self.show_task_carotisgabel()
+        elif self.current_task_idx == 2:
+            self.show_task_avertebralis()
+        elif self.current_task_idx == 3:
+            self.show_task_recurrence()
+            self.ui_sub_6.study_next_patient_button.setVisible(True)
+            self.ui_sub_6.study_next_task_button.setVisible(False)
+
+    def show_task_lymphnode(self) -> None:
+        self.ui_sub_6.study_checkbox.setVisible(False)
+        self.ui_sub_6.study_dropdown.setVisible(True)
+
         tasks.show_generic_task_ui(self.ui_sub_6,
-                                   self.current_task,
+                                   tasks.Task.LYMPH_NODE,
                                    1,
                                    9)
 
-        if self.current_task_idx == 3:
-            self.ui_sub_6.study_next_patient_button.setVisible(True)
-            self.ui_sub_6.study_next_task_button.setVisible(False)
+    def show_task_carotisgabel(self) -> None:
+        self.ui_sub_6.study_checkbox.setVisible(False)
+        self.ui_sub_6.study_dropdown.setVisible(False)
+
+        tasks.show_generic_task_ui(self.ui_sub_6,
+                                   tasks.Task.CAROTIS_GABEL,
+                                   1,
+                                   9)
+
+    def show_task_avertebralis(self) -> None:
+        self.ui_sub_6.study_checkbox.setVisible(False)
+        self.ui_sub_6.study_dropdown.setVisible(False)
+
+        tasks.show_generic_task_ui(self.ui_sub_6,
+                                   tasks.Task.A_VERTEBRALIS,
+                                   1,
+                                   9)
+
+    def show_task_recurrence(self) -> None:
+        self.ui_sub_6.study_checkbox.setVisible(True)
+        self.ui_sub_6.study_dropdown.setVisible(False)
+        self.ui_sub_6.study_checkbox.setText("Recurrence exists")
+
+        tasks.show_generic_task_ui(self.ui_sub_6,
+                                   tasks.Task.RECURRENCE,
+                                   1,
+                                   9)
 
     def on_study_add_annotation_point(self) -> None:
 
@@ -758,8 +808,56 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         utils.show_node_only_in_views(self.study_node_points[self.current_task],
                                       self.views_first_row)
 
-    def on_study_lymphnode_increased(self) -> None:
-        self.study_lymphnode_increased = not self.study_lymphnode_increased
+    def on_study_checkbox(self) -> None:
+        if self.current_task == tasks.Task.RECURRENCE:
+            self.study_recurrence_present = not self.study_recurrence_present
+            print(f"recurrence: {self.study_recurrence_present}")
+
+    def on_study_selection_changed(self) -> None:
+        if self.current_task == tasks.Task.LYMPH_NODE:
+
+            if self.ui_sub_6.study_dropdown.currentText == "Size increased":
+                self.study_lymphnode_size = "Size increased"
+            elif self.ui_sub_6.study_dropdown.currentText == "Size decreased":
+                self.study_lymphnode_size = "Size decreased"
+            elif self.ui_sub_6.study_dropdown.currentText == "Size same":
+                self.study_lymphnode_size = "Size same"
+            else:
+                raise ValueError("Unknown lymphnode size")
+
+    def study_save_annotations(self) -> None:
+
+        path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient[1]}"  # nopep8
+        if not os.path.exists(path_patient):
+            os.makedirs(path_patient)
+
+        self.study_node_points
+
+        for task, point in self.study_node_points.items():
+            if point is None:
+                slicer.util.errorDisplay(F"point {task.value} is missing")
+                continue
+
+            slicer.util.saveNode(point,
+                                 path_patient + f"/{point.GetName()}.mrk.json")
+
+        with open(path_patient + f"/lymphnode_size.txt", "w") as f:
+            f.write(str(self.study_lymphnode_size))
+
+        with open(path_patient + f"/recurrence_present.txt", "w") as f:
+            f.write(str(self.study_recurrence_present))
+
+    def study_clear_annotations(self) -> None:
+
+        for task, point in self.study_node_points.items():
+            if point is not None:
+                slicer.mrmlScene.RemoveNode(point)
+                self.study_node_points[task] = None
+
+        self.study_lymphnode_size = ""
+        self.study_recurrence_present = False
+
+        self.ui_sub_6.study_checkbox.setChecked(False)
 
     def on_synchronise_views_wth_trasform(self) -> None:
         if not self._synchronisation_checks():
@@ -1316,6 +1414,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     @property
     def current_task(self) -> tasks.Task:
         return self.tasks[self.current_task_idx]
+
+    @property
+    def current_patient(self) -> Tuple[study_loading.TransformType, str]:
+
+        return self.current_patient_list[self.current_patient_idx]
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
