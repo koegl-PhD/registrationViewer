@@ -718,7 +718,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui_sub_6.study_next_patient_button.setVisible(False)
         self.ui_sub_6.study_next_task_button.setVisible(True)
-        self.ui_sub_6.study_next_task_button.setEnabled(False)
 
         self.ui_sub_6.current_case_label.setText(
             self.current_patient_list[self.current_patient_idx][1])
@@ -727,6 +726,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_next_task(self) -> None:
         self.ui_sub_6.study_next_task_button.setEnabled(False)
+        self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
 
         self.study_save_annotations(specific_task=self.current_task)
 
@@ -742,6 +742,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.show_task_recurrence()
             self.ui_sub_6.study_next_patient_button.setVisible(True)
             self.ui_sub_6.study_next_patient_button.setEnabled(True)
+            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
             self.ui_sub_6.study_next_task_button.setVisible(False)
 
     def show_task_lymphnode(self) -> None:
@@ -812,9 +813,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if self.current_task_idx == 3:
             self.ui_sub_6.study_next_patient_button.setEnabled(True)
+            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
             self.ui_sub_6.study_checkbox.setChecked(True)
         else:
             self.ui_sub_6.study_next_task_button.setEnabled(True)
+            self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 
     def on_study_checkbox(self) -> None:
         if self.current_task != tasks.Task.RECURRENCE:
@@ -830,8 +833,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.study_recurrence_present:
             if point is None:
                 self.ui_sub_6.study_next_patient_button.setEnabled(False)
+                self.ui_sub_6.study_next_patient_button.toolTip = "Please add annotation point first"  # nopep8
+
             else:
                 self.ui_sub_6.study_next_patient_button.setEnabled(True)
+                self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
 
         else:
             if point is not None:
@@ -843,6 +849,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     self.ui_sub_6.study_checkbox.setChecked(True)
 
             self.ui_sub_6.study_next_patient_button.setEnabled(True)
+            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
 
     def on_study_selection_changed(self) -> None:
         if self.current_task == tasks.Task.LYMPH_NODE:
