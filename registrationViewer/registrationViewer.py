@@ -702,24 +702,19 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         1. when task is started data should be shown
 
         """
-        loading_bar.create_loading_bar(
-            self,
-            len(self.study_data_master.patient_list(
-                self.current_radiologist_id)),
-            1,
-            'Current case',
-            'above'
+        self.study_progress_bar_patients = utils.show_progressbar(
+            ui=self.ui_sub_6,
+            idx=1,
+            initial=1,
+            maximum=len(self.study_data_master.patient_list(
+                self.current_radiologist_id))
         )
-        self.study_progress_bar_patients = self.progress_bar_1
-
-        loading_bar.create_loading_bar(
-            self,
-            4,
-            2,
-            'Current task',
-            'above'
+        self.study_progress_bar_tasks = utils.show_progressbar(
+            ui=self.ui_sub_6,
+            idx=2,
+            initial=1,
+            maximum=4
         )
-        self.study_progress_bar_tasks = self.progress_bar_2
 
         self.ui_sub_6.start_study_by_user_button.setVisible(False)
 
