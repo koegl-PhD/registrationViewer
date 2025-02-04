@@ -863,7 +863,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     slicer.mrmlScene.RemoveNode(point)
                     self.study_node_points[tasks.Task.RECURRENCE] = None
                 else:
+                    self.ui_sub_6.study_checkbox.blockSignals(True)
                     self.ui_sub_6.study_checkbox.setChecked(True)
+                    self.ui_sub_6.study_checkbox.blockSignals(False)
 
             self.ui_sub_6.study_next_patient_button.setEnabled(True)
             self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
@@ -963,7 +965,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_lymphnode_size = ""
         self.study_recurrence_present = False
 
-        self.ui_sub_6.study_checkbox.setChecked(False)
+        self.ui_sub_6.study_checkbox.blockSignals(True)
+        self.ui_sub_6.study_checkbox.setChecked(True)
+        self.ui_sub_6.study_checkbox.blockSignals(False)
         self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
     def on_synchronise_views_wth_trasform(self) -> None:
