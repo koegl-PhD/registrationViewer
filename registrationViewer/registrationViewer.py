@@ -649,24 +649,24 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui_is_simple = not self.ui_is_simple
 
-        # utils.set_ui_simplification(self.ui_is_simple)
+        utils.set_ui_simplification(self.ui_is_simple)
 
         mainWindow = slicer.util.mainWindow()
 
         if self.ui_is_simple:
             self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-            # slicer.app.setStyleSheet("""
-            #     QWidget {
-            #         background-color: #060f21;
-            #         color: white;
-            #     }
-            #     QMainWindow {
-            #         background-color: #060f21;
-            #     }
-            #     qSlicerLayoutManager {
-            #         background-color: #060f21;
-            #     }
-            #     """)
+            slicer.app.setStyleSheet("""
+                QWidget {
+                    background-color: #060f21;
+                    color: white;
+                }
+                QMainWindow {
+                    background-color: #060f21;
+                }
+                qSlicerLayoutManager {
+                    background-color: #060f21;
+                }
+                """)
 
             view_logic.enable_sectra_movements(self.node_fixed,
                                                self.views_first_row)
@@ -682,11 +682,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6.start_study_by_user_button.setVisible(True)
         else:
             self.ui_sub_1.simple_ui_button.setText("Simple UI")
-            # slicer.app.setStyleSheet("""
-            #     QWidget {
-            #     color: black;
-            #     }
-            #     """)
+            slicer.app.setStyleSheet("""
+                QWidget {
+                color: black;
+                }
+                """)
 
             view_logic.disable_sectra_movements()
             self.show_module_parts_for_user_study()
@@ -761,7 +761,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_6.study_dropdown.setVisible(True)
         self.ui_sub_6.study_next_task_button.setVisible(True)
 
-        self.ui_sub_6.current_case_label.setText(f"{self.current_patient_name} {self.current_patient_transform_type}")  # nopep8
+        # self.ui_sub_6.current_case_label.setText(f"{self.current_patient_name} {self.current_patient_transform_type}")  # nopep8
 
         if self.current_patient_transform_type == utils.TransformType.NONE:
             self.unsynchronise_views()

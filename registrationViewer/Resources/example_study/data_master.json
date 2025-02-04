@@ -7,13 +7,13 @@
         "rad_1": {
             "name": "John Smith",
             "ids_patients_transformation_none": [
-                "LB9oATPd0mE"
-            ],
-            "ids_patients_transformation_linear": [
                 "0e5fp8GltvE"
             ],
-            "ids_patients_transformation_nonlinear": [
+            "ids_patients_transformation_linear": [
                 "TMxGak0IQOg"
+            ],
+            "ids_patients_transformation_nonlinear": [
+                "LB9oATPd0mE"
             ]
         },
         "rad_2": {
