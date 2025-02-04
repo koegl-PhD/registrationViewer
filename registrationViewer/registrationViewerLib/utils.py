@@ -13,6 +13,19 @@ class TransformationMode(Enum):
     NON_LINEAR = 2
 
 
+def show_progressbar(ui, idx: int, initial: int, maximum: int):
+
+    progress_bar = getattr(ui, f"progress_bar_{idx}")
+
+    progress_bar.setVisible(True)
+    progress_bar.setValue(initial)
+    progress_bar.setMaximum(maximum)
+
+    getattr(ui, f"progress_label_{idx}").setVisible(True)
+
+    return progress_bar
+
+
 def update_progress_window(progress: int, message: str) -> bool:
     if slicer.progressWindow.wasCanceled:
         slicer.progressWindow.close()

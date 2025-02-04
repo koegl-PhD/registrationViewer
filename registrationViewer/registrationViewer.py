@@ -359,7 +359,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.dropWidget.load_data_from_dropped_folder(
             "/home/koeglf/data/debugging/SerielleCTs_nii_forHumans/LB9oATPd0mE")
-        # utils.temp_load_data(self)
+        # # utils.temp_load_data(self)
 
         slicer.util.setDataProbeVisible(False)
 
@@ -701,6 +701,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         1. when task is started data should be shown
 
         """
+        self.study_progress_bar_patients = utils.show_progressbar(
+            ui=self.ui_sub_6,
+            idx=1,
+            initial=1,
+            maximum=len(self.study_data_master.patient_list(
+                self.current_radiologist_id))
+        )
+        self.study_progress_bar_tasks = utils.show_progressbar(
+            ui=self.ui_sub_6,
+            idx=2,
+            initial=1,
+            maximum=4
+        )
+
         self.ui_sub_6.start_study_by_user_button.setVisible(False)
 
         self.current_task_idx = -1
@@ -714,6 +728,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_clear_annotations()
 
         self.current_patient_idx += 1
+        self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
         self.current_task_idx = -1
 
         self.ui_sub_6.study_next_patient_button.setVisible(False)
@@ -731,6 +746,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_save_annotations(specific_task=self.current_task)
 
         self.current_task_idx += 1
+        self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
 
         if self.current_task_idx == 0:
             self.show_task_lymphnode()
@@ -814,7 +830,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_task_idx == 3:
             self.ui_sub_6.study_next_patient_button.setEnabled(True)
             self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+
+            # Temporarily block signals wo se don't trigger the callbacks
+            self.ui_sub_6.study_checkbox.blockSignals(True)
             self.ui_sub_6.study_checkbox.setChecked(True)
+            self.ui_sub_6.study_checkbox.blockSignals(False)
         else:
             self.ui_sub_6.study_next_task_button.setEnabled(True)
             self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
@@ -826,9 +846,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_recurrence_present = not self.study_recurrence_present
 
         point = self.study_node_points[tasks.Task.RECURRENCE]
-
-        print(f"checkbox {self.study_recurrence_present=}")
-        print(f"point is none = {point == None}")
 
         if self.study_recurrence_present:
             if point is None:
@@ -846,7 +863,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     slicer.mrmlScene.RemoveNode(point)
                     self.study_node_points[tasks.Task.RECURRENCE] = None
                 else:
+                    self.ui_sub_6.study_checkbox.blockSignals(True)
                     self.ui_sub_6.study_checkbox.setChecked(True)
+                    self.ui_sub_6.study_checkbox.blockSignals(False)
 
             self.ui_sub_6.study_next_patient_button.setEnabled(True)
             self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
@@ -946,7 +965,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_lymphnode_size = ""
         self.study_recurrence_present = False
 
-        self.ui_sub_6.study_checkbox.setChecked(False)
+        self.ui_sub_6.study_checkbox.blockSignals(True)
+        self.ui_sub_6.study_checkbox.setChecked(True)
+        self.ui_sub_6.study_checkbox.blockSignals(False)
         self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
     def on_synchronise_views_wth_trasform(self) -> None:
