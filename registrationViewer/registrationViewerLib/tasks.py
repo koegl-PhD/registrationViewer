@@ -33,12 +33,6 @@ TUMOR TEXT"""
 }
 
 
-class TransformType(Enum):
-    NONE = "none"
-    LINEAR = "linear"
-    NONLINEAR = "nonlinear"
-
-
 class Case():
     def __init__(self, current_case: int, case_count: int):
         self.current_case = current_case
@@ -54,10 +48,7 @@ def show_generic_task_ui(
         current_case_num: int,
         total_case_count: int
 ) -> None:
-    ui.synchronise_views_general.setVisible(True)
-
     ui.current_case_label.setVisible(True)
-    # ui.current_case_label.setText(Case(current_case_num, total_case_count))
 
     ui.study_current_task_description_label.setText(TASK_DESCRIPTIONS[task])
     ui.study_current_task_description_label.setVisible(True)

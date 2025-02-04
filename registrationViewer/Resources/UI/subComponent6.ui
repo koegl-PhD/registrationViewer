@@ -119,26 +119,10 @@
     <property name="alignment">
     <set>Qt::AlignCenter</set>
     </property>
-    <property name="styleSheet">
-    <string>
-      QLabel {
-          color: #333333;
-          font-size: 12px;
-      }
-    </string>
-    </property>
   </widget>
   </item>
   <item row="1" column="0" colspan="3">
   <widget class="QProgressBar" name="progress_bar_1">
-    <!-- <property name="geometry">
-    <rect>
-      <x>140</x>
-      <y>90</y>
-      <width>118</width>
-      <height>23</height>
-    </rect>
-    </property> -->
     <property name="visible">
       <bool>true</bool>
       </property>
@@ -195,26 +179,10 @@
     <property name="alignment">
     <set>Qt::AlignCenter</set>
     </property>
-    <property name="styleSheet">
-    <string>
-      QLabel {
-          color: #333333;
-          font-size: 12px;
-      }
-    </string>
-    </property>
   </widget>
   </item>
   <item row="3" column="0" colspan="3">
   <widget class="QProgressBar" name="progress_bar_2">
-    <!-- <property name="geometry">
-    <rect>
-      <x>140</x>
-      <y>90</y>
-      <width>118</width>
-      <height>23</height>
-    </rect>
-    </property> -->
     <property name="visible">
       <bool>true</bool>
       </property>
@@ -330,6 +298,17 @@
          <property name="visible">
                <bool>false</bool>
          </property>
+         <property name="styleSheet">
+            <string>
+         QCheckBox::indicator {
+            width: 15px;
+            height: 15px;
+         }
+         QCheckBox::indicator:unchecked {
+            border: 2px solid white;
+         }
+            </string>
+         </property>
          </widget>
          </item>
       <!-- END study_checkbox -->
@@ -368,6 +347,13 @@
             <property name="visible">
             <bool>false</bool>
             </property>
+            <property name="styleSheet">
+            <string>
+            QPushButton:disabled {
+               color: #666666;  /* Darker text color for better readability */
+            }
+            </string>
+            </property>
             </widget>
          </item>
       <!-- END study_next_task_button -->
@@ -380,6 +366,13 @@
             </property>
             <property name="visible">
             <bool>false</bool>
+            </property>
+            <property name="styleSheet">
+            <string>
+            QPushButton:disabled {
+               color: #666666;  /* Darker text color for better readability */
+            }
+            </string>
             </property>
             </widget>
          </item>
