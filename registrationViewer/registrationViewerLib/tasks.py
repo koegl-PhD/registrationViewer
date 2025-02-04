@@ -19,20 +19,17 @@ The ROI of the lymph node is marked in the moving image (bottom row).""",
     Task.CAROTIS_GABEL: """
 Find the carotid bifurcation in the Fixed image (top row).
 Set a point in the center of the bifurcation.
-The carotid bifurcation is marked in the moving image (bottom row).
-""",
+The carotid bifurcation is marked in the moving image (bottom row).""",
 
     Task.A_VERTEBRALIS: """
 Find the A. vertebralis in the Fixed image (top row).
 Set a point in the center of the A. vertebralis.
-The A. vertebralis is marked in the moving image (bottom row).
-""",
+The A. vertebralis is marked in the moving image (bottom row).""",
 
     Task.RECURRENCE: """
 Decide if a recurrence is present in the Fixed image (top row).
 If yes, set a point in the center of the recurrence.
-TUMOR TEXT
-    """
+TUMOR TEXT"""
 }
 
 

@@ -770,6 +770,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                    1,
                                    9)
 
+        utils.hide_all_points_except(tasks.Task.LYMPH_NODE,
+                                     self.study_node_points)
+
     def show_task_carotisgabel(self) -> None:
         self.ui_sub_6.study_checkbox.setVisible(False)
         self.ui_sub_6.study_dropdown.setVisible(False)
@@ -778,6 +781,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                    tasks.Task.CAROTIS_GABEL,
                                    1,
                                    9)
+
+        utils.hide_all_points_except(tasks.Task.CAROTIS_GABEL,
+                                     self.study_node_points)
 
     def show_task_avertebralis(self) -> None:
         self.ui_sub_6.study_checkbox.setVisible(False)
@@ -788,6 +794,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                    1,
                                    9)
 
+        utils.hide_all_points_except(tasks.Task.A_VERTEBRALIS,
+                                     self.study_node_points)
+
     def show_task_recurrence(self) -> None:
         self.ui_sub_6.study_checkbox.setVisible(True)
         self.ui_sub_6.study_dropdown.setVisible(False)
@@ -797,6 +806,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                    tasks.Task.RECURRENCE,
                                    1,
                                    9)
+
+        utils.hide_all_points_except(tasks.Task.RECURRENCE,
+                                     self.study_node_points)
 
     def on_study_add_annotation_point(self) -> None:
 
@@ -835,6 +847,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6.study_checkbox.blockSignals(True)
             self.ui_sub_6.study_checkbox.setChecked(True)
             self.ui_sub_6.study_checkbox.blockSignals(False)
+
+            self.study_recurrence_present = True
         else:
             self.ui_sub_6.study_next_task_button.setEnabled(True)
             self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
@@ -862,10 +876,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                             ""):
                     slicer.mrmlScene.RemoveNode(point)
                     self.study_node_points[tasks.Task.RECURRENCE] = None
+                    self.ui_sub_6.study_checkbox.blockSignals(True)
+                    self.ui_sub_6.study_checkbox.setChecked(False)
+                    self.ui_sub_6.study_checkbox.blockSignals(False)
+                    self.study_recurrence_present = False
                 else:
                     self.ui_sub_6.study_checkbox.blockSignals(True)
                     self.ui_sub_6.study_checkbox.setChecked(True)
                     self.ui_sub_6.study_checkbox.blockSignals(False)
+                    self.study_recurrence_present = True
 
             self.ui_sub_6.study_next_patient_button.setEnabled(True)
             self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
@@ -966,7 +985,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_recurrence_present = False
 
         self.ui_sub_6.study_checkbox.blockSignals(True)
-        self.ui_sub_6.study_checkbox.setChecked(True)
+        self.ui_sub_6.study_checkbox.setChecked(False)
         self.ui_sub_6.study_checkbox.blockSignals(False)
         self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
