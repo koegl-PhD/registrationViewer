@@ -357,8 +357,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         slicer.util.resetSliceViews()
         self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
-        self.dropWidget.load_data_from_dropped_folder(
-            "/home/koeglf/data/debugging/SerielleCTs_nii_forHumans/LB9oATPd0mE")
+        # self.dropWidget.load_data_from_dropped_folder(
+        #     "/home/koeglf/data/debugging/SerielleCTs_nii_forHumans/LB9oATPd0mE")
         # # utils.temp_load_data(self)
 
         slicer.util.setDataProbeVisible(False)
@@ -715,6 +715,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             maximum=4
         )
 
+        self.study_progress_bar_patients.setVisible(False)
+        self.ui_sub_6.progress_label_1.setVisible(False)
+        self.study_progress_bar_tasks.setVisible(False)
+        self.ui_sub_6.progress_label_2.setVisible(False)
+
         self.ui_sub_6.start_study_by_user_button.setVisible(False)
 
         self.current_task_idx = -1
@@ -726,12 +731,32 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.study_save_annotations()
         self.study_clear_annotations()
+        self.on_remove_all_data()
 
         self.current_patient_idx += 1
-        self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
         self.current_task_idx = -1
 
+        self.ui_sub_6.study_current_task_description_label.setVisible(False)
+        self.ui_sub_6.synchronise_views_general.setVisible(False)
+        self.ui_sub_6.study_add_point_button.setVisible(False)
+        self.ui_sub_6.study_dropdown.setVisible(False)
+        self.ui_sub_6.study_checkbox.setVisible(False)
+        self.ui_sub_6.study_next_task_button.setVisible(False)
         self.ui_sub_6.study_next_patient_button.setVisible(False)
+
+        study_loading.load_study_volumes(self, self.current_patient_path)
+
+        self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
+
+        self.study_progress_bar_patients.setVisible(True)
+        self.ui_sub_6.progress_label_1.setVisible(True)
+        self.study_progress_bar_tasks.setVisible(True)
+        self.ui_sub_6.progress_label_2.setVisible(True)
+
+        self.ui_sub_6.study_current_task_description_label.setVisible(True)
+        self.ui_sub_6.synchronise_views_general.setVisible(True)
+        self.ui_sub_6.study_add_point_button.setVisible(True)
+        self.ui_sub_6.study_dropdown.setVisible(True)
         self.ui_sub_6.study_next_task_button.setVisible(True)
 
         self.ui_sub_6.current_case_label.setText(
@@ -1549,6 +1574,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def current_patient(self) -> Tuple[study_loading.TransformType, str]:
 
         return self.current_patient_list[self.current_patient_idx]
+
+    @property
+    def current_patient_path(self) -> str:
+        return f"{self.study_data_master.path_study_input_cases}{self.current_patient[1]}"
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):

@@ -4,7 +4,10 @@ import json
 
 from typing import List, Tuple
 
+import slicer
+
 from registrationViewerLib.tasks import TransformType
+from registrationViewerLib import utils
 
 path = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
 
@@ -58,3 +61,50 @@ class StudyData:
                     (TransformType(transform_type.split("_")[-1]), patient))
 
         return result
+
+
+def load_study_volumes(self, path_case: str) -> None:
+
+    slicer.progressWindow = slicer.util.createProgressDialog()
+    slicer.progressWindow.show()
+    slicer.progressWindow.activateWindow()
+    slicer.progressWindow.setValue(0)
+    slicer.progressWindow.setLabelText(
+        f"Loading data...")
+    slicer.app.processEvents()
+
+    path_volume_fixed, path_volume_moving, \
+        _, _, \
+        path_transform_fixed, path_transform_moving, \
+        path_deformation = utils.get_paths_to_load(path_case)
+
+    utils.update_progress_window(0, f"Loading data...")
+    node_volume_fixed = slicer.util.loadVolume(path_volume_fixed,
+                                               {'show': False})
+
+    utils.update_progress_window(10, f"Loading data...")
+    node_volume_moving = slicer.util.loadVolume(path_volume_moving,
+                                                {'show': False})
+
+    utils.update_progress_window(40, f"Loading data...")
+    self.node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
+                                                          {'show': False})[1]
+
+    utils.update_progress_window(50, f"Loading data...")
+    self.node_transform_moving = slicer.util.loadTransform(path_transform_moving,
+                                                           {'show': False})[1]
+
+    utils.update_progress_window(60, f"Loading data...")
+    node_deformation = slicer.util.loadTransform(path_deformation,
+                                                 {'show': False})[1]
+
+    utils.update_progress_window(100, f"Loading data...")
+
+    self.ui_sub_3.inputSelector_fixed.setCurrentNode(
+        node_volume_fixed)
+    self.ui_sub_3.inputSelector_moving.setCurrentNode(
+        node_volume_moving)
+    self.ui_sub_3.inputSelector_transformation.setCurrentNode(
+        node_deformation)
+
+    slicer.progressWindow.close()

@@ -105,71 +105,10 @@ class DropWidget(qt.QFrame):
                 f"Loading data...")
             slicer.app.processEvents()
 
-            path_experiment = os.path.dirname(
-                os.path.dirname(dropped_folder_path))
-
-            studies = sorted([f for f in os.listdir(os.path.join(dropped_folder_path, 'raw'))
-                              if os.path.isdir(os.path.join(dropped_folder_path, 'raw', f))])
-
-            path_volume_fixed = [
-                file for file in glob.glob(os.path.join(dropped_folder_path, 'raw', studies[1], '*.nii.gz'))
-                if not file.endswith('_seg.nii.gz')
-            ][0]
-
-            path_volume_moving = [
-                file for file in glob.glob(os.path.join(dropped_folder_path, 'raw', studies[0], '*.nii.gz'))
-                if not file.endswith('_seg.nii.gz')
-            ][0]
-
-            path_seg_fixed = glob.glob(os.path.join(
-                dropped_folder_path, 'raw', studies[1], '*_seg.nii.gz'))[0]
-            path_seg_moving = glob.glob(os.path.join(
-                dropped_folder_path, 'raw', studies[0], '*_seg.nii.gz'))[0]
-
-            name_fixed = os.path.basename(
-                path_volume_fixed).replace(".nii.gz", "")
-            name_moving = os.path.basename(
-                path_volume_moving).replace(".nii.gz", "")
-
-            path_transform_fixed = glob.glob(os.path.join(
-                dropped_folder_path, 'preprocessed', studies[1], '*.h5'))[0]
-            path_transform_moving = glob.glob(os.path.join(
-                dropped_folder_path, 'preprocessed', studies[0], '*.h5'))[0]
-
-            paths_deformations = sorted(glob.glob(os.path.join(
-                path_experiment, 'SerielleCTs_nii_forHumans_registrations', 'BSplineNiftyReg', '*', 'deformations', '*.nii.gz')))
-            path_deformation = [
-                x for x in paths_deformations if name_fixed in x and name_moving in x]
-
-            if len(path_deformation) != 1:
-                raise Exception(
-                    f"Expected 1 deformation file, found {len(path_deformation)}")
-
-            path_deformation = path_deformation[0]
-
-            if not os.path.exists(path_volume_fixed):
-                print(path_volume_fixed)
-                raise Exception(f"Volume fixed path does not exist: {path_volume_fixed}")  # nopep8
-            if not os.path.exists(path_volume_moving):
-                print(path_volume_moving)
-                raise Exception(f"Volume moving path does not exist: {path_volume_moving}")  # nopep8
-            if not os.path.exists(path_seg_fixed):
-                print(path_seg_fixed)
-                raise Exception(
-                    f"Segmentation fixed path does not exist: {path_seg_fixed}")
-            if not os.path.exists(path_seg_moving):
-                print(path_seg_moving)
-                raise Exception(
-                    f"Segmentation moving path does not exist: {path_seg_moving}")
-            if not os.path.exists(path_transform_fixed):
-                print(path_transform_fixed)
-                raise Exception(f"Transform fixed path does not exist: {path_transform_fixed}")  # nopep8
-            if not os.path.exists(path_transform_moving):
-                print(path_transform_moving)
-                raise Exception(f"Transform moving path does not exist: {path_transform_moving}")  # nopep8
-            if not os.path.exists(path_deformation):
-                print(path_deformation)
-                raise Exception(f"Deformation path does not exist: {path_deformation}")  # nopep8
+            path_volume_fixed, path_volume_moving, \
+                path_seg_fixed, path_seg_moving, \
+                path_transform_fixed, path_transform_moving, \
+                path_deformation = utils.get_paths_to_load(dropped_folder_path)
 
             if utils.update_progress_window(0, f"Loading fixed volume..."):
                 node_volume_fixed = slicer.util.loadVolume(path_volume_fixed)
