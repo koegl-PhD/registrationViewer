@@ -283,6 +283,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                          self.on_user_start_study)
         self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
                                                      self.on_study_add_annotation_point)
+        self.ui_sub_6.study_center_on_point_button.connect("clicked(bool)",
+                                                           self.on_study_center_on_point)
         self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
                                                      self.on_next_task)
         self.ui_sub_6.study_next_patient_button.connect("clicked(bool)",
@@ -741,6 +743,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_6.study_current_task_description_label.setVisible(False)
         self.ui_sub_6.synchronise_views_general.setVisible(False)
         self.ui_sub_6.study_add_point_button.setVisible(False)
+        self.ui_sub_6.study_center_on_point_button.setVisible(False)
         self.ui_sub_6.study_dropdown.setVisible(False)
         self.ui_sub_6.study_checkbox.setVisible(False)
         self.ui_sub_6.study_next_task_button.setVisible(False)
@@ -758,6 +761,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_6.study_current_task_description_label.setVisible(True)
         self.ui_sub_6.synchronise_views_general.setVisible(True)
         self.ui_sub_6.study_add_point_button.setVisible(True)
+        self.ui_sub_6.study_center_on_point_button.setVisible(True)
         self.ui_sub_6.study_dropdown.setVisible(True)
         self.ui_sub_6.study_next_task_button.setVisible(True)
 
@@ -789,6 +793,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def on_next_task(self) -> None:
         self.ui_sub_6.study_next_task_button.setEnabled(False)
         self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
+
+        self.ui_sub_6.study_center_on_point_button.setEnabled(False)
 
         self.study_save_annotations(specific_task=self.current_task)
 
@@ -867,6 +873,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 slicer.mrmlScene.RemoveNode(
                     self.study_node_points[self.current_task])
                 self.study_node_points[self.current_task] = None
+                self.ui_sub_6.study_center_on_point_button.setEnabled(False)
             else:
                 return
 
@@ -900,6 +907,22 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6.study_next_task_button.setEnabled(True)
             self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 
+        self.ui_sub_6.study_center_on_point_button.setEnabled(True)
+
+    def on_study_center_on_point(self) -> None:
+        # jump to the location of the current point
+        current_point = self.study_node_points[self.current_task]
+
+        position = [0, 0, 0]
+        current_point.GetNthControlPointPositionWorld(0, position)
+
+        slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
+                                                            position[1],
+                                                            position[2],
+                                                            False,
+                                                            1)
+        pass
+
     def on_study_checkbox(self) -> None:
         if self.current_task != tasks.Task.RECURRENCE:
             return
@@ -927,6 +950,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     self.ui_sub_6.study_checkbox.setChecked(False)
                     self.ui_sub_6.study_checkbox.blockSignals(False)
                     self.study_recurrence_present = False
+                    self.ui_sub_6.study_center_on_point_button.setEnabled(
+                        False)
                 else:
                     self.ui_sub_6.study_checkbox.blockSignals(True)
                     self.ui_sub_6.study_checkbox.setChecked(True)
@@ -1516,6 +1541,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui_sub_6.current_case_label.setVisible(False)
         self.ui_sub_6.Form_user_study.setHidden(False)
+        self.ui_sub_6.study_center_on_point_button.setVisible(False)
 
     def show_module_parts_for_user_study(self) -> None:
         self.ui_sub_2.studyCollapsibleButton.setHidden(False)
