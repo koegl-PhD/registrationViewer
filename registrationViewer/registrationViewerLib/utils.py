@@ -1,10 +1,12 @@
 from enum import Enum
 
-from typing import Tuple, Callable, List
+from typing import Dict, Union, Tuple, Callable, List
 
 import qt
 import slicer
 import vtk
+
+from registrationViewerLib.tasks import Task
 
 
 class TransformationMode(Enum):
@@ -35,6 +37,16 @@ def update_progress_window(progress: int, message: str) -> bool:
     slicer.progressWindow.setValue(progress)
 
     return True
+
+
+def hide_all_points_except(
+    task: Task,
+    points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]
+) -> None:
+
+    for current_task, point in points.items():
+        if point is not None and current_task != task:
+            point.SetDisplayVisibility(False)
 
 
 def normalize_intensity(data):
