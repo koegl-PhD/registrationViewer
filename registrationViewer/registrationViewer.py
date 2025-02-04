@@ -26,7 +26,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading, study_loading, tasks, loading_bar
+from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading, study_loading, tasks
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -84,14 +84,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTags = []
 
-        from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study_loading, loading_bar
+        from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study_loading
         utils = importlib.reload(utils)
         crosshairs = importlib.reload(crosshairs)
         drop_data_loading = importlib.reload(drop_data_loading)
         view_logic = importlib.reload(view_logic)
         study_loading = importlib.reload(study_loading)
         tasks = importlib.reload(tasks)
-        loading_bar = importlib.reload(loading_bar)
 
         self.group_first_row = 1
         self.group_second_row = 2
@@ -831,7 +830,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_task_idx == 3:
             self.ui_sub_6.study_next_patient_button.setEnabled(True)
             self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+
+            # Temporarily block signals wo se don't trigger the callbacks
+            self.ui_sub_6.study_checkbox.blockSignals(True)
             self.ui_sub_6.study_checkbox.setChecked(True)
+            self.ui_sub_6.study_checkbox.blockSignals(False)
         else:
             self.ui_sub_6.study_next_task_button.setEnabled(True)
             self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
@@ -843,9 +846,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_recurrence_present = not self.study_recurrence_present
 
         point = self.study_node_points[tasks.Task.RECURRENCE]
-
-        print(f"checkbox {self.study_recurrence_present=}")
-        print(f"point is none = {point == None}")
 
         if self.study_recurrence_present:
             if point is None:
