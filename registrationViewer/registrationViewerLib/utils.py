@@ -11,10 +11,10 @@ import vtk
 from registrationViewerLib.tasks import Task
 
 
-class TransformationMode(Enum):
-    NONE = 0
-    LINEAR = 1
-    NON_LINEAR = 2
+class TransformType(Enum):
+    NONE = "none"
+    LINEAR = "linear"
+    NONLINEAR = "nonlinear"
 
 
 def get_paths_to_load(path_case_folder: str):

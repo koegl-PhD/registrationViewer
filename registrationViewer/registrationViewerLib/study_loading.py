@@ -6,7 +6,6 @@ from typing import List, Tuple
 
 import slicer
 
-from registrationViewerLib.tasks import TransformType
 from registrationViewerLib import utils
 
 path = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
@@ -45,7 +44,7 @@ class StudyData:
         with open(json_path, "w") as f:
             json.dump(self.data, f, indent=4)
 
-    def patient_list(self, rad_id: str) -> List[Tuple[TransformType, str]]:
+    def patient_list(self, rad_id: str) -> List[Tuple[utils.TransformType, str]]:
 
         participant = self.participants.get(rad_id, None)
         if participant is None:
@@ -58,7 +57,10 @@ class StudyData:
                                "ids_patients_transformation_none"]:
             for patient in participant[transform_type]:
                 result.append(
-                    (TransformType(transform_type.split("_")[-1]), patient))
+                    (utils.TransformType(transform_type.split("_")[-1]), patient))
+
+        # sort by transform_type
+        # result.sort(key=lambda x: x[0].value)
 
         return result
 

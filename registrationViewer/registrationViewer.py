@@ -107,11 +107,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.views_second_row + self.views_third_row  # + \
         # self.views_double_red + self.views_double_green + self.views_double_yellow
 
-        utils.create_shortcuts(('t', self.on_synchronise_views_wth_trasform),
-                               ('m', self.on_synchronise_views_manually),
-                               ('s', self.on_synchronise_views_general))
+        utils.create_shortcuts(
+            # ('t', self.on_synchronise_views_wth_trasform),
+            # ('m', self.on_synchronise_views_manually),
+            ('s', self.on_synchronise_views_general)
+        )
 
-        self.transformation_mode: 'utils.TransformationMode' = utils.TransformationMode.NON_LINEAR
+        self.study_current_transform_type: 'utils.TransformType' = utils.TransformType.NONLINEAR
 
         self.use_transform = True
         self.use_only_linear_transform = False
@@ -759,8 +761,28 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_6.study_dropdown.setVisible(True)
         self.ui_sub_6.study_next_task_button.setVisible(True)
 
-        self.ui_sub_6.current_case_label.setText(
-            self.current_patient_list[self.current_patient_idx][1])
+        self.ui_sub_6.current_case_label.setText(f"{self.current_patient_name} {self.current_patient_transform_type}")  # nopep8
+
+        if self.current_patient_transform_type == utils.TransformType.NONE:
+            self.unsynchronise_views()
+            self.ui_sub_6.synchronise_views_general.setVisible(False)
+            pass
+        elif self.current_patient_transform_type == utils.TransformType.LINEAR:
+            self.use_only_linear_transform = True
+            if self.crosshair:
+                self.crosshair.use_only_linear_transform = True
+            self.study_current_transform_type = utils.TransformType.LINEAR
+            self.ui_sub_6.synchronise_views_general.setVisible(True)
+        elif self.current_patient_transform_type == utils.TransformType.NONLINEAR:
+            self.use_only_linear_transform = False
+            if self.crosshair:
+                self.crosshair.use_only_linear_transform = False
+            self.study_current_transform_type = utils.TransformType.NONLINEAR
+            self.ui_sub_6.synchronise_views_general.setVisible(True)
+
+        else:
+            print(f"{self.current_patient_name=}")
+            raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
 
         self.on_next_task()
 
@@ -931,7 +953,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_task_idx < 0:
             return
 
-        path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient[1]}"  # nopep8
+        path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient_name}"  # nopep8
         if not os.path.exists(path_patient):
             os.makedirs(path_patient)
 
@@ -997,7 +1019,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             f.write(str(self.study_recurrence_present))
 
     def study_clear_annotations(self) -> None:
-        print('clearing')
         if self.current_task_idx <= 0:
             return
 
@@ -1016,6 +1037,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_synchronise_views_wth_trasform(self) -> None:
         if not self._synchronisation_checks():
+            return
+
+        if self.current_patient_transform_type == utils.TransformType.NONE:
+            print('not synchronising because we have None transform')
             return
 
         self.synchronise_with_displacement_pressed = not self.synchronise_with_displacement_pressed
@@ -1045,6 +1070,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 "Synchronise views (s)")
             self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
+    def unsynchronise_views(self) -> None:
+        print('unsynchronised')
+        self._remove_custom_observers_from_crosshair()
+        self.ui_sub_4.synchronise_views_with_transform.setText(
+            "Synchronise views with transform (t)")
+        self.ui_sub_6.synchronise_views_general.setText(
+            "Synchronise views (s)")
+        self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
+
     def on_synchronise_views_manually(self, views: List[List[str]] = None) -> None:
 
         if not self._synchronisation_checks():
@@ -1055,7 +1089,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.synchronise_manually_pressed is True:
             self._set_up_crosshair(self.synchronise_manually_pressed)
             print("pressed to synchronise manually")
-            self.ui_sub_4.synchronise_views_manually.setText(
+            self.ui_sub_4.synchronise_views_manually.setTfnext(
                 "Unsynchronise views manually (m)")
 
             self.use_transform = self.crosshair.use_transform = False
@@ -1087,13 +1121,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if not self._synchronisation_checks():
             return
 
-        if self.transformation_mode == utils.TransformationMode.NONE:
+        if self.study_current_transform_type == utils.TransformType.NONE:
             pass
-        elif self.transformation_mode == utils.TransformationMode.LINEAR:
+        elif self.study_current_transform_type == utils.TransformType.LINEAR:
             self.on_synchronise_views_wth_trasform()
             self.use_only_linear_transform = self.crosshair.use_only_linear_transform = True
             self.ui_sub_4.linearTransformationCheckBox.setChecked(True)
-        elif self.transformation_mode == utils.TransformationMode.NON_LINEAR:
+        elif self.study_current_transform_type == utils.TransformType.NONLINEAR:
             self.on_synchronise_views_wth_trasform()
             self.use_only_linear_transform = self.crosshair.use_only_linear_transform = False
             self.ui_sub_4.linearTransformationCheckBox.setChecked(False)
@@ -1107,8 +1141,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6.synchronise_views_general.setText(
                 "Synchronise views (s)")
 
+        self.ui_sub_4.synchronise_views_with_transform.setVisible(False)
+        self.ui_sub_4.synchronise_views_manually.setVisible(False)
+
     def on_linear_only(self) -> None:
-        print("linear only")
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = not self.use_only_linear_transform
 
     def on_remove_all_data(self) -> None:
@@ -1571,13 +1607,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return self.tasks[self.current_task_idx]
 
     @property
-    def current_patient(self) -> Tuple[study_loading.TransformType, str]:
+    def current_patient_name(self) -> str:
+        return self.current_patient_list[self.current_patient_idx][1]
 
-        return self.current_patient_list[self.current_patient_idx]
+    @property
+    def current_patient_transform_type(self) -> utils.TransformType:
+        return self.current_patient_list[self.current_patient_idx][0]
 
     @property
     def current_patient_path(self) -> str:
-        return f"{self.study_data_master.path_study_input_cases}{self.current_patient[1]}"
+        return f"{self.study_data_master.path_study_input_cases}{self.current_patient_name}"
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
