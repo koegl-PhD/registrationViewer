@@ -108,7 +108,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # self.views_double_red + self.views_double_green + self.views_double_yellow
 
         utils.create_shortcuts(
-            # ('t', self.on_synchronise_views_wth_trasform),
+            ('t', self.on_synchronise_views_wth_trasform),
             # ('m', self.on_synchronise_views_manually),
             ('s', self.on_synchronise_views_general)
         )
@@ -167,6 +167,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.current_radiologist_id: str = ""
 
         self.current_patient_idx: int = -1
+        self.current_patient_list = None
 
         self.current_task_idx: int = -1
         self.tasks = [tasks.Task.LYMPH_NODE,
@@ -1064,7 +1065,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if not self._synchronisation_checks():
             return
 
-        if self.current_patient_transform_type == utils.TransformType.NONE:
+        if self.current_patient_list is not None and self.current_patient_transform_type == utils.TransformType.NONE:
             print('not synchronising because we have None transform')
             return
 
