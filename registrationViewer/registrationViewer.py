@@ -287,17 +287,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_6.start_study_by_user_button.connect("clicked(bool)",
                                                          self.on_user_start_study)
         self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
-                                                     self.on_study_add_annotation_point)
+                                                     lambda: study.on_add_annotation_point(self))
         self.ui_sub_6.study_center_on_point_button.connect("clicked(bool)",
                                                            lambda: utils.center_on_point(self.study_node_points[self.current_task]))
         self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
-                                                     self.on_next_task)
+                                                     lambda: study.on_next_task(self))
         self.ui_sub_6.study_next_patient_button.connect("clicked(bool)",
-                                                        self.on_study_next_patient)
+                                                        lambda: study.on_study_next_patient)
         self.ui_sub_6.study_checkbox.toggled.connect(
-            self.on_study_checkbox)
+            lambda: study.on_checkbox(self))
         self.ui_sub_6.study_dropdown.currentIndexChanged.connect(
-            self.on_study_selection_changed)
+            lambda: study.on_selection_changed(self))
 
         # Buttons
         self.ui_sub_1.simple_ui_button.connect(
@@ -691,202 +691,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.crosshair.apply_offsets = self.synchronise_manually_pressed
 
     # CONNECTOINS
-
-    def on_study_next_patient(self) -> None:
-
-        study.save_annotations()
-        self.study_clear_annotations()
-        self.on_remove_all_data()
-
-        self.current_patient_idx += 1
-        self.current_task_idx = -1
-
-        self.ui_sub_6.study_current_task_description_label.setVisible(False)
-        self.ui_sub_6.synchronise_views_general.setVisible(False)
-        self.ui_sub_6.study_add_point_button.setVisible(False)
-        self.ui_sub_6.study_center_on_point_button.setVisible(False)
-        self.ui_sub_6.study_dropdown.setVisible(False)
-        self.ui_sub_6.study_checkbox.setVisible(False)
-        self.ui_sub_6.study_next_task_button.setVisible(False)
-        self.ui_sub_6.study_next_patient_button.setVisible(False)
-
-        study_loading.load_study_volumes(self, self.current_patient_path)
-
-        self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
-
-        self.study_progress_bar_patients.setVisible(True)
-        self.ui_sub_6.progress_label_1.setVisible(True)
-        self.study_progress_bar_tasks.setVisible(True)
-        self.ui_sub_6.progress_label_2.setVisible(True)
-
-        self.ui_sub_6.study_current_task_description_label.setVisible(True)
-        self.ui_sub_6.synchronise_views_general.setVisible(True)
-        self.ui_sub_6.study_add_point_button.setVisible(True)
-        self.ui_sub_6.study_center_on_point_button.setVisible(True)
-        self.ui_sub_6.study_dropdown.setVisible(True)
-        self.ui_sub_6.study_next_task_button.setVisible(True)
-
-        # self.ui_sub_6.current_case_label.setText(f"{self.current_patient_name} {self.current_patient_transform_type}")  # nopep8
-
-        if self.current_patient_transform_type == utils.TransformType.NONE:
-            self.unsynchronise_views()
-            self.ui_sub_6.synchronise_views_general.setVisible(False)
-            pass
-        elif self.current_patient_transform_type == utils.TransformType.LINEAR:
-            self.use_only_linear_transform = True
-            if self.crosshair:
-                self.crosshair.use_only_linear_transform = True
-            self.study_current_transform_type = utils.TransformType.LINEAR
-            self.ui_sub_6.synchronise_views_general.setVisible(True)
-        elif self.current_patient_transform_type == utils.TransformType.NONLINEAR:
-            self.use_only_linear_transform = False
-            if self.crosshair:
-                self.crosshair.use_only_linear_transform = False
-            self.study_current_transform_type = utils.TransformType.NONLINEAR
-            self.ui_sub_6.synchronise_views_general.setVisible(True)
-
-        else:
-            print(f"{self.current_patient_name=}")
-            raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
-
-        self.on_next_task()
-
-    def on_next_task(self) -> None:
-        self.ui_sub_6.study_next_task_button.setEnabled(False)
-        self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
-
-        self.ui_sub_6.study_center_on_point_button.setEnabled(False)
-
-        study.save_annotations(self, specific_task=self.current_task)
-
-        self.current_task_idx += 1
-        self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
-
-        if self.current_task_idx == 0:
-            tasks.show_task_lymphnode(self.ui_sub_6, self.study_node_points)
-        elif self.current_task_idx == 1:
-            tasks.show_task_carotisgabel(self.ui_sub_6, self.study_node_points)
-        elif self.current_task_idx == 2:
-            tasks.show_task_avertebralis(self.ui_sub_6, self.study_node_points)
-        elif self.current_task_idx == 3:
-            tasks.show_task_recurrence(self.ui_sub_6, self.study_node_points)
-            self.ui_sub_6.study_next_patient_button.setVisible(True)
-            self.ui_sub_6.study_next_patient_button.setEnabled(True)
-            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-            self.ui_sub_6.study_next_task_button.setVisible(False)
-
-    def on_study_add_annotation_point(self) -> None:
-
-        volume_name = self.node_fixed.GetName()
-
-        if self.study_node_points[self.current_task] is not None:
-            if utils.show_warning_popup(f"Point {self.current_task.value} already exists",
-                                        "Do you want to overwrite it?"):
-                slicer.mrmlScene.RemoveNode(
-                    self.study_node_points[self.current_task])
-                self.study_node_points[self.current_task] = None
-                self.ui_sub_6.study_center_on_point_button.setEnabled(False)
-            else:
-                return
-
-        if self.study_node_points[self.current_task] is None:
-            self.study_node_points[self.current_task] = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLMarkupsFiducialNode", f"{self.current_task.value}_{self.current_radiologist_id}_{volume_name}")
-            self.study_node_points[self.current_task].GetDisplayNode(
-            ).SetGlyphScale(1)
-            self.study_node_points[self.current_task].GetDisplayNode(
-            ).SetTextScale(2)
-
-        pos = [view_logic.get_view_offset(view) for view in self.views_first_row]  # nopep8
-
-        self.study_node_points[self.current_task].AddControlPointWorld([-pos[2], pos[1], pos[0]],
-                                                                       'p')
-
-        utils.show_node_only_in_views(self.study_node_points[self.current_task],
-                                      self.views_first_row)
-
-        if self.current_task_idx == 3:
-            self.ui_sub_6.study_next_patient_button.setEnabled(True)
-            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-
-            # Temporarily block signals wo se don't trigger the callbacks
-            self.ui_sub_6.study_checkbox.blockSignals(True)
-            self.ui_sub_6.study_checkbox.setChecked(True)
-            self.ui_sub_6.study_checkbox.blockSignals(False)
-
-            self.study_recurrence_present = True
-        else:
-            self.ui_sub_6.study_next_task_button.setEnabled(True)
-            self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
-
-        self.ui_sub_6.study_center_on_point_button.setEnabled(True)
-
-    def on_study_checkbox(self) -> None:
-        if self.current_task != tasks.Task.RECURRENCE:
-            return
-
-        self.study_recurrence_present = not self.study_recurrence_present
-
-        point = self.study_node_points[tasks.Task.RECURRENCE]
-
-        if self.study_recurrence_present:
-            if point is None:
-                self.ui_sub_6.study_next_patient_button.setEnabled(False)
-                self.ui_sub_6.study_next_patient_button.toolTip = "Please add annotation point first"  # nopep8
-
-            else:
-                self.ui_sub_6.study_next_patient_button.setEnabled(True)
-                self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-
-        else:
-            if point is not None:
-                if utils.show_warning_popup(f"Do you want to remove the point you already set for the recurrence?",
-                                            ""):
-                    slicer.mrmlScene.RemoveNode(point)
-                    self.study_node_points[tasks.Task.RECURRENCE] = None
-                    self.ui_sub_6.study_checkbox.blockSignals(True)
-                    self.ui_sub_6.study_checkbox.setChecked(False)
-                    self.ui_sub_6.study_checkbox.blockSignals(False)
-                    self.study_recurrence_present = False
-                    self.ui_sub_6.study_center_on_point_button.setEnabled(
-                        False)
-                else:
-                    self.ui_sub_6.study_checkbox.blockSignals(True)
-                    self.ui_sub_6.study_checkbox.setChecked(True)
-                    self.ui_sub_6.study_checkbox.blockSignals(False)
-                    self.study_recurrence_present = True
-
-            self.ui_sub_6.study_next_patient_button.setEnabled(True)
-            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-
-    def on_study_selection_changed(self) -> None:
-        if self.current_task == tasks.Task.LYMPH_NODE:
-
-            if self.ui_sub_6.study_dropdown.currentText == "Size increased":
-                self.study_lymphnode_size = "Size increased"
-            elif self.ui_sub_6.study_dropdown.currentText == "Size decreased":
-                self.study_lymphnode_size = "Size decreased"
-            elif self.ui_sub_6.study_dropdown.currentText == "Size same":
-                self.study_lymphnode_size = "Size same"
-            else:
-                raise ValueError("Unknown lymphnode size")
-
-    def study_clear_annotations(self) -> None:
-        if self.current_task_idx <= 0:
-            return
-
-        for task, point in self.study_node_points.items():
-            if point is not None:
-                slicer.mrmlScene.RemoveNode(point)
-                self.study_node_points[task] = None
-
-        self.study_lymphnode_size = ""
-        self.study_recurrence_present = False
-
-        self.ui_sub_6.study_checkbox.blockSignals(True)
-        self.ui_sub_6.study_checkbox.setChecked(False)
-        self.ui_sub_6.study_checkbox.blockSignals(False)
-        self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
     def unsynchronise_views(self) -> None:
         print('unsynchronised')
@@ -1286,27 +1090,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                            self.annotation_fixed_roi_recurrence]:
             if annotation is not None:
                 annotation.GetDisplayNode().SetVisibility(visibility)
-
-    def hide_module_parts_for_user_study(self) -> None:
-        self.ui_sub_1.simple_ui_button.setHidden(False)
-        self.ui_sub_2.studyCollapsibleButton.setHidden(True)
-        self.ui_sub_3.inputsCollapsibleButton.setHidden(True)
-        self.ui_sub_4.controlsCollapsibleButton.setHidden(True)
-        self.ui_sub_5.annotationsCollapsibleButton.setHidden(True)
-        self.loadingCollapsible.setHidden(True)
-
-        self.ui_sub_6.current_case_label.setVisible(False)
-        self.ui_sub_6.Form_user_study.setHidden(False)
-        self.ui_sub_6.study_center_on_point_button.setVisible(False)
-
-    def show_module_parts_for_user_study(self) -> None:
-        self.ui_sub_2.studyCollapsibleButton.setHidden(False)
-        self.ui_sub_3.inputsCollapsibleButton.setHidden(False)
-        self.ui_sub_4.controlsCollapsibleButton.setHidden(False)
-        self.ui_sub_5.annotationsCollapsibleButton.setHidden(False)
-        self.loadingCollapsible.setHidden(False)
-
-        self.ui_sub_6.Form_user_study.setHidden(True)
 
     def update_cursor_view(self) -> None:
 
