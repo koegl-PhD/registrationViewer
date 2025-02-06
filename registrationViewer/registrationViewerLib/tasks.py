@@ -1,5 +1,7 @@
 from enum import Enum
 
+from registrationViewerLib import utils
+
 
 class Task(Enum):
     NONE = "none"
@@ -55,3 +57,56 @@ def show_generic_task_ui(
 
     ui.study_add_point_button.setText("Add point")
     ui.study_add_point_button.setVisible(True)
+
+
+def show_task_lymphnode(ui, study_node_points) -> None:
+    ui.study_checkbox.setVisible(False)
+    ui.study_dropdown.setVisible(True)
+
+    show_generic_task_ui(ui,
+                         Task.LYMPH_NODE,
+                         1,
+                         9)
+
+    utils.hide_all_points_except(Task.LYMPH_NODE,
+                                 study_node_points)
+
+
+def show_task_carotisgabel(ui, study_node_points) -> None:
+    ui.study_checkbox.setVisible(False)
+    ui.study_dropdown.setVisible(False)
+
+    show_generic_task_ui(ui,
+                         Task.CAROTIS_GABEL,
+                         1,
+                         9)
+
+    utils.hide_all_points_except(Task.CAROTIS_GABEL,
+                                 study_node_points)
+
+
+def show_task_avertebralis(ui, study_node_points) -> None:
+    ui.study_checkbox.setVisible(False)
+    ui.study_dropdown.setVisible(False)
+
+    show_generic_task_ui(ui,
+                         Task.A_VERTEBRALIS,
+                         1,
+                         9)
+
+    utils.hide_all_points_except(Task.A_VERTEBRALIS,
+                                 study_node_points)
+
+
+def show_task_recurrence(ui, study_node_points) -> None:
+    ui.study_checkbox.setVisible(True)
+    ui.study_dropdown.setVisible(False)
+    ui.study_checkbox.setText("Recurrence exists")
+
+    show_generic_task_ui(ui,
+                         Task.RECURRENCE,
+                         1,
+                         9)
+
+    utils.hide_all_points_except(Task.RECURRENCE,
+                                 study_node_points)

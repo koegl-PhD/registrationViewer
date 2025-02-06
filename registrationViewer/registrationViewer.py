@@ -803,66 +803,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
 
         if self.current_task_idx == 0:
-            self.show_task_lymphnode()
+            tasks.show_task_lymphnode(self.ui_sub_6, self.study_node_points)
         elif self.current_task_idx == 1:
-            self.show_task_carotisgabel()
+            tasks.show_task_carotisgabel(self.ui_sub_6, self.study_node_points)
         elif self.current_task_idx == 2:
-            self.show_task_avertebralis()
+            tasks.show_task_avertebralis(self.ui_sub_6, self.study_node_points)
         elif self.current_task_idx == 3:
-            self.show_task_recurrence()
+            tasks.show_task_recurrence(self.ui_sub_6, self.study_node_points)
             self.ui_sub_6.study_next_patient_button.setVisible(True)
             self.ui_sub_6.study_next_patient_button.setEnabled(True)
             self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
             self.ui_sub_6.study_next_task_button.setVisible(False)
-
-    def show_task_lymphnode(self) -> None:
-        self.ui_sub_6.study_checkbox.setVisible(False)
-        self.ui_sub_6.study_dropdown.setVisible(True)
-
-        tasks.show_generic_task_ui(self.ui_sub_6,
-                                   tasks.Task.LYMPH_NODE,
-                                   1,
-                                   9)
-
-        utils.hide_all_points_except(tasks.Task.LYMPH_NODE,
-                                     self.study_node_points)
-
-    def show_task_carotisgabel(self) -> None:
-        self.ui_sub_6.study_checkbox.setVisible(False)
-        self.ui_sub_6.study_dropdown.setVisible(False)
-
-        tasks.show_generic_task_ui(self.ui_sub_6,
-                                   tasks.Task.CAROTIS_GABEL,
-                                   1,
-                                   9)
-
-        utils.hide_all_points_except(tasks.Task.CAROTIS_GABEL,
-                                     self.study_node_points)
-
-    def show_task_avertebralis(self) -> None:
-        self.ui_sub_6.study_checkbox.setVisible(False)
-        self.ui_sub_6.study_dropdown.setVisible(False)
-
-        tasks.show_generic_task_ui(self.ui_sub_6,
-                                   tasks.Task.A_VERTEBRALIS,
-                                   1,
-                                   9)
-
-        utils.hide_all_points_except(tasks.Task.A_VERTEBRALIS,
-                                     self.study_node_points)
-
-    def show_task_recurrence(self) -> None:
-        self.ui_sub_6.study_checkbox.setVisible(True)
-        self.ui_sub_6.study_dropdown.setVisible(False)
-        self.ui_sub_6.study_checkbox.setText("Recurrence exists")
-
-        tasks.show_generic_task_ui(self.ui_sub_6,
-                                   tasks.Task.RECURRENCE,
-                                   1,
-                                   9)
-
-        utils.hide_all_points_except(tasks.Task.RECURRENCE,
-                                     self.study_node_points)
 
     def on_study_add_annotation_point(self) -> None:
 
