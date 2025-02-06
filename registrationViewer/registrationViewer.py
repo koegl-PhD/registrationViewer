@@ -26,7 +26,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading, study_loading, tasks
+from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading, study, study_loading, tasks
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -84,11 +84,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTags = []
 
-        from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study_loading
+        from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study, study_loading
         utils = importlib.reload(utils)
         crosshairs = importlib.reload(crosshairs)
         drop_data_loading = importlib.reload(drop_data_loading)
         view_logic = importlib.reload(view_logic)
+        study = importlib.reload(study)
         study_loading = importlib.reload(study_loading)
         tasks = importlib.reload(tasks)
 
@@ -188,6 +189,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                            "Size decreased"] = "Size same"
         self.study_recurrence_present = False
 
+        self.study_progress_bar_patients = None
+        self.study_progress_bar_tasks = None
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -269,9 +273,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # CONNECTIONS
         # Study
         self.ui_sub_2.set_radiologist_id_button.connect("clicked(bool)",
-                                                        self.on_set_radiologist_id)
+                                                        lambda: study.on_set_radiologist_id(self))
         self.ui_sub_2.start_study_button.connect("clicked(bool)",
-                                                 self.on_start_study)
+                                                 lambda: study.on_start_study(self))
 
         def _on_text_changed():
             self.ui_sub_2.start_study_button.setEnabled(False)
@@ -285,7 +289,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
                                                      self.on_study_add_annotation_point)
         self.ui_sub_6.study_center_on_point_button.connect("clicked(bool)",
-                                                           self.on_study_center_on_point)
+                                                           lambda: utils.center_on_point(self.study_node_points[self.current_task]))
         self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
                                                      self.on_next_task)
         self.ui_sub_6.study_next_patient_button.connect("clicked(bool)",
@@ -297,7 +301,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Buttons
         self.ui_sub_1.simple_ui_button.connect(
-            "clicked(bool)", self.on_simple_ui)
+            "clicked(bool)", lambda: study.on_simple_ui(self))
         self.ui_sub_4.button_2x3.connect(
             "clicked(bool)", view_logic.set_2x3_layout)
         self.ui_sub_4.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
@@ -367,112 +371,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # # utils.temp_load_data(self)
 
         slicer.util.setDataProbeVisible(False)
-
-    def update_current_layout(self, layout: view_logic.Layout) -> None:
-        self.current_layout = layout
-
-    def update_views_third_row_with_volume_diff(self) -> None:
-
-        try:
-
-            if self.node_fixed is not None and \
-                    self.node_moving is not None and \
-                    self.node_transform_nonlinear is not None:
-
-                title = "Creating difference view..."
-                slicer.progressWindow = slicer.util.createProgressDialog()
-                slicer.progressWindow.show()
-                slicer.progressWindow.activateWindow()
-                slicer.progressWindow.setValue(0)
-                slicer.progressWindow.setLabelText(title)
-                slicer.app.processEvents()
-
-                offset_red1 = view_logic.get_view_offset("Red1")
-                offset_green1 = view_logic.get_view_offset("Green1")
-                offset_yellow1 = view_logic.get_view_offset("Yellow1")
-
-                node_fixed_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_fixed,
-                                                                                                "Fixed with affine")
-                utils.apply_and_harden_transform_to_node(node_fixed_transformed_with_affine,
-                                                         self.node_transform_fixed)
-
-                node_moving_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_moving,
-                                                                                                 "Moving with affine")
-                utils.apply_and_harden_transform_to_node(node_moving_transformed_with_affine,
-                                                         self.node_transform_moving)
-
-                if not utils.update_progress_window(20, title):
-                    return
-
-                if self.node_diff is None:
-                    self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed_transformed_with_affine,
-                                                                                "Difference")
-
-                if self.node_moving_warped is not None:
-                    slicer.mrmlScene.RemoveNode(self.node_moving_warped)
-
-                self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(node_moving_transformed_with_affine,
-                                                                                     "Warped")
-                if not utils.update_progress_window(40, title):
-                    return
-
-                utils.apply_and_harden_transform_to_node(
-                    self.node_moving_warped, self.node_transform_nonlinear)
-                self.node_moving_warped = utils.normalize_node(
-                    self.node_moving_warped)
-                node_fixed_transformed_with_affine = utils.normalize_node(
-                    node_fixed_transformed_with_affine)
-                utils.resample_node_to_reference_node(
-                    self.node_moving_warped, node_fixed_transformed_with_affine)
-
-                if not utils.update_progress_window(60, title):
-                    return
-
-                array_fixed = slicer.util.arrayFromVolume(
-                    node_fixed_transformed_with_affine)
-                array_warped = slicer.util.arrayFromVolume(
-                    self.node_moving_warped)
-
-                array_diff = np.abs(array_fixed - array_warped)
-
-                slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
-
-                if not utils.update_progress_window(80, title):
-                    return
-
-                utils.apply_and_harden_transform_to_node(self.node_diff,
-                                                         self.node_transform_fixed,
-                                                         invert=True)
-
-                view_logic.update_views_with_volume(
-                    self.views_third_row, self.node_diff)
-
-                slicer.mrmlScene.RemoveNode(
-                    node_fixed_transformed_with_affine)
-                slicer.mrmlScene.RemoveNode(
-                    node_moving_transformed_with_affine)
-
-                if self.ui_is_simple:
-                    view_logic.enable_sectra_movements(self.node_diff,
-                                                       self.views_third_row)
-
-                slicer.util.resetSliceViews()
-
-                view_logic.set_view_offset("Red3", offset_red1)
-                view_logic.set_view_offset("Green3", offset_green1)
-                view_logic.set_view_offset("Yellow3", offset_yellow1)
-
-                utils.set_window_level_and_threshold(self.node_diff,
-                                                     window=0.43,
-                                                     level=0.16,
-                                                     threshold=(0, 1))
-
-                slicer.progressWindow.close()
-
-        except Exception as e:
-            slicer.progressWindow.close()
-            logging.error(f"Error loading data: {str(e)}")
-            slicer.util.errorDisplay(f"Error loading data: {str(e)}")
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -594,6 +492,112 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             view_logic.enable_sectra_movements(self.node_diff,
                                                self.views_third_row)
 
+    def update_current_layout(self, layout: view_logic.Layout) -> None:
+        self.current_layout = layout
+
+    def update_views_third_row_with_volume_diff(self) -> None:
+
+        try:
+
+            if self.node_fixed is not None and \
+                    self.node_moving is not None and \
+                    self.node_transform_nonlinear is not None:
+
+                title = "Creating difference view..."
+                slicer.progressWindow = slicer.util.createProgressDialog()
+                slicer.progressWindow.show()
+                slicer.progressWindow.activateWindow()
+                slicer.progressWindow.setValue(0)
+                slicer.progressWindow.setLabelText(title)
+                slicer.app.processEvents()
+
+                offset_red1 = view_logic.get_view_offset("Red1")
+                offset_green1 = view_logic.get_view_offset("Green1")
+                offset_yellow1 = view_logic.get_view_offset("Yellow1")
+
+                node_fixed_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_fixed,
+                                                                                                "Fixed with affine")
+                utils.apply_and_harden_transform_to_node(node_fixed_transformed_with_affine,
+                                                         self.node_transform_fixed)
+
+                node_moving_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_moving,
+                                                                                                 "Moving with affine")
+                utils.apply_and_harden_transform_to_node(node_moving_transformed_with_affine,
+                                                         self.node_transform_moving)
+
+                if not utils.update_progress_window(20, title):
+                    return
+
+                if self.node_diff is None:
+                    self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed_transformed_with_affine,
+                                                                                "Difference")
+
+                if self.node_moving_warped is not None:
+                    slicer.mrmlScene.RemoveNode(self.node_moving_warped)
+
+                self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(node_moving_transformed_with_affine,
+                                                                                     "Warped")
+                if not utils.update_progress_window(40, title):
+                    return
+
+                utils.apply_and_harden_transform_to_node(
+                    self.node_moving_warped, self.node_transform_nonlinear)
+                self.node_moving_warped = utils.normalize_node(
+                    self.node_moving_warped)
+                node_fixed_transformed_with_affine = utils.normalize_node(
+                    node_fixed_transformed_with_affine)
+                utils.resample_node_to_reference_node(
+                    self.node_moving_warped, node_fixed_transformed_with_affine)
+
+                if not utils.update_progress_window(60, title):
+                    return
+
+                array_fixed = slicer.util.arrayFromVolume(
+                    node_fixed_transformed_with_affine)
+                array_warped = slicer.util.arrayFromVolume(
+                    self.node_moving_warped)
+
+                array_diff = np.abs(array_fixed - array_warped)
+
+                slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
+
+                if not utils.update_progress_window(80, title):
+                    return
+
+                utils.apply_and_harden_transform_to_node(self.node_diff,
+                                                         self.node_transform_fixed,
+                                                         invert=True)
+
+                view_logic.update_views_with_volume(
+                    self.views_third_row, self.node_diff)
+
+                slicer.mrmlScene.RemoveNode(
+                    node_fixed_transformed_with_affine)
+                slicer.mrmlScene.RemoveNode(
+                    node_moving_transformed_with_affine)
+
+                if self.ui_is_simple:
+                    view_logic.enable_sectra_movements(self.node_diff,
+                                                       self.views_third_row)
+
+                slicer.util.resetSliceViews()
+
+                view_logic.set_view_offset("Red3", offset_red1)
+                view_logic.set_view_offset("Green3", offset_green1)
+                view_logic.set_view_offset("Yellow3", offset_yellow1)
+
+                utils.set_window_level_and_threshold(self.node_diff,
+                                                     window=0.43,
+                                                     level=0.16,
+                                                     threshold=(0, 1))
+
+                slicer.progressWindow.close()
+
+        except Exception as e:
+            slicer.progressWindow.close()
+            logging.error(f"Error loading data: {str(e)}")
+            slicer.util.errorDisplay(f"Error loading data: {str(e)}")
+
     def _synchronisation_checks(self) -> bool:
         """
         Internal helper method to validate synchronization prerequisites.
@@ -614,127 +618,83 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         return True
 
-    # CONNECTOINS
-    def on_set_radiologist_id(self) -> None:
-
-        radiologist_id: str = str(
-            self.ui_sub_2.radiologistIDTextEdit.toPlainText())
-
-        if radiologist_id == "":
-            slicer.util.errorDisplay("Please enter radiologist ID")
+    def on_synchronise_views_wth_trasform(self) -> None:
+        if not self._synchronisation_checks():
             return
 
-        if not self.study_data_master.participants.__contains__(radiologist_id):
-            slicer.util.errorDisplay(
-                "Radiologist ID not found in study data master")
+        if self.current_patient_list is not None and self.current_patient_transform_type == utils.TransformType.NONE:
+            print('not synchronising because we have None transform')
             return
 
-        radiologist_name = self.study_data_master.participants[radiologist_id]["name"]
+        self.synchronise_with_displacement_pressed = not self.synchronise_with_displacement_pressed
 
-        if not utils.show_question_popup(f"Are you sure {radiologist_name} is the desired participant?"):
-            return
+        if self.synchronise_with_displacement_pressed is True:
+            self._set_up_crosshair(self.synchronise_with_displacement_pressed)
+            print("pressed to synchronise")
+            self.ui_sub_4.synchronise_views_with_transform.setText(
+                "Unsynchronise views with transform (t)")
+            self.ui_sub_6.synchronise_views_general.setText(
+                "Unsynchronise views (s)")
 
-        self.current_radiologist_id = radiologist_id
+            self.use_transform = self.crosshair.use_transform = True
+            self.crosshair.use_only_linear_transform = self.use_only_linear_transform
 
-        self.ui_sub_2.start_study_button.setEnabled(True)
-        self.ui_sub_2.radiologistSetCheckBox.setChecked(True)
-        self.ui_sub_2.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
-
-        self.current_patient_list = self.study_data_master.patient_list(self.current_radiologist_id)  # nopep8
-        self.current_patient_idx = 0
-
-    def on_start_study(self) -> None:
-        self.current_radiologist_id = 'rad_1'
-        self.on_simple_ui()
-        self.ui_sub_6.start_study_by_user_button.setVisible(True)
-
-    def on_simple_ui(self) -> None:
-
-        self.ui_is_simple = not self.ui_is_simple
-
-        utils.set_ui_simplification(self.ui_is_simple)
-
-        mainWindow = slicer.util.mainWindow()
-
-        if self.ui_is_simple:
-            self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-            slicer.app.setStyleSheet("""
-                QWidget {
-                    background-color: #060f21;
-                    color: white;
-                }
-                QMainWindow {
-                    background-color: #060f21;
-                }
-                qSlicerLayoutManager {
-                    background-color: #060f21;
-                }
-                """)
-
-            view_logic.enable_sectra_movements(self.node_fixed,
-                                               self.views_first_row)
-            view_logic.enable_sectra_movements(self.node_moving,
-                                               self.views_second_row)
-            view_logic.enable_sectra_movements(self.node_diff,
-                                               self.views_third_row)
-            self.hide_module_parts_for_user_study()
-
-            mainWindow.findChild(
-                qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
-
-            self.ui_sub_6.start_study_by_user_button.setVisible(True)
+            self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
+            self.crosshair.apply_offsets = False
+            self.ui_sub_4.synchronise_views_manually.setText(
+                "Synchronise views manually (m)")
+            self.synchronise_manually_pressed = False
         else:
-            self.ui_sub_1.simple_ui_button.setText("Simple UI")
-            slicer.app.setStyleSheet("""
-                QWidget {
-                color: black;
-                }
-                """)
+            print("pressed to unsynchronise")
+            self._remove_custom_observers_from_crosshair()
+            self.ui_sub_4.synchronise_views_with_transform.setText(
+                "Synchronise views with transform (t)")
+            self.ui_sub_6.synchronise_views_general.setText(
+                "Synchronise views (s)")
+            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
-            view_logic.disable_sectra_movements()
-            self.show_module_parts_for_user_study()
-            mainWindow.findChild(
-                qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
-            self.ui_sub_6.start_study_by_user_button.setVisible(False)
+    def on_synchronise_views_manually(self) -> None:
 
-    def on_user_start_study(self) -> None:
-        """
-        this should:
-        1. load data (in such a way that it is not displayed)
-        1. show task description
-        1. when data is loaded a button to start task should be displayed
-        1. when task is started data should be shown
+        if not self._synchronisation_checks():
+            return
 
-        """
-        self.study_progress_bar_patients = utils.show_progressbar(
-            ui=self.ui_sub_6,
-            idx=1,
-            initial=1,
-            maximum=len(self.study_data_master.patient_list(
-                self.current_radiologist_id))
-        )
-        self.study_progress_bar_tasks = utils.show_progressbar(
-            ui=self.ui_sub_6,
-            idx=2,
-            initial=1,
-            maximum=4
-        )
+        self.synchronise_manually_pressed = not self.synchronise_manually_pressed
 
-        self.study_progress_bar_patients.setVisible(False)
-        self.ui_sub_6.progress_label_1.setVisible(False)
-        self.study_progress_bar_tasks.setVisible(False)
-        self.ui_sub_6.progress_label_2.setVisible(False)
+        if self.synchronise_manually_pressed is True:
+            self._set_up_crosshair(self.synchronise_manually_pressed)
+            print("pressed to synchronise manually")
+            self.ui_sub_4.synchronise_views_manually.setTfnext(
+                "Unsynchronise views manually (m)")
 
-        self.ui_sub_6.start_study_by_user_button.setVisible(False)
+            self.use_transform = self.crosshair.use_transform = False
+            self.ui_sub_4.synchronise_views_with_transform.setText(
+                "Synchronise views with transform (t)")
+            self.synchronise_with_displacement_pressed = False
+            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
-        self.current_task_idx = -1
-        self.current_patient_idx = -1
+        else:
+            print("pressed to unsynchronise manually")
+            self._remove_custom_observers_from_crosshair()
+            self.ui_sub_4.synchronise_views_manually.setText(
+                "Synchronise views manually (m)")
 
-        self.on_study_next_patient()
+        # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
+        offset_diff_red = view_logic.get_view_offset(
+            "Red1") - view_logic.get_view_offset("Red2")
+        offset_diff_green = view_logic.get_view_offset(
+            "Green1") - view_logic.get_view_offset("Green2")
+        offset_diff_yellow = view_logic.get_view_offset(
+            "Yellow1") - view_logic.get_view_offset("Yellow2")
+
+        self.crosshair.offset_diffs = self.current_offset = [
+            offset_diff_red, offset_diff_green, offset_diff_yellow]
+        self.crosshair.apply_offsets = self.synchronise_manually_pressed
+
+    # CONNECTOINS
 
     def on_study_next_patient(self) -> None:
 
-        self.study_save_annotations()
+        study.save_annotations()
         self.study_clear_annotations()
         self.on_remove_all_data()
 
@@ -797,7 +757,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui_sub_6.study_center_on_point_button.setEnabled(False)
 
-        self.study_save_annotations(specific_task=self.current_task)
+        study.save_annotations(self, specific_task=self.current_task)
 
         self.current_task_idx += 1
         self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
@@ -861,20 +821,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui_sub_6.study_center_on_point_button.setEnabled(True)
 
-    def on_study_center_on_point(self) -> None:
-        # jump to the location of the current point
-        current_point = self.study_node_points[self.current_task]
-
-        position = [0, 0, 0]
-        current_point.GetNthControlPointPositionWorld(0, position)
-
-        slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                            position[1],
-                                                            position[2],
-                                                            False,
-                                                            1)
-        pass
-
     def on_study_checkbox(self) -> None:
         if self.current_task != tasks.Task.RECURRENCE:
             return
@@ -925,76 +871,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             else:
                 raise ValueError("Unknown lymphnode size")
 
-    def study_save_annotations(self, specific_task: Optional[tasks.Task] = None) -> None:
-
-        if self.current_task_idx < 0:
-            return
-
-        path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient_name}"  # nopep8
-        if not os.path.exists(path_patient):
-            os.makedirs(path_patient)
-
-        if specific_task is None or specific_task == tasks.Task.LYMPH_NODE:
-            self.study_save_lymphnode(path_patient)
-        if specific_task is None or specific_task == tasks.Task.CAROTIS_GABEL:
-            self.study_save_carotisgabel(path_patient)
-        if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS:
-            self.study_save_avertebralis(path_patient)
-        if specific_task is None or specific_task == tasks.Task.RECURRENCE:
-            self.study_save_recurrence(path_patient)
-
-    def study_save_lymphnode(self, path_patient: str) -> None:
-
-        point = self.study_node_points[tasks.Task.LYMPH_NODE]
-
-        if point is None:
-            slicer.util.errorDisplay(
-                F"point {tasks.Task.LYMPH_NODE.value} is missing")
-            return
-
-        slicer.util.saveNode(point,
-                             path_patient + f"/{point.GetName()}.mrk.json")
-
-        with open(path_patient + f"/lymphnode_size.txt", "w") as f:
-            f.write(str(self.study_lymphnode_size))
-
-    def study_save_carotisgabel(self, path_patient: str) -> None:
-        point = self.study_node_points[tasks.Task.CAROTIS_GABEL]
-
-        if point is None:
-            slicer.util.errorDisplay(
-                F"point {tasks.Task.CAROTIS_GABEL.value} is missing")
-            return
-
-        slicer.util.saveNode(point,
-                             path_patient + f"/{point.GetName()}.mrk.json")
-
-    def study_save_avertebralis(self, path_patient: str) -> None:
-        point = self.study_node_points[tasks.Task.A_VERTEBRALIS]
-
-        if point is None:
-            slicer.util.errorDisplay(
-                F"point {tasks.Task.A_VERTEBRALIS.value} is missing")
-            return
-
-        slicer.util.saveNode(point,
-                             path_patient + f"/{point.GetName()}.mrk.json")
-
-    def study_save_recurrence(self, path_patient: str) -> None:
-        point = self.study_node_points[tasks.Task.RECURRENCE]
-        print(f"saving {self.study_recurrence_present=}")
-        if self.study_recurrence_present:
-            if point is None:
-                slicer.util.errorDisplay(
-                    F"point {tasks.Task.RECURRENCE.value} is missing")
-                return
-
-            slicer.util.saveNode(point,
-                                 path_patient + f"/{point.GetName()}.mrk.json")
-
-        with open(path_patient + f"/recurrence_present.txt", "w") as f:
-            f.write(str(self.study_recurrence_present))
-
     def study_clear_annotations(self) -> None:
         if self.current_task_idx <= 0:
             return
@@ -1012,41 +888,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_6.study_checkbox.blockSignals(False)
         self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
-    def on_synchronise_views_wth_trasform(self) -> None:
-        if not self._synchronisation_checks():
-            return
-
-        if self.current_patient_list is not None and self.current_patient_transform_type == utils.TransformType.NONE:
-            print('not synchronising because we have None transform')
-            return
-
-        self.synchronise_with_displacement_pressed = not self.synchronise_with_displacement_pressed
-
-        if self.synchronise_with_displacement_pressed is True:
-            self._set_up_crosshair(self.synchronise_with_displacement_pressed)
-            print("pressed to synchronise")
-            self.ui_sub_4.synchronise_views_with_transform.setText(
-                "Unsynchronise views with transform (t)")
-            self.ui_sub_6.synchronise_views_general.setText(
-                "Unsynchronise views (s)")
-
-            self.use_transform = self.crosshair.use_transform = True
-            self.crosshair.use_only_linear_transform = self.use_only_linear_transform
-
-            self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
-            self.crosshair.apply_offsets = False
-            self.ui_sub_4.synchronise_views_manually.setText(
-                "Synchronise views manually (m)")
-            self.synchronise_manually_pressed = False
-        else:
-            print("pressed to unsynchronise")
-            self._remove_custom_observers_from_crosshair()
-            self.ui_sub_4.synchronise_views_with_transform.setText(
-                "Synchronise views with transform (t)")
-            self.ui_sub_6.synchronise_views_general.setText(
-                "Synchronise views (s)")
-            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
-
     def unsynchronise_views(self) -> None:
         print('unsynchronised')
         self._remove_custom_observers_from_crosshair()
@@ -1055,43 +896,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_6.synchronise_views_general.setText(
             "Synchronise views (s)")
         self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
-
-    def on_synchronise_views_manually(self, views: List[List[str]] = None) -> None:
-
-        if not self._synchronisation_checks():
-            return
-
-        self.synchronise_manually_pressed = not self.synchronise_manually_pressed
-
-        if self.synchronise_manually_pressed is True:
-            self._set_up_crosshair(self.synchronise_manually_pressed)
-            print("pressed to synchronise manually")
-            self.ui_sub_4.synchronise_views_manually.setTfnext(
-                "Unsynchronise views manually (m)")
-
-            self.use_transform = self.crosshair.use_transform = False
-            self.ui_sub_4.synchronise_views_with_transform.setText(
-                "Synchronise views with transform (t)")
-            self.synchronise_with_displacement_pressed = False
-            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
-
-        else:
-            print("pressed to unsynchronise manually")
-            self._remove_custom_observers_from_crosshair()
-            self.ui_sub_4.synchronise_views_manually.setText(
-                "Synchronise views manually (m)")
-
-        # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
-        offset_diff_red = view_logic.get_view_offset(
-            "Red1") - view_logic.get_view_offset("Red2")
-        offset_diff_green = view_logic.get_view_offset(
-            "Green1") - view_logic.get_view_offset("Green2")
-        offset_diff_yellow = view_logic.get_view_offset(
-            "Yellow1") - view_logic.get_view_offset("Yellow2")
-
-        self.crosshair.offset_diffs = self.current_offset = [
-            offset_diff_red, offset_diff_green, offset_diff_yellow]
-        self.crosshair.apply_offsets = self.synchronise_manually_pressed
 
     def on_synchronise_views_general(self) -> None:
 

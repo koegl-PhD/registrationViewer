@@ -1,5 +1,9 @@
 from enum import Enum
 
+from typing import Dict, Union
+
+import slicer
+
 from registrationViewerLib import utils
 
 
@@ -59,7 +63,8 @@ def show_generic_task_ui(
     ui.study_add_point_button.setVisible(True)
 
 
-def show_task_lymphnode(ui, study_node_points) -> None:
+def show_task_lymphnode(ui,
+                        study_node_points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
     ui.study_checkbox.setVisible(False)
     ui.study_dropdown.setVisible(True)
 
@@ -72,7 +77,8 @@ def show_task_lymphnode(ui, study_node_points) -> None:
                                  study_node_points)
 
 
-def show_task_carotisgabel(ui, study_node_points) -> None:
+def show_task_carotisgabel(ui,
+                           study_node_points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
     ui.study_checkbox.setVisible(False)
     ui.study_dropdown.setVisible(False)
 
@@ -85,7 +91,8 @@ def show_task_carotisgabel(ui, study_node_points) -> None:
                                  study_node_points)
 
 
-def show_task_avertebralis(ui, study_node_points) -> None:
+def show_task_avertebralis(ui,
+                           study_node_points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
     ui.study_checkbox.setVisible(False)
     ui.study_dropdown.setVisible(False)
 
@@ -98,7 +105,8 @@ def show_task_avertebralis(ui, study_node_points) -> None:
                                  study_node_points)
 
 
-def show_task_recurrence(ui, study_node_points) -> None:
+def show_task_recurrence(ui,
+                         study_node_points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
     ui.study_checkbox.setVisible(True)
     ui.study_dropdown.setVisible(False)
     ui.study_checkbox.setText("Recurrence exists")
@@ -110,3 +118,65 @@ def show_task_recurrence(ui, study_node_points) -> None:
 
     utils.hide_all_points_except(Task.RECURRENCE,
                                  study_node_points)
+
+
+def save_lymphnode(path_patient: str,
+                   study_node_points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
+                   study_lymphnode_size: str) -> None:
+
+    point = study_node_points[Task.LYMPH_NODE]
+
+    if point is None:
+        slicer.util.errorDisplay(
+            F"point {Task.LYMPH_NODE.value} is missing")
+        return
+
+    slicer.util.saveNode(point,
+                         path_patient + f"/{point.GetName()}.mrk.json")
+
+    with open(path_patient + f"/lymphnode_size.txt", "w") as f:
+        f.write(str(study_lymphnode_size))
+
+
+def save_carotisgabel(path_patient: str,
+                      study_node_points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+    point = study_node_points[Task.CAROTIS_GABEL]
+
+    if point is None:
+        slicer.util.errorDisplay(
+            F"point {Task.CAROTIS_GABEL.value} is missing")
+        return
+
+    slicer.util.saveNode(point,
+                         path_patient + f"/{point.GetName()}.mrk.json")
+
+
+def save_avertebralis(path_patient: str,
+                      study_node_points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+    point = study_node_points[Task.A_VERTEBRALIS]
+
+    if point is None:
+        slicer.util.errorDisplay(
+            F"point {Task.A_VERTEBRALIS.value} is missing")
+        return
+
+    slicer.util.saveNode(point,
+                         path_patient + f"/{point.GetName()}.mrk.json")
+
+
+def save_recurrence(path_patient: str,
+                    study_node_points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
+                    recurrence_present) -> None:
+    point = study_node_points[Task.RECURRENCE]
+
+    if recurrence_present:
+        if point is None:
+            slicer.util.errorDisplay(
+                F"point {Task.RECURRENCE.value} is missing")
+            return
+
+        slicer.util.saveNode(point,
+                             path_patient + f"/{point.GetName()}.mrk.json")
+
+    with open(path_patient + f"/recurrence_present.txt", "w") as f:
+        f.write(str(recurrence_present))
