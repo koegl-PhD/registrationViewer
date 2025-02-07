@@ -6,7 +6,7 @@ from typing import Literal, TYPE_CHECKING
 import slicer
 import qt
 
-from registrationViewerLib import study_loading, tasks, utils, view_logic
+from registrationViewerLib import tasks, utils, view_logic
 
 if TYPE_CHECKING:
     from ..registrationViewer import registrationViewerWidget
@@ -19,20 +19,20 @@ def set_connections(self: "registrationViewerWidget") -> None:
                                            lambda: on_clear_annotations(self))
 
     self.ui_sub_5.addLymphnodeRoiFixed.connect("clicked(bool)",
-                                               lambda: on_add_roi_lymphnode('fixed'))
+                                               lambda: on_add_roi_lymphnode(self, 'fixed'))
     self.ui_sub_5.addLymphnodeRoiMoving.connect("clicked(bool)",
-                                                lambda: on_add_roi_lymphnode('moving'))
+                                                lambda: on_add_roi_lymphnode(self, 'moving'))
     self.ui_sub_5.increasedLymphnodeCheckBox.toggled.connect(
         on_lymphnode_increased)
 
     self.ui_sub_5.addCarotisgabelPointFixed.connect("clicked(bool)",
-                                                    lambda: on_add_annotation_point_fixed('carotisgabel'))
+                                                    lambda: on_add_annotation_point_fixed(self, 'carotisgabel'))
     self.ui_sub_5.addCarotisgabelPointMoving.connect("clicked(bool)",
-                                                     lambda: on_add_annotation_point_moving('carotisgabel'))
+                                                     lambda: on_add_annotation_point_moving(self, 'carotisgabel'))
     self.ui_sub_5.addAbgangavertebralisPointFixed.connect("clicked(bool)",
-                                                          lambda: on_add_annotation_point_fixed('abgangavertebralis'))
+                                                          lambda: on_add_annotation_point_fixed(self, 'abgangavertebralis'))
     self.ui_sub_5.addAbgangavertebralisPointMoving.connect("clicked(bool)",
-                                                           lambda: on_add_annotation_point_moving('abgangavertebralis'))
+                                                           lambda: on_add_annotation_point_moving(self, 'abgangavertebralis'))
 
     self.ui_sub_5.recurrencePresentCheckBox.toggled.connect(
         lambda: on_recurrence_present(self))
@@ -40,9 +40,9 @@ def set_connections(self: "registrationViewerWidget") -> None:
                                                 lambda: on_add_roi_recurrence(self))
 
     self.ui_sub_5.hideAnnotations.connect("clicked(bool)",
-                                          lambda: on_set_annotations_visibility(False))
+                                          lambda: on_set_annotations_visibility(self, False))
     self.ui_sub_5.showAnnotations.connect("clicked(bool)",
-                                          lambda: on_set_annotations_visibility(True))
+                                          lambda: on_set_annotations_visibility(self, True))
 
 
 def on_save_annotations(self: "registrationViewerWidget") -> None:
@@ -267,7 +267,7 @@ def on_add_annotation_point_fixed(
         point_name: Literal['carotisgabel', 'abgangavertebralis']
 ) -> None:
 
-    add_point_list()
+    add_point_list(self)
 
     volume_name = self.node_fixed.GetName()
 
@@ -300,7 +300,7 @@ def on_add_annotation_point_moving(
         point_name: Literal['carotisgabel', 'abgangavertebralis']
 ) -> None:
 
-    add_point_list()
+    add_point_list(self)
 
     volume_name = self.node_moving.GetName()
 

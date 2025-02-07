@@ -115,7 +115,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             ('s', lambda: study_connections.on_synchronise_views_general(self))
         )
 
-        self.study_current_transform_type: 'utils.TransformType' = utils.TransformType.NONLINEAR
+        self.study_current_transform_type: 'utils.TransformType' = utils.TransformType.NONE
 
         self.use_transform = True
         self.use_only_linear_transform = False
@@ -309,7 +309,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.set_2x3_layout()
 
         slicer.util.resetSliceViews()
-        self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
         # self.dropWidget.load_data_from_dropped_folder(
         #     "/home/koeglf/data/debugging/SerielleCTs_nii_forHumans/LB9oATPd0mE")
@@ -583,6 +582,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             self.use_transform = self.crosshair.use_transform = True
             self.crosshair.use_only_linear_transform = self.use_only_linear_transform
+            print(f"{self.use_only_linear_transform=}")
 
             self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
             self.crosshair.apply_offsets = False
@@ -596,7 +596,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 "Synchronise views with transform (t)")
             self.ui_sub_6.synchronise_views_general.setText(
                 "Synchronise views (s)")
-            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
     def on_synchronise_views_manually(self) -> None:
 
@@ -642,9 +641,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "Synchronise views with transform (t)")
         self.ui_sub_6.synchronise_views_general.setText(
             "Synchronise views (s)")
-        self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
     def on_linear_only(self) -> None:
+        print(f"on linear only")
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = not self.use_only_linear_transform
 
     def on_remove_all_data(self) -> None:
@@ -734,6 +733,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair.node_transform_nonlinear = self.node_transform_nonlinear
             self.crosshair.node_transform_fixed = self.node_transform_fixed
             self.crosshair.node_transform_moving = self.node_transform_moving
+            self.crosshair.use_only_linear_transform = self.use_only_linear_transform
 
     def _remove_custom_observers_from_crosshair(self) -> None:
         for observer_tag in self.crosshair_custom_observer_tags:

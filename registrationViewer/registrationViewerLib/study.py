@@ -1,17 +1,15 @@
-
-from registrationViewerLib import study_loading, tasks, utils, view_logic
-import qt
-from typing import Optional, TYPE_CHECKING
-import os
-from dataclasses import dataclass, field
 from collections import defaultdict
+from dataclasses import dataclass, field
 import json
+import os
+from typing import Optional, TYPE_CHECKING
 
 from typing import List, Tuple
 
+import qt
 import slicer
 
-from registrationViewerLib import utils
+from registrationViewerLib import tasks, utils, tasks_ui_logic
 
 path = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
 
@@ -132,19 +130,19 @@ def save_annotations(self: "registrationViewerWidget",
         os.makedirs(path_patient)
 
     if specific_task is None or specific_task == tasks.Task.LYMPH_NODE:
-        tasks.save_lymphnode(path_patient,
-                             self.study_node_points,
-                             self.study_lymphnode_size)
+        tasks_ui_logic.save_lymphnode(path_patient,
+                                      self.study_node_points,
+                                      self.study_lymphnode_size)
     if specific_task is None or specific_task == tasks.Task.CAROTIS_GABEL:
-        tasks.save_carotisgabel(path_patient,
-                                self.study_node_points)
+        tasks_ui_logic.save_carotisgabel(path_patient,
+                                         self.study_node_points)
     if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS:
-        tasks.save_avertebralis(path_patient,
-                                self.study_node_points)
+        tasks_ui_logic.save_avertebralis(path_patient,
+                                         self.study_node_points)
     if specific_task is None or specific_task == tasks.Task.RECURRENCE:
-        tasks.save_recurrence(path_patient,
-                              self.study_node_points,
-                              self.study_recurrence_present)
+        tasks_ui_logic.save_recurrence(path_patient,
+                                       self.study_node_points,
+                                       self.study_recurrence_present)
 
 
 def clear_annotations(self: "registrationViewerWidget") -> None:

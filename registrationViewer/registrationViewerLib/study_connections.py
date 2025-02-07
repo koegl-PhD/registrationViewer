@@ -1,11 +1,9 @@
-import os
-
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import slicer
 import qt
 
-from registrationViewerLib import study, tasks, utils, view_logic
+from registrationViewerLib import tasks_ui_logic, tasks, utils, view_logic, study
 
 if TYPE_CHECKING:
     from ..registrationViewer import registrationViewerWidget
@@ -29,7 +27,7 @@ def set_connections(self: "registrationViewerWidget") -> None:
                                                     lambda: on_synchronise_views_general(self))
 
     self.ui_sub_6.start_study_by_user_button.connect("clicked(bool)",
-                                                     on_user_start_study)
+                                                     lambda: on_user_start_study(self))
     self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
                                                  lambda: on_add_annotation_point(self))
     self.ui_sub_6.study_center_on_point_button.connect("clicked(bool)",
@@ -37,7 +35,7 @@ def set_connections(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
                                                  lambda: on_next_task(self))
     self.ui_sub_6.study_next_patient_button.connect("clicked(bool)",
-                                                    lambda: on_study_next_patient)
+                                                    lambda: on_study_next_patient(self))
     self.ui_sub_6.study_checkbox.toggled.connect(
         lambda: on_checkbox(self))
     self.ui_sub_6.study_dropdown.currentIndexChanged.connect(
@@ -52,10 +50,12 @@ def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
     if self.study_current_transform_type == utils.TransformType.NONE:
         pass
     elif self.study_current_transform_type == utils.TransformType.LINEAR:
+        print(f"linear")
         self.on_synchronise_views_wth_trasform()
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = True
         self.ui_sub_4.linearTransformationCheckBox.setChecked(True)
     elif self.study_current_transform_type == utils.TransformType.NONLINEAR:
+        print(f"nonlinear")
         self.on_synchronise_views_wth_trasform()
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = False
         self.ui_sub_4.linearTransformationCheckBox.setChecked(False)
@@ -106,24 +106,24 @@ def on_simple_ui(self: "registrationViewerWidget") -> None:
 
     self.ui_is_simple = not self.ui_is_simple
 
-    utils.set_ui_simplification(self.ui_is_simple)
+    # utils.set_ui_simplification(self.ui_is_simple)
 
     mainWindow = slicer.util.mainWindow()
 
     if self.ui_is_simple:
         self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-        slicer.app.setStyleSheet("""
-            QWidget {
-                background-color: #060f21;
-                color: white;
-            }
-            QMainWindow {
-                background-color: #060f21;
-            }
-            qSlicerLayoutManager {
-                background-color: #060f21;
-            }
-            """)
+        # slicer.app.setStyleSheet("""
+        #     QWidget {
+        #         background-color: #060f21;
+        #         color: white;
+        #     }
+        #     QMainWindow {
+        #         background-color: #060f21;
+        #     }
+        #     qSlicerLayoutManager {
+        #         background-color: #060f21;
+        #     }
+        #     """)
 
         view_logic.enable_sectra_movements(self.node_fixed,
                                            self.views_first_row)
@@ -131,7 +131,7 @@ def on_simple_ui(self: "registrationViewerWidget") -> None:
                                            self.views_second_row)
         view_logic.enable_sectra_movements(self.node_diff,
                                            self.views_third_row)
-        hide_module_parts_for_user_study(self)
+        study.hide_module_parts_for_user_study(self)
 
         mainWindow.findChild(
             qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
@@ -139,14 +139,14 @@ def on_simple_ui(self: "registrationViewerWidget") -> None:
         self.ui_sub_6.start_study_by_user_button.setVisible(True)
     else:
         self.ui_sub_1.simple_ui_button.setText("Simple UI")
-        slicer.app.setStyleSheet("""
-            QWidget {
-            color: black;
-            }
-            """)
+        # slicer.app.setStyleSheet("""
+        #     QWidget {
+        #     color: black;
+        #     }
+        #     """)
 
         view_logic.disable_sectra_movements()
-        show_module_parts_for_user_study(self)
+        study.show_module_parts_for_user_study(self)
         mainWindow.findChild(
             qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
         self.ui_sub_6.start_study_by_user_button.setVisible(False)
@@ -192,13 +192,13 @@ def on_user_start_study(self: "registrationViewerWidget") -> None:
     self.current_task_idx = -1
     self.current_patient_idx = -1
 
-    self.on_study_next_patient()
+    on_study_next_patient(self)
 
 
 def on_study_next_patient(self: "registrationViewerWidget") -> None:
 
-    save_annotations(self)
-    clear_annotations(self)
+    study.save_annotations(self)
+    study.clear_annotations(self)
     self.on_remove_all_data()
 
     self.current_patient_idx += 1
@@ -213,7 +213,7 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_next_task_button.setVisible(False)
     self.ui_sub_6.study_next_patient_button.setVisible(False)
 
-    study_loading.load_study_volumes(self, self.current_patient_path)
+    study.load_study_volumes(self, self.current_patient_path)
 
     self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
 
@@ -229,7 +229,7 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_dropdown.setVisible(True)
     self.ui_sub_6.study_next_task_button.setVisible(True)
 
-    # self.ui_sub_6.current_case_label.setText(f"{self.current_patient_name} {self.current_patient_transform_type}")  # nopep8
+    self.ui_sub_6.current_case_label.setText(f"{self.current_patient_name} {self.current_patient_transform_type}")  # nopep8
 
     if self.current_patient_transform_type == utils.TransformType.NONE:
         self.unsynchronise_views()
@@ -261,19 +261,23 @@ def on_next_task(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.study_center_on_point_button.setEnabled(False)
 
-    save_annotations(self, specific_task=self.current_task)
+    study.save_annotations(self, specific_task=self.current_task)
 
     self.current_task_idx += 1
     self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
 
     if self.current_task_idx == 0:
-        tasks.show_task_lymphnode(self.ui_sub_6, self.study_node_points)
+        tasks_ui_logic.show_task_lymphnode(
+            self.ui_sub_6, self.study_node_points)
     elif self.current_task_idx == 1:
-        tasks.show_task_carotisgabel(self.ui_sub_6, self.study_node_points)
+        tasks_ui_logic.show_task_carotisgabel(
+            self.ui_sub_6, self.study_node_points)
     elif self.current_task_idx == 2:
-        tasks.show_task_avertebralis(self.ui_sub_6, self.study_node_points)
+        tasks_ui_logic.show_task_avertebralis(
+            self.ui_sub_6, self.study_node_points)
     elif self.current_task_idx == 3:
-        tasks.show_task_recurrence(self.ui_sub_6, self.study_node_points)
+        tasks_ui_logic.show_task_recurrence(
+            self.ui_sub_6, self.study_node_points)
         self.ui_sub_6.study_next_patient_button.setVisible(True)
         self.ui_sub_6.study_next_patient_button.setEnabled(True)
         self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
