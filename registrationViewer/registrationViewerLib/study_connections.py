@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 import slicer
 import qt
@@ -102,9 +102,12 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
     self.current_patient_idx = 0
 
 
-def on_simple_ui(self: "registrationViewerWidget") -> None:
+def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None) -> None:
 
     self.ui_is_simple = not self.ui_is_simple
+
+    if value is not None:
+        self.ui_is_simple = value
 
     # utils.set_ui_simplification(self.ui_is_simple)
 
@@ -155,7 +158,7 @@ def on_simple_ui(self: "registrationViewerWidget") -> None:
 def on_start_study(self: "registrationViewerWidget") -> None:
 
     self.current_radiologist_id = 'rad_1'
-    on_simple_ui(self)
+    on_simple_ui(self, True)
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
 
 
