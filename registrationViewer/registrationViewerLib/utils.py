@@ -1,6 +1,7 @@
 from enum import Enum
 import glob
 import os
+from typing import TYPE_CHECKING
 
 from typing import Dict, Union, Tuple, Callable, List
 
@@ -11,10 +12,27 @@ import vtk
 from registrationViewerLib.tasks import Task
 
 
+if TYPE_CHECKING:
+    from ..registrationViewer import registrationViewerWidget
+
+
 class TransformType(Enum):
     NONE = "none"
     LINEAR = "linear"
     NONLINEAR = "nonlinear"
+
+
+def center_on_point(point: slicer.vtkMRMLMarkupsFiducialNode) -> None:
+    # jump to the location of the current point
+
+    position = [0, 0, 0]
+    point.GetNthControlPointPositionWorld(0, position)
+
+    slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
+                                                        position[1],
+                                                        position[2],
+                                                        False,
+                                                        1)
 
 
 def get_paths_to_load(path_case_folder: str):

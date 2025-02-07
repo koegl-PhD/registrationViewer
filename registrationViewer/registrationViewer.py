@@ -26,7 +26,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading, study_loading, tasks
+from registrationViewerLib import annotations_connections, utils, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -84,12 +84,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTags = []
 
-        from registrationViewerLib import utils, tasks, crosshairs, drop_data_loading, view_logic, study_loading
+        from registrationViewerLib import annotations_connections, utils, tasks, crosshairs, drop_data_loading, view_logic, study_connections, study
+        annotations_connections = importlib.reload(annotations_connections)
         utils = importlib.reload(utils)
         crosshairs = importlib.reload(crosshairs)
         drop_data_loading = importlib.reload(drop_data_loading)
         view_logic = importlib.reload(view_logic)
-        study_loading = importlib.reload(study_loading)
+        study_connections = importlib.reload(study_connections)
+        study = importlib.reload(study)
         tasks = importlib.reload(tasks)
 
         self.group_first_row = 1
@@ -110,10 +112,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         utils.create_shortcuts(
             ('t', self.on_synchronise_views_wth_trasform),
             # ('m', self.on_synchronise_views_manually),
-            ('s', self.on_synchronise_views_general)
+            ('s', lambda: study_connections.on_synchronise_views_general(self))
         )
 
-        self.study_current_transform_type: 'utils.TransformType' = utils.TransformType.NONLINEAR
+        self.study_current_transform_type: 'utils.TransformType' = utils.TransformType.NONE
 
         self.use_transform = True
         self.use_only_linear_transform = False
@@ -159,7 +161,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # STUDY
         self.path_study_data_master: str = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
-        self.study_data_master: 'study_loading.StudyData' = study_loading.StudyData(
+        self.study_data_master: 'study.StudyData' = study.StudyData(
             self.path_study_data_master)
         self.current_data_dict: Dict[str,
                                      Dict[str, Union[str, List[str]]]] = {}
@@ -187,6 +189,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                            "Size increased",
                                            "Size decreased"] = "Size same"
         self.study_recurrence_present = False
+
+        self.study_progress_bar_patients = None
+        self.study_progress_bar_tasks = None
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -268,36 +273,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # CONNECTIONS
         # Study
-        self.ui_sub_2.set_radiologist_id_button.connect("clicked(bool)",
-                                                        self.on_set_radiologist_id)
-        self.ui_sub_2.start_study_button.connect("clicked(bool)",
-                                                 self.on_start_study)
-
-        def _on_text_changed():
-            self.ui_sub_2.start_study_button.setEnabled(False)
-            self.ui_sub_2.radiologistSetCheckBox.setChecked(False)
-            self.ui_sub_2.start_study_button.toolTip = "Please set radiologist ID first"
-        self.ui_sub_2.radiologistIDTextEdit.textChanged.connect(
-            _on_text_changed)
-
-        self.ui_sub_6.start_study_by_user_button.connect("clicked(bool)",
-                                                         self.on_user_start_study)
-        self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
-                                                     self.on_study_add_annotation_point)
-        self.ui_sub_6.study_center_on_point_button.connect("clicked(bool)",
-                                                           self.on_study_center_on_point)
-        self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
-                                                     self.on_next_task)
-        self.ui_sub_6.study_next_patient_button.connect("clicked(bool)",
-                                                        self.on_study_next_patient)
-        self.ui_sub_6.study_checkbox.toggled.connect(
-            self.on_study_checkbox)
-        self.ui_sub_6.study_dropdown.currentIndexChanged.connect(
-            self.on_study_selection_changed)
+        study_connections.set_connections(self)
 
         # Buttons
         self.ui_sub_1.simple_ui_button.connect(
-            "clicked(bool)", self.on_simple_ui)
+            "clicked(bool)", lambda: study_connections.on_simple_ui(self))
         self.ui_sub_4.button_2x3.connect(
             "clicked(bool)", view_logic.set_2x3_layout)
         self.ui_sub_4.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
@@ -306,44 +286,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
         self.ui_sub_4.synchronise_views_manually.connect(
             "clicked(bool)", self.on_synchronise_views_manually)
-        self.ui_sub_6.synchronise_views_general.connect(
-            "clicked(bool)", self.on_synchronise_views_general)
         self.ui_sub_4.linearTransformationCheckBox.toggled.connect(
             self.on_linear_only)
         self.ui_sub_4.remove_all_data.connect(
             "clicked(bool)", self.on_remove_all_data)
 
         # ANOOTATIONS
-        self.ui_sub_5.saveAnnotations.connect("clicked(bool)",
-                                              self.on_save_annotations)
-        self.ui_sub_5.clearAnnotations.connect("clicked(bool)",
-                                               self.on_clear_annotations)
-
-        self.ui_sub_5.addLymphnodeRoiFixed.connect("clicked(bool)",
-                                                   lambda: self.on_add_roi_lymphnode('fixed'))
-        self.ui_sub_5.addLymphnodeRoiMoving.connect("clicked(bool)",
-                                                    lambda: self.on_add_roi_lymphnode('moving'))
-        self.ui_sub_5.increasedLymphnodeCheckBox.toggled.connect(
-            self.on_lymphnode_increased)
-
-        self.ui_sub_5.addCarotisgabelPointFixed.connect("clicked(bool)",
-                                                        lambda: self.on_add_annotation_point_fixed('carotisgabel'))
-        self.ui_sub_5.addCarotisgabelPointMoving.connect("clicked(bool)",
-                                                         lambda: self.on_add_annotation_point_moving('carotisgabel'))
-        self.ui_sub_5.addAbgangavertebralisPointFixed.connect("clicked(bool)",
-                                                              lambda: self.on_add_annotation_point_fixed('abgangavertebralis'))
-        self.ui_sub_5.addAbgangavertebralisPointMoving.connect("clicked(bool)",
-                                                               lambda: self.on_add_annotation_point_moving('abgangavertebralis'))
-
-        self.ui_sub_5.recurrencePresentCheckBox.toggled.connect(
-            self.on_recurrence_present)
-        self.ui_sub_5.addRecurrenceRoiFixed.connect("clicked(bool)",
-                                                    self.on_add_roi_recurrence)
-
-        self.ui_sub_5.hideAnnotations.connect("clicked(bool)",
-                                              lambda: self.on_set_annotations_visibility(False))
-        self.ui_sub_5.showAnnotations.connect("clicked(bool)",
-                                              lambda: self.on_set_annotations_visibility(True))
+        annotations_connections.set_connections(self)
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -360,119 +309,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.set_2x3_layout()
 
         slicer.util.resetSliceViews()
-        self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
         # self.dropWidget.load_data_from_dropped_folder(
         #     "/home/koeglf/data/debugging/SerielleCTs_nii_forHumans/LB9oATPd0mE")
         # # utils.temp_load_data(self)
 
         slicer.util.setDataProbeVisible(False)
-
-    def update_current_layout(self, layout: view_logic.Layout) -> None:
-        self.current_layout = layout
-
-    def update_views_third_row_with_volume_diff(self) -> None:
-
-        try:
-
-            if self.node_fixed is not None and \
-                    self.node_moving is not None and \
-                    self.node_transform_nonlinear is not None:
-
-                title = "Creating difference view..."
-                slicer.progressWindow = slicer.util.createProgressDialog()
-                slicer.progressWindow.show()
-                slicer.progressWindow.activateWindow()
-                slicer.progressWindow.setValue(0)
-                slicer.progressWindow.setLabelText(title)
-                slicer.app.processEvents()
-
-                offset_red1 = view_logic.get_view_offset("Red1")
-                offset_green1 = view_logic.get_view_offset("Green1")
-                offset_yellow1 = view_logic.get_view_offset("Yellow1")
-
-                node_fixed_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_fixed,
-                                                                                                "Fixed with affine")
-                utils.apply_and_harden_transform_to_node(node_fixed_transformed_with_affine,
-                                                         self.node_transform_fixed)
-
-                node_moving_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_moving,
-                                                                                                 "Moving with affine")
-                utils.apply_and_harden_transform_to_node(node_moving_transformed_with_affine,
-                                                         self.node_transform_moving)
-
-                if not utils.update_progress_window(20, title):
-                    return
-
-                if self.node_diff is None:
-                    self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed_transformed_with_affine,
-                                                                                "Difference")
-
-                if self.node_moving_warped is not None:
-                    slicer.mrmlScene.RemoveNode(self.node_moving_warped)
-
-                self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(node_moving_transformed_with_affine,
-                                                                                     "Warped")
-                if not utils.update_progress_window(40, title):
-                    return
-
-                utils.apply_and_harden_transform_to_node(
-                    self.node_moving_warped, self.node_transform_nonlinear)
-                self.node_moving_warped = utils.normalize_node(
-                    self.node_moving_warped)
-                node_fixed_transformed_with_affine = utils.normalize_node(
-                    node_fixed_transformed_with_affine)
-                utils.resample_node_to_reference_node(
-                    self.node_moving_warped, node_fixed_transformed_with_affine)
-
-                if not utils.update_progress_window(60, title):
-                    return
-
-                array_fixed = slicer.util.arrayFromVolume(
-                    node_fixed_transformed_with_affine)
-                array_warped = slicer.util.arrayFromVolume(
-                    self.node_moving_warped)
-
-                array_diff = np.abs(array_fixed - array_warped)
-
-                slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
-
-                if not utils.update_progress_window(80, title):
-                    return
-
-                utils.apply_and_harden_transform_to_node(self.node_diff,
-                                                         self.node_transform_fixed,
-                                                         invert=True)
-
-                view_logic.update_views_with_volume(
-                    self.views_third_row, self.node_diff)
-
-                slicer.mrmlScene.RemoveNode(
-                    node_fixed_transformed_with_affine)
-                slicer.mrmlScene.RemoveNode(
-                    node_moving_transformed_with_affine)
-
-                if self.ui_is_simple:
-                    view_logic.enable_sectra_movements(self.node_diff,
-                                                       self.views_third_row)
-
-                slicer.util.resetSliceViews()
-
-                view_logic.set_view_offset("Red3", offset_red1)
-                view_logic.set_view_offset("Green3", offset_green1)
-                view_logic.set_view_offset("Yellow3", offset_yellow1)
-
-                utils.set_window_level_and_threshold(self.node_diff,
-                                                     window=0.43,
-                                                     level=0.16,
-                                                     threshold=(0, 1))
-
-                slicer.progressWindow.close()
-
-        except Exception as e:
-            slicer.progressWindow.close()
-            logging.error(f"Error loading data: {str(e)}")
-            slicer.util.errorDisplay(f"Error loading data: {str(e)}")
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -594,6 +436,112 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             view_logic.enable_sectra_movements(self.node_diff,
                                                self.views_third_row)
 
+    def update_current_layout(self, layout: view_logic.Layout) -> None:
+        self.current_layout = layout
+
+    def update_views_third_row_with_volume_diff(self) -> None:
+
+        try:
+
+            if self.node_fixed is not None and \
+                    self.node_moving is not None and \
+                    self.node_transform_nonlinear is not None:
+
+                title = "Creating difference view..."
+                slicer.progressWindow = slicer.util.createProgressDialog()
+                slicer.progressWindow.show()
+                slicer.progressWindow.activateWindow()
+                slicer.progressWindow.setValue(0)
+                slicer.progressWindow.setLabelText(title)
+                slicer.app.processEvents()
+
+                offset_red1 = view_logic.get_view_offset("Red1")
+                offset_green1 = view_logic.get_view_offset("Green1")
+                offset_yellow1 = view_logic.get_view_offset("Yellow1")
+
+                node_fixed_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_fixed,
+                                                                                                "Fixed with affine")
+                utils.apply_and_harden_transform_to_node(node_fixed_transformed_with_affine,
+                                                         self.node_transform_fixed)
+
+                node_moving_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_moving,
+                                                                                                 "Moving with affine")
+                utils.apply_and_harden_transform_to_node(node_moving_transformed_with_affine,
+                                                         self.node_transform_moving)
+
+                if not utils.update_progress_window(20, title):
+                    return
+
+                if self.node_diff is None:
+                    self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed_transformed_with_affine,
+                                                                                "Difference")
+
+                if self.node_moving_warped is not None:
+                    slicer.mrmlScene.RemoveNode(self.node_moving_warped)
+
+                self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(node_moving_transformed_with_affine,
+                                                                                     "Warped")
+                if not utils.update_progress_window(40, title):
+                    return
+
+                utils.apply_and_harden_transform_to_node(
+                    self.node_moving_warped, self.node_transform_nonlinear)
+                self.node_moving_warped = utils.normalize_node(
+                    self.node_moving_warped)
+                node_fixed_transformed_with_affine = utils.normalize_node(
+                    node_fixed_transformed_with_affine)
+                utils.resample_node_to_reference_node(
+                    self.node_moving_warped, node_fixed_transformed_with_affine)
+
+                if not utils.update_progress_window(60, title):
+                    return
+
+                array_fixed = slicer.util.arrayFromVolume(
+                    node_fixed_transformed_with_affine)
+                array_warped = slicer.util.arrayFromVolume(
+                    self.node_moving_warped)
+
+                array_diff = np.abs(array_fixed - array_warped)
+
+                slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
+
+                if not utils.update_progress_window(80, title):
+                    return
+
+                utils.apply_and_harden_transform_to_node(self.node_diff,
+                                                         self.node_transform_fixed,
+                                                         invert=True)
+
+                view_logic.update_views_with_volume(
+                    self.views_third_row, self.node_diff)
+
+                slicer.mrmlScene.RemoveNode(
+                    node_fixed_transformed_with_affine)
+                slicer.mrmlScene.RemoveNode(
+                    node_moving_transformed_with_affine)
+
+                if self.ui_is_simple:
+                    view_logic.enable_sectra_movements(self.node_diff,
+                                                       self.views_third_row)
+
+                slicer.util.resetSliceViews()
+
+                view_logic.set_view_offset("Red3", offset_red1)
+                view_logic.set_view_offset("Green3", offset_green1)
+                view_logic.set_view_offset("Yellow3", offset_yellow1)
+
+                utils.set_window_level_and_threshold(self.node_diff,
+                                                     window=0.43,
+                                                     level=0.16,
+                                                     threshold=(0, 1))
+
+                slicer.progressWindow.close()
+
+        except Exception as e:
+            slicer.progressWindow.close()
+            logging.error(f"Error loading data: {str(e)}")
+            slicer.util.errorDisplay(f"Error loading data: {str(e)}")
+
     def _synchronisation_checks(self) -> bool:
         """
         Internal helper method to validate synchronization prerequisites.
@@ -613,453 +561,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             return False
 
         return True
-
-    # CONNECTOINS
-    def on_set_radiologist_id(self) -> None:
-
-        radiologist_id: str = str(
-            self.ui_sub_2.radiologistIDTextEdit.toPlainText())
-
-        if radiologist_id == "":
-            slicer.util.errorDisplay("Please enter radiologist ID")
-            return
-
-        if not self.study_data_master.participants.__contains__(radiologist_id):
-            slicer.util.errorDisplay(
-                "Radiologist ID not found in study data master")
-            return
-
-        radiologist_name = self.study_data_master.participants[radiologist_id]["name"]
-
-        if not utils.show_question_popup(f"Are you sure {radiologist_name} is the desired participant?"):
-            return
-
-        self.current_radiologist_id = radiologist_id
-
-        self.ui_sub_2.start_study_button.setEnabled(True)
-        self.ui_sub_2.radiologistSetCheckBox.setChecked(True)
-        self.ui_sub_2.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
-
-        self.current_patient_list = self.study_data_master.patient_list(self.current_radiologist_id)  # nopep8
-        self.current_patient_idx = 0
-
-    def on_start_study(self) -> None:
-        self.current_radiologist_id = 'rad_1'
-        self.on_simple_ui()
-        self.ui_sub_6.start_study_by_user_button.setVisible(True)
-
-    def on_simple_ui(self) -> None:
-
-        self.ui_is_simple = not self.ui_is_simple
-
-        utils.set_ui_simplification(self.ui_is_simple)
-
-        mainWindow = slicer.util.mainWindow()
-
-        if self.ui_is_simple:
-            self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-            slicer.app.setStyleSheet("""
-                QWidget {
-                    background-color: #060f21;
-                    color: white;
-                }
-                QMainWindow {
-                    background-color: #060f21;
-                }
-                qSlicerLayoutManager {
-                    background-color: #060f21;
-                }
-                """)
-
-            view_logic.enable_sectra_movements(self.node_fixed,
-                                               self.views_first_row)
-            view_logic.enable_sectra_movements(self.node_moving,
-                                               self.views_second_row)
-            view_logic.enable_sectra_movements(self.node_diff,
-                                               self.views_third_row)
-            self.hide_module_parts_for_user_study()
-
-            mainWindow.findChild(
-                qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
-
-            self.ui_sub_6.start_study_by_user_button.setVisible(True)
-        else:
-            self.ui_sub_1.simple_ui_button.setText("Simple UI")
-            slicer.app.setStyleSheet("""
-                QWidget {
-                color: black;
-                }
-                """)
-
-            view_logic.disable_sectra_movements()
-            self.show_module_parts_for_user_study()
-            mainWindow.findChild(
-                qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
-            self.ui_sub_6.start_study_by_user_button.setVisible(False)
-
-    def on_user_start_study(self) -> None:
-        """
-        this should:
-        1. load data (in such a way that it is not displayed)
-        1. show task description
-        1. when data is loaded a button to start task should be displayed
-        1. when task is started data should be shown
-
-        """
-        self.study_progress_bar_patients = utils.show_progressbar(
-            ui=self.ui_sub_6,
-            idx=1,
-            initial=1,
-            maximum=len(self.study_data_master.patient_list(
-                self.current_radiologist_id))
-        )
-        self.study_progress_bar_tasks = utils.show_progressbar(
-            ui=self.ui_sub_6,
-            idx=2,
-            initial=1,
-            maximum=4
-        )
-
-        self.study_progress_bar_patients.setVisible(False)
-        self.ui_sub_6.progress_label_1.setVisible(False)
-        self.study_progress_bar_tasks.setVisible(False)
-        self.ui_sub_6.progress_label_2.setVisible(False)
-
-        self.ui_sub_6.start_study_by_user_button.setVisible(False)
-
-        self.current_task_idx = -1
-        self.current_patient_idx = -1
-
-        self.on_study_next_patient()
-
-    def on_study_next_patient(self) -> None:
-
-        self.study_save_annotations()
-        self.study_clear_annotations()
-        self.on_remove_all_data()
-
-        self.current_patient_idx += 1
-        self.current_task_idx = -1
-
-        self.ui_sub_6.study_current_task_description_label.setVisible(False)
-        self.ui_sub_6.synchronise_views_general.setVisible(False)
-        self.ui_sub_6.study_add_point_button.setVisible(False)
-        self.ui_sub_6.study_center_on_point_button.setVisible(False)
-        self.ui_sub_6.study_dropdown.setVisible(False)
-        self.ui_sub_6.study_checkbox.setVisible(False)
-        self.ui_sub_6.study_next_task_button.setVisible(False)
-        self.ui_sub_6.study_next_patient_button.setVisible(False)
-
-        study_loading.load_study_volumes(self, self.current_patient_path)
-
-        self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
-
-        self.study_progress_bar_patients.setVisible(True)
-        self.ui_sub_6.progress_label_1.setVisible(True)
-        self.study_progress_bar_tasks.setVisible(True)
-        self.ui_sub_6.progress_label_2.setVisible(True)
-
-        self.ui_sub_6.study_current_task_description_label.setVisible(True)
-        self.ui_sub_6.synchronise_views_general.setVisible(True)
-        self.ui_sub_6.study_add_point_button.setVisible(True)
-        self.ui_sub_6.study_center_on_point_button.setVisible(True)
-        self.ui_sub_6.study_dropdown.setVisible(True)
-        self.ui_sub_6.study_next_task_button.setVisible(True)
-
-        # self.ui_sub_6.current_case_label.setText(f"{self.current_patient_name} {self.current_patient_transform_type}")  # nopep8
-
-        if self.current_patient_transform_type == utils.TransformType.NONE:
-            self.unsynchronise_views()
-            self.ui_sub_6.synchronise_views_general.setVisible(False)
-            pass
-        elif self.current_patient_transform_type == utils.TransformType.LINEAR:
-            self.use_only_linear_transform = True
-            if self.crosshair:
-                self.crosshair.use_only_linear_transform = True
-            self.study_current_transform_type = utils.TransformType.LINEAR
-            self.ui_sub_6.synchronise_views_general.setVisible(True)
-        elif self.current_patient_transform_type == utils.TransformType.NONLINEAR:
-            self.use_only_linear_transform = False
-            if self.crosshair:
-                self.crosshair.use_only_linear_transform = False
-            self.study_current_transform_type = utils.TransformType.NONLINEAR
-            self.ui_sub_6.synchronise_views_general.setVisible(True)
-
-        else:
-            print(f"{self.current_patient_name=}")
-            raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
-
-        self.on_next_task()
-
-    def on_next_task(self) -> None:
-        self.ui_sub_6.study_next_task_button.setEnabled(False)
-        self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
-
-        self.ui_sub_6.study_center_on_point_button.setEnabled(False)
-
-        self.study_save_annotations(specific_task=self.current_task)
-
-        self.current_task_idx += 1
-        self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
-
-        if self.current_task_idx == 0:
-            self.show_task_lymphnode()
-        elif self.current_task_idx == 1:
-            self.show_task_carotisgabel()
-        elif self.current_task_idx == 2:
-            self.show_task_avertebralis()
-        elif self.current_task_idx == 3:
-            self.show_task_recurrence()
-            self.ui_sub_6.study_next_patient_button.setVisible(True)
-            self.ui_sub_6.study_next_patient_button.setEnabled(True)
-            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-            self.ui_sub_6.study_next_task_button.setVisible(False)
-
-    def show_task_lymphnode(self) -> None:
-        self.ui_sub_6.study_checkbox.setVisible(False)
-        self.ui_sub_6.study_dropdown.setVisible(True)
-
-        tasks.show_generic_task_ui(self.ui_sub_6,
-                                   tasks.Task.LYMPH_NODE,
-                                   1,
-                                   9)
-
-        utils.hide_all_points_except(tasks.Task.LYMPH_NODE,
-                                     self.study_node_points)
-
-    def show_task_carotisgabel(self) -> None:
-        self.ui_sub_6.study_checkbox.setVisible(False)
-        self.ui_sub_6.study_dropdown.setVisible(False)
-
-        tasks.show_generic_task_ui(self.ui_sub_6,
-                                   tasks.Task.CAROTIS_GABEL,
-                                   1,
-                                   9)
-
-        utils.hide_all_points_except(tasks.Task.CAROTIS_GABEL,
-                                     self.study_node_points)
-
-    def show_task_avertebralis(self) -> None:
-        self.ui_sub_6.study_checkbox.setVisible(False)
-        self.ui_sub_6.study_dropdown.setVisible(False)
-
-        tasks.show_generic_task_ui(self.ui_sub_6,
-                                   tasks.Task.A_VERTEBRALIS,
-                                   1,
-                                   9)
-
-        utils.hide_all_points_except(tasks.Task.A_VERTEBRALIS,
-                                     self.study_node_points)
-
-    def show_task_recurrence(self) -> None:
-        self.ui_sub_6.study_checkbox.setVisible(True)
-        self.ui_sub_6.study_dropdown.setVisible(False)
-        self.ui_sub_6.study_checkbox.setText("Recurrence exists")
-
-        tasks.show_generic_task_ui(self.ui_sub_6,
-                                   tasks.Task.RECURRENCE,
-                                   1,
-                                   9)
-
-        utils.hide_all_points_except(tasks.Task.RECURRENCE,
-                                     self.study_node_points)
-
-    def on_study_add_annotation_point(self) -> None:
-
-        volume_name = self.node_fixed.GetName()
-
-        if self.study_node_points[self.current_task] is not None:
-            if utils.show_warning_popup(f"Point {self.current_task.value} already exists",
-                                        "Do you want to overwrite it?"):
-                slicer.mrmlScene.RemoveNode(
-                    self.study_node_points[self.current_task])
-                self.study_node_points[self.current_task] = None
-                self.ui_sub_6.study_center_on_point_button.setEnabled(False)
-            else:
-                return
-
-        if self.study_node_points[self.current_task] is None:
-            self.study_node_points[self.current_task] = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLMarkupsFiducialNode", f"{self.current_task.value}_{self.current_radiologist_id}_{volume_name}")
-            self.study_node_points[self.current_task].GetDisplayNode(
-            ).SetGlyphScale(1)
-            self.study_node_points[self.current_task].GetDisplayNode(
-            ).SetTextScale(2)
-
-        pos = [view_logic.get_view_offset(view) for view in self.views_first_row]  # nopep8
-
-        self.study_node_points[self.current_task].AddControlPointWorld([-pos[2], pos[1], pos[0]],
-                                                                       'p')
-
-        utils.show_node_only_in_views(self.study_node_points[self.current_task],
-                                      self.views_first_row)
-
-        if self.current_task_idx == 3:
-            self.ui_sub_6.study_next_patient_button.setEnabled(True)
-            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-
-            # Temporarily block signals wo se don't trigger the callbacks
-            self.ui_sub_6.study_checkbox.blockSignals(True)
-            self.ui_sub_6.study_checkbox.setChecked(True)
-            self.ui_sub_6.study_checkbox.blockSignals(False)
-
-            self.study_recurrence_present = True
-        else:
-            self.ui_sub_6.study_next_task_button.setEnabled(True)
-            self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
-
-        self.ui_sub_6.study_center_on_point_button.setEnabled(True)
-
-    def on_study_center_on_point(self) -> None:
-        # jump to the location of the current point
-        current_point = self.study_node_points[self.current_task]
-
-        position = [0, 0, 0]
-        current_point.GetNthControlPointPositionWorld(0, position)
-
-        slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
-                                                            position[1],
-                                                            position[2],
-                                                            False,
-                                                            1)
-        pass
-
-    def on_study_checkbox(self) -> None:
-        if self.current_task != tasks.Task.RECURRENCE:
-            return
-
-        self.study_recurrence_present = not self.study_recurrence_present
-
-        point = self.study_node_points[tasks.Task.RECURRENCE]
-
-        if self.study_recurrence_present:
-            if point is None:
-                self.ui_sub_6.study_next_patient_button.setEnabled(False)
-                self.ui_sub_6.study_next_patient_button.toolTip = "Please add annotation point first"  # nopep8
-
-            else:
-                self.ui_sub_6.study_next_patient_button.setEnabled(True)
-                self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-
-        else:
-            if point is not None:
-                if utils.show_warning_popup(f"Do you want to remove the point you already set for the recurrence?",
-                                            ""):
-                    slicer.mrmlScene.RemoveNode(point)
-                    self.study_node_points[tasks.Task.RECURRENCE] = None
-                    self.ui_sub_6.study_checkbox.blockSignals(True)
-                    self.ui_sub_6.study_checkbox.setChecked(False)
-                    self.ui_sub_6.study_checkbox.blockSignals(False)
-                    self.study_recurrence_present = False
-                    self.ui_sub_6.study_center_on_point_button.setEnabled(
-                        False)
-                else:
-                    self.ui_sub_6.study_checkbox.blockSignals(True)
-                    self.ui_sub_6.study_checkbox.setChecked(True)
-                    self.ui_sub_6.study_checkbox.blockSignals(False)
-                    self.study_recurrence_present = True
-
-            self.ui_sub_6.study_next_patient_button.setEnabled(True)
-            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-
-    def on_study_selection_changed(self) -> None:
-        if self.current_task == tasks.Task.LYMPH_NODE:
-
-            if self.ui_sub_6.study_dropdown.currentText == "Size increased":
-                self.study_lymphnode_size = "Size increased"
-            elif self.ui_sub_6.study_dropdown.currentText == "Size decreased":
-                self.study_lymphnode_size = "Size decreased"
-            elif self.ui_sub_6.study_dropdown.currentText == "Size same":
-                self.study_lymphnode_size = "Size same"
-            else:
-                raise ValueError("Unknown lymphnode size")
-
-    def study_save_annotations(self, specific_task: Optional[tasks.Task] = None) -> None:
-
-        if self.current_task_idx < 0:
-            return
-
-        path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient_name}"  # nopep8
-        if not os.path.exists(path_patient):
-            os.makedirs(path_patient)
-
-        if specific_task is None or specific_task == tasks.Task.LYMPH_NODE:
-            self.study_save_lymphnode(path_patient)
-        if specific_task is None or specific_task == tasks.Task.CAROTIS_GABEL:
-            self.study_save_carotisgabel(path_patient)
-        if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS:
-            self.study_save_avertebralis(path_patient)
-        if specific_task is None or specific_task == tasks.Task.RECURRENCE:
-            self.study_save_recurrence(path_patient)
-
-    def study_save_lymphnode(self, path_patient: str) -> None:
-
-        point = self.study_node_points[tasks.Task.LYMPH_NODE]
-
-        if point is None:
-            slicer.util.errorDisplay(
-                F"point {tasks.Task.LYMPH_NODE.value} is missing")
-            return
-
-        slicer.util.saveNode(point,
-                             path_patient + f"/{point.GetName()}.mrk.json")
-
-        with open(path_patient + f"/lymphnode_size.txt", "w") as f:
-            f.write(str(self.study_lymphnode_size))
-
-    def study_save_carotisgabel(self, path_patient: str) -> None:
-        point = self.study_node_points[tasks.Task.CAROTIS_GABEL]
-
-        if point is None:
-            slicer.util.errorDisplay(
-                F"point {tasks.Task.CAROTIS_GABEL.value} is missing")
-            return
-
-        slicer.util.saveNode(point,
-                             path_patient + f"/{point.GetName()}.mrk.json")
-
-    def study_save_avertebralis(self, path_patient: str) -> None:
-        point = self.study_node_points[tasks.Task.A_VERTEBRALIS]
-
-        if point is None:
-            slicer.util.errorDisplay(
-                F"point {tasks.Task.A_VERTEBRALIS.value} is missing")
-            return
-
-        slicer.util.saveNode(point,
-                             path_patient + f"/{point.GetName()}.mrk.json")
-
-    def study_save_recurrence(self, path_patient: str) -> None:
-        point = self.study_node_points[tasks.Task.RECURRENCE]
-        print(f"saving {self.study_recurrence_present=}")
-        if self.study_recurrence_present:
-            if point is None:
-                slicer.util.errorDisplay(
-                    F"point {tasks.Task.RECURRENCE.value} is missing")
-                return
-
-            slicer.util.saveNode(point,
-                                 path_patient + f"/{point.GetName()}.mrk.json")
-
-        with open(path_patient + f"/recurrence_present.txt", "w") as f:
-            f.write(str(self.study_recurrence_present))
-
-    def study_clear_annotations(self) -> None:
-        if self.current_task_idx <= 0:
-            return
-
-        for task, point in self.study_node_points.items():
-            if point is not None:
-                slicer.mrmlScene.RemoveNode(point)
-                self.study_node_points[task] = None
-
-        self.study_lymphnode_size = ""
-        self.study_recurrence_present = False
-
-        self.ui_sub_6.study_checkbox.blockSignals(True)
-        self.ui_sub_6.study_checkbox.setChecked(False)
-        self.ui_sub_6.study_checkbox.blockSignals(False)
-        self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
     def on_synchronise_views_wth_trasform(self) -> None:
         if not self._synchronisation_checks():
@@ -1081,6 +582,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             self.use_transform = self.crosshair.use_transform = True
             self.crosshair.use_only_linear_transform = self.use_only_linear_transform
+            print(f"{self.use_only_linear_transform=}")
 
             self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
             self.crosshair.apply_offsets = False
@@ -1094,18 +596,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 "Synchronise views with transform (t)")
             self.ui_sub_6.synchronise_views_general.setText(
                 "Synchronise views (s)")
-            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
 
-    def unsynchronise_views(self) -> None:
-        print('unsynchronised')
-        self._remove_custom_observers_from_crosshair()
-        self.ui_sub_4.synchronise_views_with_transform.setText(
-            "Synchronise views with transform (t)")
-        self.ui_sub_6.synchronise_views_general.setText(
-            "Synchronise views (s)")
-        self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
-
-    def on_synchronise_views_manually(self, views: List[List[str]] = None) -> None:
+    def on_synchronise_views_manually(self) -> None:
 
         if not self._synchronisation_checks():
             return
@@ -1142,35 +634,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             offset_diff_red, offset_diff_green, offset_diff_yellow]
         self.crosshair.apply_offsets = self.synchronise_manually_pressed
 
-    def on_synchronise_views_general(self) -> None:
-
-        if not self._synchronisation_checks():
-            return
-
-        if self.study_current_transform_type == utils.TransformType.NONE:
-            pass
-        elif self.study_current_transform_type == utils.TransformType.LINEAR:
-            self.on_synchronise_views_wth_trasform()
-            self.use_only_linear_transform = self.crosshair.use_only_linear_transform = True
-            self.ui_sub_4.linearTransformationCheckBox.setChecked(True)
-        elif self.study_current_transform_type == utils.TransformType.NONLINEAR:
-            self.on_synchronise_views_wth_trasform()
-            self.use_only_linear_transform = self.crosshair.use_only_linear_transform = False
-            self.ui_sub_4.linearTransformationCheckBox.setChecked(False)
-        else:
-            raise ValueError("Unknown transformation mode")
-
-        if self.synchronise_with_displacement_pressed:
-            self.ui_sub_6.synchronise_views_general.setText(
-                "Unsynchronise views (s)")
-        else:
-            self.ui_sub_6.synchronise_views_general.setText(
-                "Synchronise views (s)")
-
-        self.ui_sub_4.synchronise_views_with_transform.setVisible(False)
-        self.ui_sub_4.synchronise_views_manually.setVisible(False)
+    def unsynchronise_views(self) -> None:
+        print('unsynchronised')
+        self._remove_custom_observers_from_crosshair()
+        self.ui_sub_4.synchronise_views_with_transform.setText(
+            "Synchronise views with transform (t)")
+        self.ui_sub_6.synchronise_views_general.setText(
+            "Synchronise views (s)")
 
     def on_linear_only(self) -> None:
+        print(f"on linear only")
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = not self.use_only_linear_transform
 
     def on_remove_all_data(self) -> None:
@@ -1206,352 +679,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.node_seg_moving is not None:
             slicer.mrmlScene.RemoveNode(self.node_seg_moving)
             self.node_seg_moving = None
-
-    def on_save_annotations(self) -> None:
-
-        if self.annotations_already_saved:
-            if not utils.show_warning_popup("Annotations already saved",
-                                            "Do you want to overwrite them?"):
-                return
-
-        # example name volume: XPqt2AtrAMc~2_followup_LleziZ9eAbs~201_hals_pv_08_i6_b_idose_6
-        name_volume_fixed = str(self.node_fixed.GetName())
-        name_volume_moving = str(self.node_moving.GetName())
-        temp = name_volume_fixed.split("~")
-        name_patient = temp[0]
-
-        # check if all annotations are present
-        if self.annotation_fixed_roi_lymphnode is None:
-            slicer.util.errorDisplay("Please add fixed lymphnode ROI")
-            return
-        if self.annotation_moving_roi_lymphnode is None:
-            slicer.util.errorDisplay("Please add moving lymphnode ROI")
-            return
-
-        if self.annotation_fixed_points is None or self.annotation_fixed_points.GetNumberOfControlPoints() == 0:
-            slicer.util.errorDisplay("Please add fixed annotation points")
-            return
-
-        if self.annotation_moving_points is None or self.annotation_moving_points.GetNumberOfControlPoints() == 0:
-            slicer.util.errorDisplay("Please add fixed annotation points")
-            return
-
-        if not utils.has_control_point_with_name(self.annotation_fixed_points, f"point_carotisgabel_{name_volume_fixed}"):
-            slicer.util.errorDisplay(
-                "Please add carotisgabel point for fixed volume")
-            return
-        if not utils.has_control_point_with_name(self.annotation_moving_points, f"point_carotisgabel_{name_volume_moving}"):
-            slicer.util.errorDisplay(
-                "Please add carotisgabel point for moving volume")
-            return
-
-        if not utils.has_control_point_with_name(self.annotation_fixed_points, f"point_abgangavertebralis_{name_volume_fixed}"):
-            slicer.util.errorDisplay(
-                "Please add abgangavertebralis point for fixed volume")
-            return
-        if not utils.has_control_point_with_name(self.annotation_moving_points, f"point_abgangavertebralis_{name_volume_moving}"):
-            slicer.util.errorDisplay(
-                "Please add abgangavertebralis point for moving volume")
-            return
-
-        if self.annotation_moving_roi_lymphnode and self.annotation_bool_lymphnode_increased is False:
-            if not utils.show_warning_popup(f"Did you check for increased lymphnode size?",
-                                            "(Click OK to continue saving)"):
-                return
-
-        if self.annotation_fixed_roi_recurrence is None and self.ui_sub_5.recurrencePresentCheckBox.isChecked():
-            utils.show_info_popup(
-                f"You marked that there is a recurrence, but did not add a ROI for it.\nExiting saving.")
-            return
-
-        if self.annotation_fixed_roi_recurrence is None:
-            if not utils.show_warning_popup(f"Did you check for recurrence?",
-                                            "(Click OK to continue saving)"):
-                return
-
-        if not utils.show_warning_popup("Have you set the window, level and threshold?",
-                                        "(Click OK to continue saving)"):
-            return
-
-        path_patient = self.annotations_save_path + name_patient
-        if not os.path.exists(path_patient):
-            os.makedirs(path_patient)
-
-        slicer.util.saveNode(self.annotation_fixed_roi_lymphnode, path_patient +
-                             f"/{self.annotation_fixed_roi_lymphnode.GetName()}.mrk.json")
-        slicer.util.saveNode(self.annotation_moving_roi_lymphnode, path_patient +
-                             f"/{self.annotation_moving_roi_lymphnode.GetName()}.mrk.json")
-        with open(path_patient + f"/lymphnode_increased.txt", "w") as f:
-            f.write(str(self.annotation_bool_lymphnode_increased))
-
-        slicer.util.saveNode(self.annotation_fixed_points, path_patient +
-                             f"/{self.annotation_fixed_points.GetName()}.mrk.json")
-        slicer.util.saveNode(self.annotation_moving_points, path_patient +
-                             f"/{self.annotation_fixed_points.GetName()}.mrk.json")
-
-        with open(path_patient + f"/recurrence_exists.txt", "w") as f:
-            f.write(str(self.annotation_fixed_roi_recurrence is not None))
-
-        if self.annotation_fixed_roi_recurrence is not None:
-            slicer.util.saveNode(self.annotation_fixed_roi_recurrence, path_patient +
-                                 f"/{self.annotation_fixed_roi_recurrence.GetName()}.mrk.json")
-
-        disp_node_fixed = self.node_fixed.GetDisplayNode()
-        w_l_t_fixed = {'window': disp_node_fixed.GetWindow(),
-                       'level': disp_node_fixed.GetLevel(),
-                       'threshold': [disp_node_fixed.GetLowerThreshold(), disp_node_fixed.GetUpperThreshold()]}
-        with open(path_patient + f"/window_level_threshold_{self.node_fixed.GetName()}.json", "w") as f:
-            json.dump(w_l_t_fixed, f)
-
-        disp_node_moving = self.node_moving.GetDisplayNode()
-        w_l_t_moving = {'window': disp_node_moving.GetWindow(),
-                        'level': disp_node_moving.GetLevel(),
-                        'threshold': [disp_node_moving.GetLowerThreshold(), disp_node_moving.GetUpperThreshold()]}
-        with open(path_patient + f"/window_level_threshold_{self.node_moving.GetName()}.json", "w") as f:
-            json.dump(w_l_t_moving, f)
-
-        self.annotations_already_saved = True
-
-        # show message with Ok only that saving is done
-        utils.show_info_popup("Annotations saved")
-
-    def on_clear_annotations(self) -> None:
-        if not self.annotations_already_saved:
-            if not utils.show_warning_popup("Annotations not saved yet.",
-                                            "Do you want to clear them?"):
-                return
-        else:
-            if not utils.show_warning_popup("Annotations already saved.",
-                                            "Do you want to clear them?"):
-                return
-
-        if self.annotation_fixed_roi_lymphnode is not None:
-            slicer.mrmlScene.RemoveNode(self.annotation_fixed_roi_lymphnode)
-            self.annotation_fixed_roi_lymphnode = None
-            self.ui_sub_5.lymphnodeRoiFixedCheckbox.setChecked(False)
-
-        if self.annotation_moving_roi_lymphnode is not None:
-            slicer.mrmlScene.RemoveNode(self.annotation_moving_roi_lymphnode)
-            self.annotation_moving_roi_lymphnode = None
-            self.ui_sub_5.increasedLymphnodeCheckBox.setEnabled(False)
-            self.ui_sub_5.increasedLymphnodeCheckBox.setChecked(False)
-            self.ui_sub_5.lymphnodeRoiMovingCheckbox.setChecked(False)
-
-        if self.annotation_fixed_points is not None:
-            slicer.mrmlScene.RemoveNode(self.annotation_fixed_points)
-            self.annotation_fixed_points = None
-            self.ui_sub_5.carotisgabelPointFixedCheckbox.setChecked(False)
-            self.ui_sub_5.abgangavertebralisPointFixedCheckbox.setChecked(
-                False)
-
-        if self.annotation_moving_points is not None:
-            slicer.mrmlScene.RemoveNode(self.annotation_moving_points)
-            self.annotation_moving_points = None
-            self.ui_sub_5.carotisgabelPointMovingCheckbox.setChecked(False)
-            self.ui_sub_5.abgangavertebralisPointMovingCheckbox.setChecked(
-                False)
-
-        if self.annotation_fixed_roi_recurrence is not None:
-            slicer.mrmlScene.RemoveNode(self.annotation_fixed_roi_recurrence)
-            self.annotation_fixed_roi_recurrence = None
-            self.ui_sub_5.recurrencePresentCheckBox.setChecked(False)
-            self.ui_sub_5.recurrenceRoiFixedCheckbox.setChecked(False)
-            self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(False)
-
-        self.annotations_already_saved = False
-
-    def on_add_roi_lymphnode(self, image: Literal['fixed', 'moving']) -> None:
-        if image not in ['fixed', 'moving']:
-            raise ValueError("image must be either 'fixed' or 'moving'")
-
-        if image == 'fixed':
-            volume_name = self.node_fixed.GetName()
-            views = self.views_first_row
-            node_annotation = self.annotation_fixed_roi_lymphnode
-        else:
-            volume_name = self.node_moving.GetName()
-            views = self.views_second_row
-            node_annotation = self.annotation_moving_roi_lymphnode
-
-        name = str("roi_lymphnode_" + volume_name)
-
-        if node_annotation is not None:
-            if utils.show_warning_popup(f"ROI {name.capitalize()} already exists",
-                                        "Do you want to overwrite it?"):
-                slicer.mrmlScene.RemoveNode(
-                    node_annotation)
-                if image == 'moving':
-                    self.ui_sub_5.increasedLymphnodeCheckBox.setEnabled(False)
-            else:
-                return
-
-        new_annotation = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsROINode", name)
-
-        view_logic.configure_roi(new_annotation, views)
-
-        if image == 'fixed':
-            self.annotation_fixed_roi_lymphnode = new_annotation
-            self.ui_sub_5.lymphnodeRoiFixedCheckbox.setChecked(True)
-        else:
-            self.annotation_moving_roi_lymphnode = new_annotation
-            self.ui_sub_5.increasedLymphnodeCheckBox.setEnabled(True)
-            self.ui_sub_5.lymphnodeRoiMovingCheckbox.setChecked(True)
-
-    def on_lymphnode_increased(self) -> None:
-        self.annotation_bool_lymphnode_increased = not self.annotation_bool_lymphnode_increased
-
-    def _add_point_list(self) -> None:
-        if self.annotation_fixed_points is None:
-
-            self.annotation_fixed_points = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLMarkupsFiducialNode", f"points_{self.node_fixed.GetName()}")
-
-            self.annotation_fixed_points.GetDisplayNode().SetGlyphScale(1)
-            self.annotation_fixed_points.GetDisplayNode().SetTextScale(2)
-
-        if self.annotation_moving_points is None:
-            self.annotation_moving_points = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLMarkupsFiducialNode", f"points_{self.node_moving.GetName()}")
-
-            self.annotation_moving_points.GetDisplayNode().SetGlyphScale(1)
-            self.annotation_moving_points.GetDisplayNode().SetTextScale(2)
-
-    def on_add_annotation_point_fixed(
-            self,
-            point_name: Literal['carotisgabel', 'abgangavertebralis']
-    ) -> None:
-
-        self._add_point_list()
-
-        volume_name = self.node_fixed.GetName()
-
-        name = "point_" + point_name + '_' + volume_name
-
-        if utils.has_control_point_with_name(self.annotation_fixed_points, name):
-            if utils.show_warning_popup(f"Point {point_name.capitalize()} already exists",
-                                        "Do you want to overwrite it?"):
-                utils.remove_control_point_by_name(self.annotation_fixed_points,
-                                                   name)
-            else:
-                return
-
-        pos = [view_logic.get_view_offset(view) for view in self.views_first_row]  # nopep8
-
-        self.annotation_fixed_points.AddControlPointWorld([-pos[2], pos[1], pos[0]],
-                                                          name)
-
-        if point_name == 'carotisgabel':
-            self.ui_sub_5.carotisgabelPointFixedCheckbox.setChecked(True)
-        else:
-            self.ui_sub_5.abgangavertebralisPointFixedCheckbox.setChecked(True)
-
-        utils.show_node_only_in_views(self.annotation_fixed_points,
-                                      self.views_first_row)
-
-    def on_add_annotation_point_moving(
-            self,
-            point_name: Literal['carotisgabel', 'abgangavertebralis']
-    ) -> None:
-
-        self._add_point_list()
-
-        volume_name = self.node_moving.GetName()
-
-        name = "point_" + point_name + '_' + volume_name
-
-        if utils.has_control_point_with_name(self.annotation_moving_points, name):
-            if utils.show_warning_popup(f"Point {point_name.capitalize()} already exists",
-                                        "Do you want to overwrite it?"):
-                utils.remove_control_point_by_name(self.annotation_moving_points,
-                                                   name)
-            else:
-                return
-
-        pos = [view_logic.get_view_offset(view) for view in self.views_second_row]  # nopep8
-
-        self.annotation_moving_points.AddControlPointWorld([-pos[2], pos[1], pos[0]],
-                                                           name)
-
-        if point_name == 'carotisgabel':
-            self.ui_sub_5.carotisgabelPointMovingCheckbox.setChecked(True)
-        else:
-            self.ui_sub_5.abgangavertebralisPointMovingCheckbox.setChecked(
-                True)
-
-        utils.show_node_only_in_views(self.annotation_moving_points,
-                                      self.views_second_row)
-
-    def on_recurrence_present(self) -> None:
-        if self.ui_sub_5.recurrencePresentCheckBox.isChecked():
-            self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(True)
-            return
-
-        # trying to uncheck - only allow with warning
-        if self.ui_sub_5.recurrencePresentCheckBox.isChecked() is False:
-            if self.annotation_fixed_roi_recurrence is None:
-                self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(False)
-            else:
-                if utils.show_warning_popup(f"You alreday created a ROI for the recurrence.",
-                                            "Do you want to remove it?"):
-                    slicer.mrmlScene.RemoveNode(
-                        self.annotation_fixed_roi_recurrence)
-                    self.annotation_fixed_roi_recurrence = None
-                    self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(False)
-                else:
-                    self.ui_sub_5.recurrencePresentCheckBox.setChecked(True)
-                    self.ui_sub_5.addRecurrenceRoiFixed.setEnabled(True)
-
-    def on_add_roi_recurrence(self) -> None:
-
-        name = str("roi_recurrence_" + self.node_moving.GetName())
-
-        if self.annotation_fixed_roi_recurrence is not None:
-            if utils.show_warning_popup(f"ROI {name.capitalize()} already exists",
-                                        "Do you want to overwrite it?"):
-                slicer.mrmlScene.RemoveNode(
-                    self.annotation_fixed_roi_recurrence)
-            else:
-                return
-
-        self.annotation_fixed_roi_recurrence = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsROINode", name)
-
-        view_logic.configure_roi(
-            self.annotation_fixed_roi_recurrence, self.views_first_row)
-
-        self.ui_sub_5.recurrenceRoiFixedCheckbox.setChecked(True)
-
-    def on_set_annotations_visibility(self, visibility: bool) -> None:
-
-        for annotation in [self.annotation_fixed_roi_lymphnode,
-                           self.annotation_moving_roi_lymphnode,
-                           self.annotation_fixed_points,
-                           self.annotation_moving_points,
-                           self.annotation_fixed_roi_recurrence]:
-            if annotation is not None:
-                annotation.GetDisplayNode().SetVisibility(visibility)
-
-    def hide_module_parts_for_user_study(self) -> None:
-        self.ui_sub_1.simple_ui_button.setHidden(False)
-        self.ui_sub_2.studyCollapsibleButton.setHidden(True)
-        self.ui_sub_3.inputsCollapsibleButton.setHidden(True)
-        self.ui_sub_4.controlsCollapsibleButton.setHidden(True)
-        self.ui_sub_5.annotationsCollapsibleButton.setHidden(True)
-        self.loadingCollapsible.setHidden(True)
-
-        self.ui_sub_6.current_case_label.setVisible(False)
-        self.ui_sub_6.Form_user_study.setHidden(False)
-        self.ui_sub_6.study_center_on_point_button.setVisible(False)
-
-    def show_module_parts_for_user_study(self) -> None:
-        self.ui_sub_2.studyCollapsibleButton.setHidden(False)
-        self.ui_sub_3.inputsCollapsibleButton.setHidden(False)
-        self.ui_sub_4.controlsCollapsibleButton.setHidden(False)
-        self.ui_sub_5.annotationsCollapsibleButton.setHidden(False)
-        self.loadingCollapsible.setHidden(False)
-
-        self.ui_sub_6.Form_user_study.setHidden(True)
 
     def update_cursor_view(self) -> None:
 
@@ -1606,6 +733,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair.node_transform_nonlinear = self.node_transform_nonlinear
             self.crosshair.node_transform_fixed = self.node_transform_fixed
             self.crosshair.node_transform_moving = self.node_transform_moving
+            self.crosshair.use_only_linear_transform = self.use_only_linear_transform
 
     def _remove_custom_observers_from_crosshair(self) -> None:
         for observer_tag in self.crosshair_custom_observer_tags:

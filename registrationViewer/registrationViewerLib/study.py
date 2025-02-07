@@ -1,14 +1,21 @@
-from dataclasses import dataclass, field
 from collections import defaultdict
+from dataclasses import dataclass, field
 import json
+import os
+from typing import Optional, TYPE_CHECKING
 
 from typing import List, Tuple
 
+import qt
 import slicer
 
-from registrationViewerLib import utils
+from registrationViewerLib import tasks, utils, tasks_ui_logic
 
 path = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
+
+
+if TYPE_CHECKING:
+    from ..registrationViewer import registrationViewerWidget
 
 
 @dataclass
@@ -110,3 +117,70 @@ def load_study_volumes(self, path_case: str) -> None:
         node_deformation)
 
     slicer.progressWindow.close()
+
+
+def save_annotations(self: "registrationViewerWidget",
+                     specific_task: Optional[tasks.Task] = None) -> None:
+
+    if self.current_task_idx < 0:
+        return
+
+    path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient_name}"  # nopep8
+    if not os.path.exists(path_patient):
+        os.makedirs(path_patient)
+
+    if specific_task is None or specific_task == tasks.Task.LYMPH_NODE:
+        tasks_ui_logic.save_lymphnode(path_patient,
+                                      self.study_node_points,
+                                      self.study_lymphnode_size)
+    if specific_task is None or specific_task == tasks.Task.CAROTIS_GABEL:
+        tasks_ui_logic.save_carotisgabel(path_patient,
+                                         self.study_node_points)
+    if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS:
+        tasks_ui_logic.save_avertebralis(path_patient,
+                                         self.study_node_points)
+    if specific_task is None or specific_task == tasks.Task.RECURRENCE:
+        tasks_ui_logic.save_recurrence(path_patient,
+                                       self.study_node_points,
+                                       self.study_recurrence_present)
+
+
+def clear_annotations(self: "registrationViewerWidget") -> None:
+    if self.current_task_idx <= 0:
+        return
+
+    for task, point in self.study_node_points.items():
+        if point is not None:
+            slicer.mrmlScene.RemoveNode(point)
+            self.study_node_points[task] = None
+
+    self.study_lymphnode_size = ""
+    self.study_recurrence_present = False
+
+    self.ui_sub_6.study_checkbox.blockSignals(True)
+    self.ui_sub_6.study_checkbox.setChecked(False)
+    self.ui_sub_6.study_checkbox.blockSignals(False)
+    self.ui_sub_6.study_dropdown.setCurrentText('Size same')
+
+
+def hide_module_parts_for_user_study(self: "registrationViewerWidget") -> None:
+    self.ui_sub_1.simple_ui_button.setHidden(False)
+    self.ui_sub_2.studyCollapsibleButton.setHidden(True)
+    self.ui_sub_3.inputsCollapsibleButton.setHidden(True)
+    self.ui_sub_4.controlsCollapsibleButton.setHidden(True)
+    self.ui_sub_5.annotationsCollapsibleButton.setHidden(True)
+    self.loadingCollapsible.setHidden(True)
+
+    self.ui_sub_6.current_case_label.setVisible(False)
+    self.ui_sub_6.Form_user_study.setHidden(False)
+    self.ui_sub_6.study_center_on_point_button.setVisible(False)
+
+
+def show_module_parts_for_user_study(self: "registrationViewerWidget") -> None:
+    self.ui_sub_2.studyCollapsibleButton.setHidden(False)
+    self.ui_sub_3.inputsCollapsibleButton.setHidden(False)
+    self.ui_sub_4.controlsCollapsibleButton.setHidden(False)
+    self.ui_sub_5.annotationsCollapsibleButton.setHidden(False)
+    self.loadingCollapsible.setHidden(False)
+
+    self.ui_sub_6.Form_user_study.setHidden(True)

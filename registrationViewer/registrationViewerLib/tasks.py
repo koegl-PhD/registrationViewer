@@ -1,5 +1,7 @@
 from enum import Enum
 
+from typing import Dict, Union
+
 
 class Task(Enum):
     NONE = "none"
@@ -40,18 +42,3 @@ class Case():
 
     def __str__(self):
         return f"Patient {self.current_case}/{self.case_count}"
-
-
-def show_generic_task_ui(
-        ui,
-        task: Task,
-        current_case_num: int,
-        total_case_count: int
-) -> None:
-    ui.current_case_label.setVisible(True)
-
-    ui.study_current_task_description_label.setText(TASK_DESCRIPTIONS[task])
-    ui.study_current_task_description_label.setVisible(True)
-
-    ui.study_add_point_button.setText("Add point")
-    ui.study_add_point_button.setVisible(True)
