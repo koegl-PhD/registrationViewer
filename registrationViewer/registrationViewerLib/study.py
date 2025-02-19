@@ -133,8 +133,6 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
     study_name = volume_name.split('~')[1]
 
     for task_name in tasks.TASK_ORDER.values():
-        print(f"adding {task_name.value} to {patient_name} {study_name}")
-
         path_annotation = os.path.join(self.study_data_master.path_study_input_annotations,
                                        patient_name,
                                        study_name,
@@ -146,8 +144,6 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
         name = path_annotation.split("/")[-1].split(".")[0]
         self.study_node_groundtruth_points[task_name].SetName(name)
 
-    print(f"{self.study_node_groundtruth_points=}")
-
     slicer.progressWindow.close()
 
 
@@ -158,6 +154,7 @@ def save_annotations(self: "registrationViewerWidget",
         return
 
     path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient_name}"  # nopep8
+    print(f"{path_patient=}")
     if not os.path.exists(path_patient):
         os.makedirs(path_patient)
 
@@ -190,7 +187,7 @@ def clear_annotations(self: "registrationViewerWidget") -> None:
             slicer.mrmlScene.RemoveNode(point)
             self.study_node_groundtruth_points[task] = None
 
-    self.study_lymphnode_size = ""
+    self.study_lymphnode_size = "Size same"
     self.study_recurrence_present = False
 
     self.ui_sub_6.study_checkbox.blockSignals(True)

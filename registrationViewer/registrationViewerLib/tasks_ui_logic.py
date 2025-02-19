@@ -4,7 +4,6 @@ import slicer
 
 from registrationViewerLib import utils, tasks
 
-# Define per-task UI adjustments as functions
 TASK_UI_ADDITIONS: Dict[tasks.Task, Callable[[object], None]] = {
     tasks.Task.LYMPH_NODE: lambda ui: ui.study_dropdown.setVisible(True),
     tasks.Task.RECURRENCE: lambda ui: (
@@ -55,12 +54,14 @@ def _save_point(
 
     point = study_node_points[task]
 
-    if point is None:
+    if point is None and task != tasks.Task.RECURRENCE:
         slicer.util.errorDisplay(F"point {task.value} is missing")
         return
-
-    slicer.util.saveNode(point,
-                         path_patient + f"/{point.GetName()}.mrk.json")
+    elif point is None and task == tasks.Task.RECURRENCE:
+        pass
+    else:
+        slicer.util.saveNode(point,
+                             path_patient + f"/{point.GetName()}.mrk.json")
 
     if additional_info:
         path = additional_info.get("path")
@@ -70,6 +71,7 @@ def _save_point(
             with open(path, "w") as f:
                 f.write(content)
         else:
+            print(f"{additional_info=}")
             raise ValueError(
                 f"path and content must be provided together to save additional info in {task.value}")
 

@@ -182,7 +182,7 @@ def on_user_start_study(self: "registrationViewerWidget") -> None:
         ui=self.ui_sub_6,
         idx=2,
         initial=1,
-        maximum=4
+        maximum=len(tasks.TASK_ORDER)
     )
 
     self.study_progress_bar_patients.setVisible(False)
@@ -202,7 +202,7 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
 
     study.save_annotations(self)
     study.clear_annotations(self)
-    # self.on_remove_all_data()
+    self.on_remove_all_data()
 
     self.current_patient_idx += 1
     self.current_task_idx = -1
@@ -216,7 +216,7 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_next_task_button.setVisible(False)
     self.ui_sub_6.study_next_patient_button.setVisible(False)
 
-    # study.load_study_volumes(self, self.current_patient_path)
+    study.load_study_volumes(self, self.current_patient_path)
     study.load_ground_truth_annotations(self,
                                         self.current_patient_name,
                                         self.node_moving.GetName())
@@ -273,27 +273,24 @@ def on_next_task(self: "registrationViewerWidget") -> None:
     self.current_task_idx += 1
     self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
 
-    TASK_TO_UI_FUNC = {
-        tasks.Task.A_VERTEBRALIS_R: tasks_ui_logic.show_task,
-        tasks.Task.A_VERTEBRALIS_L: tasks_ui_logic.show_task,
-        tasks.Task.A_CAROTISEXTERNA_R: tasks_ui_logic.show_task,
-        tasks.Task.A_CAROTISEXTERNA_L: tasks_ui_logic.show_task,
-        tasks.Task.LYMPH_NODE: tasks_ui_logic.show_task,
-        tasks.Task.RECURRENCE: tasks_ui_logic.show_task,
-    }
+    tasks_ui_logic.show_task(
+        self.ui_sub_6,
+        self.current_task,
+        self.study_node_points,
+        self.study_node_groundtruth_points,
+        self.group_second_row
+    )
 
-    if self.current_task in TASK_TO_UI_FUNC:
-        TASK_TO_UI_FUNC[self.current_task](
-            self.ui_sub_6,
-            self.study_node_points,
-            self.study_node_groundtruth_points,
-            self.group_second_row
-        )
-
-    self.ui_sub_6.study_next_patient_button.setVisible(True)
-    self.ui_sub_6.study_next_patient_button.setEnabled(True)
-    self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-    self.ui_sub_6.study_next_task_button.setVisible(False)
+    if self.current_task == tasks.Task.RECURRENCE:
+        self.ui_sub_6.study_next_patient_button.setVisible(True)
+        self.ui_sub_6.study_next_patient_button.setEnabled(True)
+        self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+        self.ui_sub_6.study_next_task_button.setVisible(False)
+    else:
+        self.ui_sub_6.study_next_patient_button.setVisible(False)
+        self.ui_sub_6.study_next_patient_button.setEnabled(False)
+        self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+        self.ui_sub_6.study_next_task_button.setVisible(True)
 
 
 def on_add_annotation_point(self: "registrationViewerWidget") -> None:
@@ -326,7 +323,7 @@ def on_add_annotation_point(self: "registrationViewerWidget") -> None:
     utils.show_node_only_in_views(self.study_node_points[self.current_task],
                                   self.views_first_row)
 
-    if self.current_task_idx == 3:
+    if self.current_task == tasks.Task.RECURRENCE:
         self.ui_sub_6.study_next_patient_button.setEnabled(True)
         self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
 
