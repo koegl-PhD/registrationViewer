@@ -27,26 +27,26 @@ def show_generic_task_ui(
                                  study_node_points)
 
 
-def show_task_carotisgabel_l(ui,
-                             study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+def show_task_a_carotisexterna_l(ui,
+                                 study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
     show_generic_task_ui(ui,
-                         tasks.Task.CAROTIS_GABEL_L,
+                         tasks.Task.A_CAROTISEXTERNA_L,
                          study_node_points)
 
 
-def show_task_carotisgabel_r(ui,
-                             study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
-    show_generic_task_ui(ui, tasks.Task.CAROTIS_GABEL_R, study_node_points)
+def show_task_a_carotisexterna_r(ui,
+                                 study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+    show_generic_task_ui(ui, tasks.Task.A_CAROTISEXTERNA_R, study_node_points)
 
 
-def show_task_avertebralis_l(ui,
-                             study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+def show_task_a_vertebralis_l(ui,
+                              study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
 
     show_generic_task_ui(ui, tasks.Task.A_VERTEBRALIS_L, study_node_points)
 
 
-def show_task_avertebralis_r(ui,
-                             study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+def show_task_a_vertebralis_r(ui,
+                              study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
 
     show_generic_task_ui(ui, tasks.Task.A_VERTEBRALIS_R, study_node_points)
 
@@ -107,31 +107,31 @@ def save_lymphnode(path_patient: str,
                                  "content": study_lymphnode_size})
 
 
-def save_carotisgabel_l(path_patient: str,
-                        study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+def save_a_carotisexterna_l(path_patient: str,
+                            study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
 
     _save_point(path_patient,
-                tasks.Task.CAROTIS_GABEL_L,
+                tasks.Task.A_CAROTISEXTERNA_L,
                 study_node_points)
 
 
-def save_carotisgabel_r(path_patient: str,
-                        study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+def save_a_carotisexterna_r(path_patient: str,
+                            study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
 
     _save_point(path_patient,
-                tasks.Task.CAROTIS_GABEL_R,
+                tasks.Task.A_CAROTISEXTERNA_R,
                 study_node_points)
 
 
-def save_avertebralis_l(path_patient: str,
-                        study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+def save_a_vertebralis_l(path_patient: str,
+                         study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
     _save_point(path_patient,
                 tasks.Task.A_VERTEBRALIS_L,
                 study_node_points)
 
 
-def save_avertebralis_r(path_patient: str,
-                        study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+def save_a_vertebralis_r(path_patient: str,
+                         study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
     _save_point(path_patient,
                 tasks.Task.A_VERTEBRALIS_R,
                 study_node_points)

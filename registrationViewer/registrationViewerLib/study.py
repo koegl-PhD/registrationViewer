@@ -129,22 +129,27 @@ def save_annotations(self: "registrationViewerWidget",
     if not os.path.exists(path_patient):
         os.makedirs(path_patient)
 
+    if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS_R:
+        tasks_ui_logic.save_a_vertebralis_r(path_patient,
+                                            self.study_node_points)
+
+    if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS_L:
+        tasks_ui_logic.save_a_vertebralis_l(path_patient,
+                                            self.study_node_points)
+
+    if specific_task is None or specific_task == tasks.Task.A_CAROTISEXTERNA_R:
+        tasks_ui_logic.save_a_carotisexterna_r(path_patient,
+                                               self.study_node_points)
+
+    if specific_task is None or specific_task == tasks.Task.A_CAROTISEXTERNA_L:
+        tasks_ui_logic.save_a_carotisexterna_l(path_patient,
+                                               self.study_node_points)
+
     if specific_task is None or specific_task == tasks.Task.LYMPH_NODE:
         tasks_ui_logic.save_lymphnode(path_patient,
                                       self.study_node_points,
                                       self.study_lymphnode_size)
-    if specific_task is None or specific_task == tasks.Task.CAROTIS_GABEL_L:
-        tasks_ui_logic.save_carotisgabel_l(path_patient,
-                                           self.study_node_points)
-    if specific_task is None or specific_task == tasks.Task.CAROTIS_GABEL_R:
-        tasks_ui_logic.save_carotisgabel_r(path_patient,
-                                           self.study_node_points)
-    if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS_L:
-        tasks_ui_logic.save_avertebralis_l(path_patient,
-                                           self.study_node_points)
-    if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS_R:
-        tasks_ui_logic.save_avertebralis_r(path_patient,
-                                           self.study_node_points)
+
     if specific_task is None or specific_task == tasks.Task.RECURRENCE:
         tasks_ui_logic.save_recurrence(path_patient,
                                        self.study_node_points,

@@ -269,25 +269,29 @@ def on_next_task(self: "registrationViewerWidget") -> None:
     self.current_task_idx += 1
     self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
 
-    match self.current_task:
-        case tasks.Task.CAROTIS_GABEL_L:
-            tasks_ui_logic.show_task_carotisgabel_l(
-                self.ui_sub_6, self.study_node_points)
-        case tasks.Task.A_VERTEBRALIS_L:
-            tasks_ui_logic.show_task_avertebralis_l(
-                self.ui_sub_6, self.study_node_points)
-        case tasks.Task.CAROTIS_GABEL_R:
-            tasks_ui_logic.show_task_carotisgabel_r(
-                self.ui_sub_6, self.study_node_points)
-        case tasks.Task.A_VERTEBRALIS_R:
-            tasks_ui_logic.show_task_avertebralis_r(
-                self.ui_sub_6, self.study_node_points)
-        case tasks.Task.LYMPH_NODE:
-            tasks_ui_logic.show_task_lymphnode(
-                self.ui_sub_6, self.study_node_points)
-        case tasks.Task.RECURRENCE:
-            tasks_ui_logic.show_task_recurrence(
-                self.ui_sub_6, self.study_node_points)
+    if self.current_task == tasks.Task.A_VERTEBRALIS_R:
+        tasks_ui_logic.show_task_a_vertebralis_r(
+            self.ui_sub_6, self.study_node_points)
+
+    elif self.current_task == tasks.Task.A_VERTEBRALIS_L:
+        tasks_ui_logic.show_task_a_vertebralis_l(
+            self.ui_sub_6, self.study_node_points)
+
+    elif self.current_task == tasks.Task.A_CAROTISEXTERNA_R:
+        tasks_ui_logic.show_task_a_carotisexterna_r(
+            self.ui_sub_6, self.study_node_points)
+
+    if self.current_task == tasks.Task.A_CAROTISEXTERNA_L:
+        tasks_ui_logic.show_task_a_carotisexterna_l(
+            self.ui_sub_6, self.study_node_points)
+
+    elif self.current_task == tasks.Task.LYMPH_NODE:
+        tasks_ui_logic.show_task_lymphnode(
+            self.ui_sub_6, self.study_node_points)
+
+    elif self.current_task == tasks.Task.RECURRENCE:
+        tasks_ui_logic.show_task_recurrence(
+            self.ui_sub_6, self.study_node_points)
 
     self.ui_sub_6.study_next_patient_button.setVisible(True)
     self.ui_sub_6.study_next_patient_button.setEnabled(True)
