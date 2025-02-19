@@ -172,17 +172,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.current_patient_list = None
 
         self.current_task_idx: int = -1
-        self.tasks = [tasks.Task.LYMPH_NODE,
-                      tasks.Task.CAROTIS_GABEL,
-                      tasks.Task.A_VERTEBRALIS,
-                      tasks.Task.RECURRENCE]
-
         self.study_node_points = {
-            self.tasks[0]: None,
-            self.tasks[1]: None,
-            self.tasks[2]: None,
-            self.tasks[3]: None
-        }
+            tasks.TASK_ORDER[key]: None for key in tasks.TASK_ORDER.keys()}
 
         # task specific
         self.study_lymphnode_size: Literal["Size same",
@@ -759,7 +750,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def current_task(self) -> tasks.Task:
-        return self.tasks[self.current_task_idx]
+        return tasks.TASK_ORDER[self.current_task_idx]
 
     @property
     def current_patient_name(self) -> str:

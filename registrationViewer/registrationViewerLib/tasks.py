@@ -13,6 +13,15 @@ class Task(Enum):
     RECURRENCE = "recurrence"
 
 
+TASK_ORDER = {
+    0: Task.CAROTIS_GABEL_L,
+    1: Task.A_VERTEBRALIS_L,
+    2: Task.CAROTIS_GABEL_R,
+    3: Task.A_VERTEBRALIS_R,
+    4: Task.LYMPH_NODE,
+    5: Task.RECURRENCE
+}
+
 TASK_DESCRIPTIONS = {
 
     Task.CAROTIS_GABEL_L: """

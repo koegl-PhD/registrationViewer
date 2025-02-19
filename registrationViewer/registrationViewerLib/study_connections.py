@@ -269,28 +269,30 @@ def on_next_task(self: "registrationViewerWidget") -> None:
     self.current_task_idx += 1
     self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
 
-    if self.current_task_idx == 0:
-        tasks_ui_logic.show_task_carotisgabel_l(
-            self.ui_sub_6, self.study_node_points)
-    elif self.current_task_idx == 1:
-        tasks_ui_logic.show_task_avertebralis_l(
-            self.ui_sub_6, self.study_node_points)
-    elif self.current_task_idx == 2:
-        tasks_ui_logic.show_task_carotisgabel_r(
-            self.ui_sub_6, self.study_node_points)
-    elif self.current_task_idx == 3:
-        tasks_ui_logic.show_task_avertebralis_r(
-            self.ui_sub_6, self.study_node_points)
-    elif self.current_task_idx == 4:
-        tasks_ui_logic.show_task_lymphnode(
-            self.ui_sub_6, self.study_node_points)
-    elif self.current_task_idx == 5:
-        tasks_ui_logic.show_task_recurrence(
-            self.ui_sub_6, self.study_node_points)
-        self.ui_sub_6.study_next_patient_button.setVisible(True)
-        self.ui_sub_6.study_next_patient_button.setEnabled(True)
-        self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-        self.ui_sub_6.study_next_task_button.setVisible(False)
+    match self.current_task:
+        case tasks.Task.CAROTIS_GABEL_L:
+            tasks_ui_logic.show_task_carotisgabel_l(
+                self.ui_sub_6, self.study_node_points)
+        case tasks.Task.A_VERTEBRALIS_L:
+            tasks_ui_logic.show_task_avertebralis_l(
+                self.ui_sub_6, self.study_node_points)
+        case tasks.Task.CAROTIS_GABEL_R:
+            tasks_ui_logic.show_task_carotisgabel_r(
+                self.ui_sub_6, self.study_node_points)
+        case tasks.Task.A_VERTEBRALIS_R:
+            tasks_ui_logic.show_task_avertebralis_r(
+                self.ui_sub_6, self.study_node_points)
+        case tasks.Task.LYMPH_NODE:
+            tasks_ui_logic.show_task_lymphnode(
+                self.ui_sub_6, self.study_node_points)
+        case tasks.Task.RECURRENCE:
+            tasks_ui_logic.show_task_recurrence(
+                self.ui_sub_6, self.study_node_points)
+
+    self.ui_sub_6.study_next_patient_button.setVisible(True)
+    self.ui_sub_6.study_next_patient_button.setEnabled(True)
+    self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+    self.ui_sub_6.study_next_task_button.setVisible(False)
 
 
 def on_add_annotation_point(self: "registrationViewerWidget") -> None:
