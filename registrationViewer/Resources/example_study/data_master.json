@@ -3,6 +3,7 @@
     "path_study_output": "/home/koeglf/data/preprocess_again/study_output/",
     "path_study_input_cases": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/",
     "path_study_input_registrations": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans_registrations/",
+    "path_study_input_annotations": "/home/koeglf/data/preprocess_again/ground_truth_annotations/",
     "participants": {
         "rad_1": {
             "name": "John Smith",
