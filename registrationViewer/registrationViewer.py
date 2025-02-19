@@ -26,7 +26,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import annotations_connections, utils, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks
+from registrationViewerLib import annotations_connections, utils, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, tasks_ui_logic
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -84,15 +84,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTags = []
 
-        from registrationViewerLib import annotations_connections, utils, tasks, crosshairs, drop_data_loading, view_logic, study_connections, study
+        from registrationViewerLib import annotations_connections, utils, tasks, crosshairs, drop_data_loading, view_logic, study_connections, study, tasks_ui_logic
         annotations_connections = importlib.reload(annotations_connections)
-        utils = importlib.reload(utils)
         crosshairs = importlib.reload(crosshairs)
         drop_data_loading = importlib.reload(drop_data_loading)
-        view_logic = importlib.reload(view_logic)
         study_connections = importlib.reload(study_connections)
         study = importlib.reload(study)
         tasks = importlib.reload(tasks)
+        tasks_ui_logic = importlib.reload(tasks_ui_logic)
+        utils = importlib.reload(utils)
+        view_logic = importlib.reload(view_logic)
 
         self.group_first_row = 1
         self.group_second_row = 2
@@ -172,23 +173,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.current_patient_list = None
 
         self.current_task_idx: int = -1
-        self.tasks = [tasks.Task.LYMPH_NODE,
-                      tasks.Task.CAROTIS_GABEL,
-                      tasks.Task.A_VERTEBRALIS,
-                      tasks.Task.RECURRENCE]
-
         self.study_node_points = {
-            self.tasks[0]: None,
-            self.tasks[1]: None,
-            self.tasks[2]: None,
-            self.tasks[3]: None
-        }
+            tasks.TASK_ORDER[key]: None for key in tasks.TASK_ORDER.keys()}
+
+        self.study_node_groundtruth_points = {
+            tasks.TASK_ORDER[key]: None for key in tasks.TASK_ORDER.keys()}
 
         # task specific
         self.study_lymphnode_size: Literal["Size same",
                                            "Size increased",
                                            "Size decreased"] = "Size same"
-        self.study_recurrence_present = False
+        self.study_recurrence_present: bool = False
 
         self.study_progress_bar_patients = None
         self.study_progress_bar_tasks = None
@@ -759,7 +754,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def current_task(self) -> tasks.Task:
-        return self.tasks[self.current_task_idx]
+        return tasks.TASK_ORDER[self.current_task_idx]
 
     @property
     def current_patient_name(self) -> str:

@@ -140,6 +140,8 @@ def hide_all_points_except(
     for current_task, point in points.items():
         if point is not None and current_task != task:
             point.SetDisplayVisibility(False)
+        if point is not None and current_task == task:
+            point.SetDisplayVisibility(True)
 
 
 def normalize_intensity(data):
