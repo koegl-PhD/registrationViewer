@@ -204,8 +204,9 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     study.clear_annotations(self)
     self.on_remove_all_data()
 
-    self.current_patient_idx += 1
-    self.current_task_idx = -1
+    if self.current_patient_idx >= len(self.current_patient_list):
+        utils.show_info_popup("Study finished", "You have finished the study")
+        return
 
     self.ui_sub_6.study_current_task_description_label.setVisible(False)
     self.ui_sub_6.synchronise_views_general.setVisible(False)
