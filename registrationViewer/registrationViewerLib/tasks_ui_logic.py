@@ -1,71 +1,49 @@
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, Callable
 
 import slicer
 
 from registrationViewerLib import utils, tasks
 
+# Define per-task UI adjustments as functions
+TASK_UI_ADDITIONS: Dict[tasks.Task, Callable[[object], None]] = {
+    tasks.Task.LYMPH_NODE: lambda ui: ui.study_dropdown.setVisible(True),
+    tasks.Task.RECURRENCE: lambda ui: (
+        ui.study_checkbox.setText("Recurrence exists"),
+        ui.study_checkbox.setVisible(True)
+    )
+}
 
-def show_generic_task_ui(
-        ui,
-        task: tasks.Task,
-        study_node_points: Dict[tasks.Task,
-                                Union[None, slicer.vtkMRMLMarkupsFiducialNode]]
+
+def show_task(
+    ui,
+    task: tasks.Task,
+    study_node_points: Dict[tasks.Task,
+                            Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
+    groundtruth_points: Dict[tasks.Task,
+                             Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
+    view_group: int
 ) -> None:
+
     ui.current_case_label.setVisible(True)
-
-    ui.study_current_task_description_label.setText(
-        tasks.TASK_DESCRIPTIONS[task])
+    ui.study_current_task_description_label.setText(tasks.TASK_DESCRIPTIONS[task])  # nopep8
     ui.study_current_task_description_label.setVisible(True)
-
     ui.study_add_point_button.setText("Add point")
     ui.study_add_point_button.setVisible(True)
-
     ui.study_checkbox.setVisible(False)
     ui.study_dropdown.setVisible(False)
 
-    utils.hide_all_points_except(task,
-                                 study_node_points)
+    # Hide all points except the current one in both dictionaries
+    utils.hide_all_points_except(task, study_node_points)
+    utils.hide_all_points_except(task, groundtruth_points)
 
+    position_gt_point = groundtruth_points[task].GetNthControlPointPositionWorld(
+        0)
+    slicer.modules.markups.logic().JumpSlicesToLocation(*position_gt_point,
+                                                        False,
+                                                        view_group)
 
-def show_task_a_carotisexterna_l(ui,
-                                 study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
-    show_generic_task_ui(ui,
-                         tasks.Task.A_CAROTISEXTERNA_L,
-                         study_node_points)
-
-
-def show_task_a_carotisexterna_r(ui,
-                                 study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
-    show_generic_task_ui(ui, tasks.Task.A_CAROTISEXTERNA_R, study_node_points)
-
-
-def show_task_a_vertebralis_l(ui,
-                              study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
-
-    show_generic_task_ui(ui, tasks.Task.A_VERTEBRALIS_L, study_node_points)
-
-
-def show_task_a_vertebralis_r(ui,
-                              study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
-
-    show_generic_task_ui(ui, tasks.Task.A_VERTEBRALIS_R, study_node_points)
-
-
-def show_task_lymphnode(ui,
-                        study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
-
-    show_generic_task_ui(ui, tasks.Task.LYMPH_NODE, study_node_points)
-
-    ui.study_dropdown.setVisible(True)
-
-
-def show_task_recurrence(ui,
-                         study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
-
-    show_generic_task_ui(ui, tasks.Task.RECURRENCE, study_node_points)
-
-    ui.study_checkbox.setText("Recurrence exists")
-    ui.study_checkbox.setVisible(True)
+    if task in TASK_UI_ADDITIONS:
+        TASK_UI_ADDITIONS[task](ui)
 
 
 def _save_point(
@@ -96,17 +74,6 @@ def _save_point(
                 f"path and content must be provided together to save additional info in {task.value}")
 
 
-def save_lymphnode(path_patient: str,
-                   study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
-                   study_lymphnode_size: str) -> None:
-
-    _save_point(path_patient,
-                tasks.Task.LYMPH_NODE,
-                study_node_points,
-                additional_info={"path": path_patient + "/lymphnode_size.txt",
-                                 "content": study_lymphnode_size})
-
-
 def save_a_carotisexterna_l(path_patient: str,
                             study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
 
@@ -135,6 +102,17 @@ def save_a_vertebralis_r(path_patient: str,
     _save_point(path_patient,
                 tasks.Task.A_VERTEBRALIS_R,
                 study_node_points)
+
+
+def save_lymphnode(path_patient: str,
+                   study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
+                   study_lymphnode_size: str) -> None:
+
+    _save_point(path_patient,
+                tasks.Task.LYMPH_NODE,
+                study_node_points,
+                additional_info={"path": path_patient + "/lymphnode_size.txt",
+                                 "content": study_lymphnode_size})
 
 
 def save_recurrence(path_patient: str,

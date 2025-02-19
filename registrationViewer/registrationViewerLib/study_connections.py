@@ -202,7 +202,7 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
 
     study.save_annotations(self)
     study.clear_annotations(self)
-    self.on_remove_all_data()
+    # self.on_remove_all_data()
 
     self.current_patient_idx += 1
     self.current_task_idx = -1
@@ -216,7 +216,10 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_next_task_button.setVisible(False)
     self.ui_sub_6.study_next_patient_button.setVisible(False)
 
-    study.load_study_volumes(self, self.current_patient_path)
+    # study.load_study_volumes(self, self.current_patient_path)
+    study.load_ground_truth_annotations(self,
+                                        self.current_patient_name,
+                                        self.node_moving.GetName())
 
     self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
 
@@ -264,34 +267,28 @@ def on_next_task(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.study_center_on_point_button.setEnabled(False)
 
-    study.save_annotations(self, specific_task=self.current_task)
+    if self.current_task_idx >= 0:
+        study.save_annotations(self, specific_task=self.current_task)
 
     self.current_task_idx += 1
     self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
 
-    if self.current_task == tasks.Task.A_VERTEBRALIS_R:
-        tasks_ui_logic.show_task_a_vertebralis_r(
-            self.ui_sub_6, self.study_node_points)
+    TASK_TO_UI_FUNC = {
+        tasks.Task.A_VERTEBRALIS_R: tasks_ui_logic.show_task,
+        tasks.Task.A_VERTEBRALIS_L: tasks_ui_logic.show_task,
+        tasks.Task.A_CAROTISEXTERNA_R: tasks_ui_logic.show_task,
+        tasks.Task.A_CAROTISEXTERNA_L: tasks_ui_logic.show_task,
+        tasks.Task.LYMPH_NODE: tasks_ui_logic.show_task,
+        tasks.Task.RECURRENCE: tasks_ui_logic.show_task,
+    }
 
-    elif self.current_task == tasks.Task.A_VERTEBRALIS_L:
-        tasks_ui_logic.show_task_a_vertebralis_l(
-            self.ui_sub_6, self.study_node_points)
-
-    elif self.current_task == tasks.Task.A_CAROTISEXTERNA_R:
-        tasks_ui_logic.show_task_a_carotisexterna_r(
-            self.ui_sub_6, self.study_node_points)
-
-    if self.current_task == tasks.Task.A_CAROTISEXTERNA_L:
-        tasks_ui_logic.show_task_a_carotisexterna_l(
-            self.ui_sub_6, self.study_node_points)
-
-    elif self.current_task == tasks.Task.LYMPH_NODE:
-        tasks_ui_logic.show_task_lymphnode(
-            self.ui_sub_6, self.study_node_points)
-
-    elif self.current_task == tasks.Task.RECURRENCE:
-        tasks_ui_logic.show_task_recurrence(
-            self.ui_sub_6, self.study_node_points)
+    if self.current_task in TASK_TO_UI_FUNC:
+        TASK_TO_UI_FUNC[self.current_task](
+            self.ui_sub_6,
+            self.study_node_points,
+            self.study_node_groundtruth_points,
+            self.group_second_row
+        )
 
     self.ui_sub_6.study_next_patient_button.setVisible(True)
     self.ui_sub_6.study_next_patient_button.setEnabled(True)

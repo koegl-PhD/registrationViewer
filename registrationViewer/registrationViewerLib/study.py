@@ -119,6 +119,38 @@ def load_study_volumes(self, path_case: str) -> None:
     slicer.progressWindow.close()
 
 
+def load_ground_truth_annotations(self: "registrationViewerWidget",
+                                  patient_name: str,
+                                  volume_name: str):
+    slicer.progressWindow = slicer.util.createProgressDialog()
+    slicer.progressWindow.show()
+    slicer.progressWindow.activateWindow()
+    slicer.progressWindow.setValue(50)
+    slicer.progressWindow.setLabelText(
+        f"Loading ground truth annotations...")
+    slicer.app.processEvents()
+
+    study_name = volume_name.split('~')[1]
+
+    for task_name in tasks.TASK_ORDER.values():
+        print(f"adding {task_name.value} to {patient_name} {study_name}")
+
+        path_annotation = os.path.join(self.study_data_master.path_study_input_annotations,
+                                       patient_name,
+                                       study_name,
+                                       f"{task_name.value}.mrk.json")
+
+        self.study_node_groundtruth_points[task_name] = slicer.util.loadMarkups(
+            path_annotation)
+
+        name = path_annotation.split("/")[-1].split(".")[0]
+        self.study_node_groundtruth_points[task_name].SetName(name)
+
+    print(f"{self.study_node_groundtruth_points=}")
+
+    slicer.progressWindow.close()
+
+
 def save_annotations(self: "registrationViewerWidget",
                      specific_task: Optional[tasks.Task] = None) -> None:
 
@@ -129,41 +161,34 @@ def save_annotations(self: "registrationViewerWidget",
     if not os.path.exists(path_patient):
         os.makedirs(path_patient)
 
-    if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS_R:
-        tasks_ui_logic.save_a_vertebralis_r(path_patient,
-                                            self.study_node_points)
+    tasks_to_save = [
+        (tasks.Task.A_VERTEBRALIS_R, tasks_ui_logic.save_a_vertebralis_r),
+        (tasks.Task.A_VERTEBRALIS_L, tasks_ui_logic.save_a_vertebralis_l),
+        (tasks.Task.A_CAROTISEXTERNA_R, tasks_ui_logic.save_a_carotisexterna_r),
+        (tasks.Task.A_CAROTISEXTERNA_L, tasks_ui_logic.save_a_carotisexterna_l),
+        (tasks.Task.LYMPH_NODE, lambda path, pts: tasks_ui_logic.save_lymphnode(path, pts, self.study_lymphnode_size)),  # nopep8
+        (tasks.Task.RECURRENCE, lambda path, pts: tasks_ui_logic.save_recurrence(path, pts, self.study_recurrence_present))  # nopep8
+    ]
 
-    if specific_task is None or specific_task == tasks.Task.A_VERTEBRALIS_L:
-        tasks_ui_logic.save_a_vertebralis_l(path_patient,
-                                            self.study_node_points)
-
-    if specific_task is None or specific_task == tasks.Task.A_CAROTISEXTERNA_R:
-        tasks_ui_logic.save_a_carotisexterna_r(path_patient,
-                                               self.study_node_points)
-
-    if specific_task is None or specific_task == tasks.Task.A_CAROTISEXTERNA_L:
-        tasks_ui_logic.save_a_carotisexterna_l(path_patient,
-                                               self.study_node_points)
-
-    if specific_task is None or specific_task == tasks.Task.LYMPH_NODE:
-        tasks_ui_logic.save_lymphnode(path_patient,
-                                      self.study_node_points,
-                                      self.study_lymphnode_size)
-
-    if specific_task is None or specific_task == tasks.Task.RECURRENCE:
-        tasks_ui_logic.save_recurrence(path_patient,
-                                       self.study_node_points,
-                                       self.study_recurrence_present)
+    for task, save_func in tasks_to_save:
+        if specific_task is None or specific_task == task:
+            save_func(path_patient, self.study_node_points)
 
 
 def clear_annotations(self: "registrationViewerWidget") -> None:
     if self.current_task_idx <= 0:
         return
 
+    # remove user annotations
     for task, point in self.study_node_points.items():
         if point is not None:
             slicer.mrmlScene.RemoveNode(point)
             self.study_node_points[task] = None
+    # remove ground truth annotations
+    for task, point in self.study_node_groundtruth_points.items():
+        if point is not None:
+            slicer.mrmlScene.RemoveNode(point)
+            self.study_node_groundtruth_points[task] = None
 
     self.study_lymphnode_size = ""
     self.study_recurrence_present = False
