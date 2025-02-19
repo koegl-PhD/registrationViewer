@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 
 def set_connections(self: "registrationViewerWidget") -> None:
     self.ui_sub_2.set_radiologist_id_button.connect("clicked(bool)",
-                                                    lambda: on_set_radiologist_id(self))
+                                                    lambda: btn_call_on_set_radiologist_id(self))
     self.ui_sub_2.start_study_button.connect("clicked(bool)",
-                                             lambda: on_start_study(self))
+                                             lambda: btn_call_on_start_study(self))
 
     def _on_text_changed():
         self.ui_sub_2.start_study_button.setEnabled(False)
@@ -24,22 +24,35 @@ def set_connections(self: "registrationViewerWidget") -> None:
         _on_text_changed)
 
     self.ui_sub_6.synchronise_views_general.connect("clicked(bool)",
-                                                    lambda: on_synchronise_views_general(self))
+                                                    lambda: btn_call_on_synchronise_views_general(self))
 
     self.ui_sub_6.start_study_by_user_button.connect("clicked(bool)",
-                                                     lambda: on_user_start_study(self))
+                                                     lambda: btn_call_on_user_start_study(self))
     self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
-                                                 lambda: on_add_annotation_point(self))
+                                                 lambda: btn_call_on_add_annotation_point(self))
     self.ui_sub_6.study_center_on_point_button.connect("clicked(bool)",
-                                                       lambda: utils.center_on_point(self.study_node_points[self.current_task]))
+                                                       lambda: btn_call_on_center_on_point(self))
     self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
-                                                 lambda: on_next_task(self))
+                                                 lambda: btn_call_on_next_task(self))
     self.ui_sub_6.study_next_patient_button.connect("clicked(bool)",
-                                                    lambda: on_study_next_patient(self))
+                                                    lambda: btn_call_on_study_next_patient(self))
     self.ui_sub_6.study_checkbox.toggled.connect(
-        lambda: on_checkbox(self))
+        lambda: btn_call_on_checkbox(self))
     self.ui_sub_6.study_dropdown.currentIndexChanged.connect(
-        lambda: on_selection_changed(self))
+        lambda: btn_call_on_selection_changed(self))
+
+
+def btn_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
+    print(f"WARNING log btn_call_on_synchronise_views_general")
+
+    on_synchronise_views_general(self)
+
+
+def key_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
+
+    print(f"WARNING log key_call_on_synchronise_views_general")
+
+    on_synchronise_views_general(self)
 
 
 def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
@@ -73,8 +86,11 @@ def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
     self.ui_sub_4.synchronise_views_manually.setVisible(False)
 
 
-def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
+def btn_call_on_set_radiologist_id(self: "registrationViewerWidget") -> None:
+    on_set_radiologist_id(self)
 
+
+def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
     radiologist_id: str = str(
         self.ui_sub_2.radiologistIDTextEdit.toPlainText())
 
@@ -155,11 +171,18 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
         self.ui_sub_6.start_study_by_user_button.setVisible(False)
 
 
-def on_start_study(self: "registrationViewerWidget") -> None:
+def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
+    on_start_study(self)
 
+
+def on_start_study(self: "registrationViewerWidget") -> None:
     self.current_radiologist_id = 'rad_1'
     on_simple_ui(self, True)
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
+
+
+def btn_call_on_user_start_study(self: "registrationViewerWidget") -> None:
+    on_user_start_study(self)
 
 
 def on_user_start_study(self: "registrationViewerWidget") -> None:
@@ -198,7 +221,25 @@ def on_user_start_study(self: "registrationViewerWidget") -> None:
     on_study_next_patient(self)
 
 
+def btn_call_on_center_on_point(self: "registrationViewerWidget") -> None:
+    print(f"WARNING log btn_call_on_center_on_point")
+
+    utils.center_on_point(self.study_node_points[self.current_task])
+
+
+def btn_call_on_study_next_patient(self: "registrationViewerWidget") -> None:
+
+    print(f"WARNING log btn_call_on_study_next_patient")
+
+    on_study_next_patient(self)
+
+
 def on_study_next_patient(self: "registrationViewerWidget") -> None:
+
+    if self.current_patient_idx >= 0:
+        study.save_annotations(self, serialise_to_log=True)
+
+    study.clear_annotations(self)
 
     self.current_patient_idx += 1
     self.current_task_idx = -1
@@ -210,8 +251,6 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.progress_label_2.setVisible(True)
     self.study_progress_bar_tasks.setValue(1)
 
-    study.save_annotations(self)
-    study.clear_annotations(self)
     self.on_remove_all_data()
 
     if self.current_patient_idx >= len(self.current_patient_list):
@@ -265,7 +304,15 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     on_next_task(self)
 
 
+def btn_call_on_next_task(self: "registrationViewerWidget") -> None:
+
+    print(f"WARNING log btn_call_on_next_task")
+
+    on_next_task(self)
+
+
 def on_next_task(self: "registrationViewerWidget") -> None:
+
     self.ui_sub_6.study_next_task_button.setEnabled(False)
     self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
 
@@ -295,6 +342,12 @@ def on_next_task(self: "registrationViewerWidget") -> None:
         self.ui_sub_6.study_next_patient_button.setEnabled(False)
         self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
         self.ui_sub_6.study_next_task_button.setVisible(True)
+
+
+def btn_call_on_add_annotation_point(self: "registrationViewerWidget") -> None:
+    print(f"WARNING log btn_call_on_add_annotation_point")
+
+    on_add_annotation_point(self)
 
 
 def on_add_annotation_point(self: "registrationViewerWidget") -> None:
@@ -344,6 +397,10 @@ def on_add_annotation_point(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_center_on_point_button.setEnabled(True)
 
 
+def btn_call_on_checkbox(self: "registrationViewerWidget") -> None:
+    on_checkbox(self)
+
+
 def on_checkbox(self: "registrationViewerWidget") -> None:
     if self.current_task != tasks.Task.RECURRENCE:
         return
@@ -381,6 +438,10 @@ def on_checkbox(self: "registrationViewerWidget") -> None:
 
         self.ui_sub_6.study_next_patient_button.setEnabled(True)
         self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+
+
+def btn_call_on_selection_changed(self: "registrationViewerWidget") -> None:
+    on_selection_changed(self)
 
 
 def on_selection_changed(self: "registrationViewerWidget") -> None:

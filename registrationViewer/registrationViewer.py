@@ -113,7 +113,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         utils.create_shortcuts(
             ('t', self.on_synchronise_views_wth_trasform),
             # ('m', self.on_synchronise_views_manually),
-            ('s', lambda: study_connections.on_synchronise_views_general(self))
+            ('s', lambda: study_connections.key_call_on_synchronise_views_general(self))
         )
 
         self.study_current_transform_type: 'utils.TransformType' = utils.TransformType.NONE

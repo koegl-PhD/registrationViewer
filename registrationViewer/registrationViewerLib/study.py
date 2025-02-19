@@ -148,7 +148,8 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
 
 
 def save_annotations(self: "registrationViewerWidget",
-                     specific_task: Optional[tasks.Task] = None) -> None:
+                     specific_task: Optional[tasks.Task] = None,
+                     serialise_to_log: Optional[bool] = False) -> None:
 
     if self.current_task_idx < 0:
         return
@@ -157,18 +158,23 @@ def save_annotations(self: "registrationViewerWidget",
     if not os.path.exists(path_patient):
         os.makedirs(path_patient)
 
-    tasks_to_save = [
-        (tasks.Task.A_VERTEBRALIS_R, tasks_ui_logic.save_a_vertebralis_r),
-        (tasks.Task.A_VERTEBRALIS_L, tasks_ui_logic.save_a_vertebralis_l),
-        (tasks.Task.A_CAROTISEXTERNA_R, tasks_ui_logic.save_a_carotisexterna_r),
-        (tasks.Task.A_CAROTISEXTERNA_L, tasks_ui_logic.save_a_carotisexterna_l),
-        (tasks.Task.LYMPH_NODE, lambda path, pts: tasks_ui_logic.save_lymphnode(path, pts, self.study_lymphnode_size)),  # nopep8
-        (tasks.Task.RECURRENCE, lambda path, pts: tasks_ui_logic.save_recurrence(path, pts, self.study_recurrence_present))  # nopep8
-    ]
-
-    for task, save_func in tasks_to_save:
+    for task in tasks.TASK_ORDER.values():
         if specific_task is None or specific_task == task:
-            save_func(path_patient, self.study_node_points)
+
+            additional_info = None
+
+            if task == tasks.Task.LYMPH_NODE:
+                additional_info = {"path": path_patient + "/lymphnode_size.txt",
+                                   "content": self.study_lymphnode_size}
+            elif task == tasks.Task.RECURRENCE:
+                additional_info = {"path": path_patient + "/recurrence_present.txt",
+                                   "content": str(self.study_recurrence_present)}
+
+            tasks_ui_logic.save_point(path_patient,
+                                      task,
+                                      self.study_node_points,
+                                      additional_info=additional_info,
+                                      serialise_to_log=serialise_to_log)
 
 
 def clear_annotations(self: "registrationViewerWidget") -> None:

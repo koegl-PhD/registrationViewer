@@ -45,11 +45,12 @@ def show_task(
         TASK_UI_ADDITIONS[task](ui)
 
 
-def _save_point(
+def save_point(
     path_patient: str,
     task: tasks.Task,
     study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
-    additional_info: Optional[Dict[str, str]] = None
+    additional_info: Optional[Dict[str, str]] = None,
+    serialise_to_log: Optional[bool] = False
 ) -> None:
 
     point = study_node_points[task]
@@ -63,7 +64,7 @@ def _save_point(
         slicer.util.saveNode(point,
                              path_patient + f"/{point.GetName()}.mrk.json")
 
-    if additional_info:
+    if additional_info is not None:
         path = additional_info.get("path")
         content = additional_info.get("content")
 
@@ -75,57 +76,10 @@ def _save_point(
             raise ValueError(
                 f"path and content must be provided together to save additional info in {task.value}")
 
+    if serialise_to_log:
+        serialised_point = utils.serialise_markup(point)
 
-def save_a_carotisexterna_l(path_patient: str,
-                            study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
+        if additional_info is not None:
+            serialised_point.update(additional_info)
 
-    _save_point(path_patient,
-                tasks.Task.A_CAROTISEXTERNA_L,
-                study_node_points)
-
-
-def save_a_carotisexterna_r(path_patient: str,
-                            study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
-
-    _save_point(path_patient,
-                tasks.Task.A_CAROTISEXTERNA_R,
-                study_node_points)
-
-
-def save_a_vertebralis_l(path_patient: str,
-                         study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
-    _save_point(path_patient,
-                tasks.Task.A_VERTEBRALIS_L,
-                study_node_points)
-
-
-def save_a_vertebralis_r(path_patient: str,
-                         study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]) -> None:
-    _save_point(path_patient,
-                tasks.Task.A_VERTEBRALIS_R,
-                study_node_points)
-
-
-def save_lymphnode(path_patient: str,
-                   study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
-                   study_lymphnode_size: str) -> None:
-
-    _save_point(path_patient,
-                tasks.Task.LYMPH_NODE,
-                study_node_points,
-                additional_info={"path": path_patient + "/lymphnode_size.txt",
-                                 "content": study_lymphnode_size})
-
-
-def save_recurrence(path_patient: str,
-                    study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
-                    recurrence_present: bool) -> None:
-
-    _save_point(path_patient,
-                tasks.Task.RECURRENCE,
-                study_node_points,
-                additional_info={"path": path_patient + "/recurrence_present.txt",
-                                 "content": str(recurrence_present)})
-
-    with open(path_patient + f"/recurrence_present.txt", "w") as f:
-        f.write(str(recurrence_present))
+        print(f"WARNING Serialised point: {serialised_point} not logged yet")
