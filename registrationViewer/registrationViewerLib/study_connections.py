@@ -200,6 +200,16 @@ def on_user_start_study(self: "registrationViewerWidget") -> None:
 
 def on_study_next_patient(self: "registrationViewerWidget") -> None:
 
+    self.current_patient_idx += 1
+    self.current_task_idx = -1
+
+    self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
+    self.study_progress_bar_patients.setVisible(True)
+    self.ui_sub_6.progress_label_1.setVisible(True)
+    self.study_progress_bar_tasks.setVisible(True)
+    self.ui_sub_6.progress_label_2.setVisible(True)
+    self.study_progress_bar_tasks.setValue(1)
+
     study.save_annotations(self)
     study.clear_annotations(self)
     self.on_remove_all_data()
@@ -221,13 +231,6 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     study.load_ground_truth_annotations(self,
                                         self.current_patient_name,
                                         self.node_moving.GetName())
-
-    self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
-
-    self.study_progress_bar_patients.setVisible(True)
-    self.ui_sub_6.progress_label_1.setVisible(True)
-    self.study_progress_bar_tasks.setVisible(True)
-    self.ui_sub_6.progress_label_2.setVisible(True)
 
     self.ui_sub_6.study_current_task_description_label.setVisible(True)
     self.ui_sub_6.synchronise_views_general.setVisible(True)

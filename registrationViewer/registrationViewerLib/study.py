@@ -154,7 +154,6 @@ def save_annotations(self: "registrationViewerWidget",
         return
 
     path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient_name}"  # nopep8
-    print(f"{path_patient=}")
     if not os.path.exists(path_patient):
         os.makedirs(path_patient)
 
