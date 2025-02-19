@@ -188,7 +188,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_lymphnode_size: Literal["Size same",
                                            "Size increased",
                                            "Size decreased"] = "Size same"
-        self.study_recurrence_present = False
+        self.study_recurrence_present: bool = False
 
         self.study_progress_bar_patients = None
         self.study_progress_bar_tasks = None

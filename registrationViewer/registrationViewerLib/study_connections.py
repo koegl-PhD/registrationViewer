@@ -270,15 +270,21 @@ def on_next_task(self: "registrationViewerWidget") -> None:
     self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
 
     if self.current_task_idx == 0:
-        tasks_ui_logic.show_task_lymphnode(
+        tasks_ui_logic.show_task_carotisgabel_l(
             self.ui_sub_6, self.study_node_points)
     elif self.current_task_idx == 1:
-        tasks_ui_logic.show_task_carotisgabel(
+        tasks_ui_logic.show_task_avertebralis_l(
             self.ui_sub_6, self.study_node_points)
     elif self.current_task_idx == 2:
-        tasks_ui_logic.show_task_avertebralis(
+        tasks_ui_logic.show_task_carotisgabel_r(
             self.ui_sub_6, self.study_node_points)
     elif self.current_task_idx == 3:
+        tasks_ui_logic.show_task_avertebralis_r(
+            self.ui_sub_6, self.study_node_points)
+    elif self.current_task_idx == 4:
+        tasks_ui_logic.show_task_lymphnode(
+            self.ui_sub_6, self.study_node_points)
+    elif self.current_task_idx == 5:
         tasks_ui_logic.show_task_recurrence(
             self.ui_sub_6, self.study_node_points)
         self.ui_sub_6.study_next_patient_button.setVisible(True)
