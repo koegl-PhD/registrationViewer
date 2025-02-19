@@ -1,7 +1,9 @@
 from enum import Enum
 import glob
+import json
 import os
 from typing import TYPE_CHECKING
+import tempfile
 
 from typing import Dict, Union, Tuple, Callable, List
 
@@ -471,3 +473,64 @@ def show_node_only_in_views(node, views: List[str]) -> None:
 def get_range_of_values(node: slicer.vtkMRMLScalarVolumeNode) -> Tuple[float, float]:
     array = slicer.util.arrayFromVolume(node)
     return array.min(), array.max()
+
+
+def serialise_markup(node: slicer.vtkMRMLMarkupsFiducialNode) -> Dict[str, Tuple[float, ...]]:
+
+    with tempfile.NamedTemporaryFile(mode='w', suffix=".mrk.json") as file:
+        slicer.util.saveNode(node, file.name)
+        file.flush()
+
+        with open(file.name, "r") as f:
+            data = json.load(f)
+
+    position = data["markups"][0]["controlPoints"][0]["position"]
+    orientation = data["markups"][0]["controlPoints"][0]["orientation"]
+
+    return {"position": position, "orientation": orientation}
+
+
+def de_serialise_markup(data: Dict[str, Tuple[float, ...]]) -> slicer.vtkMRMLMarkupsFiducialNode:
+
+    full_json = {
+        "@schema": "https://raw.githubusercontent.com/slicer/slicer/master/Modules/Loadable/Markups/Resources/Schema/markups-schema-v1.0.3.json#",
+        "markups": [
+            {
+                "type": "Fiducial",
+                "coordinateSystem": "LPS",
+                "coordinateUnits": "mm",
+                "locked": False,
+                "fixedNumberOfControlPoints": False,
+                "labelFormat": "%N-%d",
+                "lastUsedControlPointNumber": 1,
+                "controlPoints": [
+                    {
+                        "id": "1",
+                        "label": "p",
+                        "description": "",
+                        "associatedNodeID": "",
+                        "position": [0, 0, 0],
+                        "orientation": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+                        "positionStatus": "defined"
+                    }
+                ]
+            }
+        ]
+    }
+    position = data["position"]
+    orientation = data["orientation"]
+
+    position = [float(a) for a in position]
+    orientation = [float(a) for a in orientation]
+
+    full_json["markups"][0]["controlPoints"][0]["position"] = position
+    full_json["markups"][0]["controlPoints"][0]["orientation"] = orientation
+
+    # create temp file
+    with tempfile.NamedTemporaryFile(mode='w', suffix=".mrk.json") as file:
+        json.dump(full_json, file, indent=4)
+        file.flush()  # Ensure data is written
+        slicer.app.processEvents()  # Sync file system
+        node = slicer.util.loadMarkups(file.name)
+
+    return node
