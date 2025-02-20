@@ -402,7 +402,8 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode.SetSliceOffset(offset)
 
 
-def enable_sectra_movements(volume_node, views: List[str],
+def enable_sectra_movements(volume_node,
+                            views: List[str],
                             sensitivity_left: float = 0.1,
                             sensitivity_middle=1.0):
 
@@ -432,12 +433,23 @@ def enable_sectra_movements(volume_node, views: List[str],
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def _drag_middle(caller, event):
+            print(f"Setting window and level of {volume_node.GetName()}")
+
             current_mouse_position = caller.GetEventPosition()
 
             dx = (current_mouse_position[0] -
                   dragging[view_name]["last_mouse_position"][0]) * sensitivity_middle
             dy = (current_mouse_position[1] -
                   dragging[view_name]["last_mouse_position"][1]) * sensitivity_middle
+
+            print(f"{current_mouse_position=}")
+
+            val = dragging[view_name]["last_mouse_position"][0]
+            print(f"last_mouse_position0={val}")
+            val = dragging[view_name]["last_mouse_position"][1]
+            print(f"last_mouse_position1={val}")
+
+            print(f"{dx=}\t{dy=}")
 
             dragging[view_name]["last_mouse_position"] = current_mouse_position
 
@@ -450,6 +462,9 @@ def enable_sectra_movements(volume_node, views: List[str],
 
             new_window = max(1, current_window - dx)
             new_level = current_level + dy
+
+            # print(f"{dx=}\t{dy=}\t{current_window=}\t{current_level=}")
+            # print(f"{new_window=}\t{new_level=}")
 
             utils.set_window_level(volume_node,
                                    new_window,
@@ -494,7 +509,7 @@ def enable_sectra_movements(volume_node, views: List[str],
 
     # Loop through all provided views and set up interaction
     for view_name in views:
-        createDragHandlers(view_name)
+        # createDragHandlers(view_name)
 
         interactor = slicer.app.layoutManager().sliceWidget(
             view_name).sliceView().interactor()

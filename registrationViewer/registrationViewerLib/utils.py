@@ -221,7 +221,7 @@ def set_ui_simplification(simple: bool) -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    # slicer.util.setPythonConsoleVisible(value)
+    slicer.util.setPythonConsoleVisible(value)
 
 
 def print_affine_matrix(transformNode):
@@ -386,6 +386,8 @@ def set_window_level(node: slicer.vtkMRMLScalarVolumeNode,
 
 def set_threshold(node: slicer.vtkMRMLScalarVolumeNode,
                   threshold: Tuple[float, float]) -> None:
+
+    print(f"Setting threshold of {node.GetName()}")
 
     if not node:
         return
