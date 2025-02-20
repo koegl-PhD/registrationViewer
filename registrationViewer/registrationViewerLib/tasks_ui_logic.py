@@ -35,11 +35,9 @@ def show_task(
     utils.hide_all_points_except(task, study_node_points)
     utils.hide_all_points_except(task, groundtruth_points)
 
-    position_gt_point = groundtruth_points[task].GetNthControlPointPositionWorld(
-        0)
-    slicer.modules.markups.logic().JumpSlicesToLocation(*position_gt_point,
-                                                        False,
-                                                        view_group)
+    # we don't want to center on recurrence because we only give a text description
+    if task != tasks.Task.RECURRENCE:
+        utils.center_on_point(groundtruth_points[task], view_group)
 
     if task in TASK_UI_ADDITIONS:
         TASK_UI_ADDITIONS[task](ui)
