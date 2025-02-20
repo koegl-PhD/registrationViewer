@@ -5,7 +5,7 @@ import os
 from typing import TYPE_CHECKING
 import tempfile
 
-from typing import Dict, Union, Tuple, Callable, List
+from typing import Dict, Union, Tuple, Callable, List, Optional
 
 import qt
 import slicer
@@ -24,17 +24,22 @@ class TransformType(Enum):
     NONLINEAR = "nonlinear"
 
 
-def center_on_point(point: slicer.vtkMRMLMarkupsFiducialNode) -> None:
-    # jump to the location of the current point
+def center_on_point(point: slicer.vtkMRMLMarkupsFiducialNode,
+                    view_group: Optional[int]) -> None:
+
+    if point is None:
+        return
 
     position = [0, 0, 0]
     point.GetNthControlPointPositionWorld(0, position)
+
+    view = view_group if view_group is not None else 1
 
     slicer.modules.markups.logic().JumpSlicesToLocation(position[0],
                                                         position[1],
                                                         position[2],
                                                         False,
-                                                        1)
+                                                        view)
 
 
 def get_paths_to_load(path_case_folder: str):
