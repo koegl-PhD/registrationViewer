@@ -177,8 +177,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             tasks.TASK_ORDER[key]: None for key in tasks.TASK_ORDER.keys()}
 
         self.study_node_groundtruth_points = {
-            tasks.TASK_ORDER[key]: None for key in tasks.TASK_ORDER.keys()}
-
+            tasks.TASK_ORDER[key]: None for key in tasks.TASK_ORDER.keys() if key != tasks.Task.RECURRENCE}
+        
         # task specific
         self.study_lymphnode_size: Literal["Size same",
                                            "Size increased",

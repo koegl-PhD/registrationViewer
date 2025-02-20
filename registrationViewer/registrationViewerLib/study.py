@@ -133,10 +133,22 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
     study_name = volume_name.split('~')[1]
 
     for task_name in tasks.TASK_ORDER.values():
+
         path_annotation = os.path.join(self.study_data_master.path_study_input_annotations,
                                        patient_name,
                                        study_name,
                                        f"{task_name.value}.mrk.json")
+
+        if task_name == tasks.Task.RECURRENCE:
+            path_annotation = path_annotation.replace(".mrk.json", ".txt")
+
+            with open(path_annotation, "r") as f:
+                text = f.read()
+                tasks.TASK_DESCRIPTIONS[tasks.Task.RECURRENCE] = text
+
+                print(f"{tasks.TASK_DESCRIPTIONS[tasks.Task.RECURRENCE]=}")
+
+            continue
 
         self.study_node_groundtruth_points[task_name] = slicer.util.loadMarkups(
             path_annotation)

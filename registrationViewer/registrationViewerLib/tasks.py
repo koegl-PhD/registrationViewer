@@ -49,10 +49,7 @@ Find level X lymph node in the Fixed image (top row).\n\
 Set a point in its center and select if it changed in size.\n\
 The ROI of the lymph node is marked in the moving image (bottom row).""",
 
-    Task.RECURRENCE: """
-Decide if a recurrence is present in the Fixed image (top row).
-If yes, set a point in the center of the recurrence.
-TUMOR TEXT"""
+    Task.RECURRENCE: """"""
 }
 
 
