@@ -12,14 +12,8 @@ if TYPE_CHECKING:
     from ..registrationViewer import registrationViewerWidget
 
 
-def set_visibile(ui) -> None:
-    ui.study_dropdown.setVisible(True)
-    print("setting visisbe")
-
-
 TASK_UI_ADDITIONS: Dict[tasks.Task, Callable[[object], None]] = {
-    tasks.Task.LYMPH_NODE.value: lambda ui: set_visibile(ui),
-    # tasks.Task.LYMPH_NODE: lambda ui: ui.study_dropdown.setVisible(True),
+    tasks.Task.LYMPH_NODE: lambda ui: ui.study_dropdown.setVisible(True),
     tasks.Task.RECURRENCE.value: lambda ui: (
         ui.study_checkbox.setText("Recurrence exists"),
         ui.study_checkbox.setVisible(True)
