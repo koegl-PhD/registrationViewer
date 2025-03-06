@@ -1,12 +1,20 @@
-from typing import Dict, Union, Optional, Callable
+import logging
+
+from typing import Dict, Union, Optional, Callable, TYPE_CHECKING
 
 import slicer
 
 from registrationViewerLib import utils, tasks
+from registrationViewerLib.custom_logging import log, LogType, set_log_prefix
+
+
+if TYPE_CHECKING:
+    from ..registrationViewer import registrationViewerWidget
+
 
 TASK_UI_ADDITIONS: Dict[tasks.Task, Callable[[object], None]] = {
     tasks.Task.LYMPH_NODE: lambda ui: ui.study_dropdown.setVisible(True),
-    tasks.Task.RECURRENCE: lambda ui: (
+    tasks.Task.RECURRENCE.value: lambda ui: (
         ui.study_checkbox.setText("Recurrence exists"),
         ui.study_checkbox.setVisible(True)
     )
@@ -39,16 +47,19 @@ def show_task(
     if task != tasks.Task.RECURRENCE:
         utils.center_on_point(groundtruth_points[task], view_group)
 
-    if task in TASK_UI_ADDITIONS:
-        TASK_UI_ADDITIONS[task](ui)
+    if task.value in TASK_UI_ADDITIONS:
+
+        TASK_UI_ADDITIONS[task.value](ui)
 
 
 def save_point(
+    self: "registrationViewerWidget",
     path_patient: str,
     task: tasks.Task,
     study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
     additional_info: Optional[Dict[str, str]] = None,
-    serialise_to_log: Optional[bool] = False
+    serialise_to_log: Optional[bool] = False,
+    final_save: bool = False
 ) -> None:
 
     point = study_node_points[task]
@@ -75,12 +86,22 @@ def save_point(
                 f"path and content must be provided together to save additional info in {task.value}")
 
     if serialise_to_log:
-        if not point:
+        if not point and task == tasks.Task.RECURRENCE:
+            log(logging.INFO, LogType.ANNOTATION, "No recurrence to save")
             return
 
         serialised_point = utils.serialise_markup(point)
 
         if additional_info is not None:
-            serialised_point.update(additional_info)
+            serialised_point.update(
+                {"content": additional_info.get("content")})
 
-        print(f"WARNING Serialised point: {serialised_point} not logged yet")
+        if final_save:
+            prefix_wihout_task = f"{self.current_radiologist_id} ~ {self.current_patient_name}"
+            set_log_prefix(prefix_wihout_task)
+
+            text = f"Point {task.value} saved: {str(serialised_point)}"
+        else:
+            text = f"Point saved: {str(serialised_point)}"
+
+        log(logging.INFO, LogType.ANNOTATION, text)

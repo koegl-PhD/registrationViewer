@@ -26,7 +26,8 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import annotations_connections, utils, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, tasks_ui_logic
+from registrationViewerLib import annotations_connections, utils, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks
+from registrationViewerLib import custom_logging
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -84,16 +85,18 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTags = []
 
-        from registrationViewerLib import annotations_connections, utils, tasks, crosshairs, drop_data_loading, view_logic, study_connections, study, tasks_ui_logic
+        from registrationViewerLib import annotations_connections, utils, tasks, crosshairs, drop_data_loading, view_logic, study_connections, study
+        from registrationViewerLib import custom_logging
+
         annotations_connections = importlib.reload(annotations_connections)
         crosshairs = importlib.reload(crosshairs)
         drop_data_loading = importlib.reload(drop_data_loading)
         study_connections = importlib.reload(study_connections)
         study = importlib.reload(study)
         tasks = importlib.reload(tasks)
-        tasks_ui_logic = importlib.reload(tasks_ui_logic)
         utils = importlib.reload(utils)
         view_logic = importlib.reload(view_logic)
+        custom_logging = importlib.reload(custom_logging)
 
         self.group_first_row = 1
         self.group_second_row = 2
@@ -161,16 +164,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.annotation_fixed_roi_recurrence = None
 
         # STUDY
-        self.path_study_data_master: str = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
+        path_study_data_master: str = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
         self.study_data_master: 'study.StudyData' = study.StudyData(
-            self.path_study_data_master)
+            path_study_data_master)
+
         self.current_data_dict: Dict[str,
                                      Dict[str, Union[str, List[str]]]] = {}
 
         self.current_radiologist_id: str = ""
 
         self.current_patient_idx: int = -1
-        self.current_patient_list = None
+        self.current_patient_list = []
 
         self.current_task_idx: int = -1
         self.study_node_points = {
@@ -178,7 +182,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.study_node_groundtruth_points = {
             tasks.TASK_ORDER[key]: None for key in tasks.TASK_ORDER.keys() if key != tasks.Task.RECURRENCE}
-        
+
         # task specific
         self.study_lymphnode_size: Literal["Size same",
                                            "Size increased",
@@ -187,6 +191,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.study_progress_bar_patients = None
         self.study_progress_bar_tasks = None
+
+    def clog(self) -> None:
+        custom_logging.log(
+            logging.INFO, custom_logging.LogType.MOUSE, "test logging manually")
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -561,7 +569,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if not self._synchronisation_checks():
             return
 
-        if self.current_patient_list is not None and self.current_patient_transform_type == utils.TransformType.NONE:
+        if self.current_patient_list != [] and self.current_patient_transform_type == utils.TransformType.NONE:
             print('not synchronising because we have None transform')
             return
 

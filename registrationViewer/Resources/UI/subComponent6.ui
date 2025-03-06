@@ -171,7 +171,7 @@
     </rect>
     </property>
     <property name="text">
-    <string>Current case</string>
+    <string>Current task</string>
     </property>
       <property name="visible">
    <bool>false</bool>

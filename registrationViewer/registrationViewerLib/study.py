@@ -146,8 +146,6 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
                 text = f.read()
                 tasks.TASK_DESCRIPTIONS[tasks.Task.RECURRENCE] = text
 
-                print(f"{tasks.TASK_DESCRIPTIONS[tasks.Task.RECURRENCE]=}")
-
             continue
 
         self.study_node_groundtruth_points[task_name] = slicer.util.loadMarkups(
@@ -161,7 +159,8 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
 
 def save_annotations(self: "registrationViewerWidget",
                      specific_task: Optional[tasks.Task] = None,
-                     serialise_to_log: Optional[bool] = False) -> None:
+                     serialise_to_log: Optional[bool] = False,
+                     final_save: bool = False) -> None:
 
     if self.current_task_idx < 0:
         return
@@ -182,11 +181,13 @@ def save_annotations(self: "registrationViewerWidget",
                 additional_info = {"path": path_patient + "/recurrence_present.txt",
                                    "content": str(self.study_recurrence_present)}
 
-            tasks_ui_logic.save_point(path_patient,
+            tasks_ui_logic.save_point(self,
+                                      path_patient,
                                       task,
                                       self.study_node_points,
                                       additional_info=additional_info,
-                                      serialise_to_log=serialise_to_log)
+                                      serialise_to_log=serialise_to_log,
+                                      final_save=final_save)
 
 
 def clear_annotations(self: "registrationViewerWidget") -> None:
