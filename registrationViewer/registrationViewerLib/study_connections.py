@@ -224,7 +224,8 @@ def on_user_start_study(self: "registrationViewerWidget") -> None:
 def btn_call_on_center_on_point(self: "registrationViewerWidget") -> None:
     print(f"WARNING log btn_call_on_center_on_point")
 
-    utils.center_on_point(self.study_node_points[self.current_task])
+    utils.center_on_point(
+        self.study_node_points[self.current_task], self.group_first_row)
 
 
 def btn_call_on_study_next_patient(self: "registrationViewerWidget") -> None:
