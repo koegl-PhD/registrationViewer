@@ -417,6 +417,7 @@ def enable_sectra_movements(self: "registrationViewerWidget",
     def createDragHandlers(view_name):
         dragging[view_name] = {"left_click_drag": False,
                                "middle_click_drag": False,
+                               "right_click_drag": False,
                                "last_mouse_position": None}
 
         def start_letf_drag(caller, event):
@@ -425,6 +426,7 @@ def enable_sectra_movements(self: "registrationViewerWidget",
 
             dragging[view_name]["left_click_drag"] = True
             dragging[view_name]["middle_click_drag"] = False
+            dragging[view_name]["right_click_drag"] = False
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def start_middle_drag(caller, event):
@@ -433,7 +435,34 @@ def enable_sectra_movements(self: "registrationViewerWidget",
 
             dragging[view_name]["left_click_drag"] = False
             dragging[view_name]["middle_click_drag"] = True
+            dragging[view_name]["right_click_drag"] = True
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
+
+        def start_right_drag(caller, event):
+            if disable_sectra:
+                return
+
+            dragging[view_name]["left_click_drag"] = False
+            dragging[view_name]["middle_click_drag"] = False
+            dragging[view_name]["right_click_drag"] = True
+            dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
+
+        def _drag_left(caller, event):
+            current_position = caller.GetEventPosition()
+
+            delta_y = current_position[1] - \
+                dragging[view_name]["last_mouse_position"][1]
+
+            dragging[view_name]["last_mouse_position"] = current_position
+
+            if abs(delta_y) > 0:
+                position = slicer.util.getNode("*Crosshair*").GetCursorPositionXYZ([0]*3)  # nopep8
+                if position is not None:
+                    current_view = position.GetName()
+                    sliceLogic = slicer.app.layoutManager().sliceWidget(current_view).sliceLogic()
+                    sliceOffset = sliceLogic.GetSliceOffset()
+                    newSliceOffset = sliceOffset - delta_y * sensitivity_left
+                    sliceLogic.SetSliceOffset(newSliceOffset)
 
         def _drag_middle(caller, event):
 
@@ -467,22 +496,9 @@ def enable_sectra_movements(self: "registrationViewerWidget",
                                    new_window,
                                    new_level)
 
-        def _drag_left(caller, event):
-            current_position = caller.GetEventPosition()
+        def _drag_right(caller, event):
 
-            delta_y = current_position[1] - \
-                dragging[view_name]["last_mouse_position"][1]
-
-            dragging[view_name]["last_mouse_position"] = current_position
-
-            if abs(delta_y) > 0:
-                position = slicer.util.getNode("*Crosshair*").GetCursorPositionXYZ([0]*3)  # nopep8
-                if position is not None:
-                    current_view = position.GetName()
-                    sliceLogic = slicer.app.layoutManager().sliceWidget(current_view).sliceLogic()
-                    sliceOffset = sliceLogic.GetSliceOffset()
-                    newSliceOffset = sliceOffset - delta_y * sensitivity_left
-                    sliceLogic.SetSliceOffset(newSliceOffset)
+            print("Right click drag")
 
         def drag(caller, event):
 
@@ -500,6 +516,8 @@ def enable_sectra_movements(self: "registrationViewerWidget",
                 _drag_middle(caller, event)
             elif dragging[view_name]["left_click_drag"]:
                 _drag_left(caller, event)
+            elif dragging[view_name]["right_click_drag"]:
+                _drag_right(caller, event)
 
         def drag_end(caller, event):
             if disable_sectra:
@@ -507,9 +525,15 @@ def enable_sectra_movements(self: "registrationViewerWidget",
 
             dragging[view_name]["middle_click_drag"] = False
             dragging[view_name]["left_click_drag"] = False
+            dragging[view_name]["right_click_drag"] = False
             dragging[view_name]["last_mouse_position"] = None
 
-        return start_letf_drag, start_middle_drag, drag, drag_end
+        return start_letf_drag, start_middle_drag, start_right_drag, drag, drag_end
+
+    """
+    MouseWheelBackwardEvent:'EventIds'
+    MouseWheelForwardEvent:'EventIds'
+    """
 
     # Loop through all provided views and set up interaction
     for view_name in self.views_first_row + self.views_second_row:
@@ -519,17 +543,23 @@ def enable_sectra_movements(self: "registrationViewerWidget",
 
         if interactor.HasObserver(vtk.vtkCommand.MiddleButtonPressEvent):
             interactor.RemoveObservers(vtk.vtkCommand.MiddleButtonPressEvent)
+        if interactor.HasObserver(vtk.vtkCommand.LeftButtonPressEvent):
+            interactor.RemoveObservers(vtk.vtkCommand.LeftButtonPressEvent)
+        if interactor.HasObserver(vtk.vtkCommand.RightButtonPressEvent):
+            interactor.RemoveObservers(vtk.vtkCommand.RightButtonPressEvent)
 
-        start_letf_drag, start_middle_drag, drag, drag_end = createDragHandlers(
+        start_letf_drag, start_middle_drag, start_right_drag, drag, drag_end = createDragHandlers(
             view_name)
 
         interactor.AddObserver(vtk.vtkCommand.LeftButtonPressEvent, start_letf_drag)  # nopep8
         interactor.AddObserver(vtk.vtkCommand.MiddleButtonPressEvent, start_middle_drag)  # nopep8
+        interactor.AddObserver(vtk.vtkCommand.RightButtonPressEvent, start_right_drag)  # nopep8
 
         interactor.AddObserver(vtk.vtkCommand.MouseMoveEvent, drag, 1.0)  # nopep8
 
         interactor.AddObserver(vtk.vtkCommand.LeftButtonReleaseEvent, drag_end)  # nopep8
         interactor.AddObserver(vtk.vtkCommand.MiddleButtonReleaseEvent, drag_end)  # nopep8
+        interactor.AddObserver(vtk.vtkCommand.RightButtonReleaseEvent, drag_end)  # nopep8
 
 
 def disable_sectra_movements():
