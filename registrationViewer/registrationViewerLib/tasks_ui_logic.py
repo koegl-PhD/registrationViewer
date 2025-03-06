@@ -75,6 +75,9 @@ def save_point(
                 f"path and content must be provided together to save additional info in {task.value}")
 
     if serialise_to_log:
+        if not point:
+            return
+
         serialised_point = utils.serialise_markup(point)
 
         if additional_info is not None:
