@@ -528,7 +528,12 @@ def enable_sectra_movements(self: "registrationViewerWidget",
             dragging[view_name]["right_click_drag"] = False
             dragging[view_name]["last_mouse_position"] = None
 
-        return start_letf_drag, start_middle_drag, drag, drag_end
+        return start_letf_drag, start_middle_drag, start_right_drag, drag, drag_end
+
+    """
+    MouseWheelBackwardEvent:'EventIds'
+    MouseWheelForwardEvent:'EventIds'
+    """
 
     # Loop through all provided views and set up interaction
     for view_name in self.views_first_row + self.views_second_row:
