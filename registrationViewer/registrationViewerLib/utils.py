@@ -25,7 +25,7 @@ class TransformType(Enum):
 
 
 def center_on_point(point: slicer.vtkMRMLMarkupsFiducialNode,
-                    view_group: Optional[int]) -> None:
+                    view_group: Optional[int] = None) -> None:
 
     if point is None:
         return
@@ -221,7 +221,7 @@ def set_ui_simplification(simple: bool) -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    slicer.util.setPythonConsoleVisible(value)
+    slicer.util.setPythonConsoleVisible(True)
 
 
 def print_affine_matrix(transformNode):

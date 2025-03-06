@@ -2,3 +2,4 @@
 registrationViewer/__pycache__/
 
 registrationViewer/registrationViewerLib/__pycache__/
+*.xlsx
