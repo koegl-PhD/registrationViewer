@@ -147,25 +147,19 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
 
     if self.ui_is_simple:
         self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-        # slicer.app.setStyleSheet("""
-        #     QWidget {
-        #         background-color: #060f21;
-        #         color: white;
-        #     }
-        #     QMainWindow {
-        #         background-color: #060f21;
-        #     }
-        #     qSlicerLayoutManager {
-        #         background-color: #060f21;
-        #     }
-        #     """)
+        slicer.app.setStyleSheet("""
+            QWidget {
+                background-color: #060f21;
+                color: white;
+            }
+            QMainWindow {
+                background-color: #060f21;
+            }
+            qSlicerLayoutManager {
+                background-color: #060f21;
+            }
+            """)
 
-        view_logic.enable_sectra_movements(self.node_fixed,
-                                           self.views_first_row)
-        view_logic.enable_sectra_movements(self.node_moving,
-                                           self.views_second_row)
-        view_logic.enable_sectra_movements(self.node_diff,
-                                           self.views_third_row)
         study.hide_module_parts_for_user_study(self)
 
         mainWindow.findChild(
@@ -174,11 +168,11 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
         self.ui_sub_6.start_study_by_user_button.setVisible(True)
     else:
         self.ui_sub_1.simple_ui_button.setText("Simple UI")
-        # slicer.app.setStyleSheet("""
-        #     QWidget {
-        #     color: black;
-        #     }
-        #     """)
+        slicer.app.setStyleSheet("""
+            QWidget {
+            color: black;
+            }
+            """)
 
         view_logic.disable_sectra_movements()
         study.show_module_parts_for_user_study(self)
