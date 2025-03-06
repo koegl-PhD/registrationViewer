@@ -160,18 +160,6 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
         #     }
         #     """)
 
-        print(f"{self.node_fixed=}")
-        print(f"{self.views_first_row=}")
-        print(f"{self.node_moving=}")
-        print(f"{self.views_second_row=}")
-
-        view_logic.enable_sectra_movements(self.node_fixed,
-                                           self.views_first_row)
-        view_logic.enable_sectra_movements(self.node_moving,
-                                           self.views_second_row)
-        view_logic.enable_sectra_movements(self.node_diff,
-                                           self.views_third_row)
-
         study.hide_module_parts_for_user_study(self)
 
         mainWindow.findChild(

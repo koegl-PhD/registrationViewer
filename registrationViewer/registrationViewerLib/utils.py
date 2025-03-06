@@ -387,8 +387,6 @@ def set_window_level(node: slicer.vtkMRMLScalarVolumeNode,
 def set_threshold(node: slicer.vtkMRMLScalarVolumeNode,
                   threshold: Tuple[float, float]) -> None:
 
-    print(f"Setting threshold of {node.GetName()}")
-
     if not node:
         return
 

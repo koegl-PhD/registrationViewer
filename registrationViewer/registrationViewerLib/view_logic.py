@@ -3,12 +3,16 @@
 import vtk
 from enum import Enum
 
-from typing import List, Literal, Tuple
+from typing import List, Literal, Tuple, TYPE_CHECKING
 
 from qt import QEvent, QObject
 import slicer
 from slicer import vtkMRMLScalarVolumeNode
+
 import registrationViewerLib.utils as utils
+
+if TYPE_CHECKING:
+    from ..registrationViewer import registrationViewerWidget
 
 
 class Layout(Enum):
@@ -402,8 +406,7 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode.SetSliceOffset(offset)
 
 
-def enable_sectra_movements(volume_node,
-                            views: List[str],
+def enable_sectra_movements(self: "registrationViewerWidget",
                             sensitivity_left: float = 0.1,
                             sensitivity_middle=1.0):
 
@@ -433,7 +436,6 @@ def enable_sectra_movements(volume_node,
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def _drag_middle(caller, event):
-            print(f"Setting window and level of {volume_node.GetName()}")
 
             current_mouse_position = caller.GetEventPosition()
 
@@ -442,18 +444,16 @@ def enable_sectra_movements(volume_node,
             dy = (current_mouse_position[1] -
                   dragging[view_name]["last_mouse_position"][1]) * sensitivity_middle
 
-            print(f"{current_mouse_position=}")
-
-            val = dragging[view_name]["last_mouse_position"][0]
-            print(f"last_mouse_position0={val}")
-            val = dragging[view_name]["last_mouse_position"][1]
-            print(f"last_mouse_position1={val}")
-
-            print(f"{dx=}\t{dy=}")
-
             dragging[view_name]["last_mouse_position"] = current_mouse_position
 
-            displayNode = volume_node.GetDisplayNode()
+            if self.current_view in self.views_first_row:
+                current_node = self.node_fixed
+            elif self.current_view in self.views_second_row:
+                current_node = self.node_moving
+            else:
+                return
+
+            displayNode = current_node.GetDisplayNode()
             if not displayNode:
                 return
 
@@ -463,10 +463,7 @@ def enable_sectra_movements(volume_node,
             new_window = max(1, current_window - dx)
             new_level = current_level + dy
 
-            # print(f"{dx=}\t{dy=}\t{current_window=}\t{current_level=}")
-            # print(f"{new_window=}\t{new_level=}")
-
-            utils.set_window_level(volume_node,
+            utils.set_window_level(current_node,
                                    new_window,
                                    new_level)
 
@@ -492,7 +489,14 @@ def enable_sectra_movements(volume_node,
             if disable_sectra:
                 return
 
-            if dragging[view_name]["middle_click_drag"] and volume_node:
+            if self.current_view in self.views_first_row:
+                current_node = self.node_fixed
+            elif self.current_view in self.views_second_row:
+                current_node = self.node_moving
+            else:
+                return
+
+            if dragging[view_name]["middle_click_drag"] and current_node:
                 _drag_middle(caller, event)
             elif dragging[view_name]["left_click_drag"]:
                 _drag_left(caller, event)
@@ -508,13 +512,10 @@ def enable_sectra_movements(volume_node,
         return start_letf_drag, start_middle_drag, drag, drag_end
 
     # Loop through all provided views and set up interaction
-    for view_name in views:
-        # createDragHandlers(view_name)
+    for view_name in self.views_first_row + self.views_second_row:
 
         interactor = slicer.app.layoutManager().sliceWidget(
             view_name).sliceView().interactor()
-
-        # interactor.RemoveAllObservers()
 
         if interactor.HasObserver(vtk.vtkCommand.MiddleButtonPressEvent):
             interactor.RemoveObservers(vtk.vtkCommand.MiddleButtonPressEvent)

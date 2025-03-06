@@ -438,13 +438,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.link_views(self.views_second_row)
         view_logic.link_views(self.views_third_row)
 
-        if self.ui_is_simple:
-            view_logic.enable_sectra_movements(self.node_fixed,
-                                               self.views_first_row)
-            view_logic.enable_sectra_movements(self.node_moving,
-                                               self.views_second_row)
-            view_logic.enable_sectra_movements(self.node_diff,
-                                               self.views_third_row)
+        if self.ui_is_simple and view_logic.disable_sectra is True:
+            view_logic.enable_sectra_movements(self)
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
@@ -529,10 +524,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     node_fixed_transformed_with_affine)
                 slicer.mrmlScene.RemoveNode(
                     node_moving_transformed_with_affine)
-
-                if self.ui_is_simple:
-                    view_logic.enable_sectra_movements(self.node_diff,
-                                                       self.views_third_row)
 
                 slicer.util.resetSliceViews()
 
