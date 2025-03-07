@@ -458,18 +458,17 @@ def enable_sectra_movements(
     disable_sectra = False
 
     def createDragHandlers(view_name):
-        dragging[view_name] = {"left_click_drag": False,
-                               "middle_click_drag": False,
-                               "right_click_drag": False,
-                               "last_mouse_position": None,
-                               "logged_scroll": False,
-                               "logged_window_level": False,
-                               "logged_zoom": False,
-                               "logged_pan": False,
-                               "first_click_time_left": None,
-                               "first_click_time_right": None,
-                               "first_click_time_middle": None
-                               }
+        dragging[view_name] = {
+            "left_click_drag": False,
+            "middle_click_drag": False,
+            "right_click_drag": False,
+            "wheel_scroll": False,
+            "last_mouse_position": None,
+            "logged_drag_scroll": False,
+            "logged_window_level": False,
+            "logged_zoom": False,
+            "logged_pan": False,
+        }
 
         def start_letf_drag(caller, event):
             if disable_sectra:
@@ -492,15 +491,38 @@ def enable_sectra_movements(
             dragging[view_name]["right_click_drag"] = True
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
+        def start_wheel_scroll_forward(caller, event):
+            if disable_sectra:
+                return
+            _wheel_scroll(caller, event, 1)
+
+        def start_wheel_scroll_backward(caller, event):
+            if disable_sectra:
+                return
+            _wheel_scroll(caller, event, -1)
+
+        def _wheel_scroll(caller, event, delta):
+            sliceLogic = slicer.app.layoutManager().sliceWidget(view_name).sliceLogic()
+
+            sliceOffset = sliceLogic.GetSliceOffset()
+
+            newSliceOffset = sliceOffset + delta * sensitivity_scroll
+
+            sliceLogic.SetSliceOffset(newSliceOffset)
+
+            log(logging.INFO, LogType.MOUSE,
+                f"Wheel Scroll: {view_name} - {delta=}")
+
         def _drag_scroll(caller, event):
 
             if dragging[view_name]["logged_window_level"]:
                 log(logging.INFO, LogType.MOUSE, "End Window_Level")
                 dragging[view_name]["logged_window_level"] = False
 
-            if not dragging[view_name]["logged_scroll"]:
-                log(logging.INFO, LogType.MOUSE, f"Start Scroll: {view_name}")
-                dragging[view_name]["logged_scroll"] = True
+            if not dragging[view_name]["logged_drag_scroll"]:
+                log(logging.INFO, LogType.MOUSE,
+                    f"Start Drag Scroll: {view_name}")
+                dragging[view_name]["logged_drag_scroll"] = True
 
             current_mouse_position = caller.GetEventPosition()
 
@@ -519,13 +541,13 @@ def enable_sectra_movements(
                     sliceLogic.SetSliceOffset(newSliceOffset)
 
                     log(logging.INFO, LogType.MOUSE,
-                        f"Scroll: {current_mouse_position}")
+                        f"Drag Scroll: {current_mouse_position}")
 
         def _drag_window_level(caller, dy):
 
-            if dragging[view_name]["logged_scroll"]:
+            if dragging[view_name]["logged_drag_scroll"]:
                 log(logging.INFO, LogType.MOUSE, "End Scroll")
-                dragging[view_name]["logged_scroll"] = False
+                dragging[view_name]["logged_drag_scroll"] = False
 
             if not dragging[view_name]["logged_window_level"]:
                 log(logging.INFO, LogType.MOUSE,
@@ -641,7 +663,7 @@ def enable_sectra_movements(
             if disable_sectra:
                 return
 
-            if dragging[view_name]["logged_scroll"]:
+            if dragging[view_name]["logged_drag_scroll"]:
                 log(logging.INFO, LogType.MOUSE, "End Scroll")
             if dragging[view_name]["logged_window_level"]:
                 log(logging.INFO, LogType.MOUSE, "End Window_Level")
@@ -654,22 +676,14 @@ def enable_sectra_movements(
             dragging[view_name]["left_click_drag"] = False
             dragging[view_name]["right_click_drag"] = False
             dragging[view_name]["last_mouse_position"] = None
-            dragging[view_name]["logged_scroll"] = False
+            dragging[view_name]["logged_drag_scroll"] = False
             dragging[view_name]["logged_window_level"] = False
             dragging[view_name]["logged_zoom"] = False
             dragging[view_name]["logged_pan"] = False
-            dragging[view_name]["first_click_time_left"] = None
-            dragging[view_name]["first_click_time_right"] = None
-            dragging[view_name]["first_click_time_middle"] = None
 
-        return start_letf_drag, start_middle_drag, start_right_drag, drag, drag_end
+        return (start_letf_drag, start_middle_drag, start_right_drag,
+                start_wheel_scroll_forward, start_wheel_scroll_backward, drag, drag_end)
 
-    """
-    MouseWheelBackwardEvent:'EventIds'
-    MouseWheelForwardEvent:'EventIds'
-    """
-
-    # Loop through all provided views and set up interaction
     for view_name in self.views_first_row + self.views_second_row:
 
         interactor = slicer.app.layoutManager().sliceWidget(
@@ -681,13 +695,19 @@ def enable_sectra_movements(
             interactor.RemoveObservers(vtk.vtkCommand.LeftButtonPressEvent)
         if interactor.HasObserver(vtk.vtkCommand.RightButtonPressEvent):
             interactor.RemoveObservers(vtk.vtkCommand.RightButtonPressEvent)
+        if interactor.HasObserver(vtk.vtkCommand.MouseWheelBackwardEvent):
+            interactor.RemoveObservers(vtk.vtkCommand.MouseWheelBackwardEvent)
+        if interactor.HasObserver(vtk.vtkCommand.MouseWheelForwardEvent):
+            interactor.RemoveObservers(vtk.vtkCommand.MouseWheelForwardEvent)
 
-        start_letf_drag, start_middle_drag, start_right_drag, drag, drag_end = createDragHandlers(
-            view_name)
+        (start_letf_drag, start_middle_drag, start_right_drag,
+         start_wheel_scroll_forward, start_wheel_scroll_backward, drag, drag_end) = createDragHandlers(view_name)
 
         interactor.AddObserver(vtk.vtkCommand.LeftButtonPressEvent, start_letf_drag)  # nopep8
         interactor.AddObserver(vtk.vtkCommand.MiddleButtonPressEvent, start_middle_drag)  # nopep8
         interactor.AddObserver(vtk.vtkCommand.RightButtonPressEvent, start_right_drag)  # nopep8
+        interactor.AddObserver(vtk.vtkCommand.MouseWheelForwardEvent, start_wheel_scroll_forward)  # nopep8
+        interactor.AddObserver(vtk.vtkCommand.MouseWheelBackwardEvent, start_wheel_scroll_backward)  # nopep8
 
         interactor.AddObserver(vtk.vtkCommand.MouseMoveEvent, drag, 1.0)  # nopep8
 
