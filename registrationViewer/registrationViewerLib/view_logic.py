@@ -406,14 +406,53 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode.SetSliceOffset(offset)
 
 
-def enable_sectra_movements(self: "registrationViewerWidget",
-                            sensitivity_left: float = 0.1,
-                            sensitivity_middle=1.0):
+def _is_right_drag(view_name: str) -> bool:
+    if dragging[view_name]["right_click_drag"] and not dragging[view_name]["left_click_drag"] and not dragging[view_name]["middle_click_drag"]:
+        return True
+    return False
+
+
+def _is_left_drag(view_name: str) -> bool:
+    if dragging[view_name]["left_click_drag"] and not dragging[view_name]["middle_click_drag"] and not dragging[view_name]["right_click_drag"]:
+        return True
+    return False
+
+
+def _is_middle_drag(view_name: str) -> bool:
+    if dragging[view_name]["middle_click_drag"] and not dragging[view_name]["left_click_drag"] and not dragging[view_name]["right_click_drag"]:
+        return True
+    return False
+
+
+def _is_left_and_middle_drag(view_name: str) -> bool:
+    if dragging[view_name]["left_click_drag"] and dragging[view_name]["middle_click_drag"] and not dragging[view_name]["right_click_drag"]:
+        return True
+    return False
+
+
+def _is_right_and_middle_drag(view_name: str) -> bool:
+    if dragging[view_name]["right_click_drag"] and dragging[view_name]["middle_click_drag"] and not dragging[view_name]["left_click_drag"]:
+        return True
+    return False
+
+
+def _is_left_and_right_drag(view_name: str) -> bool:
+    if dragging[view_name]["left_click_drag"] and dragging[view_name]["right_click_drag"] and not dragging[view_name]["middle_click_drag"]:
+        return True
+    return False
+
+
+def enable_sectra_movements(
+    self: "registrationViewerWidget",
+    sensitivity_pan: float = 1.0,
+    sensitivity_window_level: float = 1.0,
+    sensitivity_scroll: float = 0.4,
+    sensitivity_zoom: float = 0.01
+):
 
     global disable_sectra
     disable_sectra = False
 
-    # Helper function to set up interaction for a single view
     def createDragHandlers(view_name):
         dragging[view_name] = {"left_click_drag": False,
                                "middle_click_drag": False,
@@ -425,53 +464,46 @@ def enable_sectra_movements(self: "registrationViewerWidget",
                 return
 
             dragging[view_name]["left_click_drag"] = True
-            dragging[view_name]["middle_click_drag"] = False
-            dragging[view_name]["right_click_drag"] = False
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def start_middle_drag(caller, event):
             if disable_sectra:
                 return
 
-            dragging[view_name]["left_click_drag"] = False
             dragging[view_name]["middle_click_drag"] = True
-            dragging[view_name]["right_click_drag"] = True
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def start_right_drag(caller, event):
             if disable_sectra:
                 return
 
-            dragging[view_name]["left_click_drag"] = False
-            dragging[view_name]["middle_click_drag"] = False
             dragging[view_name]["right_click_drag"] = True
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
-        def _drag_left(caller, event):
-            current_position = caller.GetEventPosition()
+        def _drag_scroll(caller, event):
+            current_mouse_position = caller.GetEventPosition()
 
-            delta_y = current_position[1] - \
-                dragging[view_name]["last_mouse_position"][1]
+            dy = (current_mouse_position[1] -
+                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_scroll
 
-            dragging[view_name]["last_mouse_position"] = current_position
+            dragging[view_name]["last_mouse_position"] = current_mouse_position
 
-            if abs(delta_y) > 0:
+            if abs(dy) > 0:
                 position = slicer.util.getNode("*Crosshair*").GetCursorPositionXYZ([0]*3)  # nopep8
                 if position is not None:
                     current_view = position.GetName()
                     sliceLogic = slicer.app.layoutManager().sliceWidget(current_view).sliceLogic()
                     sliceOffset = sliceLogic.GetSliceOffset()
-                    newSliceOffset = sliceOffset - delta_y * sensitivity_left
+                    newSliceOffset = sliceOffset - dy * sensitivity_scroll
                     sliceLogic.SetSliceOffset(newSliceOffset)
 
-        def _drag_middle(caller, event):
-
+        def _drag_window_level(caller, dy):
             current_mouse_position = caller.GetEventPosition()
 
             dx = (current_mouse_position[0] -
-                  dragging[view_name]["last_mouse_position"][0]) * sensitivity_middle
+                  dragging[view_name]["last_mouse_position"][0]) * sensitivity_window_level
             dy = (current_mouse_position[1] -
-                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_middle
+                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_window_level
 
             dragging[view_name]["last_mouse_position"] = current_mouse_position
 
@@ -496,28 +528,55 @@ def enable_sectra_movements(self: "registrationViewerWidget",
                                    new_window,
                                    new_level)
 
-        def _drag_right(caller, event):
+        def _drag_zoom(caller, event):
+            current_mouse_position = caller.GetEventPosition()
 
-            print("Right click drag")
+            dy = (current_mouse_position[1] -
+                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_zoom
+
+            dragging[view_name]["last_mouse_position"] = current_mouse_position
+
+            slice_node = slicer.app.layoutManager().sliceWidget(view_name).sliceLogic().GetSliceNode()  # nopep8
+
+            new_FOV_x = slice_node.GetFieldOfView()[0] * (1 - dy)
+            new_FOV_y = slice_node.GetFieldOfView()[1] * (1 - dy)
+            new_FOV_z = slice_node.GetFieldOfView()[2]
+
+            slice_node.SetFieldOfView(new_FOV_x, new_FOV_y, new_FOV_z)
+            slice_node.UpdateMatrices()
+
+        def _drag_pan(caller, event):
+            current_mouse_position = caller.GetEventPosition()
+
+            dx = (current_mouse_position[0] -
+                  dragging[view_name]["last_mouse_position"][0]) * sensitivity_pan
+            dy = (current_mouse_position[1] -
+                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_pan
+
+            dragging[view_name]["last_mouse_position"] = current_mouse_position
+
+            slice_node = slicer.app.layoutManager().sliceWidget(view_name).sliceLogic().GetSliceNode()  # nopep8
+
+            origin = list(slice_node.GetXYZOrigin())
+
+            origin[0] -= dx
+            origin[1] -= dy
+
+            slice_node.SetXYZOrigin(origin)
 
         def drag(caller, event):
 
             if disable_sectra:
                 return
 
-            if self.current_view in self.views_first_row:
-                current_node = self.node_fixed
-            elif self.current_view in self.views_second_row:
-                current_node = self.node_moving
-            else:
-                return
-
-            if dragging[view_name]["middle_click_drag"] and current_node:
-                _drag_middle(caller, event)
-            elif dragging[view_name]["left_click_drag"]:
-                _drag_left(caller, event)
-            elif dragging[view_name]["right_click_drag"]:
-                _drag_right(caller, event)
+            if _is_left_drag(view_name):
+                _drag_pan(caller, event)
+            elif _is_middle_drag(view_name):
+                _drag_window_level(caller, event)
+            elif _is_left_and_middle_drag(view_name) or _is_right_and_middle_drag(view_name):
+                _drag_scroll(caller, event)
+            elif _is_left_and_right_drag(view_name):
+                _drag_zoom(caller, event)
 
         def drag_end(caller, event):
             if disable_sectra:
