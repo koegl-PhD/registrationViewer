@@ -1,15 +1,17 @@
-
-
-import vtk
 from enum import Enum
+import logging
+from time import time
+
 
 from typing import List, Literal, Tuple, TYPE_CHECKING
 
 from qt import QEvent, QObject
 import slicer
 from slicer import vtkMRMLScalarVolumeNode
+import vtk
 
 import registrationViewerLib.utils as utils
+from registrationViewerLib.custom_logging import log, LogType
 
 if TYPE_CHECKING:
     from ..registrationViewer import registrationViewerWidget
@@ -27,6 +29,8 @@ layout_callback = None
 
 dragging = {}
 disable_sectra = True
+
+COMPOUND_TIMEOUT = 0.2
 
 
 def register_layout_callback(callback):
@@ -406,72 +410,134 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode.SetSliceOffset(offset)
 
 
-def enable_sectra_movements(self: "registrationViewerWidget",
-                            sensitivity_left: float = 0.1,
-                            sensitivity_middle=1.0):
+def _is_right_drag(view_name: str) -> bool:
+    if dragging[view_name]["right_click_drag"] and not dragging[view_name]["left_click_drag"] and not dragging[view_name]["middle_click_drag"]:
+        return True
+    return False
+
+
+def _is_left_drag(view_name: str) -> bool:
+    if dragging[view_name]["left_click_drag"] and not dragging[view_name]["middle_click_drag"] and not dragging[view_name]["right_click_drag"]:
+        return True
+    return False
+
+
+def _is_middle_drag(view_name: str) -> bool:
+    if dragging[view_name]["middle_click_drag"] and not dragging[view_name]["left_click_drag"] and not dragging[view_name]["right_click_drag"]:
+        return True
+    return False
+
+
+def _is_left_and_middle_drag(view_name: str) -> bool:
+    if dragging[view_name]["left_click_drag"] and dragging[view_name]["middle_click_drag"] and not dragging[view_name]["right_click_drag"]:
+        return True
+    return False
+
+
+def _is_right_and_middle_drag(view_name: str) -> bool:
+    if dragging[view_name]["right_click_drag"] and dragging[view_name]["middle_click_drag"] and not dragging[view_name]["left_click_drag"]:
+        return True
+    return False
+
+
+def _is_left_and_right_drag(view_name: str) -> bool:
+    if dragging[view_name]["left_click_drag"] and dragging[view_name]["right_click_drag"] and not dragging[view_name]["middle_click_drag"]:
+        return True
+    return False
+
+
+def enable_sectra_movements(
+    self: "registrationViewerWidget",
+    sensitivity_pan: float = 1.0,
+    sensitivity_window_level: float = 1.0,
+    sensitivity_scroll: float = 0.4,
+    sensitivity_zoom: float = 0.01
+):
 
     global disable_sectra
     disable_sectra = False
 
-    # Helper function to set up interaction for a single view
     def createDragHandlers(view_name):
         dragging[view_name] = {"left_click_drag": False,
                                "middle_click_drag": False,
                                "right_click_drag": False,
-                               "last_mouse_position": None}
+                               "last_mouse_position": None,
+                               "logged_scroll": False,
+                               "logged_window_level": False,
+                               "logged_zoom": False,
+                               "logged_pan": False,
+                               "first_click_time_left": None,
+                               "first_click_time_right": None,
+                               "first_click_time_middle": None
+                               }
 
         def start_letf_drag(caller, event):
             if disable_sectra:
                 return
 
             dragging[view_name]["left_click_drag"] = True
-            dragging[view_name]["middle_click_drag"] = False
-            dragging[view_name]["right_click_drag"] = False
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def start_middle_drag(caller, event):
             if disable_sectra:
                 return
 
-            dragging[view_name]["left_click_drag"] = False
             dragging[view_name]["middle_click_drag"] = True
-            dragging[view_name]["right_click_drag"] = True
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def start_right_drag(caller, event):
             if disable_sectra:
                 return
 
-            dragging[view_name]["left_click_drag"] = False
-            dragging[view_name]["middle_click_drag"] = False
             dragging[view_name]["right_click_drag"] = True
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
-        def _drag_left(caller, event):
-            current_position = caller.GetEventPosition()
+        def _drag_scroll(caller, event):
 
-            delta_y = current_position[1] - \
-                dragging[view_name]["last_mouse_position"][1]
+            if dragging[view_name]["logged_window_level"]:
+                log(logging.INFO, LogType.MOUSE, "End Window_Level")
+                dragging[view_name]["logged_window_level"] = False
 
-            dragging[view_name]["last_mouse_position"] = current_position
+            if not dragging[view_name]["logged_scroll"]:
+                log(logging.INFO, LogType.MOUSE, f"Start Scroll: {view_name}")
+                dragging[view_name]["logged_scroll"] = True
 
-            if abs(delta_y) > 0:
+            current_mouse_position = caller.GetEventPosition()
+
+            dy = (current_mouse_position[1] -
+                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_scroll
+
+            dragging[view_name]["last_mouse_position"] = current_mouse_position
+
+            if abs(dy) > 0:
                 position = slicer.util.getNode("*Crosshair*").GetCursorPositionXYZ([0]*3)  # nopep8
                 if position is not None:
                     current_view = position.GetName()
                     sliceLogic = slicer.app.layoutManager().sliceWidget(current_view).sliceLogic()
                     sliceOffset = sliceLogic.GetSliceOffset()
-                    newSliceOffset = sliceOffset - delta_y * sensitivity_left
+                    newSliceOffset = sliceOffset - dy * sensitivity_scroll
                     sliceLogic.SetSliceOffset(newSliceOffset)
 
-        def _drag_middle(caller, event):
+                    log(logging.INFO, LogType.MOUSE,
+                        f"Scroll: {current_mouse_position}")
+
+        def _drag_window_level(caller, dy):
+
+            if dragging[view_name]["logged_scroll"]:
+                log(logging.INFO, LogType.MOUSE, "End Scroll")
+                dragging[view_name]["logged_scroll"] = False
+
+            if not dragging[view_name]["logged_window_level"]:
+                log(logging.INFO, LogType.MOUSE,
+                    f"Start Window_Level: {view_name}")
+                dragging[view_name]["logged_window_level"] = True
 
             current_mouse_position = caller.GetEventPosition()
 
             dx = (current_mouse_position[0] -
-                  dragging[view_name]["last_mouse_position"][0]) * sensitivity_middle
+                  dragging[view_name]["last_mouse_position"][0]) * sensitivity_window_level
             dy = (current_mouse_position[1] -
-                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_middle
+                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_window_level
 
             dragging[view_name]["last_mouse_position"] = current_mouse_position
 
@@ -496,37 +562,105 @@ def enable_sectra_movements(self: "registrationViewerWidget",
                                    new_window,
                                    new_level)
 
-        def _drag_right(caller, event):
+            log(logging.INFO, LogType.MOUSE,
+                f"Window_Level: {current_mouse_position}")
 
-            print("Right click drag")
+        def _drag_zoom(caller, event):
+
+            if dragging[view_name]["logged_pan"]:
+                log(logging.INFO, LogType.MOUSE, "End Pan")
+                dragging[view_name]["logged_pan"] = False
+
+            if not dragging[view_name]["logged_zoom"]:
+                log(logging.INFO, LogType.MOUSE, f"Start Zoom: {view_name}")
+                dragging[view_name]["logged_zoom"] = True
+
+            current_mouse_position = caller.GetEventPosition()
+
+            dy = (current_mouse_position[1] -
+                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_zoom
+
+            dragging[view_name]["last_mouse_position"] = current_mouse_position
+
+            slice_node = slicer.app.layoutManager().sliceWidget(view_name).sliceLogic().GetSliceNode()  # nopep8
+
+            new_FOV_x = slice_node.GetFieldOfView()[0] * (1 - dy)
+            new_FOV_y = slice_node.GetFieldOfView()[1] * (1 - dy)
+            new_FOV_z = slice_node.GetFieldOfView()[2]
+
+            slice_node.SetFieldOfView(new_FOV_x, new_FOV_y, new_FOV_z)
+            slice_node.UpdateMatrices()
+
+            log(logging.INFO, LogType.MOUSE, f"Zoom: {current_mouse_position}")
+
+        def _drag_pan(caller, event):
+
+            if dragging[view_name]["logged_zoom"]:
+                log(logging.INFO, LogType.MOUSE, "End Zoom")
+                dragging[view_name]["logged_zoom"] = False
+
+            if not dragging[view_name]["logged_pan"]:
+                log(logging.INFO, LogType.MOUSE, f"Start Pan: {view_name}")
+                dragging[view_name]["logged_pan"] = True
+
+            current_mouse_position = caller.GetEventPosition()
+
+            dx = (current_mouse_position[0] -
+                  dragging[view_name]["last_mouse_position"][0]) * sensitivity_pan
+            dy = (current_mouse_position[1] -
+                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_pan
+
+            dragging[view_name]["last_mouse_position"] = current_mouse_position
+
+            slice_node = slicer.app.layoutManager().sliceWidget(view_name).sliceLogic().GetSliceNode()  # nopep8
+
+            origin = list(slice_node.GetXYZOrigin())
+
+            origin[0] -= dx
+            origin[1] -= dy
+
+            slice_node.SetXYZOrigin(origin)
+
+            log(logging.INFO, LogType.MOUSE, f"Pan: {current_mouse_position}")
 
         def drag(caller, event):
 
             if disable_sectra:
                 return
 
-            if self.current_view in self.views_first_row:
-                current_node = self.node_fixed
-            elif self.current_view in self.views_second_row:
-                current_node = self.node_moving
-            else:
-                return
-
-            if dragging[view_name]["middle_click_drag"] and current_node:
-                _drag_middle(caller, event)
-            elif dragging[view_name]["left_click_drag"]:
-                _drag_left(caller, event)
-            elif dragging[view_name]["right_click_drag"]:
-                _drag_right(caller, event)
+            if _is_left_drag(view_name):
+                _drag_pan(caller, event)
+            elif _is_middle_drag(view_name):
+                _drag_window_level(caller, event)
+            elif _is_left_and_middle_drag(view_name) or _is_right_and_middle_drag(view_name):
+                _drag_scroll(caller, event)
+            elif _is_left_and_right_drag(view_name):
+                _drag_zoom(caller, event)
 
         def drag_end(caller, event):
             if disable_sectra:
                 return
 
+            if dragging[view_name]["logged_scroll"]:
+                log(logging.INFO, LogType.MOUSE, "End Scroll")
+            if dragging[view_name]["logged_window_level"]:
+                log(logging.INFO, LogType.MOUSE, "End Window_Level")
+            if dragging[view_name]["logged_zoom"]:
+                log(logging.INFO, LogType.MOUSE, "End Zoom")
+            if dragging[view_name]["logged_pan"]:
+                log(logging.INFO, LogType.MOUSE, "End Pan")
+
             dragging[view_name]["middle_click_drag"] = False
             dragging[view_name]["left_click_drag"] = False
             dragging[view_name]["right_click_drag"] = False
             dragging[view_name]["last_mouse_position"] = None
+            dragging[view_name]["logged_scroll"] = False
+            dragging[view_name]["logged_window_level"] = False
+            dragging[view_name]["logged_zoom"] = False
+            dragging[view_name]["logged_pan"] = False
+            dragging[view_name]["first_click_time_left"] = None
+            dragging[view_name]["first_click_time_right"] = None
+            dragging[view_name]["first_click_time_middle"] = None
 
         return start_letf_drag, start_middle_drag, start_right_drag, drag, drag_end
 
