@@ -1,15 +1,17 @@
-
-
-import vtk
 from enum import Enum
+import logging
+from time import time
+
 
 from typing import List, Literal, Tuple, TYPE_CHECKING
 
 from qt import QEvent, QObject
 import slicer
 from slicer import vtkMRMLScalarVolumeNode
+import vtk
 
 import registrationViewerLib.utils as utils
+from registrationViewerLib.custom_logging import log, LogType
 
 if TYPE_CHECKING:
     from ..registrationViewer import registrationViewerWidget
@@ -27,6 +29,8 @@ layout_callback = None
 
 dragging = {}
 disable_sectra = True
+
+COMPOUND_TIMEOUT = 0.2
 
 
 def register_layout_callback(callback):
@@ -457,7 +461,15 @@ def enable_sectra_movements(
         dragging[view_name] = {"left_click_drag": False,
                                "middle_click_drag": False,
                                "right_click_drag": False,
-                               "last_mouse_position": None}
+                               "last_mouse_position": None,
+                               "logged_scroll": False,
+                               "logged_window_level": False,
+                               "logged_zoom": False,
+                               "logged_pan": False,
+                               "first_click_time_left": None,
+                               "first_click_time_right": None,
+                               "first_click_time_middle": None
+                               }
 
         def start_letf_drag(caller, event):
             if disable_sectra:
@@ -481,6 +493,15 @@ def enable_sectra_movements(
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def _drag_scroll(caller, event):
+
+            if dragging[view_name]["logged_window_level"]:
+                log(logging.INFO, LogType.MOUSE, "End Window_Level")
+                dragging[view_name]["logged_window_level"] = False
+
+            if not dragging[view_name]["logged_scroll"]:
+                log(logging.INFO, LogType.MOUSE, f"Start Scroll: {view_name}")
+                dragging[view_name]["logged_scroll"] = True
+
             current_mouse_position = caller.GetEventPosition()
 
             dy = (current_mouse_position[1] -
@@ -497,7 +518,20 @@ def enable_sectra_movements(
                     newSliceOffset = sliceOffset - dy * sensitivity_scroll
                     sliceLogic.SetSliceOffset(newSliceOffset)
 
+                    log(logging.INFO, LogType.MOUSE,
+                        f"Scroll: {current_mouse_position}")
+
         def _drag_window_level(caller, dy):
+
+            if dragging[view_name]["logged_scroll"]:
+                log(logging.INFO, LogType.MOUSE, "End Scroll")
+                dragging[view_name]["logged_scroll"] = False
+
+            if not dragging[view_name]["logged_window_level"]:
+                log(logging.INFO, LogType.MOUSE,
+                    f"Start Window_Level: {view_name}")
+                dragging[view_name]["logged_window_level"] = True
+
             current_mouse_position = caller.GetEventPosition()
 
             dx = (current_mouse_position[0] -
@@ -528,7 +562,19 @@ def enable_sectra_movements(
                                    new_window,
                                    new_level)
 
+            log(logging.INFO, LogType.MOUSE,
+                f"Window_Level: {current_mouse_position}")
+
         def _drag_zoom(caller, event):
+
+            if dragging[view_name]["logged_pan"]:
+                log(logging.INFO, LogType.MOUSE, "End Pan")
+                dragging[view_name]["logged_pan"] = False
+
+            if not dragging[view_name]["logged_zoom"]:
+                log(logging.INFO, LogType.MOUSE, f"Start Zoom: {view_name}")
+                dragging[view_name]["logged_zoom"] = True
+
             current_mouse_position = caller.GetEventPosition()
 
             dy = (current_mouse_position[1] -
@@ -545,7 +591,18 @@ def enable_sectra_movements(
             slice_node.SetFieldOfView(new_FOV_x, new_FOV_y, new_FOV_z)
             slice_node.UpdateMatrices()
 
+            log(logging.INFO, LogType.MOUSE, f"Zoom: {current_mouse_position}")
+
         def _drag_pan(caller, event):
+
+            if dragging[view_name]["logged_zoom"]:
+                log(logging.INFO, LogType.MOUSE, "End Zoom")
+                dragging[view_name]["logged_zoom"] = False
+
+            if not dragging[view_name]["logged_pan"]:
+                log(logging.INFO, LogType.MOUSE, f"Start Pan: {view_name}")
+                dragging[view_name]["logged_pan"] = True
+
             current_mouse_position = caller.GetEventPosition()
 
             dx = (current_mouse_position[0] -
@@ -563,6 +620,8 @@ def enable_sectra_movements(
             origin[1] -= dy
 
             slice_node.SetXYZOrigin(origin)
+
+            log(logging.INFO, LogType.MOUSE, f"Pan: {current_mouse_position}")
 
         def drag(caller, event):
 
@@ -582,10 +641,26 @@ def enable_sectra_movements(
             if disable_sectra:
                 return
 
+            if dragging[view_name]["logged_scroll"]:
+                log(logging.INFO, LogType.MOUSE, "End Scroll")
+            if dragging[view_name]["logged_window_level"]:
+                log(logging.INFO, LogType.MOUSE, "End Window_Level")
+            if dragging[view_name]["logged_zoom"]:
+                log(logging.INFO, LogType.MOUSE, "End Zoom")
+            if dragging[view_name]["logged_pan"]:
+                log(logging.INFO, LogType.MOUSE, "End Pan")
+
             dragging[view_name]["middle_click_drag"] = False
             dragging[view_name]["left_click_drag"] = False
             dragging[view_name]["right_click_drag"] = False
             dragging[view_name]["last_mouse_position"] = None
+            dragging[view_name]["logged_scroll"] = False
+            dragging[view_name]["logged_window_level"] = False
+            dragging[view_name]["logged_zoom"] = False
+            dragging[view_name]["logged_pan"] = False
+            dragging[view_name]["first_click_time_left"] = None
+            dragging[view_name]["first_click_time_right"] = None
+            dragging[view_name]["first_click_time_middle"] = None
 
         return start_letf_drag, start_middle_drag, start_right_drag, drag, drag_end
 
