@@ -151,12 +151,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # we need to store our tags so we can specifically remove only them
         self.crosshair_custom_observer_tags = []
 
+        self.current_loaded_case_path = ""
+
         # ANNOTATIONS
-        self.annotations_save_path = "/home/koeglf/data/try_new_preprocessing/annotations/"
         self.annotations_already_saved = False
         self.annotation_fixed_roi_lymphnode = None
         self.annotation_moving_roi_lymphnode = None
-        self.annotation_bool_lymphnode_increased = False
+        self.annotation_lymphnode_size: Literal["Size same",
+                                                "Size increased",
+                                                "Size decreased"] = "Size same"
 
         self.annotation_fixed_points = None
         self.annotation_moving_points = None

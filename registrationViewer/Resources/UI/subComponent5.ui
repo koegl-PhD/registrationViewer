@@ -63,7 +63,30 @@
         </property>
        </widget>
       </item>
-
+      <!-- START dropdown menu -->
+      <item row="20" column="2" colspan="1">
+         <widget class="QComboBox" name="lymphnode_dropdown">
+            <property name="visible">
+               <bool>true</bool>
+            </property>
+            <item>
+               <property name="text">
+                  <string>Size same</string>
+               </property>
+            </item>
+            <item>
+               <property name="text">
+                  <string>Size increased</string>
+               </property>
+            </item>
+            <item>
+               <property name="text">
+                  <string>Size decreased</string>
+               </property>
+            </item>
+         </widget>
+      </item>
+      <!-- END dropdown menu -->
             
      <item row="30" column="0">
         <widget class="QCheckBox" name="lymphnodeRoiMovingCheckbox">
@@ -85,19 +108,10 @@
         </property>
        </widget>
       </item>
-      <item row="30" column="2">
-        <widget class="QCheckBox" name="increasedLymphnodeCheckBox">
-        <property name="text">
-            <string>Increased in size</string>
-        </property>
-        <property name="enabled">
-            <bool>false</bool>
-        </property>
-        </widget>
-      </item>
+
 
      <item row="40" column="0">
-        <widget class="QCheckBox" name="carotisgabelPointFixedCheckbox">
+        <widget class="QCheckBox" name="a_vertebralis_r_PointFixedCheckbox">
         <property name="enabled">
             <bool>false</bool>
         </property>
@@ -110,16 +124,15 @@
         </widget>
       </item>
       <item row="40" column="1">
-       <widget class="QPushButton" name="addCarotisgabelPointFixed">
+       <widget class="QPushButton" name="add_a_vertebralis_r_PointFixed">
         <property name="text">
-         <string>Add Carotisgabel point in fixed</string>
+         <string>Add a_vertebralis_r point in fixed</string>
         </property>
        </widget>
       </item>
-    
 
-      <item row="50" column="0">
-        <widget class="QCheckBox" name="carotisgabelPointMovingCheckbox">
+     <item row="41" column="0">
+        <widget class="QCheckBox" name="a_vertebralis_r_PointMovingCheckbox">
         <property name="enabled">
             <bool>false</bool>
         </property>
@@ -130,58 +143,153 @@
          </size>
          </property>
         </widget>
-        </item>
+      </item>
+      <item row="41" column="1">
+       <widget class="QPushButton" name="add_a_vertebralis_r_PointMoving">
+        <property name="text">
+         <string>Add a_vertebralis_r point in moving</string>
+        </property>
+       </widget>
+      </item>
+    
+     <item row="45" column="0">
+        <widget class="QCheckBox" name="a_vertebralis_l_PointFixedCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
+        </widget>
+      </item>
+      <item row="45" column="1">
+       <widget class="QPushButton" name="add_a_vertebralis_l_PointFixed">
+        <property name="text">
+         <string>Add a_vertebralis_l point in fixed</string>
+        </property>
+       </widget>
+      </item>
+
+     <item row="46" column="0">
+        <widget class="QCheckBox" name="a_vertebralis_l_PointMovingCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
+        </widget>
+      </item>
+      <item row="46" column="1">
+       <widget class="QPushButton" name="add_a_vertebralis_l_PointMoving">
+        <property name="text">
+         <string>Add a_vertebralis_l point in moving</string>
+        </property>
+       </widget>
+      </item>
+
+
+
+
+     <item row="50" column="0">
+        <widget class="QCheckBox" name="a_carotisexterna_r_PointFixedCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
+        </widget>
+      </item>
       <item row="50" column="1">
-       <widget class="QPushButton" name="addCarotisgabelPointMoving">
+       <widget class="QPushButton" name="add_a_carotisexterna_r_PointFixed">
         <property name="text">
-         <string>Add Carotisgabel point in moving</string>
+         <string>Add a_carotisexterna_r point in fixed</string>
         </property>
        </widget>
       </item>
 
+     <item row="51" column="0">
+        <widget class="QCheckBox" name="a_carotisexterna_r_PointMovingCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
+        </widget>
+      </item>
+      <item row="51" column="1">
+       <widget class="QPushButton" name="add_a_carotisexterna_r_PointMoving">
+        <property name="text">
+         <string>Add a_carotisexterna_r point in moving</string>
+        </property>
+       </widget>
+      </item>
+
+
+
+     <item row="55" column="0">
+        <widget class="QCheckBox" name="a_carotisexterna_l_PointFixedCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
+        </widget>
+      </item>
+      <item row="55" column="1">
+       <widget class="QPushButton" name="add_a_carotisexterna_l_PointFixed">
+        <property name="text">
+         <string>Add a_carotisexterna_l point in fixed</string>
+        </property>
+       </widget>
+      </item>
+
+     <item row="56" column="0">
+        <widget class="QCheckBox" name="a_carotisexterna_l_PointMovingCheckbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
+        </widget>
+      </item>
+      <item row="56" column="1">
+       <widget class="QPushButton" name="add_a_carotisexterna_l_PointMoving">
+        <property name="text">
+         <string>Add a_carotisexterna_l point in moving</string>
+        </property>
+       </widget>
+      </item>
     
-      <item row="60" column="0">
-        <widget class="QCheckBox" name="abgangavertebralisPointFixedCheckbox">
-        <property name="enabled">
-            <bool>false</bool>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>20</width>
-          <height>16777215</height>
-         </size>
-         </property>
-        </widget>
-        </item>
-      <item row="60" column="1">
-       <widget class="QPushButton" name="addAbgangavertebralisPointFixed">
-        <property name="text">
-         <string>Add Abgang A. vertebralis point in fixed</string>
-        </property>
-       </widget>
-      </item>
 
-      
-      <item row="70" column="0">
-        <widget class="QCheckBox" name="abgangavertebralisPointMovingCheckbox">
-        <property name="enabled">
-            <bool>false</bool>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>20</width>
-          <height>16777215</height>
-         </size>
-         </property>
-        </widget>
-        </item>
-      <item row="70" column="1">
-       <widget class="QPushButton" name="addAbgangavertebralisPointMoving">
-        <property name="text">
-         <string>Add Abgang A. vertebralis point in moving</string>
-        </property>
-       </widget>
-      </item>
+
+
+
+
+
+
 
       <item row="80" column="0">
         <widget class="QCheckBox" name="recurrenceRoiFixedCheckbox">
