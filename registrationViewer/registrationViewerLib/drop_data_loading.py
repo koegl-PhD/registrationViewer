@@ -1,8 +1,7 @@
 import os
-import glob
 import logging
 
-from typing import List
+from typing import TYPE_CHECKING
 
 import ctk
 import qt
@@ -11,8 +10,11 @@ from slicer.ScriptedLoadableModule import *
 
 import registrationViewerLib.utils as utils
 
+if TYPE_CHECKING:
+    from ..registrationViewer import registrationViewerWidget
 
-def create_loading_ui(self) -> None:
+
+def create_loading_ui(self: "registrationViewerWidget") -> None:
     configCollapsible = ctk.ctkCollapsibleButton()
     configCollapsible.setMaximumWidth(500)  # Set maximum height to 400
     configCollapsible.text = "Load patient data"
@@ -43,7 +45,7 @@ def create_loading_ui(self) -> None:
 
 
 class DropWidget(qt.QFrame):
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: "registrationViewerWidget") -> None:
         # Get the widget's layout widget as the parent
         if parent is not None:
             parent_widget = parent.parent
@@ -90,6 +92,8 @@ class DropWidget(qt.QFrame):
             self.load_data_from_dropped_folder(
                 paths[0],  # Use first dropped folder
             )
+
+            self.moduleWidget.current_loaded_case_path = paths[0]
 
     def load_data_from_dropped_folder(self, dropped_folder_path: str) -> None:
         """
@@ -145,7 +149,13 @@ class DropWidget(qt.QFrame):
                 return
 
             if utils.update_progress_window(60, f"Loading deformation..."):
-                node_deformation = slicer.util.loadTransform(path_deformation)
+                if path_deformation is None:
+                    # create a new identity transform
+                    node_deformation = slicer.mrmlScene.AddNewNodeByClass(
+                        "vtkMRMLLinearTransformNode")
+                else:
+                    node_deformation = slicer.util.loadTransform(
+                        path_deformation)
             else:
                 slicer.progressWindow.close()
                 return
