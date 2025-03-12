@@ -145,7 +145,13 @@ class DropWidget(qt.QFrame):
                 return
 
             if utils.update_progress_window(60, f"Loading deformation..."):
-                node_deformation = slicer.util.loadTransform(path_deformation)
+                if path_deformation is None:
+                    # create a new identity transform
+                    node_deformation = slicer.mrmlScene.AddNewNodeByClass(
+                        "vtkMRMLLinearTransformNode")
+                else:
+                    node_deformation = slicer.util.loadTransform(
+                        path_deformation)
             else:
                 slicer.progressWindow.close()
                 return

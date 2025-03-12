@@ -80,10 +80,10 @@ def get_paths_to_load(path_case_folder: str):
         x for x in paths_deformations if name_fixed in x and name_moving in x]
 
     if len(path_deformation) != 1:
-        raise Exception(
-            f"Expected 1 deformation file, found {len(path_deformation)}")
-
-    path_deformation = path_deformation[0]
+        path_deformation = None
+        print("No deformation found")
+    else:
+        path_deformation = path_deformation[0]
 
     if not os.path.exists(path_volume_fixed):
         print(path_volume_fixed)
@@ -105,7 +105,7 @@ def get_paths_to_load(path_case_folder: str):
     if not os.path.exists(path_transform_moving):
         print(path_transform_moving)
         raise Exception(f"Transform moving path does not exist: {path_transform_moving}")  # nopep8
-    if not os.path.exists(path_deformation):
+    if path_deformation and not os.path.exists(path_deformation):
         print(path_deformation)
         raise Exception(f"Deformation path does not exist: {path_deformation}")  # nopep8
 
