@@ -12,7 +12,59 @@
       </property>
      <layout class="QGridLayout" name="formLayout_2">
 
-        <item row="0" column="1">
+
+
+    <!-- START set_slice_idx_fixed_button -->
+      <item row="0" column="1" colspan="1" alignment="Qt::AlignTop">
+        <widget class="QPushButton" name="set_slice_idx_fixed_button">
+        <property name="text">
+          <string>Jump to slice index Fixed</string>
+        </property>
+        </widget>
+      </item>
+    <!-- END set_slice_idx_fixed_button -->
+
+       <!-- START slice_idx_fixed_TextEdit -->
+      <item row="0" column="2" alignment="Qt::AlignTop">
+       <widget class="QTextEdit" name="slice_idx_fixed_TextEdit">
+       <property name="maximumSize">
+          <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+         </property>
+       </widget>
+      </item>
+    <!-- END slice_idx_fixed_TextEdit -->
+
+
+    <!-- START set_slice_idx_moving_button -->
+      <item row="1" column="1" colspan="1" alignment="Qt::AlignTop">
+        <widget class="QPushButton" name="set_slice_idx_moving_button">
+        <property name="text">
+          <string>Jump to slice index Moving</string>
+        </property>
+        </widget>
+      </item>
+    <!-- END set_slice_idx_moving_button -->
+
+       <!-- START slice_idx_moving_TextEdit -->
+      <item row="1" column="2" alignment="Qt::AlignTop">
+       <widget class="QTextEdit" name="slice_idx_moving_TextEdit">
+       <property name="maximumSize">
+          <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+         </property>
+       </widget>
+      </item>
+    <!-- END slice_idx_moving_TextEdit -->
+
+
+
+
+        <item row="5" column="1">
        <widget class="QPushButton" name="saveAnnotations">
         <property name="text">
          <string>Save</string>
@@ -20,7 +72,7 @@
        </widget>
       </item>
 
-        <item row="0" column="2">
+        <item row="5" column="2">
        <widget class="QPushButton" name="clearAnnotations">
         <property name="text">
          <string>Clear</string>
