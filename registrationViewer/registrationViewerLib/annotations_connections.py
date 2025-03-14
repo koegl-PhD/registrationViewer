@@ -1,8 +1,9 @@
+import vtk
 import json
 import os
 from pathlib import Path
 
-from typing import Literal, TYPE_CHECKING
+from typing import Literal, TYPE_CHECKING, List
 
 import slicer
 import qt
@@ -14,6 +15,13 @@ if TYPE_CHECKING:
 
 
 def set_connections(self: "registrationViewerWidget") -> None:
+
+    self.ui_sub_5.set_slice_idx_fixed_button.connect("clicked(bool)",
+                                                     lambda: on_jumpt_to_slice_idx_fixed(self))
+
+    self.ui_sub_5.set_slice_idx_moving_button.connect("clicked(bool)",
+                                                      lambda: on_jumpt_to_slice_idx_moving(self))
+
     self.ui_sub_5.saveAnnotations.connect("clicked(bool)",
                                           lambda: on_save_annotations(self))
     self.ui_sub_5.clearAnnotations.connect("clicked(bool)",
@@ -430,3 +438,79 @@ def on_set_annotations_visibility(self: "registrationViewerWidget",
                        self.annotation_fixed_roi_recurrence]:
         if annotation is not None:
             annotation.GetDisplayNode().SetVisibility(visibility)
+
+
+def on_jumpt_to_slice_idx_fixed(self: "registrationViewerWidget") -> None:
+
+    jumpt_to_slice_idx(self.node_fixed,
+                       int(self.ui_sub_5.slice_idx_fixed_TextEdit.toPlainText()),
+                       self.views_first_row)
+
+
+def on_jumpt_to_slice_idx_moving(self: "registrationViewerWidget") -> None:
+    jumpt_to_slice_idx(self.node_moving,
+                       int(self.ui_sub_5.slice_idx_moving_TextEdit.toPlainText()),
+                       self.views_second_row)
+
+
+def jumpt_to_slice_idx(volume_node, slice_idx, views: List[str]):
+
+    # Ensure that the volume has image data.
+    imageData = volume_node.GetImageData()
+    if not imageData:
+        raise ValueError(
+            "The provided volume node does not contain image data.")
+
+    # Get the dimensions of the volume (I, J, K)
+    dims = imageData.GetDimensions()  # (nx, ny, nz)
+
+    # Use the center of the slice in I and J directions.
+    centerI = dims[0] / 2.0
+    centerJ = dims[1] / 2.0
+
+    # Clamp the provided slice index to a valid range.
+    K = max(0, min(slice_idx, dims[2] - 1))
+
+    # Create a homogeneous voxel coordinate [I, J, K, 1]
+    voxelCoord = [centerI, centerJ, K, 1]
+
+    # Get the IJK-to-RAS transformation matrix from the volume node.
+    ijkToRAS = vtk.vtkMatrix4x4()
+    volume_node.GetIJKToRASMatrix(ijkToRAS)
+
+    # Transform the voxel coordinate to RAS.
+    rasCoord = [0, 0, 0, 0]
+    for i in range(4):
+        rasCoord[i] = (ijkToRAS.GetElement(i, 0) * voxelCoord[0] +
+                       ijkToRAS.GetElement(i, 1) * voxelCoord[1] +
+                       ijkToRAS.GetElement(i, 2) * voxelCoord[2] +
+                       ijkToRAS.GetElement(i, 3) * voxelCoord[3])
+
+    position = rasCoord[:3]
+
+    layoutManager = slicer.app.layoutManager()
+
+    for view in views:
+        sliceWidget = layoutManager.sliceWidget(view)
+        if not sliceWidget:
+            continue
+
+        sliceLogic = sliceWidget.sliceLogic()
+        sliceNode = sliceLogic.GetSliceNode()
+
+        # Get the SliceToRAS matrix for the current slice view.
+        sliceToRAS = sliceNode.GetSliceToRAS()
+
+        # Typically, the third column of the SliceToRAS matrix is the slice normal.
+        normal = [sliceToRAS.GetElement(0, 2),
+                  sliceToRAS.GetElement(1, 2),
+                  sliceToRAS.GetElement(2, 2)]
+
+        # Compute the offset as the dot product of the slice normal with the target RAS position.
+        offset = normal[0]*position[0] + normal[1] * \
+            position[1] + normal[2]*position[2]
+
+        # Set the computed offset for this view.
+        view_logic.set_view_offset(view, offset)
+
+    return position
