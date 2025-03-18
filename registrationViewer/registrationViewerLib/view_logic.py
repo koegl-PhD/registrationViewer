@@ -88,8 +88,14 @@ class ViewClickFilter(QObject):
 
                 if self.to_layout == "set_1x2_layout":
                     set_1x2_layout(view_name[:-1])
+
+                    log(logging.INFO, LogType.OTHER,
+                        f"Double click ~ {view_name}")
                 elif self.to_layout == "set_2x3_layout":
                     set_2x3_layout()
+                    log(logging.INFO, LogType.OTHER,
+                        f"Double click ~ {view_name}")
+
                 elif self.to_layout == "set_3x3_layout":
                     set_3x3_layout()
 
