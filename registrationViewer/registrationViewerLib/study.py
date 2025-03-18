@@ -107,6 +107,13 @@ def load_study_volumes(self, path_case: str) -> None:
     node_deformation = slicer.util.loadTransform(path_deformation,
                                                  {'show': False})[1]
 
+    if path_deformation is None:
+        node_deformation = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLLinearTransformNode")
+    else:
+        node_deformation = slicer.util.loadTransform(path_deformation,
+                                                     {'show': False})[1]
+
     utils.update_progress_window(100, f"Loading data...")
 
     self.ui_sub_3.inputSelector_fixed.setCurrentNode(
