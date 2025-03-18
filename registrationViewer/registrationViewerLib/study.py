@@ -155,11 +155,14 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
 
             continue
 
-        self.study_node_groundtruth_points[task_name] = slicer.util.loadMarkups(
-            path_annotation)
+        markup = slicer.util.loadMarkups(path_annotation)
+        if markup:
+            markup.LockedOn()
 
         name = path_annotation.split("/")[-1].split(".")[0]
-        self.study_node_groundtruth_points[task_name].SetName(name)
+        markup.SetName(name)
+
+        self.study_node_groundtruth_points[task_name] = markup
 
     slicer.progressWindow.close()
 
