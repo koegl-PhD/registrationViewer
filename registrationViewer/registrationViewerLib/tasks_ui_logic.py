@@ -100,8 +100,8 @@ def save_point(
             prefix_wihout_task = f"{self.current_radiologist_id} ~ {self.current_patient_name}"
             set_log_prefix(prefix_wihout_task)
 
-            text = f"Point {task.value} saved: {str(serialised_point)}"
+            text = f"Point {task.value} saved ~ {str(serialised_point)}"
         else:
-            text = f"Point saved: {str(serialised_point)}"
+            text = f"Point saved ~ {str(serialised_point)}"
 
         log(logging.INFO, LogType.ANNOTATION, text)
