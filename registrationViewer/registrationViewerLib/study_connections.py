@@ -504,4 +504,4 @@ def on_selection_changed(self: "registrationViewerWidget") -> None:
             raise ValueError("Unknown lymphnode size")
 
         log(logging.INFO, LogType.MOUSE,
-            f"User changed selection to {self.study_lymphnode_size}")
+            "self.study_lymphnode_size")

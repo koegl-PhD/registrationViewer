@@ -47,6 +47,9 @@ def show_task(
     if task != tasks.Task.RECURRENCE:
         utils.center_on_point(groundtruth_points[task], view_group)
 
+    if task == tasks.Task.LYMPH_NODE:
+        ui.study_dropdown.setVisible(True)
+
     if task.value in TASK_UI_ADDITIONS:
 
         TASK_UI_ADDITIONS[task.value](ui)
