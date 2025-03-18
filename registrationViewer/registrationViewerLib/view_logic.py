@@ -692,8 +692,8 @@ def enable_sectra_movements(
 
         if interactor.HasObserver(vtk.vtkCommand.MiddleButtonPressEvent):
             interactor.RemoveObservers(vtk.vtkCommand.MiddleButtonPressEvent)
-        if interactor.HasObserver(vtk.vtkCommand.LeftButtonPressEvent):
-            interactor.RemoveObservers(vtk.vtkCommand.LeftButtonPressEvent)
+        # if interactor.HasObserver(vtk.vtkCommand.LeftButtonPressEvent):
+        #     interactor.RemoveObservers(vtk.vtkCommand.LeftButtonPressEvent)
         if interactor.HasObserver(vtk.vtkCommand.RightButtonPressEvent):
             interactor.RemoveObservers(vtk.vtkCommand.RightButtonPressEvent)
         if interactor.HasObserver(vtk.vtkCommand.MouseWheelBackwardEvent):
