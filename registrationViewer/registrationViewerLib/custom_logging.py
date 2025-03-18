@@ -8,6 +8,7 @@ class LogType(Enum):
     BUTTON = "BUTTON"
     KEYBOARD = "KEYBOARD"
     ANNOTATION = "ANNOTATION"
+    OTHER = "OTHER"
 
 
 _log_file_path: str = ""

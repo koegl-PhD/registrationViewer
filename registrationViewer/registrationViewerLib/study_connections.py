@@ -289,6 +289,8 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
                                         self.current_patient_name,
                                         self.node_moving.GetName())
 
+    log(logging.INFO, LogType.OTHER, "Data loaded")
+
     self.ui_sub_6.study_current_task_description_label.setVisible(True)
     self.ui_sub_6.synchronise_views_general.setVisible(True)
     self.ui_sub_6.study_add_point_button.setVisible(True)
