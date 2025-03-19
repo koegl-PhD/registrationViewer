@@ -159,8 +159,11 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
         if markup:
             markup.LockedOn()
 
-        name = path_annotation.split("/")[-1].split(".")[0]
-        markup.SetName(name)
+            name = path_annotation.split("/")[-1].split(".")[0]
+            markup.SetName(name)
+
+            utils.show_node_only_in_views(markup,
+                                          self.views_second_row)
 
         self.study_node_groundtruth_points[task_name] = markup
 
