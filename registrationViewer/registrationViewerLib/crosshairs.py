@@ -83,6 +83,8 @@ class Crosshairs():
         crosshair_node.SetNthControlPointLabel(0, "")
         crosshair_node.GetDisplayNode().SetGlyphScale(1)
 
+        crosshair_node.LockedOn()
+
         slice_node_IDs = [slicer.app.layoutManager().sliceWidget(
             view).mrmlSliceNode().GetID()]
 
@@ -234,7 +236,7 @@ class Crosshairs():
             else:
                 print("No transformation available")
 
-    @ staticmethod
+    @staticmethod
     def set_crosshair_nodes_to_position(crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
                                         position: list[float]) -> None:
         """
