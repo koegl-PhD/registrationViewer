@@ -64,7 +64,7 @@ def key_call_on_synchronise_views_general(self: "registrationViewerWidget") -> N
     else:
         text = "User synchronised views"
 
-    log(logging.INFO, LogType.KEYBOARD, text)
+    log(logging.INFO, LogType.U_KEYBOARD, text)
 
     on_synchronise_views_general(self)
 
@@ -193,7 +193,7 @@ def on_start_study(self: "registrationViewerWidget") -> None:
 def btn_call_on_user_start_study(self: "registrationViewerWidget") -> None:
     set_log_prefix(f"{self.current_radiologist_id}")
 
-    log(logging.INFO, LogType.BUTTON, "User started study")
+    log(logging.INFO, LogType.U_BUTTON, "User started study")
 
     on_user_start_study(self)
 
@@ -271,7 +271,7 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     self.on_remove_all_data()
 
     if self.current_patient_idx >= len(self.current_patient_list):
-        log(logging.INFO, LogType.BUTTON, "User finished study")
+        log(logging.INFO, LogType.U_BUTTON, "User finished study")
         utils.show_info_popup("Study finished", "You have finished the study")
         return
 
@@ -289,7 +289,7 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
                                         self.current_patient_name,
                                         self.node_moving.GetName())
 
-    log(logging.INFO, LogType.OTHER, "Data loaded")
+    log(logging.INFO, LogType.INTERNAL, "Data loaded")
 
     self.ui_sub_6.study_current_task_description_label.setVisible(True)
     self.ui_sub_6.synchronise_views_general.setVisible(True)
@@ -367,7 +367,7 @@ def on_next_task(self: "registrationViewerWidget") -> None:
 
 def btn_call_on_add_annotation_point(self: "registrationViewerWidget") -> None:
 
-    log(logging.INFO, LogType.BUTTON, "User clicked on add point")
+    log(logging.INFO, LogType.U_BUTTON, "User clicked on add point")
     on_add_annotation_point(self)
 
 
@@ -385,11 +385,12 @@ def on_add_annotation_point(self: "registrationViewerWidget") -> None:
             self.study_node_points[self.current_task] = None
             self.ui_sub_6.study_center_on_point_button.setEnabled(False)
 
-            log(logging.INFO, LogType.BUTTON, "User overwrote annotation point")
+            log(logging.INFO, LogType.U_BUTTON,
+                "User overwrote annotation point")
             overwrote = True
 
         else:
-            log(logging.INFO, LogType.BUTTON,
+            log(logging.INFO, LogType.U_BUTTON,
                 "User cancelled overwriting annotation point")
             return
 
@@ -426,11 +427,11 @@ def on_add_annotation_point(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_center_on_point_button.setEnabled(True)
 
     if not overwrote:
-        log(logging.INFO, LogType.BUTTON, "User added annotation point")
+        log(logging.INFO, LogType.U_BUTTON, "User added annotation point")
 
 
 def btn_call_on_checkbox(self: "registrationViewerWidget") -> None:
-    log(logging.INFO, LogType.MOUSE, "User clicked on checkbox")
+    log(logging.INFO, LogType.U_MOUSE, "User clicked on checkbox")
     on_checkbox(self)
 
 
@@ -453,7 +454,7 @@ def on_checkbox(self: "registrationViewerWidget") -> None:
             self.ui_sub_6.study_next_patient_button.setEnabled(True)
             self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
 
-        log(logging.INFO, LogType.BUTTON, "User checked checkbox")
+        log(logging.INFO, LogType.U_BUTTON, "User checked checkbox")
 
     else:
         if point is not None:
@@ -468,7 +469,7 @@ def on_checkbox(self: "registrationViewerWidget") -> None:
                 self.ui_sub_6.study_center_on_point_button.setEnabled(
                     False)
 
-                log(logging.INFO, LogType.BUTTON,
+                log(logging.INFO, LogType.U_BUTTON,
                     "User unchecked checkbox and removed annotation point")
                 overwrote = True
             else:
@@ -477,7 +478,7 @@ def on_checkbox(self: "registrationViewerWidget") -> None:
                 self.ui_sub_6.study_checkbox.blockSignals(False)
                 self.study_recurrence_present = True
 
-                log(logging.INFO, LogType.BUTTON,
+                log(logging.INFO, LogType.U_BUTTON,
                     'User cancelled unchecking and removing annotation point')
 
         self.ui_sub_6.study_next_patient_button.setEnabled(True)
@@ -503,5 +504,5 @@ def on_selection_changed(self: "registrationViewerWidget") -> None:
         else:
             raise ValueError("Unknown lymphnode size")
 
-        log(logging.INFO, LogType.MOUSE,
+        log(logging.INFO, LogType.U_MOUSE,
             "self.study_lymphnode_size")

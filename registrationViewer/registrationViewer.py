@@ -200,7 +200,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def clog(self) -> None:
         custom_logging.log(
-            logging.INFO, custom_logging.LogType.MOUSE, "test logging manually")
+            logging.INFO, custom_logging.LogType.U_MOUSE, "test logging manually")
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""

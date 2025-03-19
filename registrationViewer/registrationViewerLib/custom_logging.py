@@ -4,11 +4,11 @@ from pathlib import Path
 
 
 class LogType(Enum):
-    MOUSE = "MOUSE"
-    BUTTON = "BUTTON"
-    KEYBOARD = "KEYBOARD"
-    ANNOTATION = "ANNOTATION"
-    OTHER = "OTHER"
+    U_MOUSE = "U_MOUSE"
+    U_BUTTON = "U_BUTTON"
+    U_KEYBOARD = "U_KEYBOARD"
+    SAVE = "SAVE"
+    INTERNAL = "INTERNAL"
 
 
 _log_file_path: str = ""

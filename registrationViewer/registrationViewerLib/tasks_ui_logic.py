@@ -90,7 +90,7 @@ def save_point(
 
     if serialise_to_log:
         if not point and task == tasks.Task.RECURRENCE:
-            log(logging.INFO, LogType.ANNOTATION, "No recurrence to save")
+            log(logging.INFO, LogType.SAVE, "No recurrence to save")
             return
 
         serialised_point = utils.serialise_markup(point)
@@ -107,4 +107,4 @@ def save_point(
         else:
             text = f"Point saved ~ {str(serialised_point)}"
 
-        log(logging.INFO, LogType.ANNOTATION, text)
+        log(logging.INFO, LogType.SAVE, text)
