@@ -234,7 +234,8 @@ def hide_module_parts_for_user_study(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.current_case_label.setVisible(False)
     self.ui_sub_6.Form_user_study.setHidden(False)
-    self.ui_sub_6.study_center_on_point_button.setVisible(False)
+    self.ui_sub_6.study_center_on_user_point_button.setVisible(False)
+    self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
 
 
 def show_module_parts_for_user_study(self: "registrationViewerWidget") -> None:

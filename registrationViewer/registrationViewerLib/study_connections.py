@@ -33,8 +33,10 @@ def set_connections(self: "registrationViewerWidget") -> None:
                                                      lambda: btn_call_on_user_start_study(self))
     self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
                                                  lambda: btn_call_on_add_annotation_point(self))
-    self.ui_sub_6.study_center_on_point_button.connect("clicked(bool)",
-                                                       lambda: btn_call_on_center_on_point(self))
+    self.ui_sub_6.study_center_on_user_point_button.connect("clicked(bool)",
+                                                            lambda: btn_call_on_center_on_point(self, "user"))
+    self.ui_sub_6.study_center_on_gt_point_button.connect("clicked(bool)",
+                                                          lambda: btn_call_on_center_on_point(self, "gt"))
     self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
                                                  lambda: btn_call_on_next_task(self))
     self.ui_sub_6.study_next_patient_button.connect("clicked(bool)",
@@ -234,13 +236,6 @@ def on_user_start_study(self: "registrationViewerWidget") -> None:
     on_study_next_patient(self)
 
 
-def btn_call_on_center_on_point(self: "registrationViewerWidget") -> None:
-    log(logging.INFO, LogType.BUTTON, "User centered on point")
-
-    utils.center_on_point(
-        self.study_node_points[self.current_task], self.group_first_row)
-
-
 def btn_call_on_study_next_patient(self: "registrationViewerWidget") -> None:
     on_study_next_patient(self)
 
@@ -278,7 +273,8 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_current_task_description_label.setVisible(False)
     self.ui_sub_6.synchronise_views_general.setVisible(False)
     self.ui_sub_6.study_add_point_button.setVisible(False)
-    self.ui_sub_6.study_center_on_point_button.setVisible(False)
+    self.ui_sub_6.study_center_on_user_point_button.setVisible(False)
+    self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
     self.ui_sub_6.study_dropdown.setVisible(False)
     self.ui_sub_6.study_checkbox.setVisible(False)
     self.ui_sub_6.study_next_task_button.setVisible(False)
@@ -294,7 +290,8 @@ def on_study_next_patient(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_current_task_description_label.setVisible(True)
     self.ui_sub_6.synchronise_views_general.setVisible(True)
     self.ui_sub_6.study_add_point_button.setVisible(True)
-    self.ui_sub_6.study_center_on_point_button.setVisible(True)
+    self.ui_sub_6.study_center_on_user_point_button.setVisible(True)
+    self.ui_sub_6.study_center_on_gt_point_button.setVisible(True)
     self.ui_sub_6.study_dropdown.setVisible(True)
     self.ui_sub_6.study_next_task_button.setVisible(True)
 
@@ -332,7 +329,7 @@ def on_next_task(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_next_task_button.setEnabled(False)
     self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
 
-    self.ui_sub_6.study_center_on_point_button.setEnabled(False)
+    self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
 
     if self.current_task_idx >= 0:
         study.save_annotations(self,
@@ -383,7 +380,7 @@ def on_add_annotation_point(self: "registrationViewerWidget") -> None:
             slicer.mrmlScene.RemoveNode(
                 self.study_node_points[self.current_task])
             self.study_node_points[self.current_task] = None
-            self.ui_sub_6.study_center_on_point_button.setEnabled(False)
+            self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
 
             log(logging.INFO, LogType.U_BUTTON,
                 "User overwrote annotation point")
@@ -424,7 +421,7 @@ def on_add_annotation_point(self: "registrationViewerWidget") -> None:
         self.ui_sub_6.study_next_task_button.setEnabled(True)
         self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 
-    self.ui_sub_6.study_center_on_point_button.setEnabled(True)
+    self.ui_sub_6.study_center_on_user_point_button.setEnabled(True)
 
     if not overwrote:
         log(logging.INFO, LogType.U_BUTTON, "User added annotation point")
@@ -466,7 +463,7 @@ def on_checkbox(self: "registrationViewerWidget") -> None:
                 self.ui_sub_6.study_checkbox.setChecked(False)
                 self.ui_sub_6.study_checkbox.blockSignals(False)
                 self.study_recurrence_present = False
-                self.ui_sub_6.study_center_on_point_button.setEnabled(
+                self.ui_sub_6.study_center_on_user_point_button.setEnabled(
                     False)
 
                 log(logging.INFO, LogType.U_BUTTON,
@@ -485,7 +482,23 @@ def on_checkbox(self: "registrationViewerWidget") -> None:
         self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
 
     if self.study_recurrence_present is False and overwrote is False:
-        log(logging.INFO, LogType.BUTTON, "User unchecked checkbox")
+
+def btn_call_on_center_on_point(self: "registrationViewerWidget",
+                                point_type: Literal["user", "gt"]) -> None:
+
+    log(logging.INFO, LogType.U_BUTTON, f"User centered on {point_type} point")
+
+    if point_type == "user":
+        point = self.study_node_points[self.current_task]
+        group = self.group_first_row
+    elif point_type == "gt":
+        point = self.study_node_groundtruth_points[self.current_task]
+        group = self.group_second_row
+    else:
+        log(logging.ERROR, LogType.INTERNAL, "Unknown point type")
+        return
+
+    utils.center_on_point(point, group)
 
 
 def btn_call_on_selection_changed(self: "registrationViewerWidget") -> None:
