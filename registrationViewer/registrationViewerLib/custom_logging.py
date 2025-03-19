@@ -2,6 +2,11 @@ from enum import Enum
 import logging
 from pathlib import Path
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..registrationViewer import registrationViewerWidget
+
 
 class LogType(Enum):
     U_MOUSE = "U_MOUSE"
@@ -11,82 +16,56 @@ class LogType(Enum):
     INTERNAL = "INTERNAL"
 
 
-_log_file_path: str = ""
-_log_prefix: str = ""
-_logger: logging.Logger = None
+_logger: "MyLogger" = None
 
 
-def configure_logger(log_file_path: str) -> None:
-    """
-    Configures the logger (for now only the path to the log file).
-    """
-    global _log_file_path
-    _log_file_path = log_file_path
+class MyLogger:
+    def __init__(self,
+                 widget: "registrationViewerWidget",
+                 log_file_path: str,
+                 name: str = "RegistrationEvaluation") -> None:
 
-    parent_dir = Path(_log_file_path).parent
+        self.widget = widget
 
-    if not parent_dir.exists():
-        parent_dir.mkdir(parents=True)
+        self.log_file_path = log_file_path
+        self.name = name
+
+        Path(self.log_file_path).parent.mkdir(parents=True, exist_ok=True)
+
+        self._set_up_logger()
+
+    def _set_up_logger(self) -> None:
+        self.logger = logging.getLogger(self.name)
+
+        # Clear existing handlers if any.
+        if self.logger.hasHandlers():
+            self.logger.handlers.clear()
+
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.propagate = False
+
+        file_handler = logging.FileHandler(self.log_file_path)
+        file_handler.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter(
+            '%(asctime)s ~ %(name)s ~ %(levelname)s ~ %(prefix)s ~ %(message)s'
+        )
+        file_handler.setFormatter(formatter)
+
+        self.logger.addHandler(file_handler)
+
+    def log(self, log_level: int, log_type: LogType, message: str) -> None:
+
+        prefix = f"{log_type.value} ~ {self.widget.current_radiologist_id} ~ {self.widget.current_patient_name} ~ {self.widget.current_task.value}"
+
+        self.logger.log(log_level, message, extra={"prefix": prefix})
 
 
-def set_log_prefix(prefix: str) -> None:
-    """
-    Sets the prefix for each log message
-    """
-    global _log_prefix
-    _log_prefix = prefix
-
-
-class DynamicPrefixFilter(logging.Filter):
-    """
-    Dynamically inserts the global log prefix into the log message,
-    combining it with an existing prefix if provided.
-    """
-
-    def filter(self, record: logging.LogRecord) -> bool:
-
-        # Check if an extra prefix was provided via the extra parameter.
-        provided_prefix = getattr(record, "prefix", "")
-
-        # Combine the global prefix with the provided one.
-        if provided_prefix:
-            record.prefix = f"{_log_prefix} ~ {provided_prefix}"
-        else:
-            record.prefix = _log_prefix
-
-        return True
-
-
-def _get_logger(name: str = "RegistrationEvaluation") -> logging.Logger:
-
-    if _log_file_path == "":
-        raise ValueError(
-            "Logger is not configured. Please call configure_logger() first.")
-
-    logger = logging.getLogger(name)
-
-    # Clear existing handlers if any.
-    if logger.hasHandlers():
-        logger.handlers.clear()
-
-    logger.setLevel(logging.DEBUG)
-    logger.propagate = False
-
-    log_file_path = _log_file_path
-
-    file_handler = logging.FileHandler(log_file_path)
-    file_handler.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter(
-        '%(asctime)s ~ %(name)s ~ %(levelname)s ~ %(prefix)s ~ %(message)s'
-    )
-    file_handler.setFormatter(formatter)
-
-    file_handler.addFilter(DynamicPrefixFilter())
-
-    logger.addHandler(file_handler)
-
-    return logger
+def configure_logger(widget: "registrationViewerWidget",
+                     log_file_path: str,
+                     name: str) -> None:
+    global _logger
+    _logger = MyLogger(widget, log_file_path, name)
 
 
 def log(log_level: int, log_type: LogType, message: str) -> None:
@@ -96,6 +75,6 @@ def log(log_level: int, log_type: LogType, message: str) -> None:
 
     global _logger
     if _logger is None:
-        _logger = _get_logger()
+        raise ValueError("Logger not configured")
 
-    _logger.log(log_level, message, extra={"prefix": log_type.value})
+    _logger.log(log_level, log_type, message)

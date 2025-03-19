@@ -5,7 +5,7 @@ from typing import Dict, Union, Optional, Callable, TYPE_CHECKING
 import slicer
 
 from registrationViewerLib import utils, tasks
-from registrationViewerLib.custom_logging import log, LogType, set_log_prefix
+from registrationViewerLib.custom_logging import log, LogType
 
 
 if TYPE_CHECKING:
@@ -100,9 +100,6 @@ def save_point(
                 {"content": additional_info.get("content")})
 
         if final_save:
-            prefix_wihout_task = f"{self.current_radiologist_id} ~ {self.current_patient_name}"
-            set_log_prefix(prefix_wihout_task)
-
             text = f"Point {task.value} saved ~ {str(serialised_point)}"
         else:
             text = f"Point saved ~ {str(serialised_point)}"

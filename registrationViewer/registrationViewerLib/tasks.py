@@ -4,7 +4,7 @@ from typing import Dict, Union
 
 
 class Task(Enum):
-    NONE = "none"
+    NONE = "no_task"
     A_VERTEBRALIS_R = "a_vertebralis_r"
     A_VERTEBRALIS_L = "a_vertebralis_l"
     A_CAROTISEXTERNA_R = "a_carotisexterna_r"
