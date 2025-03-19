@@ -273,11 +273,11 @@
       <!-- END synchronise_views_general -->
 
 
-      <!-- START study_center_on_point_button -->
+      <!-- START study_center_on_user_point_button -->
       <item row="7" column="0" colspan="1"  >
-         <widget class="QPushButton" name="study_center_on_point_button">
+         <widget class="QPushButton" name="study_center_on_user_point_button">
          <property name="text">
-            <string>Center on point</string>
+            <string>Center on your point</string>
          </property>
          <property name="visible">
             <bool>true</bool>
@@ -287,7 +287,7 @@
          </property>
          </widget>
       </item>  
-      <!-- END study_center_on_point_button -->
+      <!-- END study_center_on_user_point_button -->
 
       <!-- START study_add_point_button -->
       <item row="7" column="1" colspan="1"  >
@@ -353,6 +353,22 @@
          </widget>
       </item>
       <!-- END dropdown menu -->
+
+      <!-- START study_center_on_gt_point_button -->
+      <item row="8" column="0" colspan="1"  >
+         <widget class="QPushButton" name="study_center_on_gt_point_button">
+         <property name="text">
+            <string>Center on original point</string>
+         </property>
+         <property name="visible">
+            <bool>true</bool>
+         </property>
+         <property name="enabled">
+            <bool>true</bool>
+         </property>
+         </widget>
+      </item>  
+      <!-- END study_center_on_gt_point_button -->
 
       <!-- START study_next_task_button -->
          <item row="8" column="1" colspan="1"  >

@@ -88,8 +88,14 @@ class ViewClickFilter(QObject):
 
                 if self.to_layout == "set_1x2_layout":
                     set_1x2_layout(view_name[:-1])
+
+                    log(logging.INFO, LogType.U_MOUSE,
+                        f"Double click ~ {view_name}")
                 elif self.to_layout == "set_2x3_layout":
                     set_2x3_layout()
+                    log(logging.INFO, LogType.U_MOUSE,
+                        f"Double click ~ {view_name}")
+
                 elif self.to_layout == "set_3x3_layout":
                     set_3x3_layout()
 
@@ -510,18 +516,18 @@ def enable_sectra_movements(
 
             sliceLogic.SetSliceOffset(newSliceOffset)
 
-            log(logging.INFO, LogType.MOUSE,
-                f"Wheel Scroll: {view_name} - {delta=}")
+            log(logging.INFO, LogType.U_MOUSE,
+                f"Wheel_Scroll ~ {view_name} ~ d={delta:+}")
 
         def _drag_scroll(caller, event):
 
             if dragging[view_name]["logged_window_level"]:
-                log(logging.INFO, LogType.MOUSE, "End Window_Level")
+                log(logging.INFO, LogType.U_MOUSE, "End Window_Level")
                 dragging[view_name]["logged_window_level"] = False
 
             if not dragging[view_name]["logged_drag_scroll"]:
-                log(logging.INFO, LogType.MOUSE,
-                    f"Start Drag Scroll: {view_name}")
+                log(logging.INFO, LogType.U_MOUSE,
+                    f"Start Drag_Scroll ~ {view_name}")
                 dragging[view_name]["logged_drag_scroll"] = True
 
             current_mouse_position = caller.GetEventPosition()
@@ -540,18 +546,18 @@ def enable_sectra_movements(
                     newSliceOffset = sliceOffset - dy * sensitivity_scroll
                     sliceLogic.SetSliceOffset(newSliceOffset)
 
-                    log(logging.INFO, LogType.MOUSE,
-                        f"Drag Scroll: {current_mouse_position}")
+                    log(logging.INFO, LogType.U_MOUSE,
+                        f"Drag_Scroll ~ {current_mouse_position}")
 
         def _drag_window_level(caller, dy):
 
             if dragging[view_name]["logged_drag_scroll"]:
-                log(logging.INFO, LogType.MOUSE, "End Scroll")
+                log(logging.INFO, LogType.U_MOUSE, "End Drag_Scroll")
                 dragging[view_name]["logged_drag_scroll"] = False
 
             if not dragging[view_name]["logged_window_level"]:
-                log(logging.INFO, LogType.MOUSE,
-                    f"Start Window_Level: {view_name}")
+                log(logging.INFO, LogType.U_MOUSE,
+                    f"Start Window_Level ~ {view_name}")
                 dragging[view_name]["logged_window_level"] = True
 
             current_mouse_position = caller.GetEventPosition()
@@ -584,17 +590,17 @@ def enable_sectra_movements(
                                    new_window,
                                    new_level)
 
-            log(logging.INFO, LogType.MOUSE,
-                f"Window_Level: {current_mouse_position}")
+            log(logging.INFO, LogType.U_MOUSE,
+                f"Window_Level ~ {current_mouse_position}")
 
         def _drag_zoom(caller, event):
 
             if dragging[view_name]["logged_pan"]:
-                log(logging.INFO, LogType.MOUSE, "End Pan")
+                log(logging.INFO, LogType.U_MOUSE, "End Pan")
                 dragging[view_name]["logged_pan"] = False
 
             if not dragging[view_name]["logged_zoom"]:
-                log(logging.INFO, LogType.MOUSE, f"Start Zoom: {view_name}")
+                log(logging.INFO, LogType.U_MOUSE, f"Start Zoom ~ {view_name}")
                 dragging[view_name]["logged_zoom"] = True
 
             current_mouse_position = caller.GetEventPosition()
@@ -613,16 +619,17 @@ def enable_sectra_movements(
             slice_node.SetFieldOfView(new_FOV_x, new_FOV_y, new_FOV_z)
             slice_node.UpdateMatrices()
 
-            log(logging.INFO, LogType.MOUSE, f"Zoom: {current_mouse_position}")
+            log(logging.INFO, LogType.U_MOUSE,
+                f"Zoom ~ {current_mouse_position} ~ d={dy:+}")
 
         def _drag_pan(caller, event):
 
             if dragging[view_name]["logged_zoom"]:
-                log(logging.INFO, LogType.MOUSE, "End Zoom")
+                log(logging.INFO, LogType.U_MOUSE, "End Zoom")
                 dragging[view_name]["logged_zoom"] = False
 
             if not dragging[view_name]["logged_pan"]:
-                log(logging.INFO, LogType.MOUSE, f"Start Pan: {view_name}")
+                log(logging.INFO, LogType.U_MOUSE, f"Start Pan ~ {view_name}")
                 dragging[view_name]["logged_pan"] = True
 
             current_mouse_position = caller.GetEventPosition()
@@ -643,7 +650,8 @@ def enable_sectra_movements(
 
             slice_node.SetXYZOrigin(origin)
 
-            log(logging.INFO, LogType.MOUSE, f"Pan: {current_mouse_position}")
+            log(logging.INFO, LogType.U_MOUSE,
+                f"Pan ~ {current_mouse_position}")
 
         def drag(caller, event):
 
@@ -664,13 +672,13 @@ def enable_sectra_movements(
                 return
 
             if dragging[view_name]["logged_drag_scroll"]:
-                log(logging.INFO, LogType.MOUSE, "End Scroll")
+                log(logging.INFO, LogType.U_MOUSE, "End Scroll")
             if dragging[view_name]["logged_window_level"]:
-                log(logging.INFO, LogType.MOUSE, "End Window_Level")
+                log(logging.INFO, LogType.U_MOUSE, "End Window_Level")
             if dragging[view_name]["logged_zoom"]:
-                log(logging.INFO, LogType.MOUSE, "End Zoom")
+                log(logging.INFO, LogType.U_MOUSE, "End Zoom")
             if dragging[view_name]["logged_pan"]:
-                log(logging.INFO, LogType.MOUSE, "End Pan")
+                log(logging.INFO, LogType.U_MOUSE, "End Pan")
 
             dragging[view_name]["middle_click_drag"] = False
             dragging[view_name]["left_click_drag"] = False
@@ -691,8 +699,8 @@ def enable_sectra_movements(
 
         if interactor.HasObserver(vtk.vtkCommand.MiddleButtonPressEvent):
             interactor.RemoveObservers(vtk.vtkCommand.MiddleButtonPressEvent)
-        if interactor.HasObserver(vtk.vtkCommand.LeftButtonPressEvent):
-            interactor.RemoveObservers(vtk.vtkCommand.LeftButtonPressEvent)
+        # if interactor.HasObserver(vtk.vtkCommand.LeftButtonPressEvent):
+        #     interactor.RemoveObservers(vtk.vtkCommand.LeftButtonPressEvent)
         if interactor.HasObserver(vtk.vtkCommand.RightButtonPressEvent):
             interactor.RemoveObservers(vtk.vtkCommand.RightButtonPressEvent)
         if interactor.HasObserver(vtk.vtkCommand.MouseWheelBackwardEvent):

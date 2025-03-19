@@ -98,6 +98,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic = importlib.reload(view_logic)
         custom_logging = importlib.reload(custom_logging)
 
+        self.logger = None
+
         self.group_first_row = 1
         self.group_second_row = 2
         self.group_third_row = 3
@@ -197,10 +199,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_view: str = ""
         self.current_view_observer_tag = []
-
-    def clog(self) -> None:
-        custom_logging.log(
-            logging.INFO, custom_logging.LogType.MOUSE, "test logging manually")
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -780,10 +778,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def current_task(self) -> tasks.Task:
+        if self.current_task_idx not in tasks.TASK_ORDER:
+            return tasks.Task.NONE
+
         return tasks.TASK_ORDER[self.current_task_idx]
 
     @property
     def current_patient_name(self) -> str:
+        if self.current_patient_idx < 0:
+            return "no_patient"
+
         return self.current_patient_list[self.current_patient_idx][1]
 
     @property

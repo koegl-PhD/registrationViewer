@@ -107,6 +107,13 @@ def load_study_volumes(self, path_case: str) -> None:
     node_deformation = slicer.util.loadTransform(path_deformation,
                                                  {'show': False})[1]
 
+    if path_deformation is None:
+        node_deformation = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLLinearTransformNode")
+    else:
+        node_deformation = slicer.util.loadTransform(path_deformation,
+                                                     {'show': False})[1]
+
     utils.update_progress_window(100, f"Loading data...")
 
     self.ui_sub_3.inputSelector_fixed.setCurrentNode(
@@ -148,11 +155,17 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
 
             continue
 
-        self.study_node_groundtruth_points[task_name] = slicer.util.loadMarkups(
-            path_annotation)
+        markup = slicer.util.loadMarkups(path_annotation)
+        if markup:
+            markup.LockedOn()
 
-        name = path_annotation.split("/")[-1].split(".")[0]
-        self.study_node_groundtruth_points[task_name].SetName(name)
+            name = path_annotation.split("/")[-1].split(".")[0]
+            markup.SetName(name)
+
+            utils.show_node_only_in_views(markup,
+                                          self.views_second_row)
+
+        self.study_node_groundtruth_points[task_name] = markup
 
     slicer.progressWindow.close()
 
@@ -224,7 +237,8 @@ def hide_module_parts_for_user_study(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.current_case_label.setVisible(False)
     self.ui_sub_6.Form_user_study.setHidden(False)
-    self.ui_sub_6.study_center_on_point_button.setVisible(False)
+    self.ui_sub_6.study_center_on_user_point_button.setVisible(False)
+    self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
 
 
 def show_module_parts_for_user_study(self: "registrationViewerWidget") -> None:

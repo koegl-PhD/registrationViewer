@@ -5,7 +5,7 @@ from typing import Dict, Union, Optional, Callable, TYPE_CHECKING
 import slicer
 
 from registrationViewerLib import utils, tasks
-from registrationViewerLib.custom_logging import log, LogType, set_log_prefix
+from registrationViewerLib.custom_logging import log, LogType
 
 
 if TYPE_CHECKING:
@@ -47,6 +47,9 @@ def show_task(
     if task != tasks.Task.RECURRENCE:
         utils.center_on_point(groundtruth_points[task], view_group)
 
+    if task == tasks.Task.LYMPH_NODE:
+        ui.study_dropdown.setVisible(True)
+
     if task.value in TASK_UI_ADDITIONS:
 
         TASK_UI_ADDITIONS[task.value](ui)
@@ -87,7 +90,7 @@ def save_point(
 
     if serialise_to_log:
         if not point and task == tasks.Task.RECURRENCE:
-            log(logging.INFO, LogType.ANNOTATION, "No recurrence to save")
+            log(logging.INFO, LogType.SAVE, "No recurrence to save")
             return
 
         serialised_point = utils.serialise_markup(point)
@@ -97,11 +100,8 @@ def save_point(
                 {"content": additional_info.get("content")})
 
         if final_save:
-            prefix_wihout_task = f"{self.current_radiologist_id} ~ {self.current_patient_name}"
-            set_log_prefix(prefix_wihout_task)
-
-            text = f"Point {task.value} saved: {str(serialised_point)}"
+            text = f"Point {task.value} saved ~ {str(serialised_point)}"
         else:
-            text = f"Point saved: {str(serialised_point)}"
+            text = f"Point saved ~ {str(serialised_point)}"
 
-        log(logging.INFO, LogType.ANNOTATION, text)
+        log(logging.INFO, LogType.SAVE, text)
