@@ -24,6 +24,10 @@ class TransformType(Enum):
     NONLINEAR = "nonlinear"
 
 
+class Colors(Enum):
+    BLUE = (111/255, 184/255, 210/255)
+
+
 def center_on_point(point: slicer.vtkMRMLMarkupsFiducialNode,
                     view_group: Optional[int] = None) -> None:
 

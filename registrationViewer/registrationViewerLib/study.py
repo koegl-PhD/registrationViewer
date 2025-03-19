@@ -164,6 +164,7 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
 
             utils.show_node_only_in_views(markup,
                                           self.views_second_row)
+            markup.GetDisplayNode().SetSelectedColor(utils.Colors.BLUE.value)
 
         self.study_node_groundtruth_points[task_name] = markup
 
