@@ -125,32 +125,41 @@ class DropWidget(qt.QFrame):
                 return
 
             if utils.update_progress_window(20, f"Loading fixed segmentation..."):
-                self.moduleWidget.node_seg_fixed = slicer.util.loadSegmentation(
-                    path_seg_fixed)
+                if path_seg_fixed:
+                    self.moduleWidget.node_seg_fixed = slicer.util.loadSegmentation(
+                        path_seg_fixed)
             else:
                 return
 
             if utils.update_progress_window(30, f"Loading moving segmentation..."):
-                self.moduleWidget.node_seg_moving = slicer.util.loadSegmentation(
-                    path_seg_moving)
+                if path_seg_moving:
+                    self.moduleWidget.node_seg_moving = slicer.util.loadSegmentation(
+                        path_seg_moving)
             else:
                 return
 
             if utils.update_progress_window(40, f"Loading fixed transform..."):
-                self.moduleWidget.node_transform_fixed = slicer.util.loadTransform(
-                    path_transform_fixed)
+                if path_transform_fixed is None:
+                    self.moduleWidget.node_transform_fixed = slicer.mrmlScene.AddNewNodeByClass(
+                        "vtkMRMLLinearTransformNode")
+                else:
+                    self.moduleWidget.node_transform_fixed = slicer.util.loadTransform(
+                        path_transform_fixed)
             else:
                 return
 
             if utils.update_progress_window(50, f"Loading moving transform..."):
-                self.moduleWidget.node_transform_moving = slicer.util.loadTransform(
-                    path_transform_moving)
+                if path_transform_moving is None:
+                    self.moduleWidget.node_transform_moving = slicer.mrmlScene.AddNewNodeByClass(
+                        "vtkMRMLLinearTransformNode")
+                else:
+                    self.moduleWidget.node_transform_moving = slicer.util.loadTransform(
+                        path_transform_moving)
             else:
                 return
 
             if utils.update_progress_window(60, f"Loading deformation..."):
                 if path_deformation is None:
-                    # create a new identity transform
                     node_deformation = slicer.mrmlScene.AddNewNodeByClass(
                         "vtkMRMLLinearTransformNode")
                 else:

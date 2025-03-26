@@ -11,7 +11,7 @@ import slicer
 
 from registrationViewerLib import tasks, utils, tasks_ui_logic
 
-path = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
+path = r"registrationViewer/Resources/example_study/data_master.json"
 
 
 if TYPE_CHECKING:
@@ -165,6 +165,7 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
             utils.show_node_only_in_views(markup,
                                           self.views_second_row)
             markup.GetDisplayNode().SetSelectedColor(utils.Colors.BLUE.value)
+            markup.GetDisplayNode().SetGlyphScale(1.0)
 
         self.study_node_groundtruth_points[task_name] = markup
 

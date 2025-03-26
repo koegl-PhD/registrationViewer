@@ -3,6 +3,7 @@ import importlib
 import json
 import logging
 import os
+from pathlib import Path
 import time
 
 from typing import Optional, List, Any, Literal, Dict, List, Union, Tuple
@@ -169,7 +170,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.annotation_fixed_roi_recurrence = None
 
         # STUDY
-        path_study_data_master: str = r"/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
+        current_file_path = Path(os.path.dirname(
+            os.path.abspath(__file__))).parent
+        path_study_data_master: str = os.path.join(
+            current_file_path, "registrationViewer/Resources/example_study/data_master.json")
         self.study_data_master: 'study.StudyData' = study.StudyData(
             path_study_data_master)
 

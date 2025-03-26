@@ -64,9 +64,11 @@ def get_paths_to_load(path_case_folder: str):
     ][0]
 
     path_seg_fixed = glob.glob(os.path.join(
-        path_case_folder, 'raw', studies[1], '*_seg.nii.gz'))[0]
+        path_case_folder, 'raw', studies[1], '*_seg.nii.gz'))
+    path_seg_fixed = None if len(path_seg_fixed) == 0 else path_seg_fixed[0]
     path_seg_moving = glob.glob(os.path.join(
-        path_case_folder, 'raw', studies[0], '*_seg.nii.gz'))[0]
+        path_case_folder, 'raw', studies[0], '*_seg.nii.gz'))
+    path_seg_moving = None if len(path_seg_moving) == 0 else path_seg_moving[0]
 
     name_fixed = os.path.basename(
         path_volume_fixed).replace(".nii.gz", "")
@@ -74,9 +76,13 @@ def get_paths_to_load(path_case_folder: str):
         path_volume_moving).replace(".nii.gz", "")
 
     path_transform_fixed = glob.glob(os.path.join(
-        path_case_folder, 'preprocessed', studies[1], '*.h5'))[0]
+        path_case_folder, 'preprocessed', studies[1], '*.h5'))
+    path_transform_fixed = None if len(
+        path_transform_fixed) == 0 else path_transform_fixed[0]
     path_transform_moving = glob.glob(os.path.join(
-        path_case_folder, 'preprocessed', studies[0], '*.h5'))[0]
+        path_case_folder, 'preprocessed', studies[0], '*.h5'))
+    path_transform_moving = None if len(
+        path_transform_moving) == 0 else path_transform_moving[0]
 
     paths_deformations = sorted(glob.glob(os.path.join(
         path_experiment, 'SerielleCTs_nii_forHumans_registrations', 'BSplineNiftyReg', '*', 'deformations', '*.nii.gz')))
@@ -95,18 +101,18 @@ def get_paths_to_load(path_case_folder: str):
     if not os.path.exists(path_volume_moving):
         print(path_volume_moving)
         raise Exception(f"Volume moving path does not exist: {path_volume_moving}")  # nopep8
-    if not os.path.exists(path_seg_fixed):
+    if path_seg_fixed and not os.path.exists(path_seg_fixed):
         print(path_seg_fixed)
         raise Exception(
             f"Segmentation fixed path does not exist: {path_seg_fixed}")
-    if not os.path.exists(path_seg_moving):
+    if path_seg_moving and not os.path.exists(path_seg_moving):
         print(path_seg_moving)
         raise Exception(
             f"Segmentation moving path does not exist: {path_seg_moving}")
-    if not os.path.exists(path_transform_fixed):
+    if path_transform_fixed and not os.path.exists(path_transform_fixed):
         print(path_transform_fixed)
         raise Exception(f"Transform fixed path does not exist: {path_transform_fixed}")  # nopep8
-    if not os.path.exists(path_transform_moving):
+    if path_transform_moving and not os.path.exists(path_transform_moving):
         print(path_transform_moving)
         raise Exception(f"Transform moving path does not exist: {path_transform_moving}")  # nopep8
     if path_deformation and not os.path.exists(path_deformation):
