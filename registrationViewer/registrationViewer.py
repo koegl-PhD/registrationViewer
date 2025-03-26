@@ -174,6 +174,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             os.path.abspath(__file__))).parent
         path_study_data_master: str = os.path.join(
             current_file_path, "registrationViewer/Resources/example_study/data_master.json")
+        path_study_data_master: str = "/home/koeglf/data/registrationStudy/data_master.json"
         self.study_data_master: 'study.StudyData' = study.StudyData(
             path_study_data_master)
 

@@ -152,35 +152,69 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
 
     study_name = volume_name.split('~')[1]
 
+    path_annotations = os.path.join(self.study_data_master.path_study_input_cases,
+                                    patient_name,
+                                    "preprocessed",
+                                    study_name,
+                                    "annotations")
+    path_points = os.path.join(path_annotations,
+                               f"points_{volume_name}.mrk.json")
+    points_node = slicer.util.loadMarkups(path_points)
+    points_node.SetName(os.path.basename(path_points).replace(".mrk.json", ""))
+    points_node_name = points_node.GetName()
+
+    path_lymphnode = os.path.join(path_annotations,
+                                  f"roi_lymphnode_{volume_name}.mrk.json")
+    lymphnode = slicer.util.loadMarkups(path_lymphnode)
+    lymphnode.SetName('l')
+    lymphnode.LockedOn()
+    utils.show_node_only_in_views(lymphnode,
+                                  self.views_second_row)
+    lymphnode.GetDisplayNode().SetInteractionHandleScale(0)
+    lymphnode.GetDisplayNode().SetFillVisibility(False)
+    lymphnode.GetDisplayNode().SetSelectedColor(utils.Colors.RED.value)
+
+    path_recurrence_text = os.path.join(path_annotations,
+                                        "recurrence.txt")
+
     for task_name in tasks.TASK_ORDER.values():
-
-        path_annotation = os.path.join(self.study_data_master.path_study_input_annotations,
-                                       patient_name,
-                                       study_name,
-                                       f"{task_name.value}.mrk.json")
-
         if task_name == tasks.Task.RECURRENCE:
-            path_annotation = path_annotation.replace(".mrk.json", ".txt")
-
-            with open(path_annotation, "r") as f:
+            with open(path_recurrence_text, "r") as f:
                 text = f.read()
                 tasks.TASK_DESCRIPTIONS[tasks.Task.RECURRENCE] = text
 
             continue
+        if task_name == tasks.Task.LYMPH_NODE:
+            self.study_node_groundtruth_points[task_name] = lymphnode
+            continue
 
-        markup = slicer.util.loadMarkups(path_annotation)
-        if markup:
-            markup.LockedOn()
+        current_point_name = points_node_name.replace(
+            'points', f"point_{task_name.value}")
+        current_point_idx = utils.get_control_point_idx_by_name(points_node,
+                                                                current_point_name)
+        if current_point_idx == -1:
+            slicer.util.errorDisplay(f"Point {current_point_name} not found")
+            continue
 
-            name = path_annotation.split("/")[-1].split(".")[0]
-            markup.SetName(name)
+        # create new point with new name and position from current index
+        new_point = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLMarkupsFiducialNode")
+        current_position = points_node.GetNthControlPointPosition(
+            current_point_idx)
+        new_point.AddControlPoint(current_position, 'p')
 
-            utils.show_node_only_in_views(markup,
-                                          self.views_second_row)
-            markup.GetDisplayNode().SetSelectedColor(utils.Colors.BLUE.value)
-            markup.GetDisplayNode().SetGlyphScale(1.0)
+        new_point.LockedOn()
 
-        self.study_node_groundtruth_points[task_name] = markup
+        new_point.SetName(current_point_name)
+
+        utils.show_node_only_in_views(new_point,
+                                      self.views_second_row)
+        new_point.GetDisplayNode().SetSelectedColor(utils.Colors.BLUE.value)
+        new_point.GetDisplayNode().SetGlyphScale(1.0)
+
+        self.study_node_groundtruth_points[task_name] = new_point
+
+    slicer.mrmlScene.RemoveNode(points_node)
 
     slicer.progressWindow.close()
 
