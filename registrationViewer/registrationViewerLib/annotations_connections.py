@@ -87,6 +87,11 @@ def on_save_annotations(self: "registrationViewerWidget") -> None:
                                         "(Click OK to continue saving)"):
             return
 
+    if self.ui_sub_5.lymph_node_TextEdit.toPlainText() == "":
+        if not utils.show_warning_popup("You didn't add lymph node description.",
+                                        "Click OK to continue saving)"):
+            return
+
     point_name = "point_" + tasks.Task.A_VERTEBRALIS_R.value + '_' + name_volume_fixed
     if not utils.has_control_point_with_name(self.annotation_fixed_points, point_name):
         if not utils.show_warning_popup("You didn't add A. vertebralis right point for fixed volume.",
@@ -164,15 +169,15 @@ def on_save_annotations(self: "registrationViewerWidget") -> None:
     if not os.path.exists(path_moving):
         os.makedirs(path_moving)
 
-    print(f"{path_fixed=}")
-    print(f"{path_moving=}")
-
     slicer.util.saveNode(self.annotation_fixed_roi_lymphnode, path_fixed.as_posix(
     ) + f"/{self.annotation_fixed_roi_lymphnode.GetName()}.mrk.json")
     slicer.util.saveNode(self.annotation_moving_roi_lymphnode, path_moving.as_posix(
     ) + f"/{self.annotation_moving_roi_lymphnode.GetName()}.mrk.json")
-    with open(path_fixed.as_posix() + "/lymphnode_size_change.txt", "w") as f:
+    with open(path_fixed.as_posix() + "/lymphnode_info.txt", "w") as f:
         f.write(str(self.annotation_lymphnode_size))
+        f.write("\n")
+        f.write(
+            f"Description: {self.ui_sub_5.lymph_node_TextEdit.toPlainText()}")
 
     slicer.util.saveNode(self.annotation_fixed_points, path_fixed.as_posix(
     ) + f"/{self.annotation_fixed_points.GetName()}.mrk.json")
@@ -190,6 +195,8 @@ def on_save_annotations(self: "registrationViewerWidget") -> None:
 
     # show message with Ok only that saving is done
     utils.show_info_popup("Annotations saved")
+
+    self.ui_sub_5.lymph_node_TextEdit.setPlainText("")
 
 
 def on_clear_annotations(self: "registrationViewerWidget") -> None:
