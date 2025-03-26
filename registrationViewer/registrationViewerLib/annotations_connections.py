@@ -17,10 +17,10 @@ if TYPE_CHECKING:
 def set_connections(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_5.set_slice_idx_fixed_button.connect("clicked(bool)",
-                                                     lambda: on_jumpt_to_slice_idx_fixed(self))
+                                                     lambda: on_jump_to_slice_idx_fixed(self))
 
     self.ui_sub_5.set_slice_idx_moving_button.connect("clicked(bool)",
-                                                      lambda: on_jumpt_to_slice_idx_moving(self))
+                                                      lambda: on_jump_to_slice_idx_moving(self))
 
     self.ui_sub_5.saveAnnotations.connect("clicked(bool)",
                                           lambda: on_save_annotations(self))
@@ -177,7 +177,7 @@ def on_save_annotations(self: "registrationViewerWidget") -> None:
     slicer.util.saveNode(self.annotation_fixed_points, path_fixed.as_posix(
     ) + f"/{self.annotation_fixed_points.GetName()}.mrk.json")
     slicer.util.saveNode(self.annotation_moving_points, path_moving.as_posix(
-    ) + f"/{self.annotation_fixed_points.GetName()}.mrk.json")
+    ) + f"/{self.annotation_moving_points.GetName()}.mrk.json")
 
     with open(path_fixed.as_posix() + "/recurrence_exists.txt", "w") as f:
         f.write(str(self.annotation_fixed_roi_recurrence is not None))
@@ -440,21 +440,20 @@ def on_set_annotations_visibility(self: "registrationViewerWidget",
             annotation.GetDisplayNode().SetVisibility(visibility)
 
 
-def on_jumpt_to_slice_idx_fixed(self: "registrationViewerWidget") -> None:
+def on_jump_to_slice_idx_fixed(self: "registrationViewerWidget") -> None:
 
-    jumpt_to_slice_idx(self.node_fixed,
-                       int(self.ui_sub_5.slice_idx_fixed_TextEdit.toPlainText()),
-                       self.views_first_row)
-
-
-def on_jumpt_to_slice_idx_moving(self: "registrationViewerWidget") -> None:
-    jumpt_to_slice_idx(self.node_moving,
-                       int(self.ui_sub_5.slice_idx_moving_TextEdit.toPlainText()),
-                       self.views_second_row)
+    jump_to_slice_idx(self.node_fixed,
+                      int(self.ui_sub_5.slice_idx_fixed_TextEdit.toPlainText()),
+                      self.views_first_row)
 
 
-def jumpt_to_slice_idx(volume_node, slice_idx, views: List[str]):
+def on_jump_to_slice_idx_moving(self: "registrationViewerWidget") -> None:
+    jump_to_slice_idx(self.node_moving,
+                      int(self.ui_sub_5.slice_idx_moving_TextEdit.toPlainText()),
+                      self.views_second_row)
 
+
+def jump_to_slice_idx(volume_node, slice_idx, views: List[str]):
     # Ensure that the volume has image data.
     imageData = volume_node.GetImageData()
     if not imageData:
@@ -468,8 +467,9 @@ def jumpt_to_slice_idx(volume_node, slice_idx, views: List[str]):
     centerI = dims[0] / 2.0
     centerJ = dims[1] / 2.0
 
-    # Clamp the provided slice index to a valid range.
-    K = max(0, min(slice_idx, dims[2] - 1))
+    # Reverse the slice index because DICOM counts slices from the opposite side.
+    reversed_idx = (dims[2] - 1) - slice_idx
+    K = max(0, min(reversed_idx, dims[2] - 1))
 
     # Create a homogeneous voxel coordinate [I, J, K, 1]
     voxelCoord = [centerI, centerJ, K, 1]

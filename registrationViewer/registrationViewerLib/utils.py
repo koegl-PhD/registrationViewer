@@ -26,6 +26,7 @@ class TransformType(Enum):
 
 class Colors(Enum):
     BLUE = (111/255, 184/255, 210/255)
+    RED = (1.0, 0, 0)
 
 
 def center_on_point(point: slicer.vtkMRMLMarkupsFiducialNode,
@@ -47,8 +48,9 @@ def center_on_point(point: slicer.vtkMRMLMarkupsFiducialNode,
 
 
 def get_paths_to_load(path_case_folder: str):
-    path_experiment = os.path.dirname(
-        os.path.dirname(path_case_folder))
+    path_nii = os.path.dirname(path_case_folder)
+    name_nii_folder = os.path.basename(path_nii)
+    path_experiment = os.path.dirname(path_nii)
 
     studies = sorted([f for f in os.listdir(os.path.join(path_case_folder, 'raw'))
                       if os.path.isdir(os.path.join(path_case_folder, 'raw', f))])
@@ -84,8 +86,11 @@ def get_paths_to_load(path_case_folder: str):
     path_transform_moving = None if len(
         path_transform_moving) == 0 else path_transform_moving[0]
 
+    path_niftyreg = os.path.join(
+        path_experiment, f"{name_nii_folder}_registrations", 'BSplineNiftyReg')
+
     paths_deformations = sorted(glob.glob(os.path.join(
-        path_experiment, 'SerielleCTs_nii_forHumans_registrations', 'BSplineNiftyReg', '*', 'deformations', '*.nii.gz')))
+        path_niftyreg, '*', 'deformations', '*.nii.gz')))
     path_deformation = [
         x for x in paths_deformations if name_fixed in x and name_moving in x]
 
@@ -458,6 +463,16 @@ def has_control_point_with_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode
             return True
 
     return False
+
+
+def get_control_point_idx_by_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
+                                  name: str) -> int:
+
+    for i in range(node_fiducial.GetNumberOfControlPoints()):
+        if node_fiducial.GetNthControlPointLabel(i) == name:
+            return i
+
+    return -1
 
 
 def remove_control_point_by_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,

@@ -1,5 +1,6 @@
-import os
 import logging
+import os
+import traceback
 
 from typing import TYPE_CHECKING
 
@@ -116,11 +117,17 @@ class DropWidget(qt.QFrame):
 
             if utils.update_progress_window(0, f"Loading fixed volume..."):
                 node_volume_fixed = slicer.util.loadVolume(path_volume_fixed)
+                name_volume_fixed = os.path.basename(
+                    path_volume_fixed).replace(".nii.gz", "")
+                node_volume_fixed.SetName(name_volume_fixed)
             else:
                 return
 
             if utils.update_progress_window(10, f"Loading moving volume..."):
                 node_volume_moving = slicer.util.loadVolume(path_volume_moving)
+                name_volume_moving = os.path.basename(
+                    path_volume_moving).replace(".nii.gz", "")
+                node_volume_moving.SetName(name_volume_moving)
             else:
                 return
 
@@ -128,6 +135,9 @@ class DropWidget(qt.QFrame):
                 if path_seg_fixed:
                     self.moduleWidget.node_seg_fixed = slicer.util.loadSegmentation(
                         path_seg_fixed)
+                    name_seg_fixed = os.path.basename(
+                        path_seg_fixed).replace(".nii.gz", "")
+                    self.moduleWidget.node_seg_fixed.SetName(name_seg_fixed)
             else:
                 return
 
@@ -135,6 +145,9 @@ class DropWidget(qt.QFrame):
                 if path_seg_moving:
                     self.moduleWidget.node_seg_moving = slicer.util.loadSegmentation(
                         path_seg_moving)
+                    name_seg_moving = os.path.basename(
+                        path_seg_moving).replace(".nii.gz", "")
+                    self.moduleWidget.node_seg_moving.SetName(name_seg_moving)
             else:
                 return
 
@@ -145,6 +158,10 @@ class DropWidget(qt.QFrame):
                 else:
                     self.moduleWidget.node_transform_fixed = slicer.util.loadTransform(
                         path_transform_fixed)
+                    name_transform_fixed = os.path.basename(
+                        path_transform_fixed).replace(".nii.gz", "")
+                    self.moduleWidget.node_transform_fixed.SetName(
+                        name_transform_fixed)
             else:
                 return
 
@@ -155,6 +172,10 @@ class DropWidget(qt.QFrame):
                 else:
                     self.moduleWidget.node_transform_moving = slicer.util.loadTransform(
                         path_transform_moving)
+                    name_transform_moving = os.path.basename(
+                        path_transform_moving).replace(".h5", "")
+                    self.moduleWidget.node_transform_moving.SetName(
+                        name_transform_moving)
             else:
                 return
 
@@ -165,6 +186,9 @@ class DropWidget(qt.QFrame):
                 else:
                     node_deformation = slicer.util.loadTransform(
                         path_deformation)
+                    name_deformation = os.path.basename(
+                        path_deformation).replace(".nii.gz", "")
+                    node_deformation.SetName(name_deformation)
             else:
                 slicer.progressWindow.close()
                 return
@@ -185,6 +209,8 @@ class DropWidget(qt.QFrame):
             slicer.progressWindow.close()
 
         except Exception as e:
+            error_details = traceback.format_exc()
             slicer.progressWindow.close()
-            logging.error(f"Error loading data: {str(e)}")
-            slicer.util.errorDisplay(f"Error loading data: {str(e)}")
+            logging.error(f"Error loading data: {str(e)}/n{error_details}")
+            slicer.util.errorDisplay(
+                f"Error loading data: {str(e)}/n{error_details}")
