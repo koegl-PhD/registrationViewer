@@ -25,29 +25,34 @@ TASK_ORDER = {
 TASK_DESCRIPTIONS = {
 
     Task.A_VERTEBRALIS_L: """
-Find the A. vertebralis LEFT in the Fixed image (top row).
-Set a point in the center of the A. vertebralis.
-The A. vertebralis is marked in the moving image (bottom row).""",
+Finde den Abgang der A. vertebralis links im Fixed Bild (obere Reihe).
+Setze einen Punkt in die Mitte des Abgangs.
+Der Abgang ist im Moving Bild markiert (untere Reihe).
+""",
 
     Task.A_VERTEBRALIS_R: """
-Find the A. vertebralis RIGHT in the Fixed image (top row).
-Set a point in the center of the A. vertebralis.
-The A. vertebralis is marked in the moving image (bottom row).""",
+Finde den Abgang der A. vertebralis rechts im Fixed Bild (obere Reihe).
+Setze einen Punkt in die Mitte des Abgangs.
+Der Abgang ist im Moving Bild markiert (untere Reihe).
+""",
 
     Task.A_CAROTISEXTERNA_L: """
-Find the carotid bifurcation LEFT in the Fixed image (top row).
-Set a point in the center of the bifurcation.
-The carotid bifurcation is marked in the moving image (bottom row).""",
+Finde den Abgang der A. carotis externa links im Fixed Bild (obere Reihe).
+Setze einen Punkt in die Mitte des Abgangs.
+Der Abgang ist im Moving Bild markiert (untere Reihe).
+""",
 
     Task.A_CAROTISEXTERNA_R: """
-Find the carotid bifurcation RIGHT in the Fixed image (top row).
-Set a point in the center of the bifurcation.
-The carotid bifurcation is marked in the moving image (bottom row).""",
+Finde den Abgang der A. carotis externa rechts im Fixed Bild (obere Reihe).
+Setze einen Punkt in die Mitte des Abgangs.
+Der Abgang ist im Moving Bild markiert (untere Reihe).
+""",
 
     Task.LYMPH_NODE: """
-Find level X lymph node in the Fixed image (top row).\n\
-Set a point in its center and select if it changed in size.\n\
-The ROI of the lymph node is marked in the moving image (bottom row).""",
+Finde den Lymphknoten der Stufe X im Fixed Bild (obere Reihe).
+Setze einen Punkt in die Mitte des Lymphknotens und wähle, ob er sich in der Größe verändert hat.
+Der Lymphknoten ist im Moving Bild markiert (untere Reihe).
+""",
 
     Task.RECURRENCE: """"""
 }
