@@ -72,7 +72,8 @@ class StudyData:
         return result
 
 
-def load_study_volumes(self, path_case: str) -> None:
+def load_study_volumes(self: "registrationViewerWidget",
+                       path_case: str) -> None:
 
     slicer.progressWindow = slicer.util.createProgressDialog()
     slicer.progressWindow.show()
@@ -90,18 +91,30 @@ def load_study_volumes(self, path_case: str) -> None:
     utils.update_progress_window(0, f"Loading data...")
     node_volume_fixed = slicer.util.loadVolume(path_volume_fixed,
                                                {'show': False})
+    name_volume_fixed = os.path.basename(
+        path_volume_fixed).replace(".nii.gz", "")
+    node_volume_fixed.SetName(name_volume_fixed)
 
     utils.update_progress_window(10, f"Loading data...")
     node_volume_moving = slicer.util.loadVolume(path_volume_moving,
                                                 {'show': False})
+    name_volume_moving = os.path.basename(
+        path_volume_moving).replace(".nii.gz", "")
+    node_volume_moving.SetName(name_volume_moving)
 
     utils.update_progress_window(40, f"Loading data...")
     self.node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
                                                           {'show': False})[1]
+    name_transform_fixed = os.path.basename(
+        path_transform_fixed).replace(".h5", "")
+    self.node_transform_fixed.SetName(name_transform_fixed)
 
     utils.update_progress_window(50, f"Loading data...")
     self.node_transform_moving = slicer.util.loadTransform(path_transform_moving,
                                                            {'show': False})[1]
+    name_transform_moving = os.path.basename(
+        path_transform_moving).replace(".h5", "")
+    self.node_transform_moving.SetName(name_transform_moving)
 
     utils.update_progress_window(60, f"Loading data...")
     node_deformation = slicer.util.loadTransform(path_deformation,
