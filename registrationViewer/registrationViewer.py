@@ -446,6 +446,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.ui_is_simple and view_logic.disable_sectra is True:
             view_logic.enable_sectra_movements(self)
 
+    def _enable_sectr_movements(self) -> None:
+
+        custom_logging.configure_logger(self,
+                     "/home/koeglf/Documents/code/registrationViewer/registrationViewer/default.log",
+                     "RegistrationEvaluation")  # nopep8
+
+        view_logic.enable_sectra_movements(self)
+
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
 
