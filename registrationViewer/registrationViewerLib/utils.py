@@ -458,6 +458,9 @@ def show_info_popup(content: str, title: str = "Information") -> None:
 def has_control_point_with_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
                                 name: str) -> bool:
 
+    if node_fiducial is None:
+        return False
+
     for i in range(node_fiducial.GetNumberOfControlPoints()):
         if node_fiducial.GetNthControlPointLabel(i) == name:
             return True

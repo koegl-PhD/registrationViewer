@@ -160,6 +160,21 @@
         </property>
        </widget>
       </item>
+       <!-- START lymph_node_TextEdit -->
+      <item row="30" column="2">
+       <widget class="QTextEdit" name="lymph_node_TextEdit">
+         <property name="placeholderText">
+            <string>Lymph node descr...</string>
+         </property>
+       <property name="maximumSize">
+          <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+         </property>
+       </widget>
+      </item>
+    <!-- END lymph_node_TextEdit -->
 
 
      <item row="40" column="0">
