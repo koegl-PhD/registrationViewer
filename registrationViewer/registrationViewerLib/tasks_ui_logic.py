@@ -22,6 +22,7 @@ TASK_UI_ADDITIONS: Dict[tasks.Task, Callable[[object], None]] = {
 
 
 def show_task(
+    self: "registrationViewerWidget",
     ui,
     task: tasks.Task,
     study_node_points: Dict[tasks.Task,
@@ -32,7 +33,15 @@ def show_task(
 ) -> None:
 
     ui.current_case_label.setVisible(True)
-    ui.study_current_task_description_label.setText(tasks.TASK_DESCRIPTIONS[task])  # nopep8
+
+    if task == tasks.Task.LYMPH_NODE:
+        description = tasks.TASK_DESCRIPTIONS[task].format(
+            lymphnode_description=self.study_gt_lymphnode_description)
+    else:
+        description = tasks.TASK_DESCRIPTIONS[task]
+
+    ui.study_current_task_description_label.setText(description)  # nopep8
+
     ui.study_current_task_description_label.setVisible(True)
     ui.study_add_point_button.setText("Add point")
     ui.study_add_point_button.setVisible(True)
