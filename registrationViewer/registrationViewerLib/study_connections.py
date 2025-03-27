@@ -13,6 +13,10 @@ if TYPE_CHECKING:
 
 
 def set_connections(self: "registrationViewerWidget") -> None:
+
+    self.ui_sub_2.data_master_path_edit.currentPathChanged.connect(
+        lambda: on_master_json_path_changed(self))
+
     self.ui_sub_2.set_radiologist_id_button.connect("clicked(bool)",
                                                     lambda: btn_call_on_set_radiologist_id(self))
     self.ui_sub_2.start_study_button.connect("clicked(bool)",
@@ -45,6 +49,10 @@ def set_connections(self: "registrationViewerWidget") -> None:
         lambda: btn_call_on_checkbox(self))
     self.ui_sub_6.study_dropdown.currentIndexChanged.connect(
         lambda: btn_call_on_selection_changed(self))
+
+
+def on_master_json_path_changed(self: "registrationViewerWidget") -> None:
+    self.ui_sub_2.data_master_checkbox.setChecked(True)
 
 
 def btn_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
