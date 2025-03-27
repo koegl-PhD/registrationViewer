@@ -94,6 +94,90 @@
    </item>
    <!-- END centered button -->
 
+      <item row="0" column="0" colspan="3">
+        <!-- START horizontalLayout_center -->
+        <layout class="QHBoxLayout" name="horizontalLayout_center">
+
+        <!-- START horizontalSpacer_left -->
+        <item>
+          <spacer name="horizontalSpacer_left">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+          <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+            <size>
+            <width>0</width>
+            <height>0</height>
+            </size>
+          </property>
+          </spacer>
+        </item>
+        <!-- END horizontalSpacer_left -->
+        
+        <!-- START pause_button -->
+        <item>
+          <widget class="QPushButton" name="pause_button">
+          <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="styleSheet">
+            <string notr="true">
+            QPushButton {
+                background-color: #ffa200;
+                color: white;
+                font-weight: bold;
+                border-radius: 5px;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: #ff8400;
+            }
+            QPushButton:pressed {
+                background-color: #d96500;
+            }
+            </string>
+          </property>
+          <property name="text">
+            <string>Pause</string>
+          </property>
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+          </widget>
+        </item>
+        <!-- END pause_button -->
+
+        <!-- START horizontalSpacer_right -->
+        <item>
+          <spacer name="horizontalSpacer_right">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+          <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+            <size>
+            <width>0</width>
+            <height>0</height>
+            </size>
+          </property>
+          </spacer>
+        </item>
+        <!-- END horizontalSpacer_right -->
+        
+        </layout>
+      <!-- END horizontalLayout_center -->
+     </item>
 
    <!-- START gridLayout_22 -->
    <item row="1" alignment="Qt::AlignTop">
