@@ -185,6 +185,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             tasks.TASK_ORDER[key]: None for key in tasks.TASK_ORDER.keys() if key != tasks.Task.RECURRENCE}
 
         # task specific
+        self.study_gt_lymphnode_description = ""
         self.study_lymphnode_size: Literal["Size same",
                                            "Size increased",
                                            "Size decreased"] = "Size same"

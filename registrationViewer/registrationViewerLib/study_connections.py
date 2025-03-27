@@ -359,6 +359,7 @@ def next_task(self: "registrationViewerWidget") -> None:
     self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
 
     tasks_ui_logic.show_task(
+        self,
         self.ui_sub_6,
         self.current_task,
         self.study_node_points,

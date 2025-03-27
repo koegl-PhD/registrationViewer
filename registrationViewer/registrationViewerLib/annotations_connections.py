@@ -173,7 +173,7 @@ def on_save_annotations(self: "registrationViewerWidget") -> None:
     ) + f"/{self.annotation_fixed_roi_lymphnode.GetName()}.mrk.json")
     slicer.util.saveNode(self.annotation_moving_roi_lymphnode, path_moving.as_posix(
     ) + f"/{self.annotation_moving_roi_lymphnode.GetName()}.mrk.json")
-    with open(path_fixed.as_posix() + "/lymphnode_info.txt", "w") as f:
+    with open(path_moving.as_posix() + "/lymphnode_info.txt", "w") as f:
         f.write(str(self.annotation_lymphnode_size))
         f.write("\n")
         f.write(
