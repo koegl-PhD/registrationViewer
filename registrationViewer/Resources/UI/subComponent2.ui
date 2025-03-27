@@ -12,8 +12,31 @@
     <!-- START gridLayout_22 -->
      <layout class="QGridLayout" name="gridLayout_22">
 
-    <!-- START radiologistSetCheckBox -->
+      <!-- START data_master_checkbox -->
      <item row="0" column="0" alignment="Qt::AlignTop">
+        <widget class="QCheckBox" name="data_master_checkbox">
+        <property name="enabled">
+            <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
+        </widget>
+    </item>
+    <!-- END data_master_checkbox -->
+
+    <!-- START data_master_path_edit -->
+    <item row="0" column="1" colspan="2">
+      <widget class="ctkPathLineEdit" name="data_master_path_edit">
+      </widget>
+    </item>
+    <!-- END data_master_path_edit -->
+
+    <!-- START radiologistSetCheckBox -->
+     <item row="10" column="0" alignment="Qt::AlignTop">
         <widget class="QCheckBox" name="radiologistSetCheckBox">
         <property name="enabled">
             <bool>false</bool>
@@ -29,7 +52,7 @@
     <!-- END radiologistSetCheckBox -->
 
     <!-- START radiologistIDTextEdit -->
-      <item row="0" column="1" alignment="Qt::AlignTop">
+      <item row="10" column="1" alignment="Qt::AlignTop">
        <widget class="QTextEdit" name="radiologistIDTextEdit">
        <property name="maximumSize">
           <size>
@@ -46,7 +69,7 @@
 
 
     <!-- START set_radiologist_id_button -->
-      <item row="0" column="2" colspan="1" alignment="Qt::AlignTop">
+      <item row="10" column="2" colspan="1" alignment="Qt::AlignTop">
         <widget class="QPushButton" name="set_radiologist_id_button">
         <property name="text">
           <string>Set radiologist's ID</string>
@@ -57,7 +80,7 @@
 
 
     <!-- START start_study_button -->
-      <item row="1" column="0" colspan="3" alignment="Qt::AlignTop">
+      <item row="20" column="0" colspan="3" alignment="Qt::AlignTop">
         <widget class="QPushButton" name="start_study_button">
         <property name="text">
           <string>START STUDY</string>
