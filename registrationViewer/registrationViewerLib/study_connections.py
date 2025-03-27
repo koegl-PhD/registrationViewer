@@ -1,6 +1,6 @@
 import logging
 
-from typing import Optional, TYPE_CHECKING, Literal
+from typing import Optional, TYPE_CHECKING, Literal, Callable
 
 import slicer
 import qt
@@ -30,6 +30,8 @@ def set_connections(self: "registrationViewerWidget") -> None:
     self.ui_sub_2.radiologistIDTextEdit.textChanged.connect(
         _on_text_changed)
 
+    self.ui_sub_6.pause_button.connect("clicked(bool)", on_pause_button)
+
     self.ui_sub_6.synchronise_views_general.connect("clicked(bool)",
                                                     lambda: btn_call_on_synchronise_views_general(self))
 
@@ -53,6 +55,15 @@ def set_connections(self: "registrationViewerWidget") -> None:
 
 def on_master_json_path_changed(self: "registrationViewerWidget") -> None:
     self.ui_sub_2.data_master_checkbox.setChecked(True)
+
+
+def on_pause_button() -> None:
+
+    log(logging.INFO, LogType.U_BUTTON, "User paused study")
+
+    utils.show_pause_popup('Click OK to resume study.',
+                           'STUDY PAUSED',
+                           lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
 def btn_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
@@ -182,6 +193,7 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
             qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
 
         self.ui_sub_6.start_study_by_user_button.setVisible(True)
+        self.ui_sub_6.pause_button.setVisible(False)
     else:
         self.ui_sub_1.simple_ui_button.setText("Simple UI")
         slicer.app.setStyleSheet("""
@@ -195,6 +207,7 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
         mainWindow.findChild(
             qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
         self.ui_sub_6.start_study_by_user_button.setVisible(False)
+        self.ui_sub_6.pause_button.setVisible(False)
 
 
 def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
@@ -244,6 +257,7 @@ def start_study(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.progress_label_2.setVisible(False)
 
     self.ui_sub_6.start_study_by_user_button.setVisible(False)
+    self.ui_sub_6.pause_button.setVisible(True)
 
     self.current_task_idx = -1
     self.current_patient_idx = -1
