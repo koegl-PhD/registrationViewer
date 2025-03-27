@@ -234,6 +234,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             self.all_uis.append(getattr(self, f"ui_sub_{i}"))
 
+        self.ui_sub_2.data_master_path_edit.filters = ctk.ctkPathLineEdit.Files
+        self.ui_sub_2.data_master_path_edit.nameFilters = [
+            "JSON files (*.json)"]
+
+        default_path = "/home/koeglf/data/registrationStudy/data_master.json"
+        if os.path.exists(default_path):
+            self.ui_sub_2.data_master_path_edit.currentPath = default_path
+
         slicer.app.processEvents()  # Ensures all widgets are fully rendered
 
         # Set MRML scene for main UI (but not generic QWidgets)
