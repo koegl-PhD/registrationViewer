@@ -174,6 +174,11 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
     lymphnode.GetDisplayNode().SetFillVisibility(False)
     lymphnode.GetDisplayNode().SetSelectedColor(utils.Colors.RED.value)
 
+    with open(os.path.join(path_annotations, "lymphnode_info.txt"), "r") as f:
+        lymphnode_info_text = f.read()
+    self.study_gt_lymphnode_description = lymphnode_info_text.split(
+        "Description:")[-1].strip()
+
     path_recurrence_text = os.path.join(path_annotations,
                                         "recurrence.txt")
 
