@@ -115,6 +115,10 @@ def btn_call_on_set_radiologist_id(self: "registrationViewerWidget") -> None:
 
 
 def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
+
+    self.study_data_master = study.StudyData(
+        self.ui_sub_2.data_master_path_edit.currentPath)
+
     radiologist_id: str = str(
         self.ui_sub_2.radiologistIDTextEdit.toPlainText())
 
