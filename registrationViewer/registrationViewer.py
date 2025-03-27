@@ -170,16 +170,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.annotation_fixed_roi_recurrence = None
 
         # STUDY
-        current_file_path = Path(os.path.dirname(
-            os.path.abspath(__file__))).parent
-        path_study_data_master: str = os.path.join(
-            current_file_path, "registrationViewer/Resources/example_study/data_master.json")
-        path_study_data_master: str = "/home/koeglf/data/registrationStudy/data_master.json"
-        self.study_data_master: 'study.StudyData' = study.StudyData(
-            path_study_data_master)
-
-        self.current_data_dict: Dict[str,
-                                     Dict[str, Union[str, List[str]]]] = {}
+        self.study_data_master: 'study.StudyData' = None
 
         self.current_radiologist_id: str = ""
 
@@ -233,6 +224,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     slicer.util.childWidgetVariables(sub_widget))
 
             self.all_uis.append(getattr(self, f"ui_sub_{i}"))
+
+        self.ui_sub_2.data_master_path_edit.filters = ctk.ctkPathLineEdit.Files
+        self.ui_sub_2.data_master_path_edit.nameFilters = [
+            "JSON files (*.json)"]
+
+        default_path = "/home/koeglf/data/registrationStudy/data_master.json"
+        if os.path.exists(default_path):
+            self.ui_sub_2.data_master_path_edit.currentPath = default_path
 
         slicer.app.processEvents()  # Ensures all widgets are fully rendered
 
