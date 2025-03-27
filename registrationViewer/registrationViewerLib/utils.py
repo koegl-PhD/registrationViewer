@@ -455,6 +455,24 @@ def show_info_popup(content: str, title: str = "Information") -> None:
     msgBox.exec_()
 
 
+def show_pause_popup(content: str, title: str = "Information", on_ok: Callable[[], None] = lambda: None) -> None:
+    msgBox = qt.QMessageBox(slicer.util.mainWindow())
+    msgBox.setIcon(qt.QMessageBox.Information)
+    msgBox.setWindowTitle(title)
+    msgBox.setText(content)
+    msgBox.setStandardButtons(qt.QMessageBox.Ok)
+    msgBox.setStyleSheet("QLabel { font-size: 24px; padding: 30px; }")
+    msgBox.resize(1000, 600)
+
+    def handle_button_clicked(button):
+        if msgBox.buttonRole(button) == qt.QMessageBox.AcceptRole:
+            on_ok()
+        msgBox.close()
+
+    msgBox.buttonClicked.connect(handle_button_clicked)
+    msgBox.open()
+
+
 def has_control_point_with_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
                                 name: str) -> bool:
 
