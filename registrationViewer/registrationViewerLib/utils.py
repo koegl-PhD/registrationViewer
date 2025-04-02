@@ -277,6 +277,11 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
             }
             """)
 
+        slice_view.cornerAnnotation().SetMaximumFontSize(0)
+
+    slice_view.forceRender()
+    slicer.app.processEvents()
+
     slicer.modules.registrationviewer.widgetRepresentation(
     ).self().reloadCollapsibleButton.visible = value
 
