@@ -54,7 +54,10 @@ Setze einen Punkt in die Mitte des Lymphknotens und wähle, ob er sich in der Gr
 Der Lymphknoten ist im Moving Bild markiert (untere Reihe).
 """,
 
-    Task.RECURRENCE: """"""
+    Task.RECURRENCE: """
+Entscheide, ob ein Rezidiv im Fixed Bild (obere Reihe) vorhanden ist ({recurrence_description}).
+Wenn ja, setze einen Punkt in seine ungefähre Mitte.
+"""
 }
 
 

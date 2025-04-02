@@ -186,6 +186,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # task specific
         self.study_gt_lymphnode_description = ""
+        self.study_gt_recurrence_description = ""
         self.study_lymphnode_size: Literal["Size same",
                                            "Size increased",
                                            "Size decreased"] = "Size same"

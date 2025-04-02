@@ -175,20 +175,13 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
     lymphnode.GetDisplayNode().SetSelectedColor(utils.Colors.RED.value)
 
     with open(os.path.join(path_annotations, "lymphnode_info.txt"), "r") as f:
-        lymphnode_info_text = f.read()
-    self.study_gt_lymphnode_description = lymphnode_info_text.split(
-        "Description:")[-1].strip()
+        self.study_gt_lymphnode_description = f.read().split(
+            "Description:")[-1].strip()
 
-    path_recurrence_text = os.path.join(path_annotations,
-                                        "recurrence.txt")
+    with open(os.path.join(path_annotations, "recurrence.txt")) as f:
+        self.study_gt_recurrence_description = f.read()
 
     for task_name in tasks.TASK_ORDER.values():
-        if task_name == tasks.Task.RECURRENCE:
-            with open(path_recurrence_text, "r") as f:
-                text = f.read()
-                tasks.TASK_DESCRIPTIONS[tasks.Task.RECURRENCE] = text
-
-            continue
         if task_name == tasks.Task.LYMPH_NODE:
             self.study_node_groundtruth_points[task_name] = lymphnode
             continue

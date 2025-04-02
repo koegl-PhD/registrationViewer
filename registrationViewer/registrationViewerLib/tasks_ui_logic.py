@@ -37,6 +37,9 @@ def show_task(
     if task == tasks.Task.LYMPH_NODE:
         description = tasks.TASK_DESCRIPTIONS[task].format(
             lymphnode_description=self.study_gt_lymphnode_description)
+    elif task == tasks.Task.RECURRENCE:
+        description = tasks.TASK_DESCRIPTIONS[task].format(
+            recurrence_description=self.study_gt_recurrence_description)
     else:
         description = tasks.TASK_DESCRIPTIONS[task]
 
