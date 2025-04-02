@@ -88,8 +88,7 @@ def on_save_annotations(self: "registrationViewerWidget") -> None:
             return
 
     if self.ui_sub_5.lymph_node_TextEdit.toPlainText() == "":
-        if not utils.show_warning_popup("You didn't add lymph node description.",
-                                        "Click OK to continue saving)"):
+        if not utils.show_info_popup("You didn't add lymph node description.\nExiting saving."):
             return
 
     point_name = "point_" + tasks.Task.A_VERTEBRALIS_R.value + '_' + name_volume_fixed
@@ -151,6 +150,12 @@ def on_save_annotations(self: "registrationViewerWidget") -> None:
             "You marked that there is a recurrence, but did not add a ROI for it.\nExiting saving.")
         return
 
+    if self.annotation_fixed_roi_recurrence or self.ui_sub_5.recurrencePresentCheckBox.isChecked():
+        if self.ui_sub_5.recurrence_TextEdit.toPlainText() == "":
+            if not utils.show_info_popup(
+                    "You didn't add recurrence description.\nExiting saving."):
+                return
+
     if self.annotation_fixed_roi_recurrence is None:
         if not utils.show_warning_popup("Did you check for recurrence?",
                                         "(Click OK to continue saving)"):
@@ -187,6 +192,10 @@ def on_save_annotations(self: "registrationViewerWidget") -> None:
     with open(path_fixed.as_posix() + "/recurrence_exists.txt", "w") as f:
         f.write(str(self.annotation_fixed_roi_recurrence is not None))
 
+    if self.ui_sub_5.recurrence_TextEdit.toPlainText() != "":
+        with open(path_moving.as_posix() + "/recurrence.txt", "w") as f:
+            f.write(str(self.ui_sub_5.recurrence_TextEdit.toPlainText()))
+
     if self.annotation_fixed_roi_recurrence is not None:
         slicer.util.saveNode(self.annotation_fixed_roi_recurrence, path_fixed.as_posix(
         ) + f"/{self.annotation_fixed_roi_recurrence.GetName()}.mrk.json")
@@ -197,6 +206,7 @@ def on_save_annotations(self: "registrationViewerWidget") -> None:
     utils.show_info_popup("Annotations saved")
 
     self.ui_sub_5.lymph_node_TextEdit.setPlainText("")
+    self.ui_sub_5.recurrence_TextEdit.setPlainText("")
 
 
 def on_clear_annotations(self: "registrationViewerWidget") -> None:

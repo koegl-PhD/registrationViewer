@@ -385,6 +385,21 @@
         </property>
         </widget>
       </item>
+      <!-- START recurrence_TextEdit -->
+      <item row="81" column="1" colspan="3">
+       <widget class="QTextEdit" name="recurrence_TextEdit">
+         <property name="placeholderText">
+            <string>Recurrence description</string>
+         </property>
+       <property name="maximumSize">
+          <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+         </property>
+       </widget>
+      </item>
+      <!-- END recurrence_TextEdit -->
 
         <item row="100" column="0" colspan="3">
        <widget class="Line" name="line">
