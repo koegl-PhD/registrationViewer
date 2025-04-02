@@ -230,7 +230,52 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
     # hi ebar at the botto of the window
     slicer.util.setStatusBarVisible(value)
 
-    slicer.util.setViewControllersVisible(value)
+    # slicer.util.setViewControllersVisible(value)
+    layoutManager = slicer.app.layoutManager()
+    for view in self.views_all:
+        slice_view = slicer.app.layoutManager().sliceWidget(view).sliceView()
+        controller = layoutManager.sliceWidget(view).sliceController()
+
+        controller.fitToWindowToolButton().setVisible(value)
+        controller.pinButton().setVisible(value)
+        controller.setShowMaximizeViewButton(value)
+
+        controller.setMinimumHeight(25)
+
+        if value is False:
+            color = "white"
+        else:
+            color = "black"
+        for child in controller.findChildren(qt.QWidget):
+            if isinstance(child, (qt.QLabel, qt.QPushButton, qt.QComboBox, qt.QToolButton)):
+                child.setStyleSheet(f"color: {color};")
+
+        slider = controller.sliceOffsetSlider()
+        slider.setStyleSheet("""
+            QSlider::groove:horizontal {
+                background: lightgray;
+                height: 4px;
+                border-radius: 3px;
+            }
+            QSlider::sub-page:horizontal {
+                background: rgb(12, 148, 194);  /* filled part (left of handle) */
+                height: 4px;
+                border-radius: 3px;
+            }
+            QSlider::add-page:horizontal {
+                background: lightgray;  /* unfilled part (right of handle) */
+                height: 4px;
+                border-radius: 3px;
+            }
+            QSlider::handle:horizontal {
+                background: white;
+                border: 1px solid lightgray;
+                width: 7px;
+                height: 12px;
+                margin: -3px 0;
+                border-radius: 2px;
+            }
+            """)
 
     slicer.modules.registrationviewer.widgetRepresentation(
     ).self().reloadCollapsibleButton.visible = value
