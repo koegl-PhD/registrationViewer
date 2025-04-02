@@ -168,7 +168,7 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
     if value is not None:
         self.ui_is_simple = value
 
-    # utils.set_ui_simplification(self.ui_is_simple)
+    utils.set_ui_simplification(self)
 
     mainWindow = slicer.util.mainWindow()
 

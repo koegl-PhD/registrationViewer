@@ -207,12 +207,12 @@ def apply_black_to_white_lookup_table(volume_node):
     display_node.SetAndObserveColorNodeID(color_table_node.GetID())
 
 
-def set_ui_simplification(simple: bool) -> None:
+def set_ui_simplification(self: "registrationViewerWidget") -> None:
     """
     Simplifies the UI by hiding the toolbar, module panel etc.
     """
 
-    value = not simple
+    value = not self.ui_is_simple
 
     slicer.util.setMenuBarsVisible(value)
 
