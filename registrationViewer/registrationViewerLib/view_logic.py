@@ -30,8 +30,6 @@ layout_callback = None
 dragging = {}
 disable_sectra = True
 
-COMPOUND_TIMEOUT = 0.2
-
 
 def register_layout_callback(callback):
     global layout_callback
