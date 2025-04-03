@@ -630,16 +630,23 @@ def enable_sectra_movements(
                 log(logging.INFO, LogType.U_MOUSE, f"Start Pan ~ {view_name}")
                 dragging[view_name]["logged_pan"] = True
 
+            slice_widget = slicer.app.layoutManager().sliceWidget(view_name)
+            slice_node = slice_widget.sliceLogic().GetSliceNode()
+
+            # Get current zoom factor (field of view)
+            slice_view = slice_widget.sliceView()
+            field_of_view = slice_view.width / slice_node.GetFieldOfView()[0]
+
+            adjusted_sensitivity = sensitivity_pan / field_of_view
+
             current_mouse_position = caller.GetEventPosition()
 
-            dx = (current_mouse_position[0] -
-                  dragging[view_name]["last_mouse_position"][0]) * sensitivity_pan
-            dy = (current_mouse_position[1] -
-                  dragging[view_name]["last_mouse_position"][1]) * sensitivity_pan
+            dx = (current_mouse_position[0] - dragging[view_name]["last_mouse_position"][0]) \
+                * adjusted_sensitivity
+            dy = (current_mouse_position[1] - dragging[view_name]["last_mouse_position"][1]) \
+                * adjusted_sensitivity
 
             dragging[view_name]["last_mouse_position"] = current_mouse_position
-
-            slice_node = slicer.app.layoutManager().sliceWidget(view_name).sliceLogic().GetSliceNode()  # nopep8
 
             origin = list(slice_node.GetXYZOrigin())
 
