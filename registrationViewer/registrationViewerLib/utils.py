@@ -1,9 +1,11 @@
 from enum import Enum
 import glob
 import json
+import logging
 import os
-from typing import TYPE_CHECKING
 import tempfile
+import traceback
+from typing import TYPE_CHECKING
 
 from typing import Dict, Union, Tuple, Callable, List, Optional
 
@@ -12,6 +14,7 @@ import slicer
 import vtk
 
 from registrationViewerLib.tasks import Task
+from registrationViewerLib.custom_logging import log, LogType
 
 
 if TYPE_CHECKING:
@@ -635,3 +638,28 @@ def de_serialise_markup(data: Dict[str, Tuple[float, ...]]) -> slicer.vtkMRMLMar
         node = slicer.util.loadMarkups(file.name)
 
     return node
+
+
+def set_orthogonal_views(views: List[str]) -> None:
+    """
+    This has to be used when a volume has a non-standard rientation
+    """
+
+    for view in views:
+        try:
+            slice_node = slicer.app.layoutManager().sliceWidget(
+                view).sliceLogic().GetSliceNode()
+
+            if "Red" in view:
+                slice_node.SetOrientation('Axial')
+            elif "Green" in view:
+                slice_node.SetOrientation('Coronal')
+            elif "Yellow" in view:
+                slice_node.SetOrientation('Sagittal')
+            else:
+                raise ValueError(f"Unknown view: {view}")
+
+        except Exception as e:
+            error_details = traceback.format_exc()
+            log(logging.ERROR, LogType.INTERNAL,
+                f"Could not set orthogonal view for {view}: {str(e)}\n{error_details}")

@@ -206,6 +206,9 @@ class DropWidget(qt.QFrame):
             utils.show_node_only_in_views(self.moduleWidget.node_seg_moving,
                                           ['Red2', 'Green2', 'Yellow2'])
 
+            utils.set_orthogonal_views(
+                self.moduleWidget.views_first_row + self.moduleWidget.views_second_row)
+
             slicer.progressWindow.close()
 
         except Exception as e:
