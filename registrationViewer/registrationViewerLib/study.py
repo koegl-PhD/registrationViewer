@@ -183,7 +183,11 @@ def load_ground_truth_annotations(self: "registrationViewerWidget",
 
     for task_name in tasks.TASK_ORDER.values():
         if task_name == tasks.Task.LYMPH_NODE:
+            # it is not a point, but a ROI so we skip
             self.study_node_groundtruth_points[task_name] = lymphnode
+            continue
+        if task_name == tasks.Task.RECURRENCE:
+            # we don't need to show it so continue
             continue
 
         current_point_name = points_node_name.replace(
