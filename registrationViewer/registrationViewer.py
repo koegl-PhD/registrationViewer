@@ -328,7 +328,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         #     "/home/koeglf/data/debugging/SerielleCTs_nii_forHumans/LB9oATPd0mE")
         # # utils.temp_load_data(self)
 
-        slicer.util.setDataProbeVisible(False)
+        # slicer.util.setDataProbeVisible(False)
 
         self.update_current_view()
 
