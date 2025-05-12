@@ -5,7 +5,7 @@
     "path_study_input_registrations": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans_registrations/",
     "path_study_input_annotations": "/home/koeglf/data/preprocess_again/ground_truth_annotations/",
     "participants": {
-        "rad_1": {
+        "rad_4": {
             "name": "John Smith",
             "ids_patients_transformation_none": [
                 "TMxGak0IQOg"
