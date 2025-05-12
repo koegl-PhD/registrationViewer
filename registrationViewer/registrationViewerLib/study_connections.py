@@ -139,7 +139,7 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
 
     if not self.study_data_master.participants.__contains__(radiologist_id):
         slicer.util.errorDisplay(
-            "Radiologist ID not found in study data master")
+            f"Radiologist {radiologist_id} not found in study data master. Only contains {self.study_data_master.participants.keys()}")
         return
 
     radiologist_name = self.study_data_master.participants[radiologist_id]["name"]
