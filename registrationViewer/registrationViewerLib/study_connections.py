@@ -435,7 +435,7 @@ def add_annotation_point(self: "registrationViewerWidget") -> None:
         self.study_node_points[self.current_task].GetDisplayNode(
         ).SetTextScale(2)
         self.study_node_points[self.current_task].GetDisplayNode(
-        ).SetSelectedColor(utils.Colors.BLUE.value)
+        ).SetSelectedColor(utils.Colors.YELLOW.value)
 
     pos = [view_logic.get_view_offset(view) for view in self.views_first_row]  # nopep8
 

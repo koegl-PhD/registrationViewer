@@ -29,6 +29,8 @@ class TransformType(Enum):
 
 class Colors(Enum):
     BLUE = (111/255, 184/255, 210/255)
+    GREEN = (47/255, 202/255, 36/255)
+    YELLOW = (244/255, 214/255, 49/255)
     RED = (1.0, 0, 0)
 
 
