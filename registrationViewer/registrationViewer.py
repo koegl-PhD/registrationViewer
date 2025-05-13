@@ -231,7 +231,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_2.data_master_path_edit.nameFilters = [
             "JSON files (*.json)"]
 
-        default_path = "/home/koeglf/data/registrationStudy/data_master.json"
+        default_path = "/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
         if os.path.exists(default_path):
             self.ui_sub_2.data_master_path_edit.currentPath = default_path
 
