@@ -5,6 +5,7 @@ from time import time
 
 from typing import List, Literal, Tuple, TYPE_CHECKING
 
+import qt
 from qt import QEvent, QObject
 import slicer
 from slicer import vtkMRMLScalarVolumeNode
@@ -450,6 +451,19 @@ def _is_left_and_right_drag(view_name: str) -> bool:
     return False
 
 
+def attach_continuous_slice_offset_observers(view_name: str) -> None:
+
+    controller = slicer.app.layoutManager().sliceWidget(view_name).sliceController()
+    mrml_slider = controller.sliceOffsetSlider()
+
+    q_slider = mrml_slider.findChild(qt.QSlider)
+    if not q_slider:
+        return
+
+    mrml_slider.valueIsChanging.connect(lambda position: log(
+        logging.INFO, LogType.U_MOUSE, f"Slider_Scroll ~ {view_name} ~ pos={position:.1f}") if disable_sectra is False else None)
+
+
 def enable_sectra_movements(
     self: "registrationViewerWidget",
     sensitivity_pan: float = 1.0,
@@ -727,6 +741,8 @@ def enable_sectra_movements(
         interactor.AddObserver(vtk.vtkCommand.LeftButtonReleaseEvent, drag_end)  # nopep8
         interactor.AddObserver(vtk.vtkCommand.MiddleButtonReleaseEvent, drag_end)  # nopep8
         interactor.AddObserver(vtk.vtkCommand.RightButtonReleaseEvent, drag_end)  # nopep8
+
+        attach_continuous_slice_offset_observers(view_name)
 
 
 def disable_sectra_movements():
