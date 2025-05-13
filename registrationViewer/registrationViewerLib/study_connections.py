@@ -386,6 +386,11 @@ def next_task(self: "registrationViewerWidget") -> None:
         self.ui_sub_6.study_next_patient_button.setEnabled(True)
         self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
         self.ui_sub_6.study_next_task_button.setVisible(False)
+
+        # check if we are done
+        if self.current_patient_idx == len(self.current_patient_list) - 1:
+            self.ui_sub_6.study_next_patient_button.setText("Finish study")
+
     else:
         self.ui_sub_6.study_next_patient_button.setVisible(False)
         self.ui_sub_6.study_next_patient_button.setEnabled(False)
