@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 import json
 import os
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, Tuple, TYPE_CHECKING
 
 from typing import List, Tuple
 
@@ -30,20 +30,6 @@ class StudyData:
 
         self.__dict__.update(self.data)
 
-        self.patient_to_rads = self._reverse_participants()
-
-    def _reverse_participants(self):
-        reversed_mapping = defaultdict(list)
-
-        for rad_id, info in self.participants.items():
-            for transform_type in ["ids_patients_transformation_none",
-                                   "ids_patients_transformation_linear",
-                                   "ids_patients_transformation_nonlinear"]:
-                for patient_id in info.get(transform_type, []):
-                    reversed_mapping[patient_id].append(rad_id)
-
-        return dict(reversed_mapping)
-
     def save(self, json_path=None):
         if json_path is None:
             json_path = self.path
@@ -59,15 +45,8 @@ class StudyData:
 
         result = []
 
-        for transform_type in ["ids_patients_transformation_nonlinear",
-                               "ids_patients_transformation_linear",
-                               "ids_patients_transformation_none"]:
-            for patient in participant[transform_type]:
-                result.append(
-                    (utils.TransformType(transform_type.split("_")[-1]), patient))
-
-        # sort by transform_type
-        # result.sort(key=lambda x: x[0].value)
+        for comb in participant["patient_transform_combinations"]:
+            result.append((utils.TransformType(comb[0]), comb[1]))
 
         return result
 
