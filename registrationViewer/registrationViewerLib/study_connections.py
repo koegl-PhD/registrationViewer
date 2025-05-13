@@ -281,6 +281,11 @@ def next_patient(self: "registrationViewerWidget") -> None:
 
     study.clear_annotations(self)
 
+    if self.current_patient_idx == len(self.current_patient_list) - 1:
+        log(logging.INFO, LogType.U_BUTTON, "User finished study")
+        utils.show_info_popup("Study finished", "You have finished the study")
+        return
+
     self.current_patient_idx += 1
     self.current_task_idx = -1
 
@@ -292,11 +297,6 @@ def next_patient(self: "registrationViewerWidget") -> None:
     self.study_progress_bar_tasks.setValue(1)
 
     self.on_remove_all_data()
-
-    if self.current_patient_idx >= len(self.current_patient_list):
-        log(logging.INFO, LogType.U_BUTTON, "User finished study")
-        utils.show_info_popup("Study finished", "You have finished the study")
-        return
 
     self.ui_sub_6.study_current_task_description_label.setVisible(False)
     self.ui_sub_6.synchronise_views_general.setVisible(False)
