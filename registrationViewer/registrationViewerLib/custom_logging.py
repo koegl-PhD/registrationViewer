@@ -56,7 +56,7 @@ class MyLogger:
 
     def log(self, log_level: int, log_type: LogType, message: str) -> None:
 
-        prefix = f"{log_type.value} ~ {self.widget.current_radiologist_id} ~ {self.widget.current_patient_name} ~ {self.widget.current_task.value}"
+        prefix = f"{log_type.value} ~ {self.widget.current_radiologist_id} ~ {self.widget.current_patient_name} ~ {self.widget.study_current_transform_type} ~ {self.widget.current_task.value}"
 
         self.logger.log(log_level, message, extra={"prefix": prefix})
 

@@ -7,43 +7,15 @@
     "participants": {
         "rad_4": {
             "name": "John Smith",
-            "ids_patients_transformation_none": [
-                "TMxGak0IQOg"
-            ],
-            "ids_patients_transformation_linear": [
-                "LB9oATPd0mE"
-            ],
-            "ids_patients_transformation_nonlinear": [
-                "0e5fp8GltvE"
-            ]
-        },
-        "rad_2": {
-            "name": "Jane Doe",
-            "ids_patients_transformation_none": [
-                "0e5fp8GltvE",
-                "LB9oATPd0mE"
-            ],
-            "ids_patients_transformation_linear": [
-                "TMxGak0IQOg"
-            ],
-            "ids_patients_transformation_nonlinear": [
-                "XPqt2AtrAMc",
-                "xYbaegYf_mw"
-            ]
-        },
-        "rad_3": {
-            "name": "Max Mustermann",
-            "ids_patients_transformation_none": [
-                "0e5fp8GltvE",
-                "LB9oATPd0mE"
-            ],
-            "ids_patients_transformation_linear": [
-                "TMxGak0IQOg"
-            ],
-            "ids_patients_transformation_nonlinear": [
-                "XPqt2AtrAMc",
-                "xYbaegYf_mw"
-            ]
+            "patient_transform_combinations":
+                [
+                    ["none", "TMxGak0IQOg"],
+                    ["linear", "TMxGak0IQOg"],
+                    ["nonlinear", "TMxGak0IQOg"],
+                    ["none", "LB9oATPd0mE"],
+                    ["linear", "LB9oATPd0mE"],
+                    ["nonlinear", "LB9oATPd0mE"]
+                ]
         }
     }
 }
