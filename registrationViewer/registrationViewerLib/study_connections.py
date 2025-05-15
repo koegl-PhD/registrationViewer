@@ -154,7 +154,6 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
     self.ui_sub_2.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
 
     self.current_patient_list = self.study_data_master.patient_list(self.current_radiologist_id)  # nopep8
-    self.current_patient_idx = -1
 
     configure_logger(self,
                      f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_radiologist_id}.log",
@@ -221,6 +220,9 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     on_simple_ui(self, True)
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
 
+    study.load_study_volumes(self)
+    study.load_ground_truth_annotations(self)
+
 
 def btn_call_on_user_start_study(self: "registrationViewerWidget") -> None:
     log(logging.INFO, LogType.U_BUTTON, "User started study")
@@ -237,51 +239,36 @@ def start_study(self: "registrationViewerWidget") -> None:
     1. when task is started data should be shown
 
     """
-    self.study_progress_bar_patients = utils.show_progressbar(
-        ui=self.ui_sub_6,
-        idx=1,
-        initial=1,
-        maximum=len(self.study_data_master.patient_list(
-            self.current_radiologist_id))
-    )
     self.study_progress_bar_tasks = utils.show_progressbar(
         ui=self.ui_sub_6,
         idx=2,
         initial=1,
-        maximum=len(tasks.TASK_ORDER)
+        maximum=self.study_data_master.number_of_tasks(
+            self.current_radiologist_id)
     )
-
-    self.study_progress_bar_patients.setVisible(False)
-    self.ui_sub_6.progress_label_1.setVisible(False)
-    self.study_progress_bar_tasks.setVisible(False)
-    self.ui_sub_6.progress_label_2.setVisible(False)
 
     self.ui_sub_6.start_study_by_user_button.setVisible(False)
     self.ui_sub_6.pause_button.setVisible(True)
 
-    self.current_task_idx = -1
-    self.current_patient_idx = -1
+    self.current_combination_idx = 0
 
-    next_patient(self)
+    self.study_progress_bar_tasks.setVisible(True)
+    self.ui_sub_6.progress_label_2.setVisible(True)
 
-
-def btn_call_on_study_next_patient(self: "registrationViewerWidget") -> None:
-    log(logging.INFO, LogType.U_BUTTON, "Next patient")
-
-    next_patient(self)
+    next_task(self, initial=True)
 
 
 def next_patient(self: "registrationViewerWidget") -> None:
     log(logging.INFO, LogType.INTERNAL, "Next patient")
 
-    if self.current_patient_idx >= 0:
+    if self.current_combination_idx >= 0:
         study.save_annotations(self,
                                serialise_to_log=True,
                                final_save=True)
 
     study.clear_annotations(self)
 
-    if self.current_patient_idx == len(self.current_patient_list) - 1:
+    if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
         log(logging.INFO, LogType.U_BUTTON, "User finished study")
         utils.show_info_popup("Study finished", "You have finished the study")
         return
@@ -300,6 +287,7 @@ def next_patient(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.study_current_task_description_label.setVisible(False)
     self.ui_sub_6.synchronise_views_general.setVisible(False)
+
     self.ui_sub_6.study_add_point_button.setVisible(False)
     self.ui_sub_6.study_center_on_user_point_button.setVisible(False)
     self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
@@ -307,11 +295,6 @@ def next_patient(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_checkbox.setVisible(False)
     self.ui_sub_6.study_next_task_button.setVisible(False)
     self.ui_sub_6.study_next_patient_button.setVisible(False)
-
-    study.load_study_volumes(self, self.current_patient_path)
-    study.load_ground_truth_annotations(self,
-                                        self.current_patient_name,
-                                        self.node_moving.GetName())
 
     log(logging.INFO, LogType.INTERNAL, "Data loaded")
 
@@ -328,6 +311,7 @@ def next_patient(self: "registrationViewerWidget") -> None:
     if self.current_patient_transform_type == utils.TransformType.NONE:
         self.unsynchronise_views()
         self.ui_sub_6.synchronise_views_general.setVisible(False)
+
     elif self.current_patient_transform_type == utils.TransformType.LINEAR:
         self.use_only_linear_transform = True
         if self.crosshair:
@@ -352,50 +336,40 @@ def btn_call_on_next_task(self: "registrationViewerWidget") -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "Next task")
 
-    next_task(self)
+    next_task(self, initial=False)
 
 
-def next_task(self: "registrationViewerWidget") -> None:
+def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
-    log(logging.INFO, LogType.INTERNAL, "Next task")
+    if not initial:
+        study.save_annotations(self,
+                               task_type=self.current_task,
+                               serialise_to_log=True)
+
+        study.clear_current_user_annotation(self)
+
+        self.current_combination_idx += 1
+
+    if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
+        log(logging.INFO, LogType.U_BUTTON, "User finished study")
+        utils.show_info_popup("Study finished", "You have finished the study")
+        return
+
+    utils.set_up_synchronisation(self)
+
+    log(logging.INFO, LogType.INTERNAL, "Start task")
 
     self.ui_sub_6.study_next_task_button.setEnabled(False)
     self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
 
     self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
 
-    if self.current_task_idx >= 0:
-        study.save_annotations(self,
-                               specific_task=self.current_task,
-                               serialise_to_log=True)
+    self.study_progress_bar_tasks.setValue(self.current_combination_idx + 1)
 
-    self.current_task_idx += 1
-    self.study_progress_bar_tasks.setValue(self.current_task_idx + 1)
+    tasks_ui_logic.show_task(self)
 
-    tasks_ui_logic.show_task(
-        self,
-        self.ui_sub_6,
-        self.current_task,
-        self.study_node_points,
-        self.study_node_groundtruth_points,
-        self.group_second_row
-    )
-
-    if self.current_task == tasks.Task.RECURRENCE:
-        self.ui_sub_6.study_next_patient_button.setVisible(True)
-        self.ui_sub_6.study_next_patient_button.setEnabled(True)
-        self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-        self.ui_sub_6.study_next_task_button.setVisible(False)
-
-        # check if we are done
-        if self.current_patient_idx == len(self.current_patient_list) - 1:
-            self.ui_sub_6.study_next_patient_button.setText("Finish study")
-
-    else:
-        self.ui_sub_6.study_next_patient_button.setVisible(False)
-        self.ui_sub_6.study_next_patient_button.setEnabled(False)
-        self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-        self.ui_sub_6.study_next_task_button.setVisible(True)
+    if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
+        self.ui_sub_6.study_next_task_button.setText("Finish study")
 
 
 def btn_call_on_add_annotation_point(self: "registrationViewerWidget") -> None:
@@ -410,12 +384,11 @@ def add_annotation_point(self: "registrationViewerWidget") -> None:
 
     overwrote = False
 
-    if self.study_node_points[self.current_task] is not None:
+    if self.study_node_annotation is not None:
         if utils.show_warning_popup(f"Point {self.current_task.value} already exists",
                                     "Do you want to overwrite it?"):
-            slicer.mrmlScene.RemoveNode(
-                self.study_node_points[self.current_task])
-            self.study_node_points[self.current_task] = None
+            slicer.mrmlScene.RemoveNode(self.study_node_annotation)
+            self.study_node_annotation = None
             self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
 
             log(logging.INFO, LogType.U_BUTTON,
@@ -427,22 +400,22 @@ def add_annotation_point(self: "registrationViewerWidget") -> None:
                 "User cancelled overwriting annotation point")
             return
 
-    if self.study_node_points[self.current_task] is None:
-        self.study_node_points[self.current_task] = slicer.mrmlScene.AddNewNodeByClass(
+    if self.study_node_annotation is None:
+        self.study_node_annotation = slicer.mrmlScene.AddNewNodeByClass(
             "vtkMRMLMarkupsFiducialNode", f"{self.current_task.value}_{self.current_radiologist_id}_{volume_name}")
-        self.study_node_points[self.current_task].GetDisplayNode(
+        self.study_node_annotation.GetDisplayNode(
         ).SetGlyphScale(1)
-        self.study_node_points[self.current_task].GetDisplayNode(
+        self.study_node_annotation.GetDisplayNode(
         ).SetTextScale(2)
-        self.study_node_points[self.current_task].GetDisplayNode(
+        self.study_node_annotation.GetDisplayNode(
         ).SetSelectedColor(utils.Colors.YELLOW.value)
 
     pos = [view_logic.get_view_offset(view) for view in self.views_first_row]  # nopep8
 
-    self.study_node_points[self.current_task].AddControlPointWorld([-pos[2], pos[1], pos[0]],
-                                                                   'p')
+    self.study_node_annotation.AddControlPointWorld([-pos[2], pos[1], pos[0]],
+                                                    'p')
 
-    utils.show_node_only_in_views(self.study_node_points[self.current_task],
+    utils.show_node_only_in_views(self.study_node_annotation,
                                   self.views_first_row)
 
     if self.current_task == tasks.Task.RECURRENCE:
@@ -478,10 +451,8 @@ def checkbox(self: "registrationViewerWidget") -> None:
 
     self.study_recurrence_present = not self.study_recurrence_present
 
-    point = self.study_node_points[tasks.Task.RECURRENCE]
-
     if self.study_recurrence_present:
-        if point is None:
+        if self.study_node_annotation is None:
             self.ui_sub_6.study_next_patient_button.setEnabled(False)
             self.ui_sub_6.study_next_patient_button.toolTip = "Please add annotation point first"  # nopep8
 
@@ -492,11 +463,11 @@ def checkbox(self: "registrationViewerWidget") -> None:
         log(logging.INFO, LogType.INTERNAL, "Checkbox checked")
 
     else:
-        if point is not None:
+        if self.study_node_annotation is not None:
             if utils.show_warning_popup(f"Do you want to remove the point you already set for the recurrence?",
                                         ""):
-                slicer.mrmlScene.RemoveNode(point)
-                self.study_node_points[tasks.Task.RECURRENCE] = None
+                slicer.mrmlScene.RemoveNode(self.study_node_annotation)
+                self.study_node_annotation = None
                 self.ui_sub_6.study_checkbox.blockSignals(True)
                 self.ui_sub_6.study_checkbox.setChecked(False)
                 self.ui_sub_6.study_checkbox.blockSignals(False)
@@ -529,10 +500,10 @@ def btn_call_on_center_on_point(self: "registrationViewerWidget",
     log(logging.INFO, LogType.U_BUTTON, f"User centered on {point_type} point")
 
     if point_type == "user":
-        point = self.study_node_points[self.current_task]
+        point = self.study_node_annotation
         group = self.group_first_row
     elif point_type == "gt":
-        point = self.study_node_groundtruth_points[self.current_task]
+        point = self.study_node_groundtruth_points[self.current_patient_name][self.current_task]
         group = self.group_second_row
     else:
         log(logging.ERROR, LogType.INTERNAL, "Unknown point type")

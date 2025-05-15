@@ -161,7 +161,8 @@ def update_progress_window(progress: int, message: str) -> bool:
 
 def hide_all_points_except(
     task: Task,
-    points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]
+    points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
+    views: List[str]
 ) -> None:
 
     for current_task, point in points.items():
@@ -169,6 +170,8 @@ def hide_all_points_except(
             point.SetDisplayVisibility(False)
         if point is not None and current_task == task:
             point.SetDisplayVisibility(True)
+
+            show_node_only_in_views(point, views)
 
 
 def normalize_intensity(data):
@@ -221,7 +224,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
 
     slicer.util.setMenuBarsVisible(value)
 
-    slicer.util.setToolbarsVisible(value)
+    # slicer.util.setToolbarsVisible(value)
 
     # hide help section
     slicer.util.setModuleHelpSectionVisible(value)
@@ -287,8 +290,8 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
     slice_view.forceRender()
     slicer.app.processEvents()
 
-    slicer.modules.registrationviewer.widgetRepresentation(
-    ).self().reloadCollapsibleButton.visible = value
+    # slicer.modules.registrationviewer.widgetRepresentation(
+    # ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
     slicer.util.setPythonConsoleVisible(True)
@@ -665,3 +668,49 @@ def set_orthogonal_views(views: List[str]) -> None:
             error_details = traceback.format_exc()
             log(logging.ERROR, LogType.INTERNAL,
                 f"Could not set orthogonal view for {view}: {str(e)}\n{error_details}")
+
+
+def hide_all_volumes_from_views(views: List[str]) -> None:
+    lm = slicer.app.layoutManager()
+
+    for name in views:
+        try:
+            slice_node = lm.sliceWidget(
+                name).sliceLogic().GetSliceCompositeNode()
+
+            slice_node.SetBackgroundVolumeID(None)
+            slice_node.SetForegroundVolumeID(None)
+        except:
+            pass
+
+
+def set_up_synchronisation(self: "registrationViewerWidget") -> None:
+    """
+    Set up synchronisation between the views based on the current transform type
+    """
+
+    if self.current_patient_transform_type == TransformType.NONE:
+        self.unsynchronise_views()
+        self.ui_sub_6.synchronise_views_general.setVisible(False)
+
+    elif self.current_patient_transform_type == TransformType.LINEAR:
+        self.use_only_linear_transform = True
+
+        if self.crosshair:
+            self.crosshair.use_only_linear_transform = True
+
+        self.study_current_transform_type = TransformType.LINEAR
+        self.ui_sub_6.synchronise_views_general.setVisible(True)
+
+    elif self.current_patient_transform_type == TransformType.NONLINEAR:
+        self.use_only_linear_transform = False
+
+        if self.crosshair:
+            self.crosshair.use_only_linear_transform = False
+
+        self.study_current_transform_type = TransformType.NONLINEAR
+        self.ui_sub_6.synchronise_views_general.setVisible(True)
+
+    else:
+        print(f"{self.current_patient_name=}")
+        raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8

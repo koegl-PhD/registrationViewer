@@ -174,23 +174,25 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_radiologist_id: str = ""
 
-        self.current_patient_idx: int = -1
+        self.current_combination_idx = 0
+
         self.current_patient_list = []
 
-        self.current_task_idx: int = -1
-        self.study_node_points = {
-            tasks.TASK_ORDER[key]: None for key in tasks.TASK_ORDER.keys()}
+        self.study_loaded_data: dict[str,
+                                     dict[str, vtkMRMLScalarVolumeNode]] = {}
 
-        self.study_node_groundtruth_points = {
-            tasks.TASK_ORDER[key]: None for key in tasks.TASK_ORDER.keys() if key != tasks.Task.RECURRENCE}
+        self.study_node_annotation = None
+
+        self.study_node_groundtruth_points = {}
 
         # task specific
-        self.study_gt_lymphnode_description = ""
-        self.study_gt_recurrence_description = ""
+        self.study_gt_lymphnode_description: dict[str, str] = {}
+        self.study_gt_recurrence_description: dict[str, str] = {}
         self.study_lymphnode_size: Literal["Size same",
                                            "Size increased",
                                            "Size decreased"] = "Size same"
-        self.study_recurrence_present: bool = False
+
+        self.study_recurrence_present: dict[str, bool] = {}
 
         self.study_progress_bar_patients = None
         self.study_progress_bar_tasks = None
@@ -231,7 +233,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_2.data_master_path_edit.nameFilters = [
             "JSON files (*.json)"]
 
-        default_path = "/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
+        default_path = "/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master_random.json"
         if os.path.exists(default_path):
             self.ui_sub_2.data_master_path_edit.currentPath = default_path
 
@@ -792,25 +794,35 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def current_task(self) -> tasks.Task:
-        if self.current_task_idx not in tasks.TASK_ORDER:
+        if self.current_patient_task_transform_comb == ("", "", ""):
             return tasks.Task.NONE
 
-        return tasks.TASK_ORDER[self.current_task_idx]
+        return tasks.Task(self.current_patient_task_transform_comb[1])
 
     @property
     def current_patient_name(self) -> str:
-        if self.current_patient_idx < 0:
+        if self.current_patient_task_transform_comb == ("", "", ""):
             return "no_patient"
 
-        return self.current_patient_list[self.current_patient_idx][1]
+        return self.current_patient_task_transform_comb[0]
 
     @property
     def current_patient_transform_type(self) -> utils.TransformType:
-        return self.current_patient_list[self.current_patient_idx][0]
+        if self.current_patient_task_transform_comb == ("", "", ""):
+            return utils.TransformType.NONE
+
+        return utils.TransformType(self.current_patient_task_transform_comb[2])
 
     @property
     def current_patient_path(self) -> str:
         return f"{self.study_data_master.path_study_input_cases}{self.current_patient_name}"
+
+    @property
+    def current_patient_task_transform_comb(self) -> Tuple[str, str, str]:
+        if self.current_patient_list == []:
+            return ("", "", "")
+
+        return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx]
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):

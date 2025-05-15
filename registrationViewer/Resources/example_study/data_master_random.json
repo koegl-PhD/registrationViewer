@@ -1,20 +1,16 @@
 {
     "path_study": "/home/koeglf/data/preprocess_again/",
-    "path_study_output": "/home/koeglf/data/preprocess_again/study_output/",
+    "path_study_output": "/home/koeglf/data/preprocess_again/study_output_random/",
     "path_study_input_cases": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/",
     "path_study_input_registrations": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans_registrations/",
     "path_study_input_annotations": "/home/koeglf/data/preprocess_again/ground_truth_annotations/",
     "participants": {
         "rad_4": {
             "name": "John Smith",
-            "patient_transform_combinations":
+            "patients":
                 [
-                    ["none", "TMxGak0IQOg"],
-                    ["linear", "TMxGak0IQOg"],
-                    ["none", "LB9oATPd0mE"],
-                    ["nonlinear", "TMxGak0IQOg"],
-                    ["linear", "LB9oATPd0mE"],
-                    ["nonlinear", "LB9oATPd0mE"]
+                    "YPEbc0OFC8I"
+
                 ]
         }
     }

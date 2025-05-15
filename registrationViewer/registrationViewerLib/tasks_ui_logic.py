@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 from typing import Dict, Union, Optional, Callable, TYPE_CHECKING
 
@@ -23,70 +24,68 @@ TASK_UI_ADDITIONS: Dict[tasks.Task, Callable[[object], None]] = {
 
 def show_task(
     self: "registrationViewerWidget",
-    ui,
-    task: tasks.Task,
-    study_node_points: Dict[tasks.Task,
-                            Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
-    groundtruth_points: Dict[tasks.Task,
-                             Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
-    view_group: int
 ) -> None:
 
-    ui.current_case_label.setVisible(True)
-
-    if task == tasks.Task.LYMPH_NODE:
-        description = tasks.TASK_DESCRIPTIONS[task].format(
-            lymphnode_description=self.study_gt_lymphnode_description)
-    elif task == tasks.Task.RECURRENCE:
-        description = tasks.TASK_DESCRIPTIONS[task].format(
-            recurrence_description=self.study_gt_recurrence_description)
+    if self.current_task == tasks.Task.LYMPH_NODE:
+        description = tasks.TASK_DESCRIPTIONS[self.current_task].format(
+            lymphnode_description=self.study_gt_lymphnode_description[self.current_patient_name])
+    elif self.current_task == tasks.Task.RECURRENCE:
+        description = tasks.TASK_DESCRIPTIONS[self.current_task].format(
+            recurrence_description=self.study_gt_recurrence_description[self.current_patient_name])
     else:
-        description = tasks.TASK_DESCRIPTIONS[task]
+        description = tasks.TASK_DESCRIPTIONS[self.current_task]
 
-    ui.study_current_task_description_label.setText(description)  # nopep8
+    self.ui_sub_6.study_current_task_description_label.setText(description)  # nopep8
 
-    ui.study_current_task_description_label.setVisible(True)
-    ui.study_add_point_button.setText("Add point")
-    ui.study_add_point_button.setVisible(True)
-    ui.study_checkbox.setVisible(False)
-    ui.study_dropdown.setVisible(False)
+    self.ui_sub_6.study_current_task_description_label.setVisible(True)
+    self.ui_sub_6.study_add_point_button.setText("Add point")
+    self.ui_sub_6.study_add_point_button.setVisible(True)
+    self.ui_sub_6.study_center_on_user_point_button.setVisible(True)
+    self.ui_sub_6.study_center_on_gt_point_button.setVisible(True)
+    self.ui_sub_6.study_checkbox.setVisible(False)
+    self.ui_sub_6.study_dropdown.setVisible(False)
 
-    # Hide all points except the current one in both dictionaries
-    utils.hide_all_points_except(task, study_node_points)
-    utils.hide_all_points_except(task, groundtruth_points)
+    # Hide all points except the current one
+    utils.hide_all_points_except(self.current_task,
+                                 self.study_node_groundtruth_points[self.current_patient_name],
+                                 self.views_second_row)
 
     # we don't want to center on recurrence because we only give a text description
-    if task != tasks.Task.RECURRENCE:
-        utils.center_on_point(groundtruth_points[task], view_group)
+    if self.current_task != tasks.Task.RECURRENCE:
+        utils.center_on_point(
+            self.study_node_groundtruth_points[self.current_patient_name][self.current_task], self.group_second_row)
 
-    if task == tasks.Task.LYMPH_NODE:
-        ui.study_dropdown.setVisible(True)
+    if self.current_task == tasks.Task.LYMPH_NODE:
+        self.ui_sub_6.study_dropdown.setVisible(True)
+    # else:
+    #     self.study_node_groundtruth_points[self.current_patient_name][self.current_task].GetDisplayNode(
+    #     ).SetVisibility(False)
 
-    if task.value in TASK_UI_ADDITIONS:
+    if self.current_task.value in TASK_UI_ADDITIONS:
 
-        TASK_UI_ADDITIONS[task.value](ui)
+        TASK_UI_ADDITIONS[self.current_task.value](self.ui_sub_6)
 
 
 def save_point(
-    self: "registrationViewerWidget",
     path_patient: str,
     task: tasks.Task,
-    study_node_points: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
+    study_node_annotation: Dict[tasks.Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
     additional_info: Optional[Dict[str, str]] = None,
     serialise_to_log: Optional[bool] = False,
     final_save: bool = False
 ) -> None:
 
-    point = study_node_points[task]
+    # create all dirctories in path_patient
+    Path(path_patient).mkdir(parents=True, exist_ok=True)
 
-    if point is None and task != tasks.Task.RECURRENCE:
+    if study_node_annotation is None and task != tasks.Task.RECURRENCE:
         slicer.util.errorDisplay(F"point {task.value} is missing")
         return
-    elif point is None and task == tasks.Task.RECURRENCE:
+    elif study_node_annotation is None and task == tasks.Task.RECURRENCE:
         pass
     else:
-        slicer.util.saveNode(point,
-                             path_patient + f"/{point.GetName()}.mrk.json")
+        slicer.util.saveNode(study_node_annotation,
+                             path_patient + f"/{study_node_annotation.GetName()}.mrk.json")
 
     if additional_info is not None:
         path = additional_info.get("path")
@@ -101,11 +100,11 @@ def save_point(
                 f"path and content must be provided together to save additional info in {task.value}")
 
     if serialise_to_log:
-        if not point and task == tasks.Task.RECURRENCE:
+        if not study_node_annotation and task == tasks.Task.RECURRENCE:
             log(logging.INFO, LogType.SAVE, "No recurrence to save")
             return
 
-        serialised_point = utils.serialise_markup(point)
+        serialised_point = utils.serialise_markup(study_node_annotation)
 
         if additional_info is not None:
             serialised_point.update(
