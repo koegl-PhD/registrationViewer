@@ -45,8 +45,6 @@ def set_connections(self: "registrationViewerWidget") -> None:
                                                           lambda: btn_call_on_center_on_point(self, "gt"))
     self.ui_sub_6.study_next_task_button.connect("clicked(bool)",
                                                  lambda: btn_call_on_next_task(self))
-    self.ui_sub_6.study_next_patient_button.connect("clicked(bool)",
-                                                    lambda: btn_call_on_study_next_patient(self))
     self.ui_sub_6.study_checkbox.toggled.connect(
         lambda: btn_call_on_checkbox(self))
     self.ui_sub_6.study_dropdown.currentIndexChanged.connect(
@@ -61,9 +59,9 @@ def on_pause_button() -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "User paused study")
 
-    utils.show_pause_popup('Click OK to resume study.',
-                           'STUDY PAUSED',
-                           lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
+    utils.show_big_popup_with_callback('Click OK to resume study.',
+                                       'STUDY PAUSED',
+                                       lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
 def btn_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
@@ -255,80 +253,6 @@ def start_study(self: "registrationViewerWidget") -> None:
     self.current_combination_idx = 0
 
     next_task(self, initial=True)
-
-
-def next_patient(self: "registrationViewerWidget") -> None:
-    log(logging.INFO, LogType.INTERNAL, "Next patient")
-
-    if self.current_combination_idx >= 0:
-        study.save_annotations(self,
-                               serialise_to_log=True,
-                               final_save=True)
-
-    study.clear_annotations(self)
-
-    if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
-        log(logging.INFO, LogType.U_BUTTON, "User finished study")
-        utils.show_info_popup("Study finished", "You have finished the study")
-        return
-
-    self.current_patient_idx += 1
-    self.current_task_idx = -1
-
-    self.study_progress_bar_patients.setValue(self.current_patient_idx + 1)
-    self.study_progress_bar_patients.setVisible(True)
-    self.ui_sub_6.progress_label_1.setVisible(True)
-    self.study_progress_bar_tasks.setVisible(True)
-    self.ui_sub_6.progress_label_2.setVisible(True)
-    self.study_progress_bar_tasks.setValue(1)
-
-    self.on_remove_all_data()
-
-    self.ui_sub_6.study_current_task_description_label.setVisible(False)
-    self.ui_sub_6.synchronise_views_general.setVisible(False)
-
-    self.ui_sub_6.study_add_point_button.setVisible(False)
-    self.ui_sub_6.study_center_on_user_point_button.setVisible(False)
-    self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
-    self.ui_sub_6.study_dropdown.setVisible(False)
-    self.ui_sub_6.study_checkbox.setVisible(False)
-    self.ui_sub_6.study_next_task_button.setVisible(False)
-    self.ui_sub_6.study_next_patient_button.setVisible(False)
-
-    log(logging.INFO, LogType.INTERNAL, "Data loaded")
-
-    self.ui_sub_6.study_current_task_description_label.setVisible(True)
-    self.ui_sub_6.synchronise_views_general.setVisible(True)
-    self.ui_sub_6.study_add_point_button.setVisible(True)
-    self.ui_sub_6.study_center_on_user_point_button.setVisible(True)
-    self.ui_sub_6.study_center_on_gt_point_button.setVisible(True)
-    self.ui_sub_6.study_dropdown.setVisible(True)
-    self.ui_sub_6.study_next_task_button.setVisible(True)
-
-    self.ui_sub_6.current_case_label.setText(f"{self.current_patient_name} {self.current_patient_transform_type}")  # nopep8
-
-    if self.current_patient_transform_type == utils.TransformType.NONE:
-        self.unsynchronise_views()
-        self.ui_sub_6.synchronise_views_general.setVisible(False)
-
-    elif self.current_patient_transform_type == utils.TransformType.LINEAR:
-        self.use_only_linear_transform = True
-        if self.crosshair:
-            self.crosshair.use_only_linear_transform = True
-        self.study_current_transform_type = utils.TransformType.LINEAR
-        self.ui_sub_6.synchronise_views_general.setVisible(True)
-    elif self.current_patient_transform_type == utils.TransformType.NONLINEAR:
-        self.use_only_linear_transform = False
-        if self.crosshair:
-            self.crosshair.use_only_linear_transform = False
-        self.study_current_transform_type = utils.TransformType.NONLINEAR
-        self.ui_sub_6.synchronise_views_general.setVisible(True)
-
-    else:
-        print(f"{self.current_patient_name=}")
-        raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
-
-    next_task(self)
 
 
 def btn_call_on_next_task(self: "registrationViewerWidget") -> None:

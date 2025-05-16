@@ -72,6 +72,10 @@ def show_task(
 
         TASK_UI_ADDITIONS[self.current_task.value](self.ui_sub_6)
 
+    utils.show_big_popup_with_callback(content=description.replace("\n", "\n\n"),
+                                       title=f"Task {self.current_combination_idx+1}/{self.study_data_master.number_of_tasks(self.current_radiologist_id)}",
+                                       on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User started task"))
+
 
 def save_point(
     path_patient: str,
