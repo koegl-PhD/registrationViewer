@@ -148,30 +148,49 @@ def show_progressbar(ui, idx: int, initial: int, maximum: int):
     return progress_bar
 
 
-def update_progress_window(progress: int, message: str) -> bool:
+def set_up_progress_window(label: str, initial_value: int = 0) -> None:
+
+    slicer.progressWindow = slicer.util.createProgressDialog()
+    slicer.progressWindow.show()
+    slicer.progressWindow.activateWindow()
+    slicer.progressWindow.setValue(initial_value)
+    slicer.progressWindow.setLabelText(label)
+    slicer.app.processEvents()
+
+
+def update_progress_window(progress: Optional[int] = None, message: Optional[str] = None) -> bool:
     if slicer.progressWindow.wasCanceled:
         slicer.progressWindow.close()
         return False
 
-    slicer.progressWindow.setLabelText(message)
-    slicer.progressWindow.setValue(progress)
+    if progress is not None:
+        slicer.progressWindow.setValue(progress)
+
+    if message is not None:
+        slicer.progressWindow.setLabelText(message)
 
     return True
 
 
-def hide_all_points_except(
-    task: Task,
-    points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]],
-    views: List[str]
-) -> None:
+def hide_all_points_except_current_point(self: "registrationViewerWidget") -> None:
 
-    for current_task, point in points.items():
-        if point is not None and current_task != task:
-            point.SetDisplayVisibility(False)
-        if point is not None and current_task == task:
-            point.SetDisplayVisibility(True)
+    for patient_name, patient_points in self.study_node_groundtruth_points.items():
 
-            show_node_only_in_views(point, views)
+        # for not current patient hide all
+        if patient_name != self.current_patient_name:
+            for current_task, point in patient_points.items():
+                if point is not None:
+                    print(f"Hiding point {point.GetName()}")
+                    point.SetDisplayVisibility(False)
+
+        # for current patient hide all except current task
+        else:
+            for current_task, point in patient_points.items():
+                if point is not None and current_task != self.current_task:
+                    print(f"Hiding point {point.GetName()}")
+                    point.SetDisplayVisibility(False)
+                if point is not None and current_task == self.current_task:
+                    point.SetDisplayVisibility(True)
 
 
 def normalize_intensity(data):
@@ -714,3 +733,15 @@ def set_up_synchronisation(self: "registrationViewerWidget") -> None:
     else:
         print(f"{self.current_patient_name=}")
         raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
+
+
+def set_up_data_nodes(self: "registrationViewerWidget") -> None:
+
+    self.node_transform_fixed = self.study_loaded_data[self.current_patient_name]["transform_fixed"]
+    self.node_transform_moving = self.study_loaded_data[self.current_patient_name]["transform_moving"]
+    self.ui_sub_3.inputSelector_fixed.setCurrentNode(
+        self.study_loaded_data[self.current_patient_name]["fixed"])
+    self.ui_sub_3.inputSelector_moving.setCurrentNode(
+        self.study_loaded_data[self.current_patient_name]["moving"])
+    self.ui_sub_3.inputSelector_transformation.setCurrentNode(
+        self.study_loaded_data[self.current_patient_name]["deformation"])
