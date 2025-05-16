@@ -776,6 +776,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_view_observer_tag.clear()
 
+    def get_combination(self, idx: int) -> Tuple[str, str, str]:
+        """
+        Get the combination of patient name, task and transformation type
+        """
+        if self.current_patient_list == []:
+            return ("", "", "")
+
+        return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][idx]
+
     @property
     def node_fixed(self) -> Any:
         return self.ui_sub_3.inputSelector_fixed.currentNode()
