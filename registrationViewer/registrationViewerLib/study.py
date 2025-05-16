@@ -134,9 +134,6 @@ def load_study_volumes(self: "registrationViewerWidget") -> None:
             path_transform_moving).replace(".h5", "")
         node_transform_moving.SetName(name_transform_moving)
 
-        node_deformation = slicer.util.loadTransform(path_deformation,
-                                                     {'show': False})[1]
-
         if path_deformation is None:
             node_deformation = slicer.mrmlScene.AddNewNodeByClass(
                 "vtkMRMLLinearTransformNode")
