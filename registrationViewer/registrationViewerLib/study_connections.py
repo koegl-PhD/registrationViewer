@@ -341,6 +341,11 @@ def btn_call_on_next_task(self: "registrationViewerWidget") -> None:
 
 def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
+    if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
+        log(logging.INFO, LogType.U_BUTTON, "User finished study")
+        utils.show_info_popup("Study finished", "You have finished the study")
+        return
+
     if not initial:
         study.save_annotations(self,
                                task_type=self.current_task,
@@ -349,11 +354,6 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         study.clear_current_user_annotation(self)
 
         self.current_combination_idx += 1
-
-    if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
-        log(logging.INFO, LogType.U_BUTTON, "User finished study")
-        utils.show_info_popup("Study finished", "You have finished the study")
-        return
 
     utils.set_up_synchronisation(self)
 
@@ -470,7 +470,7 @@ def checkbox(self: "registrationViewerWidget") -> None:
                 self.study_recurrence_present = False
                 self.ui_sub_6.study_center_on_user_point_button.setEnabled(
                     False)
-                self.ui_sub_6.study_next_task_button.setEnabled(False)
+                self.ui_sub_6.study_next_task_button.setEnabled(True)
 
                 log(logging.INFO, LogType.U_BUTTON,
                     "User unchecked checkbox and removed annotation point")
