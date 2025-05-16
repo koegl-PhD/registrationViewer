@@ -1,17 +1,16 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 import json
+import logging
 import os
 import random
 
 from typing import List, Optional, Tuple, TYPE_CHECKING
 
-from typing import List, Tuple
-
-import qt
 import slicer
 
 from registrationViewerLib import tasks, utils, tasks_ui_logic
+from registrationViewerLib.custom_logging import log, LogType
 
 
 if TYPE_CHECKING:
@@ -88,6 +87,8 @@ class StudyData:
 
 def load_all_study_data(self: "registrationViewerWidget") -> None:
 
+    log(logging.INFO, LogType.INTERNAL, "Start loading study data")
+
     utils.set_up_progress_window("Loading data...")
 
     end_percentage = load_study_volumes(self)
@@ -95,6 +96,8 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
     load_ground_truth_annotations(self, end_percentage)
 
     slicer.progressWindow.close()
+
+    log(logging.INFO, LogType.INTERNAL, "Finished loading study data")
 
 
 def load_study_volumes(self: "registrationViewerWidget") -> int:
