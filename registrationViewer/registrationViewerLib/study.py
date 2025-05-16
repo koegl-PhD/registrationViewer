@@ -85,20 +85,24 @@ class StudyData:
             self.case_task_transformation_map[rad_id] = temp_rad_map
 
 
-def load_study_volumes(self: "registrationViewerWidget") -> None:
+def load_all_study_data(self: "registrationViewerWidget") -> None:
 
-    slicer.progressWindow = slicer.util.createProgressDialog()
-    slicer.progressWindow.show()
-    slicer.progressWindow.activateWindow()
-    slicer.progressWindow.setValue(0)
-    slicer.progressWindow.setLabelText(
-        f"Loading data...")
-    slicer.app.processEvents()
+    utils.set_up_progress_window("Loading data...")
+
+    end_percentage = load_study_volumes(self)
+
+    load_ground_truth_annotations(self, end_percentage)
+
+    slicer.progressWindow.close()
+
+
+def load_study_volumes(self: "registrationViewerWidget") -> int:
 
     size = len(self.study_data_master.patient_list(
         self.current_radiologist_id))
 
-    for idx, patient_name in enumerate(self.study_data_master.patient_list(self.current_radiologist_id)):
+    percentage_patient = 0
+    for patient_name in self.study_data_master.patient_list(self.current_radiologist_id):
 
         print(patient_name)
 
@@ -109,31 +113,45 @@ def load_study_volumes(self: "registrationViewerWidget") -> None:
             path_transform_fixed, path_transform_moving, \
             path_deformation = utils.get_paths_to_load(path_case)
 
-        utils.update_progress_window(idx / (size), f"Loading data...")
+        utils.update_progress_window(
+            (percentage_patient * 90) / (size), f"Loading data...")
+        percentage_patient += 0.2
         node_volume_fixed = slicer.util.loadVolume(path_volume_fixed,
                                                    {'show': False})
         name_volume_fixed = os.path.basename(
             path_volume_fixed).replace(".nii.gz", "")
         node_volume_fixed.SetName(name_volume_fixed)
 
+        utils.update_progress_window(
+            (percentage_patient * 90) / (size), f"Loading data...")
+        percentage_patient += 0.2
         node_volume_moving = slicer.util.loadVolume(path_volume_moving,
                                                     {'show': False})
         name_volume_moving = os.path.basename(
             path_volume_moving).replace(".nii.gz", "")
         node_volume_moving.SetName(name_volume_moving)
 
+        utils.update_progress_window(
+            (percentage_patient * 90) / (size), f"Loading data...")
+        percentage_patient += 0.05
         node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
                                                          {'show': False})[1]
         name_transform_fixed = os.path.basename(
             path_transform_fixed).replace(".h5", "")
         node_transform_fixed.SetName(name_transform_fixed)
 
+        utils.update_progress_window(
+            (percentage_patient * 90) / (size), f"Loading data...")
+        percentage_patient += 0.05
         node_transform_moving = slicer.util.loadTransform(path_transform_moving,
                                                           {'show': False})[1]
         name_transform_moving = os.path.basename(
             path_transform_moving).replace(".h5", "")
         node_transform_moving.SetName(name_transform_moving)
 
+        utils.update_progress_window(
+            (percentage_patient * 90) / (size), f"Loading data...")
+        percentage_patient += 0.5
         if path_deformation is None:
             node_deformation = slicer.mrmlScene.AddNewNodeByClass(
                 "vtkMRMLLinearTransformNode")
@@ -147,32 +165,20 @@ def load_study_volumes(self: "registrationViewerWidget") -> None:
         self.study_loaded_data[patient_name]["moving"] = node_volume_moving
         self.study_loaded_data[patient_name]["transform_fixed"] = node_transform_fixed
         self.study_loaded_data[patient_name]["transform_moving"] = node_transform_moving
+        self.study_loaded_data[patient_name]["deformation"] = node_deformation
 
         utils.hide_all_volumes_from_views(
             self.views_first_row + self.views_second_row)
 
-    utils.update_progress_window(100, f"Loading data...")
-
-    # this has to be done for each task
-    # also set self.node_transform_fixed and moving
-    self.ui_sub_3.inputSelector_fixed.setCurrentNode(
-        node_volume_fixed)
-    self.ui_sub_3.inputSelector_moving.setCurrentNode(
-        node_volume_moving)
-    self.ui_sub_3.inputSelector_transformation.setCurrentNode(
-        node_deformation)
-
-    slicer.progressWindow.close()
+    return percentage_patient
 
 
-def load_ground_truth_annotations(self: "registrationViewerWidget"):
-    slicer.progressWindow = slicer.util.createProgressDialog()
-    slicer.progressWindow.show()
-    slicer.progressWindow.activateWindow()
-    slicer.progressWindow.setValue(50)
-    slicer.progressWindow.setLabelText(
-        f"Loading ground truth annotations...")
-    slicer.app.processEvents()
+def load_ground_truth_annotations(self: "registrationViewerWidget", start_percentage: int) -> None:
+
+    size = len(self.study_data_master.patient_list(
+        self.current_radiologist_id))
+
+    percentage_patient = start_percentage
 
     for patient_name in self.study_data_master.patient_list(self.current_radiologist_id):
 
@@ -188,13 +194,20 @@ def load_ground_truth_annotations(self: "registrationViewerWidget"):
 
         path_points = os.path.join(path_annotations,
                                    f"points_{volume_moving_name}.mrk.json")
+        utils.update_progress_window(
+            (percentage_patient * 90) / (size))
+        percentage_patient += 0.05
         points_node = slicer.util.loadMarkups(path_points)
+
         points_node.SetName(os.path.basename(
             path_points).replace(".mrk.json", ""))
         points_node_name = points_node.GetName()
 
         path_lymphnode = os.path.join(path_annotations,
                                       f"roi_lymphnode_{volume_moving_name}.mrk.json")
+        utils.update_progress_window(
+            (percentage_patient * 90) / (size))
+        percentage_patient += 0.05
         lymphnode = slicer.util.loadMarkups(path_lymphnode)
         lymphnode.SetName('l')
         lymphnode.LockedOn()

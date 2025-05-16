@@ -220,8 +220,7 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     on_simple_ui(self, True)
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
 
-    study.load_study_volumes(self)
-    study.load_ground_truth_annotations(self)
+    study.load_all_study_data(self)
 
 
 def btn_call_on_user_start_study(self: "registrationViewerWidget") -> None:
