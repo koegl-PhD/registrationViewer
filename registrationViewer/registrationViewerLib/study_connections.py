@@ -249,11 +249,11 @@ def start_study(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.start_study_by_user_button.setVisible(False)
     self.ui_sub_6.pause_button.setVisible(True)
-
-    self.current_combination_idx = 0
-
+    self.ui_sub_6.study_next_task_button.setVisible(True)
     self.study_progress_bar_tasks.setVisible(True)
     self.ui_sub_6.progress_label_2.setVisible(True)
+
+    self.current_combination_idx = 0
 
     next_task(self, initial=True)
 
@@ -419,19 +419,15 @@ def add_annotation_point(self: "registrationViewerWidget") -> None:
                                   self.views_first_row)
 
     if self.current_task == tasks.Task.RECURRENCE:
-        self.ui_sub_6.study_next_patient_button.setEnabled(True)
-        self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
-
         # Temporarily block signals wo se don't trigger the callbacks
         self.ui_sub_6.study_checkbox.blockSignals(True)
         self.ui_sub_6.study_checkbox.setChecked(True)
         self.ui_sub_6.study_checkbox.blockSignals(False)
 
         self.study_recurrence_present = True
-    else:
-        self.ui_sub_6.study_next_task_button.setEnabled(True)
-        self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 
+    self.ui_sub_6.study_next_task_button.setEnabled(True)
+    self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
     self.ui_sub_6.study_center_on_user_point_button.setEnabled(True)
 
     if not overwrote:
@@ -453,12 +449,12 @@ def checkbox(self: "registrationViewerWidget") -> None:
 
     if self.study_recurrence_present:
         if self.study_node_annotation is None:
-            self.ui_sub_6.study_next_patient_button.setEnabled(False)
-            self.ui_sub_6.study_next_patient_button.toolTip = "Please add annotation point first"  # nopep8
+            self.ui_sub_6.study_next_task_button.setEnabled(False)
+            self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
 
         else:
-            self.ui_sub_6.study_next_patient_button.setEnabled(True)
-            self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
+            self.ui_sub_6.study_next_task_button.setEnabled(True)
+            self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 
         log(logging.INFO, LogType.INTERNAL, "Checkbox checked")
 
@@ -474,6 +470,7 @@ def checkbox(self: "registrationViewerWidget") -> None:
                 self.study_recurrence_present = False
                 self.ui_sub_6.study_center_on_user_point_button.setEnabled(
                     False)
+                self.ui_sub_6.study_next_task_button.setEnabled(False)
 
                 log(logging.INFO, LogType.U_BUTTON,
                     "User unchecked checkbox and removed annotation point")
@@ -486,9 +483,6 @@ def checkbox(self: "registrationViewerWidget") -> None:
 
                 log(logging.INFO, LogType.U_BUTTON,
                     'User cancelled unchecking and removing annotation point')
-
-        self.ui_sub_6.study_next_patient_button.setEnabled(True)
-        self.ui_sub_6.study_next_patient_button.toolTip = ""  # nopep8
 
     if self.study_recurrence_present is False and overwrote is False:
         log(logging.INFO, LogType.INTERNAL, "Checkbox unchecked")
