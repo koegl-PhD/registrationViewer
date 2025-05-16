@@ -415,7 +415,7 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode.SetSliceOffset(offset)
 
 
-def randomise_offsets(views: List[str], max_v: int = 10, min_v: int = 15) -> None:
+def randomise_offsets(views: List[str], min_v: int = 10, max_v: int = 15) -> None:
     """
     Randomly change the offset of the given views.
     """
