@@ -180,14 +180,12 @@ def hide_all_points_except_current_point(self: "registrationViewerWidget") -> No
         if patient_name != self.current_patient_name:
             for current_task, point in patient_points.items():
                 if point is not None:
-                    print(f"Hiding point {point.GetName()}")
                     point.SetDisplayVisibility(False)
 
         # for current patient hide all except current task
         else:
             for current_task, point in patient_points.items():
                 if point is not None and current_task != self.current_task:
-                    print(f"Hiding point {point.GetName()}")
                     point.SetDisplayVisibility(False)
                 if point is not None and current_task == self.current_task:
                     point.SetDisplayVisibility(True)

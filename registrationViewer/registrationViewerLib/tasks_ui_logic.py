@@ -1,11 +1,12 @@
 import logging
 from pathlib import Path
+import random
 
 from typing import Dict, Union, Optional, Callable, TYPE_CHECKING
 
 import slicer
 
-from registrationViewerLib import utils, tasks
+from registrationViewerLib import utils, tasks, view_logic
 from registrationViewerLib.custom_logging import log, LogType
 
 
@@ -24,6 +25,7 @@ TASK_UI_ADDITIONS: Dict[tasks.Task, Callable[[object], None]] = {
 
 def show_task(
     self: "registrationViewerWidget",
+    randomise_starting_offset: bool = False,
 ) -> None:
 
     if self.current_task == tasks.Task.LYMPH_NODE:
@@ -48,12 +50,17 @@ def show_task(
     # Hide all points except the current one
     utils.hide_all_points_except_current_point(self)
 
+    if randomise_starting_offset:
+        view_logic.randomise_offsets(
+            self.views_first_row + self.views_second_row)
+
     # we don't want to center on recurrence because we only give a text description
     if self.current_task == tasks.Task.RECURRENCE:
         self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
         self.ui_sub_6.study_checkbox.blockSignals(True)
         self.ui_sub_6.study_checkbox.setChecked(False)
         self.ui_sub_6.study_checkbox.blockSignals(False)
+
     else:
         utils.center_on_point(
             self.study_node_groundtruth_points[self.current_patient_name][self.current_task], self.group_second_row)

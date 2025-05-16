@@ -340,6 +340,8 @@ def btn_call_on_next_task(self: "registrationViewerWidget") -> None:
 
 def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
+    randomise_starting_offset = False
+
     if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
         log(logging.INFO, LogType.U_BUTTON, "User finished study")
         utils.show_info_popup("Study finished", "You have finished the study")
@@ -354,10 +356,16 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
         self.current_combination_idx += 1
 
+        # if the previous patient was the same, randomize the offsets, so it seems like each point is new
+        if self.get_combination(self.current_combination_idx - 1)[0] == self.get_combination(self.current_combination_idx)[0]:
+            randomise_starting_offset = True
+
     utils.set_up_synchronisation(self)
     utils.set_up_data_nodes(self)
 
     log(logging.INFO, LogType.INTERNAL, "Start task")
+
+    print(self.current_patient_task_transform_comb)
 
     self.ui_sub_6.study_next_task_button.setEnabled(False)
     self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
@@ -366,7 +374,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     self.study_progress_bar_tasks.setValue(self.current_combination_idx + 1)
 
-    tasks_ui_logic.show_task(self)
+    tasks_ui_logic.show_task(self, randomise_starting_offset)
 
     if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
         self.ui_sub_6.study_next_task_button.setText("Finish study")

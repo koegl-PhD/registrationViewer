@@ -1,6 +1,6 @@
 from enum import Enum
 import logging
-from time import time
+import random
 
 
 from typing import List, Literal, Tuple, TYPE_CHECKING
@@ -413,6 +413,24 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode = sliceLogic.GetSliceNode()
 
     sliceNode.SetSliceOffset(offset)
+
+
+def randomise_offsets(views: List[str], max_v: int = 10, min_v: int = 15) -> None:
+    """
+    Randomly change the offset of the given views.
+    """
+
+    if max_v <= min_v:
+        raise ValueError("max_v must be greater than min_v")
+
+    offsets = [get_view_offset(view) for view in views]
+
+    for view, offset in zip(views, offsets):
+
+        change = random.randint(min_v, max_v)
+        sign = random.choice([-1, 1])
+
+        set_view_offset(view, offset + change * sign)
 
 
 def _is_right_drag(view_name: str) -> bool:
