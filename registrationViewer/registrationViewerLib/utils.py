@@ -530,14 +530,14 @@ def show_info_popup(content: str, title: str = "Information") -> None:
     msgBox.exec_()
 
 
-def show_pause_popup(content: str, title: str = "Information", on_ok: Callable[[], None] = lambda: None) -> None:
+def show_big_popup_with_callback(content: str, title: str = "Information", on_ok: Callable[[], None] = lambda: None) -> None:
     msgBox = qt.QMessageBox(slicer.util.mainWindow())
     msgBox.setIcon(qt.QMessageBox.Information)
     msgBox.setWindowTitle(title)
     msgBox.setText(content)
     msgBox.setStandardButtons(qt.QMessageBox.Ok)
     msgBox.setStyleSheet("QLabel { font-size: 24px; padding: 30px; }")
-    msgBox.resize(1000, 600)
+    msgBox.resize(1500, 1200)
 
     def handle_button_clicked(button):
         if msgBox.buttonRole(button) == qt.QMessageBox.AcceptRole:
