@@ -51,15 +51,17 @@ def show_task(
                                  self.views_second_row)
 
     # we don't want to center on recurrence because we only give a text description
-    if self.current_task != tasks.Task.RECURRENCE:
+    if self.current_task == tasks.Task.RECURRENCE:
+        self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
+        self.ui_sub_6.study_checkbox.blockSignals(True)
+        self.ui_sub_6.study_checkbox.setChecked(False)
+        self.ui_sub_6.study_checkbox.blockSignals(False)
+    else:
         utils.center_on_point(
             self.study_node_groundtruth_points[self.current_patient_name][self.current_task], self.group_second_row)
 
     if self.current_task == tasks.Task.LYMPH_NODE:
         self.ui_sub_6.study_dropdown.setVisible(True)
-    # else:
-    #     self.study_node_groundtruth_points[self.current_patient_name][self.current_task].GetDisplayNode(
-    #     ).SetVisibility(False)
 
     if self.current_task.value in TASK_UI_ADDITIONS:
 
