@@ -46,9 +46,7 @@ def show_task(
     self.ui_sub_6.study_dropdown.setVisible(False)
 
     # Hide all points except the current one
-    utils.hide_all_points_except(self.current_task,
-                                 self.study_node_groundtruth_points[self.current_patient_name],
-                                 self.views_second_row)
+    utils.hide_all_points_except_current_point(self)
 
     # we don't want to center on recurrence because we only give a text description
     if self.current_task == tasks.Task.RECURRENCE:
