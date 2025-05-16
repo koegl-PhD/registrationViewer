@@ -355,6 +355,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         self.current_combination_idx += 1
 
     utils.set_up_synchronisation(self)
+    utils.set_up_data_nodes(self)
 
     log(logging.INFO, LogType.INTERNAL, "Start task")
 
