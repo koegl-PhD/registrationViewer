@@ -256,7 +256,8 @@ def load_ground_truth_annotations(self: "registrationViewerWidget", start_percen
             new_point.SetName(current_point_name)
 
             utils.show_node_only_in_views(new_point,
-                                          [])
+                                          self.views_second_row)
+            new_point.SetDisplayVisibility(False)
             new_point.GetDisplayNode().SetSelectedColor(utils.Colors.BLUE.value)
             new_point.GetDisplayNode().SetGlyphScale(1.0)
 
