@@ -153,6 +153,39 @@
         </item>
         <!-- END pause_button -->
 
+        <!-- START info_button -->
+        <item>
+          <widget class="QPushButton" name="info_button">
+          <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="styleSheet">
+            <string notr="true">
+            QPushButton {
+                background-color: #07f02e;
+                color: white;
+                font-weight: bold;
+                border-radius: 5px;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: #0ec22c;
+            }
+            QPushButton:pressed {
+                background-color: #078f1e;
+            }
+            </string>
+          </property>
+          <property name="text">
+            <string>Info</string>
+          </property>
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+          </widget>
+        </item>
+        <!-- END info_button -->
+
         <!-- START horizontalSpacer_right -->
         <item>
           <spacer name="horizontalSpacer_right">

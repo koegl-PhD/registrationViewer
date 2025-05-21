@@ -32,6 +32,8 @@ def set_connections(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.pause_button.connect("clicked(bool)", on_pause_button)
 
+    self.ui_sub_6.info_button.connect("clicked(bool)", on_info_button)
+
     self.ui_sub_6.synchronise_views_general.connect("clicked(bool)",
                                                     lambda: btn_call_on_synchronise_views_general(self))
 
@@ -62,6 +64,15 @@ def on_pause_button() -> None:
     utils.show_big_popup_with_callback('Click OK to resume study.',
                                        'STUDY PAUSED',
                                        lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
+
+
+def on_info_button() -> None:
+
+    log(logging.INFO, LogType.U_BUTTON, "User clicked on info button")
+
+    utils.show_popup_with_image('/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+                                'STUDY INFO',
+                                lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
 def btn_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
@@ -191,6 +202,7 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
 
         self.ui_sub_6.start_study_by_user_button.setVisible(True)
         self.ui_sub_6.pause_button.setVisible(False)
+        self.ui_sub_6.info_button.setVisible(False)
     else:
         self.ui_sub_1.simple_ui_button.setText("Simple UI")
         slicer.app.setStyleSheet("""
@@ -205,6 +217,7 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
             qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
         self.ui_sub_6.start_study_by_user_button.setVisible(False)
         self.ui_sub_6.pause_button.setVisible(False)
+        self.ui_sub_6.info_button.setVisible(False)
 
 
 def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
@@ -246,6 +259,7 @@ def start_study(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.start_study_by_user_button.setVisible(False)
     self.ui_sub_6.pause_button.setVisible(True)
+    self.ui_sub_6.info_button.setVisible(True)
     self.ui_sub_6.study_next_task_button.setVisible(True)
     self.study_progress_bar_tasks.setVisible(True)
     self.ui_sub_6.progress_label_2.setVisible(True)
