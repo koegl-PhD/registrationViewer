@@ -155,6 +155,7 @@ class DropWidget(qt.QFrame):
                 if path_transform_fixed is None:
                     self.moduleWidget.node_transform_fixed = slicer.mrmlScene.AddNewNodeByClass(
                         "vtkMRMLLinearTransformNode")
+                    print(f"No fixed transform found")
                 else:
                     self.moduleWidget.node_transform_fixed = slicer.util.loadTransform(
                         path_transform_fixed)
@@ -169,6 +170,7 @@ class DropWidget(qt.QFrame):
                 if path_transform_moving is None:
                     self.moduleWidget.node_transform_moving = slicer.mrmlScene.AddNewNodeByClass(
                         "vtkMRMLLinearTransformNode")
+                    print(f"No moving transform found")
                 else:
                     self.moduleWidget.node_transform_moving = slicer.util.loadTransform(
                         path_transform_moving)
@@ -183,6 +185,7 @@ class DropWidget(qt.QFrame):
                 if path_deformation is None:
                     node_deformation = slicer.mrmlScene.AddNewNodeByClass(
                         "vtkMRMLLinearTransformNode")
+                    print(f"No deformation found")
                 else:
                     node_deformation = slicer.util.loadTransform(
                         path_deformation)
