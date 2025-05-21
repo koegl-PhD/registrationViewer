@@ -30,9 +30,11 @@ class StudyData:
 
         self.__dict__.update(self.data)
 
-        self._create_random_case_task_transformation_map()
+        self._create_case_task_transformation_map(randomise=False)
 
-        # print(self.case_task_transformation_map)
+        for rad_id, content in self.case_task_transformation_map.items():
+            for a in content:
+                print(a)
 
     def save(self, json_path=None):
         if json_path is None:
@@ -56,7 +58,7 @@ class StudyData:
 
         return len(self.case_task_transformation_map[rad_id])
 
-    def _create_random_case_task_transformation_map(self) -> None:
+    def _create_case_task_transformation_map(self, randomise: bool) -> None:
         """
         Create a mapping of task to transformation for the random case.
         This is used to create the random case in the study.
@@ -72,14 +74,21 @@ class StudyData:
 
             for patient in rad_content["patients"]:
 
-                for task in tasks.TASK_ORDER.values():
+                for transform in utils.TransformType:
 
-                    for transform in utils.TransformType:
+                    for task in tasks.TASK_ORDER.values():
+
+                        if patient == "YPEbc0OFC8I" and transform != utils.TransformType.NONE:
+                            continue
+
+                        if patient == "yIt7Z7VHXU0" and transform != utils.TransformType.NONLINEAR:
+                            continue
 
                         temp_rad_map.append(
                             (patient, task.value, transform.value))
 
-            random.shuffle(temp_rad_map)
+            if randomise:
+                random.shuffle(temp_rad_map)
 
             self.case_task_transformation_map[rad_id] = temp_rad_map
 
