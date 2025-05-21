@@ -241,7 +241,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
 
     slicer.util.setMenuBarsVisible(value)
 
-    # slicer.util.setToolbarsVisible(value)
+    slicer.util.setToolbarsVisible(value)
 
     # hide help section
     slicer.util.setModuleHelpSectionVisible(value)
@@ -307,10 +307,11 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
     slice_view.forceRender()
     slicer.app.processEvents()
 
-    # slicer.modules.registrationviewer.widgetRepresentation(
-    # ).self().reloadCollapsibleButton.visible = value
+    slicer.modules.registrationviewer.widgetRepresentation(
+    ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
+    # slicer.util.setPythonConsoleVisible(value)
     slicer.util.setPythonConsoleVisible(True)
 
 
