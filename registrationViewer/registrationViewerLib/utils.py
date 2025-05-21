@@ -549,6 +549,40 @@ def show_big_popup_with_callback(content: str, title: str = "Information", on_ok
     msgBox.open()
 
 
+def show_popup_with_image(image_path: str, title: str, on_ok: Callable[[], None] = lambda: None) -> None:
+    """Show a message box with an image instead of text."""
+    dialog = qt.QDialog(slicer.util.mainWindow())
+    dialog.setWindowTitle(title)
+    dialog.setModal(True)
+    layout = qt.QVBoxLayout(dialog)
+
+    # Image
+    label = qt.QLabel()
+    pixmap = qt.QPixmap(image_path)
+
+    screen_geometry = qt.QApplication.desktop().availableGeometry()
+    max_width = screen_geometry.width() * 0.6
+    max_height = screen_geometry.height() * 0.6
+
+    scaled_pixmap = pixmap.scaled(
+        max_width, max_height, qt.Qt.KeepAspectRatio, qt.Qt.SmoothTransformation)
+    label.setPixmap(scaled_pixmap)
+    layout.addWidget(label)
+
+    # OK Button
+    button_box = qt.QDialogButtonBox(qt.QDialogButtonBox.Ok)
+    button_box.button(qt.QDialogButtonBox.Ok).setStyleSheet(
+        "font-size: 24px; padding: 12px 24px;")
+    layout.addWidget(button_box)
+
+    def handle_accept():
+        on_ok()
+        dialog.accept()
+
+    button_box.accepted.connect(handle_accept)
+    dialog.exec_()
+
+
 def has_control_point_with_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
                                 name: str) -> bool:
 
