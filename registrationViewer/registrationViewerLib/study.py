@@ -30,7 +30,7 @@ class StudyData:
 
         self.__dict__.update(self.data)
 
-        self._create_random_case_task_transformation_map()
+        self._create_case_task_transformation_map(randomise=False)
 
         for rad_id, content in self.case_task_transformation_map.items():
             for a in content:
