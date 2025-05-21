@@ -28,6 +28,14 @@ def show_task(
     randomise_starting_offset: bool = False,
 ) -> None:
 
+    if self.crosshair is not None:
+        if self.current_patient_transform_type == utils.TransformType.NONE:
+            self.crosshair.set_crosshair_visibility_in_views(
+                self.views_all, False)
+        else:
+            self.crosshair.set_crosshair_visibility_in_views(
+                self.views_all, True)
+
     if self.current_task == tasks.Task.LYMPH_NODE:
         description = tasks.TASK_DESCRIPTIONS[self.current_task].format(
             lymphnode_description=self.study_gt_lymphnode_description[self.current_patient_name])
