@@ -447,6 +447,11 @@ def checkbox(self: "registrationViewerWidget") -> None:
     if self.study_recurrence_present is False and overwrote is False:
         log(logging.INFO, LogType.INTERNAL, "Checkbox unchecked")
 
+    if self.study_recurrence_present is False and self.study_node_annotation is None:
+        self.ui_sub_6.study_next_task_button.setEnabled(True)
+        self.ui_sub_6.study_next_task_button.toolTip = ""
+        log(logging.INFO, LogType.INTERNAL, "Checkbox unchecked")
+
 
 def btn_call_on_center_on_point(self: "registrationViewerWidget",
                                 point_type: Literal["user", "gt"]) -> None:
