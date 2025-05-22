@@ -52,6 +52,8 @@ class Contents(Enum):
 
         Achten Sie darauf, die Registrierung zu deaktivieren, wenn Sie von einer Ansicht zur nächsten wechseln.
         In jeder Aufgabe müssen Sie einen Punkt in der oberen Reihe (dem neueren Scan) setzen, der einer Struktur im unteren Scan entspricht.
+
+        Sie können auf den grünen Info-Button klicken, um die Steuerung anzuzeigen, und auf den orangefarbenen Pause-Button klicken, um die Studie zu pausieren.
         """
 
     WARNING_REMOVE_RECURRENCE_POINT = "Möchten Sie den Punkt entfernen, den Sie bereits für das Rezidiv gesetzt habt?"
