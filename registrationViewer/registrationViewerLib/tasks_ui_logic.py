@@ -73,6 +73,8 @@ def show_task(
         self.ui_sub_6.study_checkbox.blockSignals(True)
         self.ui_sub_6.study_checkbox.setChecked(False)
         self.ui_sub_6.study_checkbox.blockSignals(False)
+        self.ui_sub_6.study_next_task_button.setEnabled(True)
+        self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 
     else:
         utils.center_on_point(
