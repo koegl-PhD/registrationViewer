@@ -7,13 +7,13 @@ import tempfile
 import traceback
 from typing import TYPE_CHECKING
 
-from typing import Dict, Union, Tuple, Callable, List, Optional
+from typing import Dict, Tuple, Callable, List, Optional
 
 import qt
 import slicer
 import vtk
 
-from registrationViewerLib.tasks import Task
+from registrationViewerLib import texts
 from registrationViewerLib.custom_logging import log, LogType
 
 
@@ -241,7 +241,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
 
     slicer.util.setMenuBarsVisible(value)
 
-    slicer.util.setToolbarsVisible(value)
+    # slicer.util.setToolbarsVisible(value)
 
     # hide help section
     slicer.util.setModuleHelpSectionVisible(value)
@@ -311,7 +311,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    slicer.util.setPythonConsoleVisible(value)
+    # slicer.util.setPythonConsoleVisible(value)
 
 
 def print_affine_matrix(transformNode):
@@ -489,12 +489,12 @@ def set_threshold(node: slicer.vtkMRMLScalarVolumeNode,
     displayNode.SetThreshold(threshold[0], threshold[1])
 
 
-def show_warning_popup(content: str,
-                       question: str):
+def show_warning_popup(title: str,
+                       content: str):
     msgBox = qt.QMessageBox()
     msgBox.setIcon(qt.QMessageBox.Warning)
+    msgBox.setWindowTitle(title)
     msgBox.setText(content)
-    msgBox.setInformativeText(question)
     msgBox.setStandardButtons(qt.QMessageBox.Ok | qt.QMessageBox.Cancel)
     msgBox.setDefaultButton(qt.QMessageBox.Cancel)
 
@@ -521,7 +521,7 @@ def show_question_popup(content: str) -> bool:
         return False
 
 
-def show_info_popup(content: str, title: str = "Information") -> None:
+def show_info_popup(title: str, content: str) -> None:
     msgBox = qt.QMessageBox()
     msgBox.setIcon(qt.QMessageBox.Information)
     msgBox.setWindowTitle(title)
@@ -530,22 +530,28 @@ def show_info_popup(content: str, title: str = "Information") -> None:
     msgBox.exec_()
 
 
-def show_big_popup_with_callback(content: str, title: str = "Information", on_ok: Callable[[], None] = lambda: None) -> None:
+def show_big_popup_with_callback(
+    title: str,
+    content: str,
+    text_size: int = 24,
+    on_ok: Callable[[], None] = lambda: None
+) -> None:
+
     msgBox = qt.QMessageBox(slicer.util.mainWindow())
     msgBox.setIcon(qt.QMessageBox.Information)
     msgBox.setWindowTitle(title)
     msgBox.setText(content)
     msgBox.setStandardButtons(qt.QMessageBox.Ok)
-    msgBox.setStyleSheet("QLabel { font-size: 24px; padding: 30px; }")
-    msgBox.resize(1500, 1200)
+    msgBox.setStyleSheet(
+        f"QLabel {{ font-size: {text_size}px; padding: 30px; }}")
+    msgBox.resize(1500, 2000)
 
-    def handle_button_clicked(button):
-        if msgBox.buttonRole(button) == qt.QMessageBox.AcceptRole:
-            on_ok()
-        msgBox.close()
+    result = msgBox.exec_()
+    if result == qt.QMessageBox.Ok:
+        on_ok()
+        return True
 
-    msgBox.buttonClicked.connect(handle_button_clicked)
-    msgBox.open()
+    return False
 
 
 def show_popup_with_image(image_path: str, title: str, on_ok: Callable[[], None] = lambda: None) -> None:
@@ -779,3 +785,34 @@ def set_up_data_nodes(self: "registrationViewerWidget") -> None:
         self.study_loaded_data[self.current_patient_name]["moving"])
     self.ui_sub_3.inputSelector_transformation.setCurrentNode(
         self.study_loaded_data[self.current_patient_name]["deformation"])
+
+
+def set_button_texts(self: "registrationViewerWidget") -> None:
+
+    self.ui_sub_6.study_center_on_user_point_button.setText(
+        texts.Buttons.CENTER_ON_USER_POINT.value)
+
+    self.ui_sub_6.study_center_on_gt_point_button.setText(
+        texts.Buttons.CENTER_ON_GROUND_TRUTH_POINT.value
+    )
+
+    self.ui_sub_6.study_next_task_button.setText(
+        texts.Buttons.NEXT_TASK_BUTTON.value
+    )
+
+    self.ui_sub_6.study_add_point_button.setText(
+        texts.Buttons.ADD_POINT_BUTTON.value
+    )
+
+    self.ui_sub_6.study_dropdown.setItemText(
+        0, texts.Buttons.DROPDOWN_UNCHANGED.value)
+
+    self.ui_sub_6.study_dropdown.setItemText(
+        1, texts.Buttons.DROPDOWN_INCREASED.value)
+
+    self.ui_sub_6.study_dropdown.setItemText(
+        2, texts.Buttons.DROPDOWN_DECREASED.value)
+
+    self.ui_sub_6.start_study_by_user_button.setText(
+        texts.Buttons.START_STUDY.value
+    )

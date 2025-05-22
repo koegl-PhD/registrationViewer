@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import time
 
-from typing import Optional, List, Any, Literal, Dict, List, Union, Tuple
+from typing import Optional, Any, Literal, Tuple
 
 import numpy as np
 
@@ -27,7 +27,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import annotations_connections, utils, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks
+from registrationViewerLib import annotations_connections, utils, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, texts
 from registrationViewerLib import custom_logging
 
 
@@ -86,7 +86,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTags = []
 
-        from registrationViewerLib import annotations_connections, utils, tasks, crosshairs, drop_data_loading, view_logic, study_connections, study
+        from registrationViewerLib import annotations_connections, utils, tasks, crosshairs, drop_data_loading, texts, view_logic, study_connections, study
         from registrationViewerLib import custom_logging
 
         annotations_connections = importlib.reload(annotations_connections)
@@ -98,6 +98,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         utils = importlib.reload(utils)
         view_logic = importlib.reload(view_logic)
         custom_logging = importlib.reload(custom_logging)
+        texts = importlib.reload(texts)
 
         self.logger = None
 
@@ -596,7 +597,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Unsynchronise views with transform (t)")
             self.ui_sub_6.synchronise_views_general.setText(
-                "Unsynchronise views (s)")
+                texts.Buttons.TURN_TRANSFORMATION_OFF.value)
 
             self.use_transform = self.crosshair.use_transform = True
             self.crosshair.use_only_linear_transform = self.use_only_linear_transform
@@ -613,7 +614,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
             self.ui_sub_6.synchronise_views_general.setText(
-                "Synchronise views (s)")
+                texts.Buttons.TURN_TRANSFORMATION_ON.value)
 
     def on_synchronise_views_manually(self) -> None:
 
@@ -658,7 +659,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
         self.ui_sub_6.synchronise_views_general.setText(
-            "Synchronise views (s)")
+            texts.Buttons.TURN_TRANSFORMATION_ON.value)
 
     def on_linear_only(self) -> None:
         print(f"on linear only")

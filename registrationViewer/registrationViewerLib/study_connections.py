@@ -5,7 +5,7 @@ from typing import Optional, TYPE_CHECKING, Literal
 import slicer
 import qt
 
-from registrationViewerLib import tasks_ui_logic, tasks, utils, view_logic, study
+from registrationViewerLib import tasks_ui_logic, tasks, utils, view_logic, study, texts
 from registrationViewerLib.custom_logging import configure_logger, log, LogType
 
 if TYPE_CHECKING:
@@ -61,18 +61,18 @@ def on_pause_button() -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "User paused study")
 
-    utils.show_big_popup_with_callback('Click OK to resume study.',
-                                       'STUDY PAUSED',
-                                       lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
+    utils.show_big_popup_with_callback(title=texts.Titles.STUDY_PAUSED.value,
+                                       content=texts.Contents.OK_TO_RESMUE.value,
+                                       callable=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
 def on_info_button() -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "User clicked on info button")
 
-    utils.show_popup_with_image('/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                'STEUERUNGSANLEITUNG',
-                                lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
+    utils.show_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+                                title=texts.Titles.STUDY_INSTRUCTIONS.value,
+                                callable=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
 def btn_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
@@ -121,10 +121,10 @@ def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
 
     if self.synchronise_with_displacement_pressed:
         self.ui_sub_6.synchronise_views_general.setText(
-            "Unsynchronise views (s)")
+            texts.Buttons.TURN_TRANSFORMATION_OFF.value)
     else:
         self.ui_sub_6.synchronise_views_general.setText(
-            "Synchronise views (s)")
+            texts.Buttons.TURN_TRANSFORMATION_ON.value)
 
     self.ui_sub_4.synchronise_views_with_transform.setVisible(False)
     self.ui_sub_4.synchronise_views_manually.setVisible(False)
@@ -182,18 +182,18 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
 
     if self.ui_is_simple:
         self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-        slicer.app.setStyleSheet("""
-            QWidget {
-                background-color: #060f21;
-                color: white;
-            }
-            QMainWindow {
-                background-color: #060f21;
-            }
-            qSlicerLayoutManager {
-                background-color: #060f21;
-            }
-            """)
+        # slicer.app.setStyleSheet("""
+        #     QWidget {
+        #         background-color: #060f21;
+        #         color: white;
+        #     }
+        #     QMainWindow {
+        #         background-color: #060f21;
+        #     }
+        #     qSlicerLayoutManager {
+        #         background-color: #060f21;
+        #     }
+        #     """)
 
         study.hide_module_parts_for_user_study(self)
 
@@ -231,6 +231,8 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     on_simple_ui(self, True)
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
 
+    utils.set_button_texts(self)
+
     study.load_all_study_data(self)
 
 
@@ -266,8 +268,13 @@ def start_study(self: "registrationViewerWidget") -> None:
 
     self.current_combination_idx = 0
 
+    utils.show_big_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION.value,
+                                       content=texts.Contents.STUDY_DESCRIPTION.value,
+                                       text_size=16,
+                                       on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
+
     if utils.show_popup_with_image('/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                   'STEUERUNGSANLEITUNG',
+                                   texts.Titles.USER_ICONS.value,
                                    lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study")):
 
         next_task(self, initial=True)
@@ -286,7 +293,8 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
         log(logging.INFO, LogType.U_BUTTON, "User finished study")
-        utils.show_info_popup("Study finished", "You have finished the study")
+        utils.show_info_popup(texts.Titles.STUDY_FINISHED,
+                              texts.Contents.STUDY_FINISHED)
         return
 
     if not initial:
@@ -335,8 +343,8 @@ def add_annotation_point(self: "registrationViewerWidget") -> None:
     overwrote = False
 
     if self.study_node_annotation is not None:
-        if utils.show_warning_popup(f"Point {self.current_task.value} already exists",
-                                    "Do you want to overwrite it?"):
+        if utils.show_warning_popup(title=texts.Titles.WARNING_POINT_EXISTS.format(insert=self.current_task.value),
+                                    content=texts.Contents.QUESTION_OVERWRITE_POINT):
             slicer.mrmlScene.RemoveNode(self.study_node_annotation)
             self.study_node_annotation = None
             self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
@@ -410,8 +418,8 @@ def checkbox(self: "registrationViewerWidget") -> None:
 
     else:
         if self.study_node_annotation is not None:
-            if utils.show_warning_popup(f"Do you want to remove the point you already set for the recurrence?",
-                                        ""):
+            if utils.show_warning_popup(content=texts.Contents.WARNING_REMOVE_RECURRENCE_POINT.value,
+                                        title=texts.Titles.WARNING.value):
                 slicer.mrmlScene.RemoveNode(self.study_node_annotation)
                 self.study_node_annotation = None
                 self.ui_sub_6.study_checkbox.blockSignals(True)
@@ -464,11 +472,11 @@ def on_selection_changed(self: "registrationViewerWidget") -> None:
 
     if self.current_task == tasks.Task.LYMPH_NODE:
 
-        if self.ui_sub_6.study_dropdown.currentText == "Size increased":
+        if self.ui_sub_6.study_dropdown.currentText == texts.Buttons.DROPDOWN_INCREASED.value:
             self.study_lymphnode_size = "Size increased"
-        elif self.ui_sub_6.study_dropdown.currentText == "Size decreased":
+        elif self.ui_sub_6.study_dropdown.currentText == texts.Buttons.DROPDOWN_DECREASED.value:
             self.study_lymphnode_size = "Size decreased"
-        elif self.ui_sub_6.study_dropdown.currentText == "Size same":
+        elif self.ui_sub_6.study_dropdown.currentText == texts.Buttons.DROPDOWN_UNCHANGED.value:
             self.study_lymphnode_size = "Size same"
         else:
             raise ValueError("Unknown lymphnode size")

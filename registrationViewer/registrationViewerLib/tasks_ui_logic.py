@@ -1,12 +1,11 @@
 import logging
 from pathlib import Path
-import random
 
 from typing import Dict, Union, Optional, Callable, TYPE_CHECKING
 
 import slicer
 
-from registrationViewerLib import utils, tasks, view_logic
+from registrationViewerLib import utils, tasks, view_logic, texts
 from registrationViewerLib.custom_logging import log, LogType
 
 
@@ -17,7 +16,8 @@ if TYPE_CHECKING:
 TASK_UI_ADDITIONS: Dict[tasks.Task, Callable[[object], None]] = {
     tasks.Task.LYMPH_NODE: lambda ui: ui.study_dropdown.setVisible(True),
     tasks.Task.RECURRENCE.value: lambda ui: (
-        ui.study_checkbox.setText("Recurrence exists"),
+        ui.study_checkbox.setText(
+            texts.Buttons.DROPDOWN_RECURRENCE_PRESENT.value),
         ui.study_checkbox.setVisible(True)
     )
 }
@@ -39,16 +39,20 @@ def show_task(
     if self.current_task == tasks.Task.LYMPH_NODE:
         description = tasks.TASK_DESCRIPTIONS[self.current_task].format(
             lymphnode_description=self.study_gt_lymphnode_description[self.current_patient_name])
+        self.ui_sub_6.study_center_on_gt_point_button.setText(
+            texts.Buttons.CENTER_ON_GROUND_TRUTH_LYMPHNODE.value)
     elif self.current_task == tasks.Task.RECURRENCE:
         description = tasks.TASK_DESCRIPTIONS[self.current_task].format(
             recurrence_description=self.study_gt_recurrence_description[self.current_patient_name])
+        self.ui_sub_6.study_center_on_gt_point_button.setText("")
     else:
         description = tasks.TASK_DESCRIPTIONS[self.current_task]
+        self.ui_sub_6.study_center_on_gt_point_button.setText(
+            texts.Buttons.CENTER_ON_GROUND_TRUTH_POINT.value)
 
     self.ui_sub_6.study_current_task_description_label.setText(description)  # nopep8
 
     self.ui_sub_6.study_current_task_description_label.setVisible(True)
-    self.ui_sub_6.study_add_point_button.setText("Add point")
     self.ui_sub_6.study_add_point_button.setVisible(True)
     self.ui_sub_6.study_center_on_user_point_button.setVisible(True)
     self.ui_sub_6.study_center_on_gt_point_button.setVisible(True)
@@ -65,6 +69,7 @@ def show_task(
     # we don't want to center on recurrence because we only give a text description
     if self.current_task == tasks.Task.RECURRENCE:
         self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
+        self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
         self.ui_sub_6.study_checkbox.blockSignals(True)
         self.ui_sub_6.study_checkbox.setChecked(False)
         self.ui_sub_6.study_checkbox.blockSignals(False)
@@ -80,8 +85,9 @@ def show_task(
 
         TASK_UI_ADDITIONS[self.current_task.value](self.ui_sub_6)
 
-    utils.show_big_popup_with_callback(content=description.replace("\n", "\n\n"),
-                                       title=f"Task {self.current_combination_idx+1}/{self.study_data_master.number_of_tasks(self.current_radiologist_id)}",
+    utils.show_big_popup_with_callback(title=f"Task {self.current_combination_idx+1}/{self.study_data_master.number_of_tasks(self.current_radiologist_id)}",
+                                       content=description.replace(
+                                           "\n", "\n\n"),
                                        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User started task"))
 
 
