@@ -554,7 +554,11 @@ def show_big_popup_with_callback(
     return False
 
 
-def show_popup_with_image(image_path: str, title: str, on_ok: Callable[[], None] = lambda: None) -> None:
+def show_popup_with_image(
+        image_path: str,
+        title: str,
+        on_ok: Callable[[], None] = lambda: None
+) -> None:
     """Show a message box with an image instead of text."""
     dialog = qt.QDialog(slicer.util.mainWindow())
     dialog.setWindowTitle(title)

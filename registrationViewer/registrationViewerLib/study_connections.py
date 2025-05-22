@@ -63,7 +63,7 @@ def on_pause_button() -> None:
 
     utils.show_big_popup_with_callback(title=texts.Titles.STUDY_PAUSED.value,
                                        content=texts.Contents.OK_TO_RESMUE.value,
-                                       callable=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
+                                       on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
 def on_info_button() -> None:
@@ -72,7 +72,7 @@ def on_info_button() -> None:
 
     utils.show_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
                                 title=texts.Titles.STUDY_INSTRUCTIONS.value,
-                                callable=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
+                                on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
 def btn_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
@@ -273,9 +273,9 @@ def start_study(self: "registrationViewerWidget") -> None:
                                        text_size=16,
                                        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
 
-    if utils.show_popup_with_image('/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                   texts.Titles.USER_ICONS.value,
-                                   lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study")):
+    if utils.show_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+                                   title=texts.Titles.USER_ICONS.value,
+                                   on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study")):
 
         next_task(self, initial=True)
 
@@ -343,8 +343,8 @@ def add_annotation_point(self: "registrationViewerWidget") -> None:
     overwrote = False
 
     if self.study_node_annotation is not None:
-        if utils.show_warning_popup(title=texts.Titles.WARNING_POINT_EXISTS.format(insert=self.current_task.value),
-                                    content=texts.Contents.QUESTION_OVERWRITE_POINT):
+        if utils.show_warning_popup(title=texts.Titles.WARNING_POINT_EXISTS.value.format(insert=self.current_task.value),
+                                    content=texts.Contents.QUESTION_OVERWRITE_POINT.value):
             slicer.mrmlScene.RemoveNode(self.study_node_annotation)
             self.study_node_annotation = None
             self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)

@@ -9,7 +9,7 @@ class Titles(Enum):
 
     WARNING = "Warnung"
 
-    WARNING_POINT_EXISTS = "Punkt {{insert}} existiert bereits"
+    WARNING_POINT_EXISTS = "Punkt {insert} existiert bereits"
 
     STUDY_INSTRUCTIONS = "STEUERUNGSANLEITUNG"
 
