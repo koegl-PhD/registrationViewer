@@ -270,7 +270,7 @@ def start_study(self: "registrationViewerWidget") -> None:
 
     utils.show_big_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION.value,
                                        content=texts.Contents.STUDY_DESCRIPTION.value,
-                                       text_size=16,
+                                       text_size=14,
                                        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
 
     if utils.show_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',

@@ -54,6 +54,12 @@ class Contents(Enum):
         In jeder Aufgabe müssen Sie einen Punkt in der oberen Reihe (dem neueren Scan) setzen, der einer Struktur im unteren Scan entspricht.
 
         Sie können auf den grünen Info-Button klicken, um die Steuerung anzuzeigen, und auf den orangefarbenen Pause-Button klicken, um die Studie zu pausieren.
+
+        Links werden Ihnen vier Buttons angezeigt: zwei zum Zentrieren auf Punkte (einer für den Referenzpunkt und einer für den von Ihnen gesetzten Punkt). Außerdem gibt es einen Button zum Hinzufügen eines Punktes (nach dem Setzen kann dieser an die gewünschte Stelle gezogen werden) sowie einen Button zum Fortfahren mit der nächsten Aufgabe, der aktiviert wird, sobald Sie einen Punkt gesetzt haben.  
+
+        Bei Aufgaben zu Lymphknoten erscheint zusätzlich ein Dropdown-Menü, in dem Sie angeben müssen, ob sich der Lymphknoten in der Größe verändert hat.  
+
+        Schließlich gibt es bei registrierten Fällen einen Button namens "{Buttons.TURN_TRANSFORMATION_ON.value}", mit dem die Registrierung aktiviert wird.
         """
 
     WARNING_REMOVE_RECURRENCE_POINT = "Möchten Sie den Punkt entfernen, den Sie bereits für das Rezidiv gesetzt habt?"
