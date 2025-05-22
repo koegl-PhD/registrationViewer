@@ -266,7 +266,11 @@ def start_study(self: "registrationViewerWidget") -> None:
 
     self.current_combination_idx = 0
 
-    next_task(self, initial=True)
+    if utils.show_popup_with_image('/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+                                   'STEUERUNGSANLEITUNG',
+                                   lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study")):
+
+        next_task(self, initial=True)
 
 
 def btn_call_on_next_task(self: "registrationViewerWidget") -> None:
