@@ -579,7 +579,9 @@ def show_popup_with_image(image_path: str, title: str, on_ok: Callable[[], None]
         dialog.accept()
 
     button_box.accepted.connect(handle_accept)
-    dialog.exec_()
+    result = dialog.exec_()
+
+    return result
 
 
 def has_control_point_with_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
