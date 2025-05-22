@@ -71,7 +71,7 @@ def on_info_button() -> None:
     log(logging.INFO, LogType.U_BUTTON, "User clicked on info button")
 
     utils.show_popup_with_image('/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                'STUDY INFO',
+                                'STEUERUNGSANLEITUNG',
                                 lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 

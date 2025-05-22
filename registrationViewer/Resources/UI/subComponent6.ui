@@ -288,7 +288,7 @@
     </rect>
     </property>
     <property name="text">
-    <string>Current task</string>
+    <string>Laufende Aufgabe</string>
     </property>
       <property name="visible">
    <bool>false</bool>

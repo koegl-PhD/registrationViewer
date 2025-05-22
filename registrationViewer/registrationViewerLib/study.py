@@ -168,8 +168,10 @@ def load_study_volumes(self: "registrationViewerWidget") -> int:
             node_deformation = slicer.mrmlScene.AddNewNodeByClass(
                 "vtkMRMLLinearTransformNode")
         else:
-            node_deformation = slicer.util.loadTransform(path_deformation,
-                                                         {'show': False})[1]
+            node_deformation = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLLinearTransformNode")
+            # node_deformation = slicer.util.loadTransform(path_deformation,
+            #  {'show': False})[1]
 
         if patient_name not in self.study_loaded_data:
             self.study_loaded_data[patient_name] = {}
