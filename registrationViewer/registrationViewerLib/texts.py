@@ -47,6 +47,8 @@ class Buttons(Enum):
 
     START_STUDY = "Studie starten"
 
+    FINISH_STUDY = "Studie beenden"
+
     def __str__(self):
         return self.value
 
