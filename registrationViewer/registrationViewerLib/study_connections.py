@@ -328,7 +328,8 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
     tasks_ui_logic.show_task(self, randomise_starting_offset)
 
     if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
-        self.ui_sub_6.study_next_task_button.setText("Finish study")
+        self.ui_sub_6.study_next_task_button.setText(
+            texts.Buttons.FINISH_STUDY)
 
 
 def btn_call_on_add_annotation_point(self: "registrationViewerWidget") -> None:
