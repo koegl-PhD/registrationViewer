@@ -241,7 +241,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
 
     slicer.util.setMenuBarsVisible(value)
 
-    # slicer.util.setToolbarsVisible(value)
+    slicer.util.setToolbarsVisible(value)
 
     # hide help section
     slicer.util.setModuleHelpSectionVisible(value)
@@ -255,6 +255,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
     # hi ebar at the botto of the window
     slicer.util.setStatusBarVisible(value)
 
+    # dont't uncomment
     # slicer.util.setViewControllersVisible(value)
     layoutManager = slicer.app.layoutManager()
     for view in self.views_all:
@@ -311,7 +312,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    # slicer.util.setPythonConsoleVisible(value)
+    slicer.util.setPythonConsoleVisible(value)
 
 
 def print_affine_matrix(transformNode):

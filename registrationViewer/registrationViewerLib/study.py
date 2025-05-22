@@ -78,6 +78,9 @@ class StudyData:
 
                     for task in tasks.TASK_ORDER.values():
 
+                        # if task != tasks.Task.RECURRENCE:
+                        #     continue
+
                         if patient == "YPEbc0OFC8I" and transform != utils.TransformType.NONE:
                             continue
 
@@ -168,10 +171,10 @@ def load_study_volumes(self: "registrationViewerWidget") -> int:
             node_deformation = slicer.mrmlScene.AddNewNodeByClass(
                 "vtkMRMLLinearTransformNode")
         else:
-            node_deformation = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLLinearTransformNode")
-            # node_deformation = slicer.util.loadTransform(path_deformation,
-            #  {'show': False})[1]
+            # node_deformation = slicer.mrmlScene.AddNewNodeByClass(
+            # "vtkMRMLLinearTransformNode")
+            node_deformation = slicer.util.loadTransform(path_deformation,
+                                                         {'show': False})[1]
 
         if patient_name not in self.study_loaded_data:
             self.study_loaded_data[patient_name] = {}
