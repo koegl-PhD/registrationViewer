@@ -148,27 +148,47 @@ def show_progressbar(ui, idx: int, initial: int, maximum: int):
     return progress_bar
 
 
-def update_progress_window(progress: int, message: str) -> bool:
+def set_up_progress_window(label: str, initial_value: int = 0) -> None:
+
+    slicer.progressWindow = slicer.util.createProgressDialog()
+    slicer.progressWindow.show()
+    slicer.progressWindow.activateWindow()
+    slicer.progressWindow.setValue(initial_value)
+    slicer.progressWindow.setLabelText(label)
+    slicer.app.processEvents()
+
+
+def update_progress_window(progress: Optional[int] = None, message: Optional[str] = None) -> bool:
     if slicer.progressWindow.wasCanceled:
         slicer.progressWindow.close()
         return False
 
-    slicer.progressWindow.setLabelText(message)
-    slicer.progressWindow.setValue(progress)
+    if progress is not None:
+        slicer.progressWindow.setValue(progress)
+
+    if message is not None:
+        slicer.progressWindow.setLabelText(message)
 
     return True
 
 
-def hide_all_points_except(
-    task: Task,
-    points: Dict[Task, Union[None, slicer.vtkMRMLMarkupsFiducialNode]]
-) -> None:
+def hide_all_points_except_current_point(self: "registrationViewerWidget") -> None:
 
-    for current_task, point in points.items():
-        if point is not None and current_task != task:
-            point.SetDisplayVisibility(False)
-        if point is not None and current_task == task:
-            point.SetDisplayVisibility(True)
+    for patient_name, patient_points in self.study_node_groundtruth_points.items():
+
+        # for not current patient hide all
+        if patient_name != self.current_patient_name:
+            for current_task, point in patient_points.items():
+                if point is not None:
+                    point.SetDisplayVisibility(False)
+
+        # for current patient hide all except current task
+        else:
+            for current_task, point in patient_points.items():
+                if point is not None and current_task != self.current_task:
+                    point.SetDisplayVisibility(False)
+                if point is not None and current_task == self.current_task:
+                    point.SetDisplayVisibility(True)
 
 
 def normalize_intensity(data):
@@ -291,7 +311,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    slicer.util.setPythonConsoleVisible(True)
+    slicer.util.setPythonConsoleVisible(value)
 
 
 def print_affine_matrix(transformNode):
@@ -510,14 +530,14 @@ def show_info_popup(content: str, title: str = "Information") -> None:
     msgBox.exec_()
 
 
-def show_pause_popup(content: str, title: str = "Information", on_ok: Callable[[], None] = lambda: None) -> None:
+def show_big_popup_with_callback(content: str, title: str = "Information", on_ok: Callable[[], None] = lambda: None) -> None:
     msgBox = qt.QMessageBox(slicer.util.mainWindow())
     msgBox.setIcon(qt.QMessageBox.Information)
     msgBox.setWindowTitle(title)
     msgBox.setText(content)
     msgBox.setStandardButtons(qt.QMessageBox.Ok)
     msgBox.setStyleSheet("QLabel { font-size: 24px; padding: 30px; }")
-    msgBox.resize(1000, 600)
+    msgBox.resize(1500, 1200)
 
     def handle_button_clicked(button):
         if msgBox.buttonRole(button) == qt.QMessageBox.AcceptRole:
@@ -526,6 +546,40 @@ def show_pause_popup(content: str, title: str = "Information", on_ok: Callable[[
 
     msgBox.buttonClicked.connect(handle_button_clicked)
     msgBox.open()
+
+
+def show_popup_with_image(image_path: str, title: str, on_ok: Callable[[], None] = lambda: None) -> None:
+    """Show a message box with an image instead of text."""
+    dialog = qt.QDialog(slicer.util.mainWindow())
+    dialog.setWindowTitle(title)
+    dialog.setModal(True)
+    layout = qt.QVBoxLayout(dialog)
+
+    # Image
+    label = qt.QLabel()
+    pixmap = qt.QPixmap(image_path)
+
+    screen_geometry = qt.QApplication.desktop().availableGeometry()
+    max_width = screen_geometry.width() * 0.6
+    max_height = screen_geometry.height() * 0.6
+
+    scaled_pixmap = pixmap.scaled(
+        max_width, max_height, qt.Qt.KeepAspectRatio, qt.Qt.SmoothTransformation)
+    label.setPixmap(scaled_pixmap)
+    layout.addWidget(label)
+
+    # OK Button
+    button_box = qt.QDialogButtonBox(qt.QDialogButtonBox.Ok)
+    button_box.button(qt.QDialogButtonBox.Ok).setStyleSheet(
+        "font-size: 24px; padding: 12px 24px;")
+    layout.addWidget(button_box)
+
+    def handle_accept():
+        on_ok()
+        dialog.accept()
+
+    button_box.accepted.connect(handle_accept)
+    dialog.exec_()
 
 
 def has_control_point_with_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
@@ -665,3 +719,61 @@ def set_orthogonal_views(views: List[str]) -> None:
             error_details = traceback.format_exc()
             log(logging.ERROR, LogType.INTERNAL,
                 f"Could not set orthogonal view for {view}: {str(e)}\n{error_details}")
+
+
+def hide_all_volumes_from_views(views: List[str]) -> None:
+    lm = slicer.app.layoutManager()
+
+    for name in views:
+        try:
+            slice_node = lm.sliceWidget(
+                name).sliceLogic().GetSliceCompositeNode()
+
+            slice_node.SetBackgroundVolumeID(None)
+            slice_node.SetForegroundVolumeID(None)
+        except:
+            pass
+
+
+def set_up_synchronisation(self: "registrationViewerWidget") -> None:
+    """
+    Set up synchronisation between the views based on the current transform type
+    """
+
+    if self.current_patient_transform_type == TransformType.NONE:
+        self.unsynchronise_views()
+        self.ui_sub_6.synchronise_views_general.setVisible(False)
+
+    elif self.current_patient_transform_type == TransformType.LINEAR:
+        self.use_only_linear_transform = True
+
+        if self.crosshair:
+            self.crosshair.use_only_linear_transform = True
+
+        self.study_current_transform_type = TransformType.LINEAR
+        self.ui_sub_6.synchronise_views_general.setVisible(True)
+
+    elif self.current_patient_transform_type == TransformType.NONLINEAR:
+        self.use_only_linear_transform = False
+
+        if self.crosshair:
+            self.crosshair.use_only_linear_transform = False
+
+        self.study_current_transform_type = TransformType.NONLINEAR
+        self.ui_sub_6.synchronise_views_general.setVisible(True)
+
+    else:
+        print(f"{self.current_patient_name=}")
+        raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
+
+
+def set_up_data_nodes(self: "registrationViewerWidget") -> None:
+
+    self.node_transform_fixed = self.study_loaded_data[self.current_patient_name]["transform_fixed"]
+    self.node_transform_moving = self.study_loaded_data[self.current_patient_name]["transform_moving"]
+    self.ui_sub_3.inputSelector_fixed.setCurrentNode(
+        self.study_loaded_data[self.current_patient_name]["fixed"])
+    self.ui_sub_3.inputSelector_moving.setCurrentNode(
+        self.study_loaded_data[self.current_patient_name]["moving"])
+    self.ui_sub_3.inputSelector_transformation.setCurrentNode(
+        self.study_loaded_data[self.current_patient_name]["deformation"])

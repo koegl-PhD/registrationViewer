@@ -247,6 +247,17 @@ class Crosshairs():
             node.SetNthControlPointPositionWorld(
                 0, position[0], position[1], position[2])
 
+    def set_crosshair_visibility_in_views(self, views: list[str], visibility: bool) -> None:
+        """
+        Hide the crosshair in the given views.
+        """
+
+        for view in views:
+            if view in self.crosshair_nodes:
+                display_node = self.crosshair_nodes[view].GetDisplayNode()
+                if display_node is not None:
+                    display_node.SetVisibility(visibility)
+
     def set_crosshair_visibility(self) -> None:
         """
         Turns off the crosshair in the current view
