@@ -61,18 +61,19 @@ def on_pause_button() -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "User paused study")
 
-    utils.show_big_popup_with_callback(title=texts.Titles.STUDY_PAUSED,
-                                       content=texts.Contents.OK_TO_RESMUE,
-                                       on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
+    utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_PAUSED,
+                                              content=texts.Contents.OK_TO_RESMUE,
+                                              center_text=True,
+                                              on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
 def on_info_button() -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "User clicked on info button")
 
-    utils.show_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                title=texts.Titles.STUDY_INSTRUCTIONS,
-                                on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
+    utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+                                           title=texts.Titles.STUDY_INSTRUCTIONS,
+                                           on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
 def btn_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
@@ -268,14 +269,14 @@ def start_study(self: "registrationViewerWidget") -> None:
 
     self.current_combination_idx = 0
 
-    utils.show_big_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
-                                       content=texts.Contents.STUDY_DESCRIPTION,
-                                       text_size=14,
-                                       on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
+    utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+                                              content=texts.Contents.STUDY_DESCRIPTION,
+                                              text_size=14,
+                                              on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
 
-    if utils.show_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                   title=texts.Titles.USER_ICONS,
-                                   on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study")):
+    if utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+                                              title=texts.Titles.USER_ICONS,
+                                              on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study")):
 
         next_task(self, initial=True)
 

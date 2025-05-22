@@ -85,10 +85,11 @@ def show_task(
 
         TASK_UI_ADDITIONS[self.current_task.value](self.ui_sub_6)
 
-    utils.show_big_popup_with_callback(title=f"Task {self.current_combination_idx+1}/{self.study_data_master.number_of_tasks(self.current_radiologist_id)}",
-                                       content=description.replace(
-                                           "\n", "\n\n"),
-                                       on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User started task"))
+    utils.show_fullscreen_popup_with_callback(title=f"Aufgabe {self.current_combination_idx+1}/{self.study_data_master.number_of_tasks(self.current_radiologist_id)}",
+                                              content=description.replace(
+        "\n", "\n\n"),
+        center_text=True,
+        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User started task"))
 
 
 def save_point(

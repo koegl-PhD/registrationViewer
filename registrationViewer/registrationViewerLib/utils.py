@@ -530,33 +530,44 @@ def show_info_popup(title: str, content: str) -> None:
     msgBox.exec_()
 
 
-def show_big_popup_with_callback(
+def show_fullscreen_popup_with_callback(
     title: str,
     content: str,
+    center_text: bool = False,
     text_size: int = 24,
     on_ok: Callable[[], None] = lambda: None
-) -> None:
+) -> bool:
+    dialog = qt.QDialog(slicer.util.mainWindow())
+    dialog.setWindowTitle(title)
+    dialog.setModal(True)
+    layout = qt.QVBoxLayout(dialog)
 
-    msgBox = qt.QMessageBox(slicer.util.mainWindow())
-    msgBox.setIcon(qt.QMessageBox.Information)
-    msgBox.setWindowTitle(title)
-    msgBox.setText(content)
-    msgBox.setStandardButtons(qt.QMessageBox.Ok)
-    msgBox.setStyleSheet(
-        f"QLabel {{ font-size: {text_size}px; padding: 30px; }}")
-    msgBox.resize(1500, 2000)
+    label = qt.QLabel(content)
+    label.setWordWrap(True)
+    if center_text:
+        label.setAlignment(qt.Qt.AlignCenter)  # or AlignHCenter | AlignTop
+    label.setStyleSheet(f"font-size: {text_size}px; padding: 30px;")
+    layout.addWidget(label)
 
-    result = msgBox.exec_()
-    if result == qt.QMessageBox.Ok:
+    button_box = qt.QDialogButtonBox(qt.QDialogButtonBox.Ok)
+    button_box.button(qt.QDialogButtonBox.Ok).setStyleSheet(
+        "font-size: 20px; padding: 10px 30px;")
+    layout.addWidget(button_box)
+
+    def accept():
         on_ok()
-        return True
+        dialog.accept()
 
-    return False
+    button_box.accepted.connect(accept)
+
+    dialog.setWindowState(qt.Qt.WindowFullScreen)
+    return dialog.exec_() == qt.QDialog.Accepted
 
 
-def show_popup_with_image(
+def show_fullscreen_popup_with_image(
         image_path: str,
         title: str,
+        center_image: bool = True,
         on_ok: Callable[[], None] = lambda: None
 ) -> None:
     """Show a message box with an image instead of text."""
@@ -576,6 +587,10 @@ def show_popup_with_image(
     scaled_pixmap = pixmap.scaled(
         max_width, max_height, qt.Qt.KeepAspectRatio, qt.Qt.SmoothTransformation)
     label.setPixmap(scaled_pixmap)
+
+    if center_image:
+        label.setAlignment(qt.Qt.AlignCenter)
+
     layout.addWidget(label)
 
     # OK Button
@@ -589,9 +604,9 @@ def show_popup_with_image(
         dialog.accept()
 
     button_box.accepted.connect(handle_accept)
-    result = dialog.exec_()
 
-    return result
+    dialog.setWindowState(qt.Qt.WindowFullScreen)
+    return dialog.exec_() == qt.QDialog.Accepted
 
 
 def has_control_point_with_name(node_fiducial: slicer.vtkMRMLMarkupsFiducialNode,
