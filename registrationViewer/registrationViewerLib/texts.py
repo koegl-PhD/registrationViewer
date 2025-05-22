@@ -18,30 +18,6 @@ class Titles(Enum):
     STUDY_FINISHED = "STUDIE BEENDET"
 
 
-class Contents(Enum):
-
-    NONE = ""
-    STUDY_DESCRIPTION = """
-
-        Im Rahmen dieser Studie werden Sie mehrere Annotierungsaufgaben bearbeiten, die alle demselben Muster folgen.
-        Sie sehen zwei Reihen von CT-Scans, wobei jedes Paar immer vom selben Patienten stammt.
-        Die obere Reihe zeigt den aktuellsten Scan, den wir „Fixed“ nennen; die untere Reihe zeigt einen älteren Scan, den wir „Moving“ nennen.
-
-        Bei einigen Aufgaben sind die beiden Bilder miteinander registriert. Sie können diese Registrierung mit der Taste „t“ oder über die Schaltfläche „SOMETHING“ ein- und ausschalten. Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: Die Position Ihrer Maus in einem Scan wird an der entsprechenden Stelle im anderen Scan angezeigt.
-
-        Achten Sie darauf, die Registrierung zu deaktivieren, wenn Sie von einer Ansicht zur nächsten wechseln.
-        In jeder Aufgabe müssen Sie einen Punkt in der oberen Reihe (dem neueren Scan) setzen, der einer Struktur im unteren Scan entspricht.
-        """
-
-    WARNING_REMOVE_RECURRENCE_POINT = "Möchten Sie den Punkt entfernen, den Sie bereits für das Rezidiv gesetzt habt?"
-
-    QUESTION_OVERWRITE_POINT = "Wollen Sie den Punkt überschreiben?"
-
-    OK_TO_RESMUE = "Klicken Sie auf OK, um fortzufahren"
-
-    STUDY_FINISHED = "Sie haben die Studie abgeschlossen"
-
-
 class Buttons(Enum):
     NONE = ""
 
@@ -61,3 +37,27 @@ class Buttons(Enum):
     TURN_TRANSFORMATION_OFF = "Transformation deaktivieren"
 
     START_STUDY = "Studie starten"
+
+
+class Contents(Enum):
+
+    NONE = ""
+    STUDY_DESCRIPTION = f"""
+
+        Im Rahmen dieser Studie werden Sie mehrere Annotierungsaufgaben bearbeiten, die alle demselben Muster folgen.
+        Sie sehen zwei Reihen von CT-Scans, wobei jedes Paar immer vom selben Patienten stammt.
+        Die obere Reihe zeigt den aktuellsten Scan, den wir „Fixed“ nennen; die untere Reihe zeigt einen älteren Scan, den wir „Moving“ nennen.
+
+        Bei einigen Aufgaben sind die beiden Bilder miteinander registriert. Sie können diese Registrierung mit der Taste „t“ oder über den Button "{Buttons.TURN_TRANSFORMATION_ON.value}" ein- und ausschalten. Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: Die Position Ihrer Maus in einem Scan wird an der entsprechenden Stelle im anderen Scan angezeigt.
+
+        Achten Sie darauf, die Registrierung zu deaktivieren, wenn Sie von einer Ansicht zur nächsten wechseln.
+        In jeder Aufgabe müssen Sie einen Punkt in der oberen Reihe (dem neueren Scan) setzen, der einer Struktur im unteren Scan entspricht.
+        """
+
+    WARNING_REMOVE_RECURRENCE_POINT = "Möchten Sie den Punkt entfernen, den Sie bereits für das Rezidiv gesetzt habt?"
+
+    QUESTION_OVERWRITE_POINT = "Wollen Sie den Punkt überschreiben?"
+
+    OK_TO_RESMUE = "Klicken Sie auf OK, um fortzufahren"
+
+    STUDY_FINISHED = "Sie haben die Studie abgeschlossen"
