@@ -597,7 +597,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Unsynchronise views with transform (t)")
             self.ui_sub_6.synchronise_views_general.setText(
-                texts.Buttons.TURN_TRANSFORMATION_OFF.value)
+                texts.Buttons.TURN_TRANSFORMATION_OFF)
 
             self.use_transform = self.crosshair.use_transform = True
             self.crosshair.use_only_linear_transform = self.use_only_linear_transform
@@ -614,7 +614,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
             self.ui_sub_6.synchronise_views_general.setText(
-                texts.Buttons.TURN_TRANSFORMATION_ON.value)
+                texts.Buttons.TURN_TRANSFORMATION_ON)
 
     def on_synchronise_views_manually(self) -> None:
 
@@ -659,7 +659,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
         self.ui_sub_6.synchronise_views_general.setText(
-            texts.Buttons.TURN_TRANSFORMATION_ON.value)
+            texts.Buttons.TURN_TRANSFORMATION_ON)
 
     def on_linear_only(self) -> None:
         print(f"on linear only")

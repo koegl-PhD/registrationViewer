@@ -794,29 +794,29 @@ def set_up_data_nodes(self: "registrationViewerWidget") -> None:
 def set_button_texts(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.study_center_on_user_point_button.setText(
-        texts.Buttons.CENTER_ON_USER_POINT.value)
+        texts.Buttons.CENTER_ON_USER_POINT)
 
     self.ui_sub_6.study_center_on_gt_point_button.setText(
-        texts.Buttons.CENTER_ON_GROUND_TRUTH_POINT.value
+        texts.Buttons.CENTER_ON_GROUND_TRUTH_POINT
     )
 
     self.ui_sub_6.study_next_task_button.setText(
-        texts.Buttons.NEXT_TASK_BUTTON.value
+        texts.Buttons.NEXT_TASK_BUTTON
     )
 
     self.ui_sub_6.study_add_point_button.setText(
-        texts.Buttons.ADD_POINT_BUTTON.value
+        texts.Buttons.ADD_POINT_BUTTON
     )
 
     self.ui_sub_6.study_dropdown.setItemText(
-        0, texts.Buttons.DROPDOWN_UNCHANGED.value)
+        0, texts.Buttons.DROPDOWN_UNCHANGED)
 
     self.ui_sub_6.study_dropdown.setItemText(
-        1, texts.Buttons.DROPDOWN_INCREASED.value)
+        1, texts.Buttons.DROPDOWN_INCREASED)
 
     self.ui_sub_6.study_dropdown.setItemText(
-        2, texts.Buttons.DROPDOWN_DECREASED.value)
+        2, texts.Buttons.DROPDOWN_DECREASED)
 
     self.ui_sub_6.start_study_by_user_button.setText(
-        texts.Buttons.START_STUDY.value
+        texts.Buttons.START_STUDY
     )

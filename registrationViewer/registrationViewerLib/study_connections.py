@@ -61,8 +61,8 @@ def on_pause_button() -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "User paused study")
 
-    utils.show_big_popup_with_callback(title=texts.Titles.STUDY_PAUSED.value,
-                                       content=texts.Contents.OK_TO_RESMUE.value,
+    utils.show_big_popup_with_callback(title=texts.Titles.STUDY_PAUSED,
+                                       content=texts.Contents.OK_TO_RESMUE,
                                        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
@@ -71,7 +71,7 @@ def on_info_button() -> None:
     log(logging.INFO, LogType.U_BUTTON, "User clicked on info button")
 
     utils.show_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                title=texts.Titles.STUDY_INSTRUCTIONS.value,
+                                title=texts.Titles.STUDY_INSTRUCTIONS,
                                 on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
 
@@ -121,10 +121,10 @@ def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
 
     if self.synchronise_with_displacement_pressed:
         self.ui_sub_6.synchronise_views_general.setText(
-            texts.Buttons.TURN_TRANSFORMATION_OFF.value)
+            texts.Buttons.TURN_TRANSFORMATION_OFF)
     else:
         self.ui_sub_6.synchronise_views_general.setText(
-            texts.Buttons.TURN_TRANSFORMATION_ON.value)
+            texts.Buttons.TURN_TRANSFORMATION_ON)
 
     self.ui_sub_4.synchronise_views_with_transform.setVisible(False)
     self.ui_sub_4.synchronise_views_manually.setVisible(False)
@@ -268,13 +268,13 @@ def start_study(self: "registrationViewerWidget") -> None:
 
     self.current_combination_idx = 0
 
-    utils.show_big_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION.value,
-                                       content=texts.Contents.STUDY_DESCRIPTION.value,
+    utils.show_big_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+                                       content=texts.Contents.STUDY_DESCRIPTION,
                                        text_size=14,
                                        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
 
     if utils.show_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                   title=texts.Titles.USER_ICONS.value,
+                                   title=texts.Titles.USER_ICONS,
                                    on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study")):
 
         next_task(self, initial=True)
@@ -343,8 +343,8 @@ def add_annotation_point(self: "registrationViewerWidget") -> None:
     overwrote = False
 
     if self.study_node_annotation is not None:
-        if utils.show_warning_popup(title=texts.Titles.WARNING_POINT_EXISTS.value.format(insert=self.current_task.value),
-                                    content=texts.Contents.QUESTION_OVERWRITE_POINT.value):
+        if utils.show_warning_popup(title=texts.Titles.WARNING_POINT_EXISTS.format(insert=self.current_task.value),
+                                    content=texts.Contents.QUESTION_OVERWRITE_POINT):
             slicer.mrmlScene.RemoveNode(self.study_node_annotation)
             self.study_node_annotation = None
             self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
@@ -418,8 +418,8 @@ def checkbox(self: "registrationViewerWidget") -> None:
 
     else:
         if self.study_node_annotation is not None:
-            if utils.show_warning_popup(content=texts.Contents.WARNING_REMOVE_RECURRENCE_POINT.value,
-                                        title=texts.Titles.WARNING.value):
+            if utils.show_warning_popup(content=texts.Contents.WARNING_REMOVE_RECURRENCE_POINT,
+                                        title=texts.Titles.WARNING):
                 slicer.mrmlScene.RemoveNode(self.study_node_annotation)
                 self.study_node_annotation = None
                 self.ui_sub_6.study_checkbox.blockSignals(True)
@@ -472,11 +472,11 @@ def on_selection_changed(self: "registrationViewerWidget") -> None:
 
     if self.current_task == tasks.Task.LYMPH_NODE:
 
-        if self.ui_sub_6.study_dropdown.currentText == texts.Buttons.DROPDOWN_INCREASED.value:
+        if self.ui_sub_6.study_dropdown.currentText == texts.Buttons.DROPDOWN_INCREASED:
             self.study_lymphnode_size = "Size increased"
-        elif self.ui_sub_6.study_dropdown.currentText == texts.Buttons.DROPDOWN_DECREASED.value:
+        elif self.ui_sub_6.study_dropdown.currentText == texts.Buttons.DROPDOWN_DECREASED:
             self.study_lymphnode_size = "Size decreased"
-        elif self.ui_sub_6.study_dropdown.currentText == texts.Buttons.DROPDOWN_UNCHANGED.value:
+        elif self.ui_sub_6.study_dropdown.currentText == texts.Buttons.DROPDOWN_UNCHANGED:
             self.study_lymphnode_size = "Size same"
         else:
             raise ValueError("Unknown lymphnode size")

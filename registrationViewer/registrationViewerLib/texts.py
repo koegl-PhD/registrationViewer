@@ -38,6 +38,12 @@ class Buttons(Enum):
 
     START_STUDY = "Studie starten"
 
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
 
 class Contents(Enum):
 
@@ -48,7 +54,7 @@ class Contents(Enum):
         Sie sehen zwei Reihen von CT-Scans, wobei jedes Paar immer vom selben Patienten stammt.
         Die obere Reihe zeigt den aktuellsten Scan, den wir „Fixed“ nennen; die untere Reihe zeigt einen älteren Scan, den wir „Moving“ nennen.
 
-        Bei einigen Aufgaben sind die beiden Bilder miteinander registriert. Sie können diese Registrierung mit der Taste „t“ oder über den Button "{Buttons.TURN_TRANSFORMATION_ON.value}" ein- und ausschalten. Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: Die Position Ihrer Maus in einem Scan wird an der entsprechenden Stelle im anderen Scan angezeigt.
+        Bei einigen Aufgaben sind die beiden Bilder miteinander registriert. Sie können diese Registrierung mit der Taste „t“ oder über den Button "{Buttons.TURN_TRANSFORMATION_ON}" ein- und ausschalten. Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: Die Position Ihrer Maus in einem Scan wird an der entsprechenden Stelle im anderen Scan angezeigt.
 
         Achten Sie darauf, die Registrierung zu deaktivieren, wenn Sie von einer Ansicht zur nächsten wechseln.
         In jeder Aufgabe müssen Sie einen Punkt in der oberen Reihe (dem neueren Scan) setzen, der einer Struktur im unteren Scan entspricht.
@@ -59,7 +65,7 @@ class Contents(Enum):
 
         Bei Aufgaben zu Lymphknoten erscheint zusätzlich ein Dropdown-Menü, in dem Sie angeben müssen, ob sich der Lymphknoten in der Größe verändert hat.  
 
-        Schließlich gibt es bei registrierten Fällen einen Button namens "{Buttons.TURN_TRANSFORMATION_ON.value}", mit dem die Registrierung aktiviert wird.
+        Schließlich gibt es bei registrierten Fällen einen Button namens "{Buttons.TURN_TRANSFORMATION_ON}", mit dem die Registrierung aktiviert wird.
         """
 
     WARNING_REMOVE_RECURRENCE_POINT = "Möchten Sie den Punkt entfernen, den Sie bereits für das Rezidiv gesetzt habt?"

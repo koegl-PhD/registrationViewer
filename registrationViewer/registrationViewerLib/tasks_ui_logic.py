@@ -17,7 +17,7 @@ TASK_UI_ADDITIONS: Dict[tasks.Task, Callable[[object], None]] = {
     tasks.Task.LYMPH_NODE: lambda ui: ui.study_dropdown.setVisible(True),
     tasks.Task.RECURRENCE.value: lambda ui: (
         ui.study_checkbox.setText(
-            texts.Buttons.DROPDOWN_RECURRENCE_PRESENT.value),
+            texts.Buttons.DROPDOWN_RECURRENCE_PRESENT),
         ui.study_checkbox.setVisible(True)
     )
 }
@@ -40,7 +40,7 @@ def show_task(
         description = tasks.TASK_DESCRIPTIONS[self.current_task].format(
             lymphnode_description=self.study_gt_lymphnode_description[self.current_patient_name])
         self.ui_sub_6.study_center_on_gt_point_button.setText(
-            texts.Buttons.CENTER_ON_GROUND_TRUTH_LYMPHNODE.value)
+            texts.Buttons.CENTER_ON_GROUND_TRUTH_LYMPHNODE)
     elif self.current_task == tasks.Task.RECURRENCE:
         description = tasks.TASK_DESCRIPTIONS[self.current_task].format(
             recurrence_description=self.study_gt_recurrence_description[self.current_patient_name])
@@ -48,7 +48,7 @@ def show_task(
     else:
         description = tasks.TASK_DESCRIPTIONS[self.current_task]
         self.ui_sub_6.study_center_on_gt_point_button.setText(
-            texts.Buttons.CENTER_ON_GROUND_TRUTH_POINT.value)
+            texts.Buttons.CENTER_ON_GROUND_TRUTH_POINT)
 
     self.ui_sub_6.study_current_task_description_label.setText(description)  # nopep8
 
