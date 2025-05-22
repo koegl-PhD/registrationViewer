@@ -1,7 +1,5 @@
 from enum import Enum
 
-from typing import Dict, Union
-
 
 class Task(Enum):
     NONE = "no_task"
