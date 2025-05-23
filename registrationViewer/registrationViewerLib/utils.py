@@ -767,10 +767,13 @@ def set_up_synchronisation(self: "registrationViewerWidget") -> None:
     """
     Set up synchronisation between the views based on the current transform type
     """
+    self.ui_sub_6.synchronise_views_general.setVisible(True)
 
     if self.current_patient_transform_type == TransformType.NONE:
         self.unsynchronise_views()
-        self.ui_sub_6.synchronise_views_general.setVisible(False)
+        self.ui_sub_6.synchronise_views_general.setText(
+            texts.Buttons.TRANFORMATION_NOT_AVAILABLE)
+        self.ui_sub_6.synchronise_views_general.setEnabled(False)
 
     elif self.current_patient_transform_type == TransformType.LINEAR:
         self.use_only_linear_transform = True
@@ -779,7 +782,9 @@ def set_up_synchronisation(self: "registrationViewerWidget") -> None:
             self.crosshair.use_only_linear_transform = True
 
         self.study_current_transform_type = TransformType.LINEAR
-        self.ui_sub_6.synchronise_views_general.setVisible(True)
+        self.ui_sub_6.synchronise_views_general.setEnabled(True)
+        self.ui_sub_6.synchronise_views_general.setText(
+            texts.Buttons.TURN_TRANSFORMATION_ON)
 
     elif self.current_patient_transform_type == TransformType.NONLINEAR:
         self.use_only_linear_transform = False
@@ -788,7 +793,9 @@ def set_up_synchronisation(self: "registrationViewerWidget") -> None:
             self.crosshair.use_only_linear_transform = False
 
         self.study_current_transform_type = TransformType.NONLINEAR
-        self.ui_sub_6.synchronise_views_general.setVisible(True)
+        self.ui_sub_6.synchronise_views_general.setEnabled(True)
+        self.ui_sub_6.synchronise_views_general.setText(
+            texts.Buttons.TURN_TRANSFORMATION_ON)
 
     else:
         print(f"{self.current_patient_name=}")
