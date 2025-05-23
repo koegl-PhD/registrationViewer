@@ -834,6 +834,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx]
 
+    @property
+    def current_radiologist_name(self) -> str:
+
+        return self.study_data_master.participants[self.current_radiologist_id]['name']
+
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
