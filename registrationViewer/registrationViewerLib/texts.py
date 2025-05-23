@@ -90,10 +90,13 @@ Schließlich gibt es bei registrierten Fällen einen Button namens "{Buttons.TUR
 
     OK_TO_RESMUE = "Klicken Sie auf OK, um fortzufahren"
 
-    STUDY_FINISHED = "Sie haben die Studie abgeschlossen"
+    STUDY_FINISHED = "Danke {insert}, Sie haben die Studie abgeschlossen!"
 
     def __str__(self):
         return self.value
 
     def __repr__(self):
         return self.value
+
+    def format(self, *args, **kwargs):
+        return self.value.format(*args, **kwargs)

@@ -294,8 +294,10 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
         log(logging.INFO, LogType.U_BUTTON, "User finished study")
-        utils.show_info_popup(texts.Titles.STUDY_FINISHED,
-                              texts.Contents.STUDY_FINISHED)
+        utils.show_fullscreen_popup_with_callback(texts.Titles.STUDY_FINISHED,
+                                                  texts.Contents.STUDY_FINISHED.format(
+                                                      insert=self.current_radiologist_name),
+                                                  center_text=True)
         return
 
     if not initial:
