@@ -11,9 +11,31 @@
    </rect>
   </property>
 
+    <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+        <widget class="QLabel" name="current_rad_name">
+          <property name="text">
+            <string>Sebastian</string>
+          </property>
+          <property name="alignment">
+            <set>Qt::AlignCenter</set>
+          </property>
+        </widget>
+      </item>
+      <item>
+        <widget class="QLabel" name="empty_label">
+          <property name="text">
+            <string></string>
+          </property>
+          <property name="alignment">
+            <set>Qt::AlignCenter</set>
+          </property>
+        </widget>
+      </item>
+      <item>
       <!-- START horizontalLayout_center -->
 <layout class="QGridLayout" name="horizontalLayout_center">
-  
+
    <!-- START centered button -->
    <!-- START horizontalLayout_center2 -->
    <item row="1" alignment="Qt::AlignTop">
@@ -213,7 +235,7 @@
      </item>
 
    <!-- START gridLayout_22 -->
-   <item row="1" alignment="Qt::AlignTop">
+   <item row="1">
    <layout class="QGridLayout" name="gridLayout_22">
 
       <!-- START progress_bar_1 -->
@@ -277,6 +299,16 @@
       <!-- END progress_bar_1 -->
 
       <!-- START progress_bar_1 -->
+      <item row="1">
+        <widget class="QLabel" name="empty_label">
+          <property name="text">
+            <string></string>
+          </property>
+          <property name="alignment">
+            <set>Qt::AlignCenter</set>
+          </property>
+        </widget>
+      </item>
   <item row="2" column="0" colspan="3">
   <widget class="QLabel" name="progress_label_2">
     <property name="geometry">
@@ -530,11 +562,10 @@
          </layout>
          </item>
    <!-- END gridLayout_22 -->
+   </layout>
+            </item>
+            </layout>
+            <!-- END horizontalLayout_center -->
 
-</layout>
-<!-- END horizontalLayout_center -->
-
- </widget>
- <resources/>
- <connections/>
+   </widget>
 </ui>

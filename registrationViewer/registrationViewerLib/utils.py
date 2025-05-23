@@ -836,3 +836,7 @@ def set_button_texts(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.start_study_by_user_button.setText(
         texts.Buttons.START_STUDY
     )
+
+    self.ui_sub_6.current_rad_name.setText(
+        self.current_radiologist_name
+    )
