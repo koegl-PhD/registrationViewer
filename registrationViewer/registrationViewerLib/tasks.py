@@ -48,7 +48,7 @@ Der Abgang ist im Moving Bild markiert (untere Reihe).
 
     Task.LYMPH_NODE: """
 Finde den Lymphknoten im Fixed Bild (obere Reihe) ({lymphnode_description}).
-Setze einen Punkt in die Mitte des Lymphknotens und wähle, ob er sich in der Größe verändert hat.
+Setze einen Punkt in die Mitte des Lymphknotens.
 Der Lymphknoten ist im Moving Bild markiert (untere Reihe).
 """,
 

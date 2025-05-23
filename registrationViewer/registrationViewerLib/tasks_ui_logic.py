@@ -81,7 +81,7 @@ def show_task(
             self.study_node_groundtruth_points[self.current_patient_name][self.current_task], self.group_second_row)
 
     if self.current_task == tasks.Task.LYMPH_NODE:
-        self.ui_sub_6.study_dropdown.setVisible(True)
+        self.ui_sub_6.study_dropdown.setVisible(False)
 
     if self.current_task.value in TASK_UI_ADDITIONS:
 
