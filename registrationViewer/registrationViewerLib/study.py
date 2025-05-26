@@ -32,10 +32,6 @@ class StudyData:
 
         self._create_case_task_transformation_map(randomise=False)
 
-        for rad_id, content in self.case_task_transformation_map.items():
-            for a in content:
-                print(a)
-
     def save(self, json_path=None):
         if json_path is None:
             json_path = self.path
@@ -100,6 +96,8 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
 
     log(logging.INFO, LogType.INTERNAL, "Start loading study data")
 
+    fullscreen_block = utils.show_fullscreen_block("", "")
+
     utils.set_up_progress_window("Loading data...")
 
     end_percentage = load_study_volumes(self)
@@ -107,6 +105,8 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
     load_ground_truth_annotations(self, end_percentage)
 
     slicer.progressWindow.close()
+
+    fullscreen_block.close()
 
     log(logging.INFO, LogType.INTERNAL, "Finished loading study data")
 

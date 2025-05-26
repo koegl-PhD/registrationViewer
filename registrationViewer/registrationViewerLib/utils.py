@@ -565,6 +565,35 @@ def show_fullscreen_popup_with_callback(
     return dialog.exec_() == qt.QDialog.Accepted
 
 
+def show_fullscreen_block(
+    title: str,
+    content: str,
+    center_text: bool = False,
+    text_size: int = 24
+) -> qt.QDialog:
+    """
+    Show a non-blocking fullscreen popup and return its dialog for external closing.
+
+    To close, call .close() on the returned object
+    """
+    dialog = qt.QDialog(slicer.util.mainWindow())
+    dialog.setWindowTitle(title)
+    dialog.setModal(False)
+    layout = qt.QVBoxLayout(dialog)
+
+    label = qt.QLabel(content)
+    label.setWordWrap(True)
+    if center_text:
+        label.setAlignment(qt.Qt.AlignCenter)
+    label.setStyleSheet(f"font-size: {text_size}px; padding: 30px;")
+    layout.addWidget(label)
+
+    dialog.setWindowState(qt.Qt.WindowFullScreen)
+    dialog.show()
+
+    return dialog
+
+
 def show_fullscreen_popup_with_image(
         image_path: str,
         title: str,
