@@ -231,6 +231,7 @@ def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
 def organiser_start_study(self: "registrationViewerWidget") -> None:
     on_simple_ui(self, True)
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
+    self.ui_sub_6.current_rad_name.setVisible(True)
 
     utils.set_button_texts(self)
 

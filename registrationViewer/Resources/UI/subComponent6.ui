@@ -15,8 +15,11 @@
       <item>
         <widget class="QLabel" name="current_rad_name">
           <property name="text">
-            <string>Sebastian</string>
+            <string>rad-name-placeholder</string>
           </property>
+         <property name="visible">
+        <bool>false</bool>
+        </property>
           <property name="alignment">
             <set>Qt::AlignCenter</set>
           </property>
@@ -429,7 +432,7 @@
             <string>Center on your point</string>
          </property>
          <property name="visible">
-            <bool>true</bool>
+            <bool>false</bool>
          </property>
          <property name="enabled">
             <bool>false</bool>
@@ -510,7 +513,7 @@
             <string>Center on original point</string>
          </property>
          <property name="visible">
-            <bool>true</bool>
+            <bool>false</bool>
          </property>
          <property name="enabled">
             <bool>true</bool>
