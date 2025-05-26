@@ -117,10 +117,22 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.views_second_row + self.views_third_row  # + \
         # self.views_double_red + self.views_double_green + self.views_double_yellow
 
+        def toggle_simple_ui_button_visibility(self):
+            self.ui_sub_1.simple_ui_button.setVisible(
+                not self.ui_sub_1.simple_ui_button.isVisible())
+
+        self.console_visible = True
+
+        def toggle_console_visibility(self):
+            self.console_visible = not self.console_visible
+            slicer.util.setPythonConsoleVisible(self.console_visible)
+
         utils.create_shortcuts(
             ('s', self.on_synchronise_views_wth_trasform),
             # ('m', self.on_synchronise_views_manually),
-            ('t', lambda: study_connections.key_call_on_synchronise_views_general(self))
+            ('t', lambda: study_connections.key_call_on_synchronise_views_general(self)),
+            ('Ctrl+k', lambda: toggle_simple_ui_button_visibility(self)),
+            ('Ctrl+p', lambda: toggle_console_visibility(self)),
         )
 
         self.study_current_transform_type: 'utils.TransformType' = utils.TransformType.NONE
@@ -294,7 +306,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Buttons
         self.ui_sub_1.simple_ui_button.connect(
-            "clicked(bool)", lambda: study_connections.on_simple_ui(self))
+            "clicked(bool)", lambda: study_connections.btn_call_on_simple_ui(self))
         self.ui_sub_4.button_2x3.connect(
             "clicked(bool)", view_logic.set_2x3_layout)
         self.ui_sub_4.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(

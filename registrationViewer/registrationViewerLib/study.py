@@ -349,25 +349,19 @@ def clear_annotations(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
 
-def hide_module_parts_for_user_study(self: "registrationViewerWidget") -> None:
-    self.ui_sub_1.simple_ui_button.setHidden(False)
+def hide_organiser_ui_elements(self: "registrationViewerWidget") -> None:
+
     self.ui_sub_2.studyCollapsibleButton.setHidden(True)
     self.ui_sub_3.inputsCollapsibleButton.setHidden(True)
     self.ui_sub_4.controlsCollapsibleButton.setHidden(True)
     self.ui_sub_5.annotationsCollapsibleButton.setHidden(True)
     self.loadingCollapsible.setHidden(True)
 
-    self.ui_sub_6.current_case_label.setVisible(False)
-    self.ui_sub_6.Form_user_study.setHidden(False)
-    self.ui_sub_6.study_center_on_user_point_button.setVisible(False)
-    self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
 
+def show_organiser_ui_elements(self: "registrationViewerWidget") -> None:
 
-def show_module_parts_for_user_study(self: "registrationViewerWidget") -> None:
     self.ui_sub_2.studyCollapsibleButton.setHidden(False)
     self.ui_sub_3.inputsCollapsibleButton.setHidden(False)
     self.ui_sub_4.controlsCollapsibleButton.setHidden(False)
     self.ui_sub_5.annotationsCollapsibleButton.setHidden(False)
     self.loadingCollapsible.setHidden(False)
-
-    self.ui_sub_6.Form_user_study.setHidden(True)

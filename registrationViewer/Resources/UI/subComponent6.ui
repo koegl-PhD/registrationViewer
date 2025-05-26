@@ -372,22 +372,6 @@
       <!-- END progress_bar_1 -->
 
 
-      <!-- START current_case_label -->
-         <item row="4" column="0" colspan="3"  >
-         <widget class="QLabel" name="current_case_label">
-            <property name="text">
-               <string>Case 1/9</string>
-            </property>
-            <property name="visible">
-               <bool>false</bool>
-            </property>
-            <property name="alignment">
-               <set>Qt::AlignCenter</set>
-            </property>
-         </widget>
-         </item>
-      <!-- END current_case_label -->
-
       <!-- START study_current_task_description_label -->
       <item row="5" column="0" colspan="3">
          <widget class="QLabel" name="study_current_task_description_label">
