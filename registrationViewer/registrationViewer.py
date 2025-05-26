@@ -121,11 +121,26 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_1.simple_ui_button.setVisible(
                 not self.ui_sub_1.simple_ui_button.isVisible())
 
+            if self.ui_sub_1.simple_ui_button.isVisible():
+                text = "Organiser showed advanced button"
+            else:
+                text = "Organiser hid advanced button"
+            custom_logging.log(
+                logging.INFO, custom_logging.LogType.INTERNAL, text)
+
         self.console_visible = True
 
         def toggle_console_visibility(self):
-            self.console_visible = not self.console_visible
+
+            if self.console_visible:
+                text = "Organiser opened console"
+            else:
+                text = "Organiser closed console"
+            custom_logging.log(
+                logging.INFO, custom_logging.LogType.INTERNAL, text)
+
             slicer.util.setPythonConsoleVisible(self.console_visible)
+            self.console_visible = not self.console_visible
 
         utils.create_shortcuts(
             ('s', self.on_synchronise_views_wth_trasform),
@@ -205,7 +220,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                            "Size increased",
                                            "Size decreased"] = "Size same"
 
-        self.study_recurrence_present: dict[str, bool] = {}
+        self.study_recurrence_present: bool = False
 
         self.study_progress_bar_patients = None
         self.study_progress_bar_tasks = None
