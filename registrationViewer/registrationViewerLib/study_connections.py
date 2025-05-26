@@ -187,18 +187,18 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
 
     if self.ui_is_simple:
         self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-        slicer.app.setStyleSheet("""
-            QWidget {
-                background-color: #060f21;
-                color: white;
-            }
-            QMainWindow {
-                background-color: #060f21;
-            }
-            qSlicerLayoutManager {
-                background-color: #060f21;
-            }
-            """)
+        # slicer.app.setStyleSheet("""
+        #     QWidget {
+        #         background-color: #060f21;
+        #         color: white;
+        #     }
+        #     QMainWindow {
+        #         background-color: #060f21;
+        #     }
+        #     qSlicerLayoutManager {
+        #         background-color: #060f21;
+        #     }
+        #     """)
 
         study.hide_organiser_ui_elements(self)
 
@@ -238,6 +238,8 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     on_simple_ui(self, True, inital=True)
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
     self.ui_sub_6.current_rad_name.setVisible(True)
+
+    self.ui_sub_1.simple_ui_button.setVisible(False)
 
     utils.set_button_texts(self)
 
