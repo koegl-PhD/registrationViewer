@@ -237,6 +237,17 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
 
     study.load_all_study_data(self)
 
+    l = len(
+        self.study_data_master.case_task_transformation_map[self.current_radiologist_id])
+
+    log(logging.INFO, LogType.INTERNAL, "All tasks to be done START")
+
+    for idx, combination in enumerate(self.study_data_master.case_task_transformation_map[self.current_radiologist_id]):
+        log(logging.INFO, LogType.INTERNAL,
+            f"Combination {idx}/{l - 1}: {combination}")
+
+    log(logging.INFO, LogType.INTERNAL, "All tasks to be done END")
+
 
 def btn_call_on_user_start_study(self: "registrationViewerWidget") -> None:
     log(logging.INFO, LogType.U_BUTTON, "User started study")
@@ -269,7 +280,7 @@ def start_study(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.progress_label_2.setVisible(True)
 
     self.current_combination_idx = int(
-        self.ui_sub_2.starting_task_numberTextEdit.toPlainText()) - 1
+        self.ui_sub_2.starting_task_numberTextEdit.toPlainText())
 
     utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
                                               content=texts.Contents.STUDY_DESCRIPTION,
