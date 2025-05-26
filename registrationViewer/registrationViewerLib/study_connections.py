@@ -181,6 +181,9 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
     if value is not None:
         self.ui_is_simple = value
 
+    log(logging.INFO, LogType.INTERNAL,
+        f"UI set to {'simple' if self.ui_is_simple else 'advanced'}")
+
     utils.set_ui_simplification(self)
 
     mainWindow = slicer.util.mainWindow()
@@ -314,6 +317,10 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
     randomise_starting_offset = False
 
     if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
+        study.save_annotations(self,
+                               task_type=self.current_task,
+                               serialise_to_log=True)
+
         log(logging.INFO, LogType.U_BUTTON, "User finished study")
         utils.show_fullscreen_popup_with_callback(texts.Titles.STUDY_FINISHED,
                                                   texts.Contents.STUDY_FINISHED.format(
