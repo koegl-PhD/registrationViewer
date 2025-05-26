@@ -267,7 +267,8 @@ def start_study(self: "registrationViewerWidget") -> None:
     self.study_progress_bar_tasks.setVisible(True)
     self.ui_sub_6.progress_label_2.setVisible(True)
 
-    self.current_combination_idx = 0
+    self.current_combination_idx = int(
+        self.ui_sub_2.starting_task_numberTextEdit.toPlainText()) - 1
 
     utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
                                               content=texts.Contents.STUDY_DESCRIPTION,

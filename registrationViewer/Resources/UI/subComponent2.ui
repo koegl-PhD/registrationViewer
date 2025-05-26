@@ -78,6 +78,36 @@
       </item>
     <!-- END set_radiologist_id_button -->
 
+    <!-- START starting_task_numberTextEdit -->
+      <item row="15" column="1" alignment="Qt::AlignTop">
+       <widget class="QTextEdit" name="starting_task_numberTextEdit">
+       <property name="maximumSize">
+          <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+         </property>
+        <property name="plainText">
+      <string>0</string>
+    </property>
+       </widget>
+      </item>
+    <!-- END starting_task_numberTextEdit -->
+
+
+    <!-- START start_task_number_label -->
+      <item row="15" column="2" alignment="Qt::AlignTop">
+        <widget class="QLabel" name="start_task_number_label">
+          <property name="text">
+            <string>Choose starting task number (1-based)</string>
+          </property>
+          <property name="alignment">
+            <set>Qt::AlignCenter</set>
+          </property>
+        </widget>
+      </item>
+    <!-- END start_task_number_label -->
+
 
     <!-- START start_study_button -->
       <item row="20" column="0" colspan="3" alignment="Qt::AlignTop">
