@@ -32,10 +32,6 @@ class StudyData:
 
         self._create_case_task_transformation_map(randomise=False)
 
-        for rad_id, content in self.case_task_transformation_map.items():
-            for a in content:
-                print(a)
-
     def save(self, json_path=None):
         if json_path is None:
             json_path = self.path
