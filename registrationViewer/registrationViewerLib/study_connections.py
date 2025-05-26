@@ -170,7 +170,11 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
                      "RegistrationEvaluation")  # nopep8
 
 
-def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None) -> None:
+def btn_call_on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None) -> None:
+    on_simple_ui(self, value)
+
+
+def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None, inital: bool = False) -> None:
 
     self.ui_is_simple = not self.ui_is_simple
 
@@ -196,14 +200,17 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
             }
             """)
 
-        study.hide_module_parts_for_user_study(self)
+        study.hide_organiser_ui_elements(self)
 
         mainWindow.findChild(
             qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
 
-        self.ui_sub_6.start_study_by_user_button.setVisible(True)
-        self.ui_sub_6.pause_button.setVisible(False)
-        self.ui_sub_6.info_button.setVisible(False)
+        if inital:
+            self.ui_sub_6.start_study_by_user_button.setVisible(True)
+            self.ui_sub_6.pause_button.setVisible(False)
+            self.ui_sub_6.info_button.setVisible(False)
+        else:
+            self.ui_sub_6.Form_user_study.setVisible(True)
     else:
         self.ui_sub_1.simple_ui_button.setText("Simple UI")
         slicer.app.setStyleSheet("""
@@ -213,12 +220,11 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None)
             """)
 
         view_logic.disable_sectra_movements()
-        study.show_module_parts_for_user_study(self)
         mainWindow.findChild(
             qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
-        self.ui_sub_6.start_study_by_user_button.setVisible(False)
-        self.ui_sub_6.pause_button.setVisible(False)
-        self.ui_sub_6.info_button.setVisible(False)
+
+        study.show_organiser_ui_elements(self)
+        self.ui_sub_6.Form_user_study.setVisible(False)
 
 
 def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
@@ -229,7 +235,7 @@ def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
 
 
 def organiser_start_study(self: "registrationViewerWidget") -> None:
-    on_simple_ui(self, True)
+    on_simple_ui(self, True, inital=True)
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
     self.ui_sub_6.current_rad_name.setVisible(True)
 

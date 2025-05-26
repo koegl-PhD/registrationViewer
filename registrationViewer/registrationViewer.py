@@ -294,7 +294,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Buttons
         self.ui_sub_1.simple_ui_button.connect(
-            "clicked(bool)", lambda: study_connections.on_simple_ui(self))
+            "clicked(bool)", lambda: study_connections.btn_call_on_simple_ui(self))
         self.ui_sub_4.button_2x3.connect(
             "clicked(bool)", view_logic.set_2x3_layout)
         self.ui_sub_4.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
