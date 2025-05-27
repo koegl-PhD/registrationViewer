@@ -24,8 +24,8 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import annotations_connections, utils, sectra, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, texts
-from registrationViewerLib import custom_logging
+import registrationViewerLib
+from registrationViewerLib import annotations_connections, custom_logging, utils, sectra, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, texts
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -83,20 +83,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTags = []
 
-        from registrationViewerLib import annotations_connections, utils, tasks, crosshairs, sectra, drop_data_loading, texts, view_logic, study_connections, study
-        from registrationViewerLib import custom_logging
+        modules = [
+            "annotations_connections", "utils", "sectra", "crosshairs",
+            "view_logic", "drop_data_loading", "study_connections",
+            "study", "tasks", "texts", "custom_logging"
+        ]
 
-        annotations_connections = importlib.reload(annotations_connections)
-        crosshairs = importlib.reload(crosshairs)
-        drop_data_loading = importlib.reload(drop_data_loading)
-        study_connections = importlib.reload(study_connections)
-        study = importlib.reload(study)
-        tasks = importlib.reload(tasks)
-        utils = importlib.reload(utils)
-        view_logic = importlib.reload(view_logic)
-        custom_logging = importlib.reload(custom_logging)
-        texts = importlib.reload(texts)
-        sectra = importlib.reload(sectra)
+        for name in modules:
+            m = importlib.reload(getattr(registrationViewerLib, name))
+            setattr(registrationViewerLib, name, m)  # type: ignore
+            globals()[name] = m  # type: ignore
 
         self.logger = None
 
