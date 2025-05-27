@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import time
 
-from typing import Optional, Any, Literal, Tuple
+from typing import Optional, Any, Literal, Tuple, List
 
 import numpy as np
 
@@ -213,6 +213,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.study_node_groundtruth_points = {}
 
+        self.arrow_key_filter = utils.ArrowKeyFilter()
+
         # task specific
         self.study_gt_lymphnode_description: dict[str, str] = {}
         self.study_gt_recurrence_description: dict[str, str] = {}
@@ -364,7 +366,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
-        view_logic.disable_sectra_movements()
+        view_logic.disable_sectra_movements(self)
         self.removeObservers()
 
     def enter(self) -> None:
@@ -475,16 +477,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.link_views(self.views_second_row)
         view_logic.link_views(self.views_third_row)
 
-        if self.ui_is_simple and view_logic.disable_sectra is True:
-            view_logic.enable_sectra_movements(self)
-
     def _enable_sectr_movements(self) -> None:
 
         custom_logging.configure_logger(self,
                      "/home/koeglf/Documents/code/registrationViewer/registrationViewer/default.log",
                      "RegistrationEvaluation")  # nopep8
 
-        view_logic.enable_sectra_movements(self)
+        view_logic.setup_sectra_movements(self)
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout

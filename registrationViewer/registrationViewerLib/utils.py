@@ -11,6 +11,7 @@ from typing import Dict, Tuple, Callable, List, Optional
 
 import qt
 import slicer
+from slicer import qMRMLSliceWidget
 import vtk
 
 from registrationViewerLib import texts
@@ -32,6 +33,39 @@ class Colors(Enum):
     GREEN = (47/255, 202/255, 36/255)
     YELLOW = (244/255, 214/255, 49/255)
     RED = (1.0, 0, 0)
+
+
+class ArrowKeyFilter(qt.QObject):
+    def __init__(self) -> None:
+        """Initialize key press tracking."""
+
+        super().__init__()
+        self._pressed: dict[int, bool] = {}
+
+    def eventFilter(self, obj: qt.QObject, event: qt.QEvent) -> bool:
+        """Log 'left'/'right' once per physical key press."""
+
+        if event.type() == qt.QEvent.KeyPress:
+
+            key: int = event.key()
+
+            if key in (qt.Qt.Key_Left, qt.Qt.Key_Right) and not self._pressed.get(key, False):
+
+                direction = "left" if key == qt.Qt.Key_Left else "right"
+                print(direction)
+                log(logging.INFO, LogType.U_BUTTON,
+                    f"Key_Arrow ~ {get_active_slice_view()} ~ {direction}")
+
+                self._pressed[key] = True
+
+        elif event.type() == qt.QEvent.KeyRelease:
+
+            key: int = event.key()
+
+            if key in (qt.Qt.Key_Left, qt.Qt.Key_Right):
+                self._pressed[key] = False
+
+        return False
 
 
 def center_on_point(point: slicer.vtkMRMLMarkupsFiducialNode,
@@ -876,3 +910,17 @@ def set_button_texts(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.current_rad_name.setText(
         self.current_radiologist_name
     )
+
+
+def get_active_slice_view() -> str:
+    """
+    Return the name of the slice view that currently has focus.
+    """
+
+    widget = slicer.app.focusWidget()
+    while widget:
+        if isinstance(widget, qMRMLSliceWidget):
+            return widget.mrmlSliceNode().GetLayoutName()
+        widget = widget.parent()
+
+    return "Unknown"

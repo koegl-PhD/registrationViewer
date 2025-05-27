@@ -29,7 +29,7 @@ class Layout(Enum):
 layout_callback = None
 
 dragging = {}
-disable_sectra = True
+enable_sectra = False
 
 
 def register_layout_callback(callback):
@@ -479,19 +479,31 @@ def attach_continuous_slice_offset_observers(view_name: str) -> None:
         return
 
     mrml_slider.valueIsChanging.connect(lambda position: log(
-        logging.INFO, LogType.U_MOUSE, f"Slider_Scroll ~ {view_name} ~ pos={position:.1f}") if disable_sectra is False else None)
+        logging.INFO, LogType.U_MOUSE, f"Slider_Scroll ~ {view_name} ~ pos={position:.1f}") if enable_sectra is True else None)
 
 
-def enable_sectra_movements(
+def attach_key_arrow_observes(self: "registrationViewerWidget") -> None:
+    """
+    Add left/right arrow key observers
+    """
+    qt.QApplication.instance().installEventFilter(self.arrow_key_filter)
+
+
+def dettach_key_arrow_observes(self: "registrationViewerWidget") -> None:
+    """
+    Remove and delete left/right arrow key observers.
+    """
+    app = qt.QApplication.instance()
+    app.removeEventFilter(self.arrow_key_filter)
+
+
+def setup_sectra_movements(
     self: "registrationViewerWidget",
     sensitivity_pan: float = 1.0,
     sensitivity_window_level: float = 1.0,
     sensitivity_scroll: float = 0.4,
     sensitivity_zoom: float = 0.01
 ):
-
-    global disable_sectra
-    disable_sectra = False
 
     def createDragHandlers(view_name):
         dragging[view_name] = {
@@ -507,33 +519,33 @@ def enable_sectra_movements(
         }
 
         def start_letf_drag(caller, event):
-            if disable_sectra:
+            if not enable_sectra:
                 return
 
             dragging[view_name]["left_click_drag"] = True
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def start_middle_drag(caller, event):
-            if disable_sectra:
+            if not enable_sectra:
                 return
 
             dragging[view_name]["middle_click_drag"] = True
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def start_right_drag(caller, event):
-            if disable_sectra:
+            if not enable_sectra:
                 return
 
             dragging[view_name]["right_click_drag"] = True
             dragging[view_name]["last_mouse_position"] = caller.GetEventPosition()
 
         def start_wheel_scroll_forward(caller, event):
-            if disable_sectra:
+            if not enable_sectra:
                 return
             _wheel_scroll(caller, event, 1)
 
         def start_wheel_scroll_backward(caller, event):
-            if disable_sectra:
+            if not enable_sectra:
                 return
             _wheel_scroll(caller, event, -1)
 
@@ -692,7 +704,7 @@ def enable_sectra_movements(
 
         def drag(caller, event):
 
-            if disable_sectra:
+            if not enable_sectra:
                 return
 
             if _is_left_drag(view_name):
@@ -705,7 +717,7 @@ def enable_sectra_movements(
                 _drag_zoom(caller, event)
 
         def drag_end(caller, event):
-            if disable_sectra:
+            if not enable_sectra:
                 return
 
             if dragging[view_name]["logged_drag_scroll"]:
@@ -762,16 +774,28 @@ def enable_sectra_movements(
 
         attach_continuous_slice_offset_observers(view_name)
 
+    attach_key_arrow_observes(self)
 
-def disable_sectra_movements():
+
+def enable_sectra_movements(self: "registrationViewerWidget") -> None:
+
+    global enable_sectra
+    enable_sectra = True
+
+    attach_key_arrow_observes(self)
+
+
+def disable_sectra_movements(self: "registrationViewerWidget") -> None:
     """
     Disable scrolling through dragging by removing observers from slice views.
 
     This function should be called after enable_scrolling_through_dragging() 
     to remove the drag event observers.
     """
-    global disable_sectra
-    disable_sectra = True
+    global enable_sectra
+    enable_sectra = False
+
+    dettach_key_arrow_observes(self)
 
 
 def configure_roi(node_roi: slicer.vtkMRMLMarkupsROINode,
