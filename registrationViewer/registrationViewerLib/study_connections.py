@@ -5,7 +5,7 @@ from typing import Optional, TYPE_CHECKING, Literal
 import slicer
 import qt
 
-from registrationViewerLib import tasks_ui_logic, tasks, utils, view_logic, study, texts
+from registrationViewerLib import sectra, study, tasks, tasks_ui_logic, texts, utils, view_logic
 from registrationViewerLib.custom_logging import configure_logger, log, LogType
 
 if TYPE_CHECKING:
@@ -190,18 +190,7 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
 
     if self.ui_is_simple:
         self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-        slicer.app.setStyleSheet("""
-            QWidget {
-                background-color: #060f21;
-                color: white;
-            }
-            QMainWindow {
-                background-color: #060f21;
-            }
-            qSlicerLayoutManager {
-                background-color: #060f21;
-            }
-            """)
+        sectra.set_sectra_style_sheet()
 
         view_logic.enable_sectra_movements(self)
 
@@ -218,11 +207,8 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
             self.ui_sub_6.Form_user_study.setVisible(True)
     else:
         self.ui_sub_1.simple_ui_button.setText("Simple UI")
-        slicer.app.setStyleSheet("""
-            QWidget {
-            color: black;
-            }
-            """)
+
+        sectra.set_normal_style_sheet()
 
         view_logic.disable_sectra_movements(self)
         mainWindow.findChild(
