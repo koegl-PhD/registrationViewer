@@ -203,6 +203,8 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
             }
             """)
 
+        view_logic.enable_sectra_movements(self)
+
         study.hide_organiser_ui_elements(self)
 
         mainWindow.findChild(
@@ -222,7 +224,7 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
             }
             """)
 
-        view_logic.disable_sectra_movements()
+        view_logic.disable_sectra_movements(self)
         mainWindow.findChild(
             qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
 
@@ -247,6 +249,9 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     utils.set_button_texts(self)
 
     study.load_all_study_data(self)
+
+    view_logic.setup_sectra_movements(self)
+    view_logic.enable_sectra_movements(self)
 
     l = len(
         self.study_data_master.case_task_transformation_map[self.current_radiologist_id])
