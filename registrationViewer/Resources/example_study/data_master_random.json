@@ -1,17 +1,22 @@
 {
     "path_study": "/home/koeglf/data/preprocess_again/",
-    "path_study_output": "/home/koeglf/data/preprocess_again/study_output_random/",
+    "path_study_output": "/home/koeglf/data/preprocess_again/study_output/",
     "path_study_input_cases": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/",
     "path_study_input_registrations": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans_registrations/",
-    "path_study_input_annotations": "/home/koeglf/data/preprocess_again/ground_truth_annotations/",
+    "path_study_training_cases": "/home/koeglf/data/preprocess_again/example_cases/SerielleCTs_nii_forHumans/",
+    "path_study_training_registrations": "/home/koeglf/data/preprocess_again/example_cases/SerielleCTs_nii_forHumans_registrations/",
     "participants": {
         "rad_4": {
-            "name": "John Smith",
+            "name": "Sebastian Ziegelmayer",
             "patients":
                 [
                     "YPEbc0OFC8I",
                     "yIt7Z7VHXU0"
-                ]
+                ],
+            "config": {
+                "randomise": true,
+                "show_training_cases": true
+            }
         }
     }
 }

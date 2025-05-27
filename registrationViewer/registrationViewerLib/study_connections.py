@@ -237,7 +237,23 @@ def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "Organiser started study")
 
-    organiser_start_study(self)
+    if self.study_data_master.show_training_cases(self.current_radiologist_id):
+        utils.set_buttons_for_test_cases(self)
+
+        self.study_progress_bar_tasks = utils.show_progressbar(
+            ui=self.ui_sub_6,
+            idx=2,
+            initial=1,
+            maximum=3
+        )
+
+        utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+                                                  content=texts.Contents.STUDY_DESCRIPTION,
+                                                  text_size=14,
+                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
+
+    else:
+        organiser_start_study(self)
 
 
 def organiser_start_study(self: "registrationViewerWidget") -> None:
@@ -307,7 +323,19 @@ def start_study(self: "registrationViewerWidget") -> None:
                                               title=texts.Titles.USER_ICONS,
                                               on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study")):
 
-        next_task(self, initial=True)
+        if self.study_data_master.show_training_cases(self.current_radiologist_id):
+            utils.set_buttons_for_test_cases(self)
+            self.study_progress_bar_tasks.setMaximum(3)
+            utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+                                                      content=texts.Contents.STUDY_DESCRIPTION,
+                                                      text_size=14,
+                                                      on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
+
+        else:
+            next_task(self, initial=True)
+
+
+def next_test_task(self: "registrationViewerWidget") -> None:
 
 
 def btn_call_on_next_task(self: "registrationViewerWidget") -> None:

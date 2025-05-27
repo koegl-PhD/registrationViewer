@@ -45,7 +45,7 @@ class StudyData:
         if participant is None:
             raise ValueError(f"Rad id {rad_id} not found in data")
 
-        return participant["patients"]
+        return participant["patients"].copy()
 
     def number_of_tasks(self, rad_id: str) -> int:
         participant = self.participants.get(rad_id, None)
@@ -53,6 +53,41 @@ class StudyData:
             raise ValueError(f"Rad id {rad_id} not found in data")
 
         return len(self.case_task_transformation_map[rad_id])
+
+    def show_training_cases(self, rad_id: str) -> bool:
+        """
+        Returns whether we should show training cases.
+        """
+
+        participant = self.participants.get(rad_id, None)
+        if participant is None:
+            raise ValueError(f"Rad id {rad_id} not found in data")
+
+        return participant["config"]["show_training_cases"]
+
+    def get_training_case_names(self, rad_id: str) -> List[str]:
+        """
+        Returns the names of the cases used for training
+        """
+
+        if not self.show_training_cases(rad_id):
+            return []
+
+        participant = self.participants.get(rad_id, None)
+        if participant is None:
+            raise ValueError(f"Rad id {rad_id} not found in data")
+
+        # list all folders
+        path = self.path_study_training_cases
+
+        if not os.path.exists(path):
+            raise FileNotFoundError(
+                f"Path {path} does not exist. Please check the study configuration.")
+
+        training_cases = sorted([f for f in os.listdir(
+            path) if os.path.isdir(os.path.join(path, f))])
+
+        return training_cases
 
     def _create_case_task_transformation_map(self, randomise: bool) -> None:
         """
@@ -96,7 +131,7 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
 
     log(logging.INFO, LogType.INTERNAL, "Start loading study data")
 
-    fullscreen_block = utils.show_fullscreen_block("", "")
+    # fullscreen_block = utils.show_fullscreen_block("", "")
 
     utils.set_up_progress_window("Loading data...")
 
@@ -106,22 +141,31 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
 
     slicer.progressWindow.close()
 
-    fullscreen_block.close()
+    # fullscreen_block.close()
 
     log(logging.INFO, LogType.INTERNAL, "Finished loading study data")
 
 
 def load_study_volumes(self: "registrationViewerWidget") -> int:
 
+    percentage_patient = 0
+
+    patient_list = self.study_data_master.patient_list(
+        self.current_radiologist_id)
+    paths_cases = [
+        f"{self.study_data_master.path_study_input_cases}{patient_name}" for patient_name in patient_list]
     size = len(self.study_data_master.patient_list(
         self.current_radiologist_id))
 
-    percentage_patient = 0
-    for patient_name in self.study_data_master.patient_list(self.current_radiologist_id):
+    if self.study_data_master.show_training_cases(self.current_radiologist_id):
 
-        print(patient_name)
+        training_list = self.study_data_master.get_training_case_names(
+            self.current_radiologist_id)
+        patient_list += training_list
+        paths_cases += [f"{self.study_data_master.path_study_training_cases}{patient_name}" for patient_name in training_list]
+        size = len(patient_list)
 
-        path_case = f"{self.study_data_master.path_study_input_cases}{patient_name}"
+    for patient_name, path_case in zip(patient_list, paths_cases):
 
         path_volume_fixed, path_volume_moving, \
             _, _, \
@@ -149,19 +193,29 @@ def load_study_volumes(self: "registrationViewerWidget") -> int:
         utils.update_progress_window(
             (percentage_patient * 90) / (size), f"Loading data...")
         percentage_patient += 0.05
-        node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
-                                                         {'show': False})[1]
-        name_transform_fixed = os.path.basename(
-            path_transform_fixed).replace(".h5", "")
+        if path_transform_fixed is None:
+            node_transform_fixed = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLLinearTransformNode")
+            name_transform_fixed = "Fixed_t"
+        else:
+            node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
+                                                             {'show': False})[1]
+            name_transform_fixed = os.path.basename(
+                path_transform_fixed).replace(".h5", "")
         node_transform_fixed.SetName(name_transform_fixed)
 
         utils.update_progress_window(
             (percentage_patient * 90) / (size), f"Loading data...")
         percentage_patient += 0.05
-        node_transform_moving = slicer.util.loadTransform(path_transform_moving,
-                                                          {'show': False})[1]
-        name_transform_moving = os.path.basename(
-            path_transform_moving).replace(".h5", "")
+        if path_transform_moving is None:
+            node_transform_moving = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLLinearTransformNode")
+            name_transform_moving = "Moving_t"
+        else:
+            node_transform_moving = slicer.util.loadTransform(path_transform_moving,
+                                                              {'show': False})[1]
+            name_transform_moving = os.path.basename(
+                path_transform_moving).replace(".h5", "")
         node_transform_moving.SetName(name_transform_moving)
 
         utils.update_progress_window(
@@ -201,6 +255,7 @@ def load_ground_truth_annotations(self: "registrationViewerWidget", start_percen
 
         volume_moving_name = self.study_loaded_data[patient_name]["moving"].GetName(
         )
+
         study_moving_name = volume_moving_name.split('~')[1]
 
         path_annotations = os.path.join(self.study_data_master.path_study_input_cases,

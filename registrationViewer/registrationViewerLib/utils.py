@@ -272,9 +272,9 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
 
     value = not self.ui_is_simple
 
-    slicer.util.setMenuBarsVisible(value)
+    # slicer.util.setMenuBarsVisible(value)
 
-    slicer.util.setToolbarsVisible(value)
+    # slicer.util.setToolbarsVisible(value)
 
     # hide help section
     slicer.util.setModuleHelpSectionVisible(value)
@@ -345,7 +345,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    slicer.util.setPythonConsoleVisible(value)
+    # slicer.util.setPythonConsoleVisible(value)
 
 
 def print_affine_matrix(transformNode):
@@ -910,6 +910,8 @@ def set_button_texts(self: "registrationViewerWidget") -> None:
         self.current_radiologist_name
     )
 
+    self.ui_sub_6.progress_label_2.setText(texts.Contents.CURRENT_TASK)
+
 
 def get_active_slice_view() -> str:
     """
@@ -923,3 +925,20 @@ def get_active_slice_view() -> str:
         widget = widget.parent()
 
     return "Unknown"
+
+
+def set_buttons_for_test_cases(self: "registrationViewerWidget") -> None:
+
+    self.ui_sub_6.synchronise_views_general.setVisible(False)
+
+    self.ui_sub_6.study_center_on_user_point_button.setVisible(False)
+    self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
+
+    self.ui_sub_6.study_add_point_button.setVisible(False)
+
+    self.ui_sub_6.progress_label_2.setText(texts.Contents.TEST_CURRENT_TASK)
+
+
+def reset_buttons_after_test_cases(self: "registrationViewerWidget") -> None:
+
+    self.ui_sub_6.progress_label_2.setText(texts.Contents.CURRENT_TASK)
