@@ -52,7 +52,6 @@ class ArrowKeyFilter(qt.QObject):
             if key in (qt.Qt.Key_Left, qt.Qt.Key_Right) and not self._pressed.get(key, False):
 
                 direction = "left" if key == qt.Qt.Key_Left else "right"
-                print(direction)
                 log(logging.INFO, LogType.U_BUTTON,
                     f"Key_Arrow ~ {get_active_slice_view()} ~ {direction}")
 
