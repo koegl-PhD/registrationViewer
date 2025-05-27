@@ -13,6 +13,9 @@ if TYPE_CHECKING:
 
 
 def set_connections(self: "registrationViewerWidget") -> None:
+    """
+    Set all UI-backend connections
+    """
 
     self.ui_sub_2.data_master_path_edit.currentPathChanged.connect(
         lambda: on_master_json_path_changed(self))
@@ -54,10 +57,16 @@ def set_connections(self: "registrationViewerWidget") -> None:
 
 
 def on_master_json_path_changed(self: "registrationViewerWidget") -> None:
+    """
+    Once the path to the data master changed ste the checkbox to true
+    """
     self.ui_sub_2.data_master_checkbox.setChecked(True)
 
 
 def on_pause_button() -> None:
+    """
+    Opens PAUSE popup and logs that the user paused the study
+    """
 
     log(logging.INFO, LogType.U_BUTTON, "User paused study")
 
@@ -68,6 +77,9 @@ def on_pause_button() -> None:
 
 
 def on_info_button() -> None:
+    """
+    Opens info popup with available controls and logs that the user paused the study
+    """
 
     log(logging.INFO, LogType.U_BUTTON, "User clicked on info button")
 
@@ -102,18 +114,18 @@ def key_call_on_synchronise_views_general(self: "registrationViewerWidget") -> N
 
 def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
 
-    if not self._synchronisation_checks():
+    if not self.synchronisation_checks():
         return
 
     if self.study_current_transform_type == utils.TransformType.NONE:
         pass
     elif self.study_current_transform_type == utils.TransformType.LINEAR:
-        print(f"linear")
+        print("linear")
         self.on_synchronise_views_wth_trasform()
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = True
         self.ui_sub_4.linearTransformationCheckBox.setChecked(True)
     elif self.study_current_transform_type == utils.TransformType.NONLINEAR:
-        print(f"nonlinear")
+        print("nonlinear")
         self.on_synchronise_views_wth_trasform()
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = False
         self.ui_sub_4.linearTransformationCheckBox.setChecked(False)
@@ -190,9 +202,10 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
 
     if self.ui_is_simple:
         self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-        sectra.set_sectra_style_sheet()
-
-        view_logic.enable_sectra_movements(self)
+        # sectra.set_sectra_style_sheet()
+        sectra.enable_sectra_movements()
+        view_logic.attach_continuous_slice_offset_observers(self)
+        view_logic.attach_key_arrow_observers(self)
 
         study.hide_organiser_ui_elements(self)
 
@@ -209,8 +222,10 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
         self.ui_sub_1.simple_ui_button.setText("Simple UI")
 
         sectra.set_normal_style_sheet()
+        sectra.disable_sectra_movements()
+        view_logic.detach_continuous_slice_offset_observers(self)
+        view_logic.dettach_key_arrow_observers(self)
 
-        view_logic.disable_sectra_movements(self)
         mainWindow.findChild(
             qt.QWidget, "PanelDockWidget").setMaximumWidth(1000)
 
@@ -236,8 +251,7 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
 
     study.load_all_study_data(self)
 
-    view_logic.setup_sectra_movements(self)
-    view_logic.enable_sectra_movements(self)
+    sectra.setup_sectra_movements(self)
 
     l = len(
         self.study_data_master.case_task_transformation_map[self.current_radiologist_id])

@@ -1,20 +1,17 @@
 import functools
 import importlib
-import json
 import logging
 import os
-from pathlib import Path
 import time
 
-from typing import Optional, Any, Literal, Tuple, List
+from typing import Optional, Any, Literal, Tuple, Dict, Callable
 
 import numpy as np
 
 import ctk
-import slicer.util
 import vtk
 import slicer
-import qt
+import slicer.util
 from slicer.i18n import tr as _
 from slicer.i18n import translate
 from slicer.ScriptedLoadableModule import (
@@ -27,7 +24,7 @@ from slicer.parameterNodeWrapper import (
 )
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
-from registrationViewerLib import annotations_connections, utils, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, texts
+from registrationViewerLib import annotations_connections, utils, sectra, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, texts
 from registrationViewerLib import custom_logging
 
 
@@ -86,7 +83,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTags = []
 
-        from registrationViewerLib import annotations_connections, utils, tasks, crosshairs, drop_data_loading, texts, view_logic, study_connections, study
+        from registrationViewerLib import annotations_connections, utils, tasks, crosshairs, sectra, drop_data_loading, texts, view_logic, study_connections, study
         from registrationViewerLib import custom_logging
 
         annotations_connections = importlib.reload(annotations_connections)
@@ -99,6 +96,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic = importlib.reload(view_logic)
         custom_logging = importlib.reload(custom_logging)
         texts = importlib.reload(texts)
+        sectra = importlib.reload(sectra)
 
         self.logger = None
 
@@ -214,6 +212,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_node_groundtruth_points = {}
 
         self.arrow_key_filter = utils.ArrowKeyFilter()
+
+        self.slider_observers: Dict[str, Callable[[float], None]] = {}
 
         # task specific
         self.study_gt_lymphnode_description: dict[str, str] = {}
@@ -366,7 +366,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
-        view_logic.disable_sectra_movements(self)
+        sectra.disable_sectra_movements()
+
         self.removeObservers()
 
     def enter(self) -> None:
@@ -483,7 +484,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                      "/home/koeglf/Documents/code/registrationViewer/registrationViewer/default.log",
                      "RegistrationEvaluation")  # nopep8
 
-        view_logic.setup_sectra_movements(self)
+        sectra.setup_sectra_movements(self)
+        sectra.enable_sectra_movements()
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
@@ -587,7 +589,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             logging.error(f"Error loading data: {str(e)}")
             slicer.util.errorDisplay(f"Error loading data: {str(e)}")
 
-    def _synchronisation_checks(self) -> bool:
+    def synchronisation_checks(self) -> bool:
         """
         Internal helper method to validate synchronization prerequisites.
         Returns True if synchronization can proceed, False otherwise.
@@ -608,7 +610,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return True
 
     def on_synchronise_views_wth_trasform(self) -> None:
-        if not self._synchronisation_checks():
+        if not self.synchronisation_checks():
             return
 
         if self.current_patient_list != [] and self.current_patient_transform_type == utils.TransformType.NONE:
@@ -644,7 +646,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_synchronise_views_manually(self) -> None:
 
-        if not self._synchronisation_checks():
+        if not self.synchronisation_checks():
             return
 
         self.synchronise_manually_pressed = not self.synchronise_manually_pressed
@@ -688,7 +690,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             texts.Buttons.TURN_TRANSFORMATION_ON)
 
     def on_linear_only(self) -> None:
-        print(f"on linear only")
+        print("on linear only")
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = not self.use_only_linear_transform
 
     def on_remove_all_data(self) -> None:
