@@ -317,21 +317,11 @@ def load_ground_truth_annotations(self: "registrationViewerWidget", start_percen
                 continue
 
             # create new point with new name and position from current index
-            new_point = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLMarkupsFiducialNode")
             current_position = points_node.GetNthControlPointPosition(
                 current_point_idx)
-            new_point.AddControlPoint(current_position, 'p')
-
-            new_point.LockedOn()
-
-            new_point.SetName(current_point_name)
-
-            utils.show_node_only_in_views(new_point,
-                                          self.views_second_row)
-            new_point.SetDisplayVisibility(False)
-            new_point.GetDisplayNode().SetSelectedColor(utils.Colors.BLUE.value)
-            new_point.GetDisplayNode().SetGlyphScale(1.0)
+            new_point = utils.create_gt_point(current_point_name,
+                                              current_position,
+                                              self.views_second_row)
 
             if patient_name not in self.study_node_groundtruth_points:
                 self.study_node_groundtruth_points[patient_name] = {}

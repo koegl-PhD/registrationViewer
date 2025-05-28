@@ -942,3 +942,27 @@ def set_buttons_for_test_cases(self: "registrationViewerWidget") -> None:
 def reset_buttons_after_test_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.progress_label_2.setText(texts.Contents.CURRENT_TASK)
+
+
+def create_gt_point(
+        point_name: str,
+        position: Tuple[float, float, float],
+        views: List[str]
+) -> slicer.vtkMRMLMarkupsFiducialNode:
+
+    new_point = slicer.mrmlScene.AddNewNodeByClass(
+        "vtkMRMLMarkupsFiducialNode")
+
+    new_point.AddControlPoint(position, 'p')
+
+    new_point.LockedOn()
+
+    new_point.SetName(point_name)
+
+    show_node_only_in_views(new_point, views)
+
+    new_point.SetDisplayVisibility(False)
+    new_point.GetDisplayNode().SetSelectedColor(Colors.BLUE.value)
+    new_point.GetDisplayNode().SetGlyphScale(1.0)
+
+    return new_point
