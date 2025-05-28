@@ -834,6 +834,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return tasks.Task(self.current_patient_task_transform_comb[1])
 
     @property
+    def number_of_tasks(self) -> int:
+
+        if self.current_patient_list == []:
+            return 0
+
+        return self.study_data_master.number_of_tasks(self.current_radiologist_id)
+
+    @property
     def current_patient_name(self) -> str:
         if self.current_patient_task_transform_comb == ("", "", ""):
             return "no_patient"

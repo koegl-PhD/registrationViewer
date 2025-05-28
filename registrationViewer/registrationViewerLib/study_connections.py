@@ -300,8 +300,7 @@ def start_study(self: "registrationViewerWidget") -> None:
         ui=self.ui_sub_6,
         idx=2,
         initial=1,
-        maximum=self.study_data_master.number_of_tasks(
-            self.current_radiologist_id)
+        maximum=self.number_of_tasks
     )
 
     self.ui_sub_6.start_study_by_user_button.setVisible(False)
@@ -349,7 +348,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     randomise_starting_offset = False
 
-    if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
+    if self.current_combination_idx == self.number_of_tasks - 1:
         study.save_annotations(self,
                                task_type=self.current_task,
                                serialise_to_log=True)
@@ -390,7 +389,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     tasks_ui_logic.show_task(self, randomise_starting_offset)
 
-    if self.current_combination_idx == self.study_data_master.number_of_tasks(self.current_radiologist_id) - 1:
+    if self.current_combination_idx == self.number_of_tasks - 1:
         self.ui_sub_6.study_next_task_button.setText(
             texts.Buttons.FINISH_STUDY)
 
