@@ -219,6 +219,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.checkbox_test_cases: bool = False
 
+        self.dummy_patient_step: Literal["start", "end"] = "start"
+
         # task specific
         self.study_gt_lymphnode_description: dict[str, str] = {}
         self.study_gt_recurrence_description: dict[str, str] = {}
@@ -877,6 +879,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return self.current_patient_task_transform_comb[0]
 
     @property
+    def previous_patient_name(self) -> str:
+        if self.current_patient_task_transform_comb == ("", "", ""):
+            return "no_patient"
+
+        if self.current_combination_idx == 0:
+            return "no_patient"
+
+        return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx - 1][0]
+
+    @property
     def current_patient_transform_type(self) -> utils.TransformType:
         if self.current_patient_task_transform_comb == ("", "", ""):
             return utils.TransformType.NONE
@@ -937,6 +949,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             return "Start test task"
 
         return "Start task"
+
+    @property
+    def start_task_log_text_user(self) -> str:
+        if self.is_current_patient_task_transform_comb_test:
+            return "User started test task"
+
+        return "User started task"
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):

@@ -30,6 +30,8 @@ class StudyData:
 
         self.__dict__.update(self.data)
 
+        self.dummy_patient_name = "0e5fp8GltvE"
+
         self._create_case_task_transformation_map(randomise=False)
 
     def save(self, json_path=None):
@@ -99,8 +101,6 @@ class StudyData:
 
         self.case_task_transformation_map = {}
 
-        dummy_patient_name = "0e5fp8GltvE"
-
         for rad_id, rad_content in self.participants.items():
 
             temp_rad_map = []
@@ -111,7 +111,7 @@ class StudyData:
 
                     for task in tasks.TASK_ORDER.values():
 
-                        if patient == dummy_patient_name:  # this is the dummy case
+                        if patient == self.dummy_patient_name:
                             continue
 
                         # if task != tasks.Task.RECURRENCE:
@@ -132,7 +132,7 @@ class StudyData:
             start_and_end_task = []
             for task in tasks.TASK_ORDER.values():
                 start_and_end_task.append(
-                    (dummy_patient_name, task.value, utils.TransformType.NONLINEAR.value))
+                    (self.dummy_patient_name, task.value, utils.TransformType.NONLINEAR.value))
             random.shuffle(start_and_end_task)
 
             temp_rad_map = start_and_end_task + temp_rad_map + start_and_end_task
@@ -155,7 +155,7 @@ class StudyData:
                 print(a)
 
             participant = self.participants.get(rad_id, None)
-            participant["patients"].insert(0, dummy_patient_name)
+            participant["patients"].insert(0, self.dummy_patient_name)
 
 
 def load_all_study_data(self: "registrationViewerWidget") -> None:
@@ -386,7 +386,13 @@ def save_annotations(self: "registrationViewerWidget",
     if self.current_combination_idx < 0:
         return
 
-    path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient_name}/{self.current_patient_transform_type.value}"  # nopep8
+    if self.current_patient_name == self.study_data_master.dummy_patient_name:
+        current_patient_name = self.current_patient_name + \
+            f"_{self.dummy_patient_step}"
+    else:
+        current_patient_name = self.current_patient_name
+
+    path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{current_patient_name}/{self.current_patient_transform_type.value}"  # nopep8
 
     if not os.path.exists(path_patient):
         os.makedirs(path_patient)

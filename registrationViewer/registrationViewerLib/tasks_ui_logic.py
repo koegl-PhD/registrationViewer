@@ -94,7 +94,7 @@ def show_task(
                                               content=description.replace(
         "\n", "\n\n"),
         center_text=True,
-        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, self.start_task_log_text))
+        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, self.start_task_log_text_user))
 
 
 def save_point(

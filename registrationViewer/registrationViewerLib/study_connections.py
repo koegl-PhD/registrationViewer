@@ -406,6 +406,9 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
             self.current_combination_idx += self.combination_starting_offset
             self.applied_starting_offset = True
 
+    if self.previous_patient_name == self.study_data_master.dummy_patient_name and self.current_patient_name != self.study_data_master.dummy_patient_name:
+        self.dummy_patient_step = "end"
+
     utils.set_up_synchronisation(self)
     utils.set_up_data_nodes(self)
 
@@ -427,11 +430,6 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
             self.current_combination_idx - self.number_of_test_tasks + 1)
 
     tasks_ui_logic.show_task(self, randomise_starting_offset)
-
-    print(f"{self.current_combination_idx=}")
-    print(f"{self.number_of_tasks=}")
-    print(f"{self.number_of_test_tasks=}\n")
-    print(f"{self.is_current_patient_task_transform_comb_test=}\n")
 
     self.ui_sub_6.study_next_task_button.setText(
         texts.Buttons.NEXT_TASK_BUTTON)
