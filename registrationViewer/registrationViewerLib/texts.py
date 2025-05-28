@@ -51,6 +51,8 @@ class Buttons(Enum):
 
     FINISH_STUDY = "Studie beenden"
 
+    PROCCED_TO_STUDY = "Zur Studie fortfahren"
+
     def __str__(self):
         return self.value
 
@@ -61,6 +63,7 @@ class Buttons(Enum):
 class Contents(Enum):
 
     NONE = ""
+    STUDY_BEGINS = "HAUPTSTUDIE FÄNGT AN"
     STUDY_DESCRIPTION = f"""
 Im Rahmen dieser Studie werden Sie mehrere Annotierungsaufgaben bearbeiten, die alle demselben Muster folgen.
 Sie sehen zwei Reihen von CT-Scans, wobei jedes Paar immer vom selben Patienten stammt.
@@ -85,15 +88,6 @@ Bei Aufgaben zu Lymphknoten erscheint zusätzlich ein Dropdown-Menü, in dem Sie
 
 Schließlich gibt es bei registrierten Fällen einen Button namens "{Buttons.TURN_TRANSFORMATION_ON}", mit dem die Registrierung aktiviert wird.
         """
-
-    TEST_STUDY_DESCRIPTION = f"""
-You will be shown 3 test tasks that are not part of the actual study. Use them to get used to the interface and the tasks.
-The first task will show the same image twwice, so the registration is perfect.
-The second task will show the same image, but the lower image is rotated by 14°, so the registration is still perfect.
-The third task will show a real example, with the images coming from two different session, so the registration is not perfect.
-In all tasks, you can toggle the registration with the "{Buttons.TURN_TRANSFORMATION_ON}" button or by pressing the "t" key.
-Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: Die Position Ihrer Maus in einem Scan wird an der entsprechenden Stelle im anderen Scan angezeigt.
-    """
 
     TEST_STUDY_DESCRIPTION = f"""
 Vor Beginn der eigentlichen Studie werden Ihnen drei Testaufgaben gezeigt. Diese dienen dazu, sich mit der Oberfläche und den Aufgaben vertraut zu machen.

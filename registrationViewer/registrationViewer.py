@@ -211,6 +211,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.slider_observers: Dict[str, Callable[[float], None]] = {}
 
+        self.first_time_description_show: bool = True
+        self.first_time_test_description_show: bool = True
+
+        self.checkbox_test_cases: bool = False
+
         # task specific
         self.study_gt_lymphnode_description: dict[str, str] = {}
         self.study_gt_recurrence_description: dict[str, str] = {}
@@ -839,17 +844,27 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_list == []:
             return 0
 
-        return self.study_data_master.number_of_tasks(self.current_radiologist_id)
+        return self.study_data_master.number_of_tasks(self.current_radiologist_id) - self.number_of_test_tasks
 
     @property
-    def show_traininig_cases(self) -> bool:
+    def number_of_test_tasks(self) -> int:
+        if self.current_patient_list == []:
+            return 0
+
+        if self.show_test_cases:
+            return 3
+        else:
+            return 0
+
+    @property
+    def show_test_cases(self) -> bool:
         """
         Check if the training cases should be shown.
         """
         if self.current_patient_list == []:
             return False
 
-        return self.study_data_master.show_training_cases(self.current_radiologist_id)
+        return self.checkbox_test_cases
 
     @property
     def current_patient_name(self) -> str:
@@ -876,10 +891,49 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx]
 
+    def patient_task_transform_comb(self, idx: int) -> Tuple[str, str, str]:
+        if self.current_patient_list == []:
+            return ("", "", "")
+
+        return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][idx]
+
+    @property
+    def is_current_patient_task_transform_comb_test(self) -> bool:
+        """
+        Check if the current combination is a test task.
+        """
+        if self.current_patient_task_transform_comb == ("", "", ""):
+            return False
+
+        return tasks.Task(self.current_patient_task_transform_comb[1]) in [tasks.Task.TEST_RIGID, tasks.Task.TEST_ROTATION, tasks.Task.TEST_NONLINEAR]
+
+    def is_patient_task_transform_comb_test(self, idx: int) -> bool:
+        """
+        Check if the current combination is a test task.
+        """
+        if self.current_patient_task_transform_comb == ("", "", ""):
+            return False
+
+        return tasks.Task(self.patient_task_transform_comb(idx)[1]) in [tasks.Task.TEST_RIGID, tasks.Task.TEST_ROTATION, tasks.Task.TEST_NONLINEAR]
+
     @property
     def current_radiologist_name(self) -> str:
 
         return self.study_data_master.participants[self.current_radiologist_id]['name']
+
+    @property
+    def next_task_log_text(self) -> str:
+        if self.is_current_patient_task_transform_comb_test:
+            return "Next test task"
+
+        return "Next task"
+
+    @property
+    def start_task_log_text(self) -> str:
+        if self.is_current_patient_task_transform_comb_test:
+            return "Start test task"
+
+        return "Start task"
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):

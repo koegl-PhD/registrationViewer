@@ -124,7 +124,22 @@ class StudyData:
             if randomise:
                 random.shuffle(temp_rad_map)
 
+            test_names = self.get_training_case_names(rad_id)
+            test_comb_1 = (test_names[0], tasks.Task.TEST_RIGID.value,
+                           utils.TransformType.LINEAR.value)
+            test_comb_2 = (test_names[1], tasks.Task.TEST_ROTATION.value,
+                           utils.TransformType.LINEAR.value)
+            test_comb_3 = (test_names[2], tasks.Task.TEST_NONLINEAR.value,
+                           utils.TransformType.NONLINEAR.value)
+
+            temp_rad_map.insert(0, test_comb_1)
+            temp_rad_map.insert(1, test_comb_2)
+            temp_rad_map.insert(2, test_comb_3)
+
             self.case_task_transformation_map[rad_id] = temp_rad_map
+
+            for a in self.case_task_transformation_map[rad_id]:
+                print(a)
 
 
 def load_all_study_data(self: "registrationViewerWidget") -> None:
@@ -225,10 +240,10 @@ def load_study_volumes(self: "registrationViewerWidget") -> int:
             node_deformation = slicer.mrmlScene.AddNewNodeByClass(
                 "vtkMRMLLinearTransformNode")
         else:
-            # node_deformation = slicer.mrmlScene.AddNewNodeByClass(
-            # "vtkMRMLLinearTransformNode")
-            node_deformation = slicer.util.loadTransform(path_deformation,
-                                                         {'show': False})[1]
+            node_deformation = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLLinearTransformNode")
+            # node_deformation = slicer.util.loadTransform(path_deformation,
+            #  {'show': False})[1]
 
         if patient_name not in self.study_loaded_data:
             self.study_loaded_data[patient_name] = {}
@@ -329,6 +344,20 @@ def load_ground_truth_annotations(self: "registrationViewerWidget", start_percen
             self.study_node_groundtruth_points[patient_name][task_name] = new_point
 
         slicer.mrmlScene.RemoveNode(points_node)
+
+    # add dummy test points
+    test_patient_names = self.study_data_master.get_training_case_names(
+        self.current_radiologist_id)
+
+    self.study_node_groundtruth_points[test_patient_names[0]] = {tasks.Task.TEST_RIGID: utils.create_gt_point(tasks.Task.TEST_RIGID.value,
+                                                                                                              (0, 0, 0),
+                                                                                                              [])}
+    self.study_node_groundtruth_points[test_patient_names[1]] = {tasks.Task.TEST_ROTATION: utils.create_gt_point(tasks.Task.TEST_ROTATION.value,
+                                                                                                                 (0, 0, 0),
+                                                                                                                 [])}
+    self.study_node_groundtruth_points[test_patient_names[2]] = {tasks.Task.TEST_NONLINEAR: utils.create_gt_point(tasks.Task.TEST_NONLINEAR.value,
+                                                                                                                  (0, 0, 0),
+                                                                                                                  [])}
 
     slicer.progressWindow.close()
 

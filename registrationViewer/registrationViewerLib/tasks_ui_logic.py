@@ -76,6 +76,9 @@ def show_task(
         self.ui_sub_6.study_next_task_button.setEnabled(True)
         self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 
+    # we don't want to center on test tasks because those are not real tasks
+    elif self.is_current_patient_task_transform_comb_test:
+        self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
     else:
         utils.center_on_point(
             self.study_node_groundtruth_points[self.current_patient_name][self.current_task], self.group_second_row)
@@ -91,7 +94,7 @@ def show_task(
                                               content=description.replace(
         "\n", "\n\n"),
         center_text=True,
-        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User started task"))
+        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, self.start_task_log_text))
 
 
 def save_point(

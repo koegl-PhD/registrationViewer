@@ -17,6 +17,10 @@ def set_connections(self: "registrationViewerWidget") -> None:
     Set all UI-backend connections
     """
 
+    self.ui_sub_2.test_examples_SetCheckBox.toggled.connect(
+        lambda: btn_call_on_test_example_checkbox(self)
+    )
+
     self.ui_sub_2.data_master_path_edit.currentPathChanged.connect(
         lambda: on_master_json_path_changed(self))
 
@@ -182,6 +186,11 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
                      "RegistrationEvaluation")  # nopep8
 
 
+def btn_call_on_test_example_checkbox(self: "registrationViewerWidget") -> None:
+
+    self.checkbox_test_cases = self.ui_sub_2.test_examples_SetCheckBox.isChecked()
+
+
 def btn_call_on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None) -> None:
     on_simple_ui(self, value)
 
@@ -237,23 +246,7 @@ def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "Organiser started study")
 
-    if self.show_traininig_cases:
-        utils.set_buttons_for_test_cases(self)
-
-        self.study_progress_bar_tasks = utils.show_progressbar(
-            ui=self.ui_sub_6,
-            idx=2,
-            initial=1,
-            maximum=3
-        )
-
-        utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
-                                                  content=texts.Contents.STUDY_DESCRIPTION,
-                                                  text_size=14,
-                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
-
-    else:
-        organiser_start_study(self)
+    organiser_start_study(self)
 
 
 def organiser_start_study(self: "registrationViewerWidget") -> None:
@@ -264,6 +257,9 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     self.ui_sub_1.simple_ui_button.setVisible(False)
 
     utils.set_button_texts(self)
+    print(f"{self.show_test_cases=}")
+    if self.show_test_cases:
+        utils.set_buttons_for_test_cases(self)
 
     study.load_all_study_data(self)
 
@@ -296,59 +292,74 @@ def start_study(self: "registrationViewerWidget") -> None:
     1. when task is started data should be shown
 
     """
-    self.study_progress_bar_tasks = utils.show_progressbar(
-        ui=self.ui_sub_6,
-        idx=2,
-        initial=1,
-        maximum=self.number_of_tasks
-    )
-
     self.ui_sub_6.start_study_by_user_button.setVisible(False)
     self.ui_sub_6.pause_button.setVisible(True)
     self.ui_sub_6.info_button.setVisible(True)
     self.ui_sub_6.study_next_task_button.setVisible(True)
-    self.study_progress_bar_tasks.setVisible(True)
-    self.ui_sub_6.progress_label_2.setVisible(True)
 
     self.current_combination_idx = int(
         self.ui_sub_2.starting_task_numberTextEdit.toPlainText())
 
-    utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
-                                              content=texts.Contents.STUDY_DESCRIPTION,
-                                              text_size=14,
-                                              on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
-
-    if utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                              title=texts.Titles.USER_ICONS,
-                                              on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study")):
-
-        if self.study_data_master.show_training_cases(self.current_radiologist_id):
-            utils.set_buttons_for_test_cases(self)
-            self.study_progress_bar_tasks.setMaximum(3)
-            utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
-                                                      content=texts.Contents.STUDY_DESCRIPTION,
-                                                      text_size=14,
-                                                      on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
-
-        else:
-            next_task(self, initial=True)
-
-
-def next_test_task(self: "registrationViewerWidget") -> None:
+    next_task(self, initial=True)
 
 
 def btn_call_on_next_task(self: "registrationViewerWidget") -> None:
 
-    log(logging.INFO, LogType.U_BUTTON, "Next task")
+    log(logging.INFO, LogType.U_BUTTON, self.next_task_log_text)
 
     next_task(self, initial=False)
 
 
 def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
+    if self.show_test_cases and self.first_time_test_description_show and self.is_current_patient_task_transform_comb_test:
+        utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+                                                  content=texts.Contents.TEST_STUDY_DESCRIPTION,
+                                                  text_size=14,
+                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed test study description"))
+
+        utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+                                               title=texts.Titles.USER_ICONS,
+                                               on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
+
+        self.study_progress_bar_tasks = utils.show_progressbar(
+            ui=self.ui_sub_6,
+            idx=2,
+            initial=1,
+            maximum=3
+        )
+
+        self.first_time_test_description_show = False
+
+    if self.first_time_description_show and not self.is_patient_task_transform_comb_test(self.current_combination_idx + 1):
+
+        utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+                                                  content=texts.Contents.STUDY_BEGINS,
+                                                  text_size=40,
+                                                  center_text=True,
+                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study begins"))
+
+        utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+                                                  content=texts.Contents.STUDY_DESCRIPTION,
+                                                  text_size=14,
+                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
+
+        utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+                                               title=texts.Titles.USER_ICONS,
+                                               on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
+
+        self.study_progress_bar_tasks = utils.show_progressbar(
+            ui=self.ui_sub_6,
+            idx=2,
+            initial=1,
+            maximum=self.number_of_tasks
+        )
+
+        self.first_time_description_show = False
+
     randomise_starting_offset = False
 
-    if self.current_combination_idx == self.number_of_tasks - 1:
+    if self.current_combination_idx == self.number_of_tasks + self.number_of_test_tasks - 1:
         study.save_annotations(self,
                                task_type=self.current_task,
                                serialise_to_log=True)
@@ -376,20 +387,42 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
     utils.set_up_synchronisation(self)
     utils.set_up_data_nodes(self)
 
-    log(logging.INFO, LogType.INTERNAL, "Start task")
+    log(logging.INFO, LogType.INTERNAL, self.start_task_log_text)
 
     print(self.current_patient_task_transform_comb)
 
     self.ui_sub_6.study_next_task_button.setEnabled(False)
+
     self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
 
     self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
 
-    self.study_progress_bar_tasks.setValue(self.current_combination_idx + 1)
+    if self.is_current_patient_task_transform_comb_test:
+        self.study_progress_bar_tasks.setValue(
+            self.current_combination_idx + 1)
+    else:
+        self.study_progress_bar_tasks.setValue(
+            self.current_combination_idx - self.number_of_test_tasks + 1)
 
     tasks_ui_logic.show_task(self, randomise_starting_offset)
 
-    if self.current_combination_idx == self.number_of_tasks - 1:
+    print(f"{self.current_combination_idx=}")
+    print(f"{self.number_of_tasks=}")
+    print(f"{self.number_of_test_tasks=}\n")
+    print(f"{self.is_current_patient_task_transform_comb_test=}\n")
+
+    self.ui_sub_6.study_next_task_button.setText(
+        texts.Buttons.NEXT_TASK_BUTTON)
+
+    if self.show_test_cases:
+        if self.is_current_patient_task_transform_comb_test:
+            self.ui_sub_6.study_next_task_button.setText(
+                texts.Buttons.TEST_NEXT_TASK_BUTTON)
+        if self.current_combination_idx == self.number_of_test_tasks - 1:
+            self.ui_sub_6.study_next_task_button.setText(
+                texts.Buttons.PROCCED_TO_STUDY)
+
+    if self.current_combination_idx == self.number_of_tasks + self.number_of_test_tasks - 1:
         self.ui_sub_6.study_next_task_button.setText(
             texts.Buttons.FINISH_STUDY)
 
