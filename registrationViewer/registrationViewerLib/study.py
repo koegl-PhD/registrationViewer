@@ -99,6 +99,8 @@ class StudyData:
 
         self.case_task_transformation_map = {}
 
+        dummy_patient_name = "0e5fp8GltvE"
+
         for rad_id, rad_content in self.participants.items():
 
             temp_rad_map = []
@@ -108,6 +110,9 @@ class StudyData:
                 for transform in utils.TransformType:
 
                     for task in tasks.TASK_ORDER.values():
+
+                        if patient == dummy_patient_name:  # this is the dummy case
+                            continue
 
                         # if task != tasks.Task.RECURRENCE:
                         #     continue
@@ -123,6 +128,14 @@ class StudyData:
 
             if randomise:
                 random.shuffle(temp_rad_map)
+
+            start_and_end_task = []
+            for task in tasks.TASK_ORDER.values():
+                start_and_end_task.append(
+                    (dummy_patient_name, task.value, utils.TransformType.NONLINEAR.value))
+            random.shuffle(start_and_end_task)
+
+            temp_rad_map = start_and_end_task + temp_rad_map + start_and_end_task
 
             test_names = self.get_training_case_names(rad_id)
             test_comb_1 = (test_names[0], tasks.Task.TEST_RIGID.value,
@@ -140,6 +153,9 @@ class StudyData:
 
             for a in self.case_task_transformation_map[rad_id]:
                 print(a)
+
+            participant = self.participants.get(rad_id, None)
+            participant["patients"].insert(0, dummy_patient_name)
 
 
 def load_all_study_data(self: "registrationViewerWidget") -> None:
