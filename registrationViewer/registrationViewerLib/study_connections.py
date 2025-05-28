@@ -420,7 +420,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     self.ui_sub_6.study_next_task_button.setEnabled(False)
 
-    self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
+    self.ui_sub_6.study_next_task_button.toolTip = texts.ToolTips.ADD_POINT_FIRST
 
     self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
 
@@ -527,7 +527,7 @@ def checkbox(self: "registrationViewerWidget") -> None:
     if self.study_recurrence_present:
         if self.study_node_annotation is None:
             self.ui_sub_6.study_next_task_button.setEnabled(False)
-            self.ui_sub_6.study_next_task_button.toolTip = "Please add annotation point first"  # nopep8
+            self.ui_sub_6.study_next_task_button.toolTip = texts.ToolTips.ADD_POINT_FIRST
 
         else:
             self.ui_sub_6.study_next_task_button.setEnabled(True)

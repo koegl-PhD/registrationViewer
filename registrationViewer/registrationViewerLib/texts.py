@@ -121,3 +121,19 @@ Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: 
 
     def format(self, *args, **kwargs):
         return self.value.format(*args, **kwargs)
+
+
+class ToolTips(Enum):
+
+    NONE = ""
+
+    ADD_POINT_FIRST = "Bitte fügen Sie zuerst einen Punkt hinzu"
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+    def format(self, *args, **kwargs):
+        return self.value.format(*args, **kwargs)
