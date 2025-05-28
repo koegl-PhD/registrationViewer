@@ -211,7 +211,7 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
 
     if self.ui_is_simple:
         self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-        # sectra.set_sectra_style_sheet()
+        sectra.set_sectra_style_sheet()
         sectra.enable_sectra_movements()
         view_logic.attach_continuous_slice_offset_observers(self)
         view_logic.attach_key_arrow_observers(self)
@@ -316,6 +316,9 @@ def btn_call_on_next_task(self: "registrationViewerWidget") -> None:
 def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     if self.show_test_cases and self.first_time_test_description_show and self.is_current_patient_task_transform_comb_test:
+
+        fullscreen_block = utils.show_fullscreen_block("", "")
+
         utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
                                                   content=texts.Contents.TEST_STUDY_DESCRIPTION,
                                                   text_size=14,
@@ -324,6 +327,8 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
                                                title=texts.Titles.USER_ICONS,
                                                on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
+
+        fullscreen_block.close()
 
         self.study_progress_bar_tasks = utils.show_progressbar(
             ui=self.ui_sub_6,
@@ -335,6 +340,8 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         self.first_time_test_description_show = False
 
     if self.first_time_description_show and not self.is_patient_task_transform_comb_test(self.current_combination_idx + 1):
+
+        fullscreen_block = utils.show_fullscreen_block("", "")
 
         if self.show_test_cases:
             utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
@@ -351,6 +358,8 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
                                                title=texts.Titles.USER_ICONS,
                                                on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
+
+        fullscreen_block.close()
 
         self.study_progress_bar_tasks = utils.show_progressbar(
             ui=self.ui_sub_6,

@@ -146,7 +146,7 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
 
     log(logging.INFO, LogType.INTERNAL, "Start loading study data")
 
-    # fullscreen_block = utils.show_fullscreen_block("", "")
+    fullscreen_block = utils.show_fullscreen_block("", "")
 
     utils.set_up_progress_window("Loading data...")
 
@@ -156,7 +156,7 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
 
     slicer.progressWindow.close()
 
-    # fullscreen_block.close()
+    fullscreen_block.close()
 
     log(logging.INFO, LogType.INTERNAL, "Finished loading study data")
 
@@ -240,10 +240,10 @@ def load_study_volumes(self: "registrationViewerWidget") -> int:
             node_deformation = slicer.mrmlScene.AddNewNodeByClass(
                 "vtkMRMLLinearTransformNode")
         else:
-            node_deformation = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLLinearTransformNode")
-            # node_deformation = slicer.util.loadTransform(path_deformation,
-            #  {'show': False})[1]
+            # node_deformation = slicer.mrmlScene.AddNewNodeByClass(
+            # "vtkMRMLLinearTransformNode")
+            node_deformation = slicer.util.loadTransform(path_deformation,
+                                                         {'show': False})[1]
 
         if patient_name not in self.study_loaded_data:
             self.study_loaded_data[patient_name] = {}
