@@ -260,6 +260,9 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     print(f"{self.show_test_cases=}")
     if self.show_test_cases:
         utils.set_buttons_for_test_cases(self)
+    else:
+        a = self.study_data_master.case_task_transformation_map[self.current_radiologist_id]
+        self.study_data_master.case_task_transformation_map[self.current_radiologist_id] = a[3:]
 
     study.load_all_study_data(self)
 
@@ -297,7 +300,7 @@ def start_study(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.info_button.setVisible(True)
     self.ui_sub_6.study_next_task_button.setVisible(True)
 
-    self.current_combination_idx = int(
+    self.combination_starting_offset = int(
         self.ui_sub_2.starting_task_numberTextEdit.toPlainText())
 
     next_task(self, initial=True)
@@ -333,11 +336,12 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     if self.first_time_description_show and not self.is_patient_task_transform_comb_test(self.current_combination_idx + 1):
 
-        utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
-                                                  content=texts.Contents.STUDY_BEGINS,
-                                                  text_size=40,
-                                                  center_text=True,
-                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study begins"))
+        if self.show_test_cases:
+            utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+                                                      content=texts.Contents.STUDY_BEGINS,
+                                                      text_size=40,
+                                                      center_text=True,
+                                                      on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study begins"))
 
         utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
                                                   content=texts.Contents.STUDY_DESCRIPTION,
@@ -379,10 +383,19 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         study.clear_current_user_annotation(self)
 
         self.current_combination_idx += 1
+        self.current_test_combination_idx += 1
 
         # if the previous patient was the same, randomize the offsets, so it seems like each point is new
         if self.get_combination(self.current_combination_idx - 1)[0] == self.get_combination(self.current_combination_idx)[0]:
             randomise_starting_offset = True
+    else:
+        if self.show_test_cases:
+            if self.current_test_combination_idx == 3:
+                self.current_combination_idx += self.combination_starting_offset
+        elif not self.applied_starting_offset:
+            print("applied")
+            self.current_combination_idx += self.combination_starting_offset
+            self.applied_starting_offset = True
 
     utils.set_up_synchronisation(self)
     utils.set_up_data_nodes(self)

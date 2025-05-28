@@ -196,7 +196,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_radiologist_id: str = ""
 
-        self.current_combination_idx = 0
+        self.current_combination_idx: int = 0
+        self.combination_starting_offset: int = 0
+        self.current_test_combination_idx: int = 0
+        self.applied_starting_offset: bool = False
 
         self.current_patient_list = []
 
