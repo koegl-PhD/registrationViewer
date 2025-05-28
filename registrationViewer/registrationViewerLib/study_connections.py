@@ -237,7 +237,7 @@ def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "Organiser started study")
 
-    if self.study_data_master.show_training_cases(self.current_radiologist_id):
+    if self.show_traininig_cases:
         utils.set_buttons_for_test_cases(self)
 
         self.study_progress_bar_tasks = utils.show_progressbar(
