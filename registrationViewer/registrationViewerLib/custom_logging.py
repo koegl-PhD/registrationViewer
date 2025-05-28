@@ -1,6 +1,7 @@
 from enum import Enum
 import logging
 from pathlib import Path
+import traceback
 
 from typing import TYPE_CHECKING
 
@@ -56,7 +57,15 @@ class MyLogger:
 
     def log(self, log_level: int, log_type: LogType, message: str) -> None:
 
-        prefix = f"{log_type.value} ~ task_idx_{self.widget.current_combination_idx:04d} ~ {self.widget.current_radiologist_id} ~ {self.widget.current_patient_name} ~ {self.widget.study_current_transform_type} ~ {self.widget.current_task.value}"
+        try:
+            prefix = f"{log_type.value} ~ task_idx_{self.widget.current_combination_idx:04d} ~ {self.widget.current_radiologist_id} ~ {self.widget.current_patient_name} ~ {self.widget.study_current_transform_type} ~ {self.widget.current_task.value}"
+
+        except Exception as e:
+            log_level = logging.ERROR
+            log_type = LogType.INTERNAL
+            message = f"Error while logging: {e}\n{traceback.format_exc()}"
+
+            prefix = log_type.value
 
         self.logger.log(log_level, message, extra={"prefix": prefix})
 
