@@ -564,6 +564,21 @@ def show_info_popup(title: str, content: str) -> None:
     msgBox.exec_()
 
 
+class FullscreenPopupDialog(qt.QDialog):
+    """Fullscreen QDialog that reroutes Esc to OK handler."""
+
+    def __init__(self, parent: qt.QWidget, on_ok: Callable[[], None]) -> None:
+        super().__init__(parent)
+        self._on_ok = on_ok
+
+    def keyPressEvent(self, event: qt.QKeyEvent) -> None:
+        if event.key() == qt.Qt.Key_Escape:
+            self._on_ok()
+            self.accept()
+        else:
+            qt.QDialog.keyPressEvent(self, event)
+
+
 def show_fullscreen_popup_with_callback(
     title: str,
     content: str,
@@ -571,7 +586,7 @@ def show_fullscreen_popup_with_callback(
     text_size: int = 24,
     on_ok: Callable[[], None] = lambda: None
 ) -> bool:
-    dialog = qt.QDialog(slicer.util.mainWindow())
+    dialog = FullscreenPopupDialog(slicer.util.mainWindow(), on_ok)
     dialog.setWindowTitle(title)
     dialog.setModal(True)
     layout = qt.QVBoxLayout(dialog)
@@ -634,7 +649,7 @@ def show_fullscreen_popup_with_image(
         on_ok: Callable[[], None] = lambda: None
 ) -> None:
     """Show a message box with an image instead of text."""
-    dialog = qt.QDialog(slicer.util.mainWindow())
+    dialog = FullscreenPopupDialog(slicer.util.mainWindow(), on_ok)
     dialog.setWindowTitle(title)
     dialog.setModal(True)
     layout = qt.QVBoxLayout(dialog)
