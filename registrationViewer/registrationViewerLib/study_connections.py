@@ -211,7 +211,7 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
 
     if self.ui_is_simple:
         self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-        sectra.set_sectra_style_sheet()
+        # sectra.set_sectra_style_sheet()
         sectra.enable_sectra_movements()
         view_logic.attach_continuous_slice_offset_observers(self)
         view_logic.attach_key_arrow_observers(self)
@@ -397,17 +397,19 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         # if the previous patient was the same, randomize the offsets, so it seems like each point is new
         if self.get_combination(self.current_combination_idx - 1)[0] == self.get_combination(self.current_combination_idx)[0]:
             randomise_starting_offset = True
-    else:
+
         if self.show_test_cases:
             if self.current_test_combination_idx == 3:
                 self.current_combination_idx += self.combination_starting_offset
         elif not self.applied_starting_offset:
-            print("applied")
             self.current_combination_idx += self.combination_starting_offset
             self.applied_starting_offset = True
 
-    if self.previous_patient_name == self.study_data_master.dummy_patient_name and self.current_patient_name != self.study_data_master.dummy_patient_name:
-        self.dummy_patient_step = "end"
+    if not self.is_current_patient_task_transform_comb_test:
+        if self.previous_patient_name == self.study_data_master.dummy_patient_name and self.current_patient_name != self.study_data_master.dummy_patient_name:
+            self.dummy_patient_step = "end"
+        if self.previous_patient_name != self.study_data_master.dummy_patient_name and self.current_patient_name != self.study_data_master.dummy_patient_name:
+            self.dummy_patient_step = "end"
 
     utils.set_up_synchronisation(self)
     utils.set_up_data_nodes(self)
