@@ -32,7 +32,7 @@ class StudyData:
 
         self.dummy_patient_name = "0e5fp8GltvE"
 
-        self._create_case_task_transformation_map(randomise=False)
+        self._create_case_task_transformation_map(randomise=True)
 
     def save(self, json_path=None):
         if json_path is None:
@@ -112,15 +112,6 @@ class StudyData:
                     for task in tasks.TASK_ORDER.values():
 
                         if patient == self.dummy_patient_name:
-                            continue
-
-                        # if task != tasks.Task.RECURRENCE:
-                        #     continue
-
-                        if patient == "YPEbc0OFC8I" and transform != utils.TransformType.NONE:
-                            continue
-
-                        if patient == "yIt7Z7VHXU0" and transform != utils.TransformType.NONLINEAR:
                             continue
 
                         temp_rad_map.append(
