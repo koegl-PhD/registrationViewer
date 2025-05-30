@@ -432,6 +432,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
             self.current_combination_idx - self.number_of_test_tasks + 1)
 
     tasks_ui_logic.show_task(self, randomise_starting_offset)
+    self.study_recurrence_present = False
 
     self.ui_sub_6.study_next_task_button.setText(
         texts.Buttons.NEXT_TASK_BUTTON)
@@ -542,7 +543,6 @@ def checkbox(self: "registrationViewerWidget") -> None:
 
             slicer.mrmlScene.RemoveNode(self.study_node_annotation)
             self.study_node_annotation = None
-            self.study_recurrence_present = False
 
             self.ui_sub_6.study_center_on_user_point_button.setEnabled(
                 False)
@@ -561,10 +561,7 @@ def checkbox(self: "registrationViewerWidget") -> None:
         self.ui_sub_6.study_next_task_button.setEnabled(True)
         self.ui_sub_6.study_next_task_button.toolTip = ""
 
-    if not self.ui_sub_6.study_checkbox.isChecked():
-        self.study_recurrence_present = False
-    else:
-        self.study_recurrence_present = True
+    self.study_recurrence_present = self.ui_sub_6.study_checkbox.isChecked()
 
 
 def btn_call_on_center_on_point(self: "registrationViewerWidget",
