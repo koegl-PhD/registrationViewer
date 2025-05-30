@@ -136,7 +136,8 @@ class StudyData:
                                 (patient, task.value, transform.value))
 
             if randomise:
-                random.shuffle(temp_rad_map)
+                temp_rad_map = utils.shuffle_without_consecutive_ab(
+                    temp_rad_map)
 
             start_and_end_task = []
             for task in tasks.TASK_ORDER.values():

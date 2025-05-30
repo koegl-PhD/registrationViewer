@@ -1,8 +1,10 @@
+from collections import defaultdict
 from enum import Enum
 import glob
 import json
 import logging
 import os
+import random
 import tempfile
 import traceback
 from typing import TYPE_CHECKING
@@ -345,7 +347,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    slicer.util.setPythonConsoleVisible(value)
+    # slicer.util.setPythonConsoleVisible(value)
 
 
 def print_affine_matrix(transformNode):
@@ -993,3 +995,43 @@ def set_checkbox_with_signal_block(self: "registrationViewerWidget", value: bool
     self.ui_sub_6.study_checkbox.blockSignals(True)
     self.ui_sub_6.study_checkbox.setChecked(value)
     self.ui_sub_6.study_checkbox.blockSignals(False)
+
+
+def shuffle_without_consecutive_ab(
+    tuples: List[Tuple[str, str, str]]
+) -> List[Tuple[str, str, str]]:
+    """
+    Shuffle list of (a, b, c) tuples such that no consecutive tuple has the same (a, b).
+    """
+
+    # Group tuples by (a, b)
+    ab_groups: dict[Tuple[str, str],
+                    List[Tuple[str, str, str]]] = defaultdict(list)
+    for t in tuples:
+        ab_groups[(t[0], t[1])].append(t)
+
+    # Create a pool of groups
+    ab_keys = list(ab_groups.keys())
+    random.shuffle(ab_keys)
+
+    result = []
+    prev_ab = None
+
+    while ab_groups:
+        # Get all groups that don't match the previous (a, b)
+        candidates = [k for k in ab_keys if k != prev_ab]
+
+        if not candidates:
+            raise ValueError(
+                "Cannot shuffle without consecutive (a, b) duplicates.")
+
+        choice = random.choice(candidates)
+        item = ab_groups[choice].pop()
+        result.append(item)
+        prev_ab = choice
+
+        if not ab_groups[choice]:
+            ab_keys.remove(choice)
+            del ab_groups[choice]
+
+    return result
