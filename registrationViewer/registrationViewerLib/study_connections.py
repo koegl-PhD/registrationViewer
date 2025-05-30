@@ -515,53 +515,56 @@ def btn_call_on_checkbox(self: "registrationViewerWidget") -> None:
 
 
 def checkbox(self: "registrationViewerWidget") -> None:
-    overwrote = False
-
     if self.current_task != tasks.Task.RECURRENCE:
         return
 
-    self.study_recurrence_present = not self.study_recurrence_present
-
-    if self.study_recurrence_present:
-        if self.study_node_annotation is None:
-            self.ui_sub_6.study_next_task_button.setEnabled(False)
-            self.ui_sub_6.study_next_task_button.toolTip = texts.ToolTips.ADD_POINT_FIRST
-
-        else:
-            self.ui_sub_6.study_next_task_button.setEnabled(True)
-            self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
+    if self.ui_sub_6.study_checkbox.isChecked() and self.study_node_annotation is None:
+        self.ui_sub_6.study_next_task_button.setEnabled(False)
+        self.ui_sub_6.study_next_task_button.toolTip = texts.ToolTips.ADD_POINT_FIRST
 
         log(logging.INFO, LogType.INTERNAL, "Checkbox checked")
 
-    else:
-        if self.study_node_annotation is not None:
-            if utils.show_warning_popup(content=texts.Contents.WARNING_REMOVE_RECURRENCE_POINT,
-                                        title=texts.Titles.WARNING):
-                slicer.mrmlScene.RemoveNode(self.study_node_annotation)
-                self.study_node_annotation = None
-                utils.set_checkbox_with_signal_block(self, False)
-                self.study_recurrence_present = False
-                self.ui_sub_6.study_center_on_user_point_button.setEnabled(
-                    False)
-                self.ui_sub_6.study_next_task_button.setEnabled(True)
-
-                log(logging.INFO, LogType.U_BUTTON,
-                    "User unchecked checkbox and removed annotation point")
-                overwrote = True
-            else:
-                utils.set_checkbox_with_signal_block(self, True)
-                self.study_recurrence_present = True
-
-                log(logging.INFO, LogType.U_BUTTON,
-                    'User cancelled unchecking and removing annotation point')
-
-    if self.study_recurrence_present is False and overwrote is False:
-        log(logging.INFO, LogType.INTERNAL, "Checkbox unchecked")
-
-    if self.study_recurrence_present is False and self.study_node_annotation is None:
+    elif self.ui_sub_6.study_checkbox.isChecked() and self.study_node_annotation:
         self.ui_sub_6.study_next_task_button.setEnabled(True)
         self.ui_sub_6.study_next_task_button.toolTip = ""
+
+        log(logging.INFO, LogType.INTERNAL, "Checkbox checked")
+
+    elif not self.ui_sub_6.study_checkbox.isChecked() and self.study_node_annotation is None:
+        self.ui_sub_6.study_next_task_button.setEnabled(True)
+        self.ui_sub_6.study_next_task_button.toolTip = ""
+
         log(logging.INFO, LogType.INTERNAL, "Checkbox unchecked")
+
+    else:
+        if utils.show_warning_popup(content=texts.Contents.WARNING_REMOVE_RECURRENCE_POINT,
+                                    title=texts.Titles.WARNING):
+
+            slicer.mrmlScene.RemoveNode(self.study_node_annotation)
+            self.study_node_annotation = None
+            self.study_recurrence_present = False
+
+            self.ui_sub_6.study_center_on_user_point_button.setEnabled(
+                False)
+
+            log(logging.INFO, LogType.U_BUTTON,
+                "User unchecked checkbox and removed annotation point")
+            log(logging.INFO, LogType.INTERNAL, "Checkbox unchecked")
+
+        else:
+            utils.set_checkbox_with_signal_block(self, True)
+
+            log(logging.INFO, LogType.U_BUTTON,
+                'User cancelled unchecking and removing annotation point')
+            log(logging.INFO, LogType.INTERNAL, "Checkbox checked")
+
+        self.ui_sub_6.study_next_task_button.setEnabled(True)
+        self.ui_sub_6.study_next_task_button.toolTip = ""
+
+    if not self.ui_sub_6.study_checkbox.isChecked():
+        self.study_recurrence_present = False
+    else:
+        self.study_recurrence_present = True
 
 
 def btn_call_on_center_on_point(self: "registrationViewerWidget",
