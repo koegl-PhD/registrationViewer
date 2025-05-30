@@ -497,9 +497,7 @@ def add_annotation_point(self: "registrationViewerWidget") -> None:
 
     if self.current_task == tasks.Task.RECURRENCE:
         # Temporarily block signals wo se don't trigger the callbacks
-        self.ui_sub_6.study_checkbox.blockSignals(True)
-        self.ui_sub_6.study_checkbox.setChecked(True)
-        self.ui_sub_6.study_checkbox.blockSignals(False)
+        utils.set_checkbox_with_signal_block(self, True)
 
         self.study_recurrence_present = True
 
@@ -541,9 +539,7 @@ def checkbox(self: "registrationViewerWidget") -> None:
                                         title=texts.Titles.WARNING):
                 slicer.mrmlScene.RemoveNode(self.study_node_annotation)
                 self.study_node_annotation = None
-                self.ui_sub_6.study_checkbox.blockSignals(True)
-                self.ui_sub_6.study_checkbox.setChecked(False)
-                self.ui_sub_6.study_checkbox.blockSignals(False)
+                utils.set_checkbox_with_signal_block(self, False)
                 self.study_recurrence_present = False
                 self.ui_sub_6.study_center_on_user_point_button.setEnabled(
                     False)
@@ -553,9 +549,7 @@ def checkbox(self: "registrationViewerWidget") -> None:
                     "User unchecked checkbox and removed annotation point")
                 overwrote = True
             else:
-                self.ui_sub_6.study_checkbox.blockSignals(True)
-                self.ui_sub_6.study_checkbox.setChecked(True)
-                self.ui_sub_6.study_checkbox.blockSignals(False)
+                utils.set_checkbox_with_signal_block(self, True)
                 self.study_recurrence_present = True
 
                 log(logging.INFO, LogType.U_BUTTON,

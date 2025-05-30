@@ -983,3 +983,13 @@ def create_gt_point(
     new_point.GetDisplayNode().SetGlyphScale(1.0)
 
     return new_point
+
+
+def set_checkbox_with_signal_block(self: "registrationViewerWidget", value: bool) -> None:
+    """
+    Set the value of a checkbox and block the signal to prevent unwanted callbacks.
+    """
+
+    self.ui_sub_6.study_checkbox.blockSignals(True)
+    self.ui_sub_6.study_checkbox.setChecked(value)
+    self.ui_sub_6.study_checkbox.blockSignals(False)
