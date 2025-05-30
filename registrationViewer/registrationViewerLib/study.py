@@ -41,13 +41,29 @@ class StudyData:
         with open(json_path, "w") as f:
             json.dump(self.data, f, indent=4)
 
-    def patient_list(self, rad_id: str) -> List[Tuple[utils.TransformType, str]]:
+    def patient_list(self, rad_id: str) -> List[str]:
 
         participant = self.participants.get(rad_id, None)
         if participant is None:
             raise ValueError(f"Rad id {rad_id} not found in data")
 
-        return participant["patients"].copy()
+        return participant["patients"]["negative"].copy() + participant["patients"]["positive"].copy()
+
+    def patient_names_and_paths(self, rad_id: str) -> List[Tuple[str, str]]:
+        participant = self.participants.get(rad_id, None)
+        if participant is None:
+            raise ValueError(f"Rad id {rad_id} not found in data")
+
+        names_and_paths = []
+
+        for present, patients in participant["patients"].items():
+
+            for patient_name in patients:
+                p = self.data[f"path_study_input_cases_{present}"]
+                names_and_paths.append(
+                    (patient_name, f"{p}{patient_name}"))
+
+        return names_and_paths
 
     def number_of_tasks(self, rad_id: str) -> int:
         participant = self.participants.get(rad_id, None)
@@ -105,20 +121,23 @@ class StudyData:
 
             temp_rad_map = []
 
-            for patient in rad_content["patients"]:
+            for present in ["positive", "negative"]:
 
-                for transform in utils.TransformType:
+                for patient in rad_content["patients"][present]:
 
-                    for task in tasks.TASK_ORDER.values():
+                    for transform in utils.TransformType:
 
-                        if patient == self.dummy_patient_name:
-                            continue
+                        for task in tasks.TASK_ORDER.values():
 
-                        temp_rad_map.append(
-                            (patient, task.value, transform.value))
+                            if patient == self.dummy_patient_name:
+                                continue
+
+                            temp_rad_map.append(
+                                (patient, task.value, transform.value))
 
             if randomise:
-                random.shuffle(temp_rad_map)
+                temp_rad_map = utils.shuffle_without_consecutive_ab(
+                    temp_rad_map)
 
             start_and_end_task = []
             for task in tasks.TASK_ORDER.values():
@@ -146,7 +165,20 @@ class StudyData:
                 print(a)
 
             participant = self.participants.get(rad_id, None)
-            participant["patients"].insert(0, self.dummy_patient_name)
+            participant["patients"]["positive"].insert(
+                0, self.dummy_patient_name)
+
+    def number_of_patients(self, rad_id: str) -> int:
+        """
+        Returns the number of patients in the study.
+        """
+
+        participant = self.participants.get(rad_id, None)
+        if participant is None:
+            raise ValueError(f"Rad id {rad_id} not found in data")
+
+        return len(participant["patients"]["positive"]) + \
+            len(participant["patients"]["negative"])
 
 
 def load_all_study_data(self: "registrationViewerWidget") -> None:
@@ -172,25 +204,22 @@ def load_study_volumes(self: "registrationViewerWidget") -> int:
 
     percentage_patient = 0
 
-    patient_list = self.study_data_master.patient_list(
+    names_and_paths = self.study_data_master.patient_names_and_paths(
         self.current_radiologist_id)
-    paths_cases = [
-        f"{self.study_data_master.path_study_input_cases}{patient_name}" for patient_name in patient_list]
-    size = len(self.study_data_master.patient_list(
-        self.current_radiologist_id))
+    size = len(names_and_paths)
 
     if self.study_data_master.show_training_cases(self.current_radiologist_id):
 
         training_list = self.study_data_master.get_training_case_names(
             self.current_radiologist_id)
-        patient_list += training_list
-        paths_cases += [f"{self.study_data_master.path_study_training_cases}{patient_name}" for patient_name in training_list]
-        size = len(patient_list)
+        names_and_paths += [(patient_name, f"{self.study_data_master.path_study_training_cases}{patient_name}")
+                            for patient_name in training_list]
 
-    for patient_name, path_case in zip(patient_list, paths_cases):
+        size = len(names_and_paths)
 
-        path_volume_fixed, path_volume_moving, \
-            _, _, \
+    for patient_name, path_case in names_and_paths:
+
+        path_volume_fixed, path_volume_moving, _, _, \
             path_transform_fixed, path_transform_moving, \
             path_deformation = utils.get_paths_to_load(path_case)
 
@@ -268,20 +297,19 @@ def load_study_volumes(self: "registrationViewerWidget") -> int:
 
 def load_ground_truth_annotations(self: "registrationViewerWidget", start_percentage: int) -> None:
 
-    size = len(self.study_data_master.patient_list(
-        self.current_radiologist_id))
+    size = self.study_data_master.number_of_patients(
+        self.current_radiologist_id)
 
     percentage_patient = start_percentage
 
-    for patient_name in self.study_data_master.patient_list(self.current_radiologist_id):
+    for patient_name, patient_path in self.study_data_master.patient_names_and_paths(self.current_radiologist_id):
 
         volume_moving_name = self.study_loaded_data[patient_name]["moving"].GetName(
         )
 
         study_moving_name = volume_moving_name.split('~')[1]
 
-        path_annotations = os.path.join(self.study_data_master.path_study_input_cases,
-                                        patient_name,
+        path_annotations = os.path.join(patient_path,
                                         "preprocessed",
                                         study_moving_name,
                                         "annotations")
@@ -317,8 +345,13 @@ def load_ground_truth_annotations(self: "registrationViewerWidget", start_percen
             self.study_gt_lymphnode_description[patient_name] = f.read().split(
                 "Description:")[-1].strip()
 
-        with open(os.path.join(path_annotations, "recurrence.txt")) as f:
-            self.study_gt_recurrence_description[patient_name] = f.read()
+        try:
+            with open(os.path.join(path_annotations, "recurrence.txt")) as f:
+                self.study_gt_recurrence_description[patient_name] = f.read()
+        except FileNotFoundError:
+            self.study_gt_recurrence_description[patient_name] = "No recurrence information available"
+            print(
+                f"Recurrence file not found for patient {patient_name}. Using default description.")
 
         for task_name in tasks.TASK_ORDER.values():
             if task_name == tasks.Task.LYMPH_NODE:

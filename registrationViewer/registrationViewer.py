@@ -897,10 +897,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return utils.TransformType(self.current_patient_task_transform_comb[2])
 
     @property
-    def current_patient_path(self) -> str:
-        return f"{self.study_data_master.path_study_input_cases}{self.current_patient_name}"
-
-    @property
     def current_patient_task_transform_comb(self) -> Tuple[str, str, str]:
         if self.current_patient_list == []:
             return ("", "", "")
