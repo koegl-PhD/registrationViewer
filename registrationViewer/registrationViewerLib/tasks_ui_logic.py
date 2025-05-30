@@ -70,9 +70,7 @@ def show_task(
     if self.current_task == tasks.Task.RECURRENCE:
         self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
         self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
-        self.ui_sub_6.study_checkbox.blockSignals(True)
-        self.ui_sub_6.study_checkbox.setChecked(False)
-        self.ui_sub_6.study_checkbox.blockSignals(False)
+        utils.set_checkbox_with_signal_block(self, False)
         self.ui_sub_6.study_next_task_button.setEnabled(True)
         self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 

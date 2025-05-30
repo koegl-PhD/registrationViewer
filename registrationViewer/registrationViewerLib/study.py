@@ -430,9 +430,7 @@ def clear_annotations(self: "registrationViewerWidget") -> None:
     self.study_lymphnode_size = "Size same"
     self.study_recurrence_present = False
 
-    self.ui_sub_6.study_checkbox.blockSignals(True)
-    self.ui_sub_6.study_checkbox.setChecked(False)
-    self.ui_sub_6.study_checkbox.blockSignals(False)
+    utils.set_checkbox_with_signal_block(self, False)
     self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
 

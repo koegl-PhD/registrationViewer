@@ -303,7 +303,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.addObserver(slicer.mrmlScene,
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
-        self._remove_custom_observers_from_crosshair()
+        self.remove_custom_observers_from_crosshair()
         self._remove_view_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui_sub_4.synchronise_views_with_transform.setText(
@@ -394,7 +394,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def onSceneStartClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just before the scene is closed."""
 
-        self._remove_custom_observers_from_crosshair()
+        self.remove_custom_observers_from_crosshair()
         self._remove_view_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui_sub_4.synchronise_views_with_transform.setText(
@@ -644,7 +644,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.synchronise_manually_pressed = False
         else:
             print("pressed to unsynchronise")
-            self._remove_custom_observers_from_crosshair()
+            self.remove_custom_observers_from_crosshair()
             self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
             self.ui_sub_6.synchronise_views_general.setText(
@@ -671,7 +671,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         else:
             print("pressed to unsynchronise manually")
-            self._remove_custom_observers_from_crosshair()
+            self.remove_custom_observers_from_crosshair()
             self.ui_sub_4.synchronise_views_manually.setText(
                 "Synchronise views manually (m)")
 
@@ -689,7 +689,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def unsynchronise_views(self) -> None:
         print('unsynchronised')
-        self._remove_custom_observers_from_crosshair()
+        self.remove_custom_observers_from_crosshair()
         self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
         self.ui_sub_6.synchronise_views_general.setText(
@@ -799,9 +799,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair.node_transform_moving = self.node_transform_moving
             self.crosshair.use_only_linear_transform = self.use_only_linear_transform
 
-    def _remove_custom_observers_from_crosshair(self) -> None:
+    def remove_custom_observers_from_crosshair(self) -> None:
         for observer_tag in self.crosshair_custom_observer_tags:
-            self.node_crosshair.RemoveObserver(observer_tag)
+            if self.node_crosshair:
+                self.node_crosshair.RemoveObserver(observer_tag)
 
         self.crosshair_custom_observer_tags.clear()
 
