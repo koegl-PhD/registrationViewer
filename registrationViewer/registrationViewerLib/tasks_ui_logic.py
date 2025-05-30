@@ -70,12 +70,13 @@ def show_task(
     if self.current_task == tasks.Task.RECURRENCE:
         self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
         self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
-        self.ui_sub_6.study_checkbox.blockSignals(True)
-        self.ui_sub_6.study_checkbox.setChecked(False)
-        self.ui_sub_6.study_checkbox.blockSignals(False)
+        utils.set_checkbox_with_signal_block(self, False)
         self.ui_sub_6.study_next_task_button.setEnabled(True)
         self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 
+    # we don't want to center on test tasks because those are not real tasks
+    elif self.is_current_patient_task_transform_comb_test:
+        self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
     else:
         utils.center_on_point(
             self.study_node_groundtruth_points[self.current_patient_name][self.current_task], self.group_second_row)
@@ -87,11 +88,11 @@ def show_task(
 
         TASK_UI_ADDITIONS[self.current_task.value](self.ui_sub_6)
 
-    utils.show_fullscreen_popup_with_callback(title=f"Aufgabe {self.current_combination_idx+1}/{self.study_data_master.number_of_tasks(self.current_radiologist_id)}",
+    utils.show_fullscreen_popup_with_callback(title=f"Aufgabe {self.current_combination_idx+1}/{self.number_of_tasks}",
                                               content=description.replace(
         "\n", "\n\n"),
         center_text=True,
-        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User started task"))
+        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, self.start_task_log_text_user))
 
 
 def save_point(

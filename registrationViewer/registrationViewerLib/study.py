@@ -30,7 +30,9 @@ class StudyData:
 
         self.__dict__.update(self.data)
 
-        self._create_case_task_transformation_map(randomise=False)
+        self.dummy_patient_name = "0e5fp8GltvE"
+
+        self._create_case_task_transformation_map(randomise=True)
 
     def save(self, json_path=None):
         if json_path is None:
@@ -45,7 +47,7 @@ class StudyData:
         if participant is None:
             raise ValueError(f"Rad id {rad_id} not found in data")
 
-        return participant["patients"]
+        return participant["patients"].copy()
 
     def number_of_tasks(self, rad_id: str) -> int:
         participant = self.participants.get(rad_id, None)
@@ -53,6 +55,41 @@ class StudyData:
             raise ValueError(f"Rad id {rad_id} not found in data")
 
         return len(self.case_task_transformation_map[rad_id])
+
+    def show_training_cases(self, rad_id: str) -> bool:
+        """
+        Returns whether we should show training cases.
+        """
+
+        participant = self.participants.get(rad_id, None)
+        if participant is None:
+            raise ValueError(f"Rad id {rad_id} not found in data")
+
+        return participant["config"]["show_training_cases"]
+
+    def get_training_case_names(self, rad_id: str) -> List[str]:
+        """
+        Returns the names of the cases used for training
+        """
+
+        if not self.show_training_cases(rad_id):
+            return []
+
+        participant = self.participants.get(rad_id, None)
+        if participant is None:
+            raise ValueError(f"Rad id {rad_id} not found in data")
+
+        # list all folders
+        path = self.path_study_training_cases
+
+        if not os.path.exists(path):
+            raise FileNotFoundError(
+                f"Path {path} does not exist. Please check the study configuration.")
+
+        training_cases = sorted([f for f in os.listdir(
+            path) if os.path.isdir(os.path.join(path, f))])
+
+        return training_cases
 
     def _create_case_task_transformation_map(self, randomise: bool) -> None:
         """
@@ -74,13 +111,7 @@ class StudyData:
 
                     for task in tasks.TASK_ORDER.values():
 
-                        # if task != tasks.Task.RECURRENCE:
-                        #     continue
-
-                        if patient == "YPEbc0OFC8I" and transform != utils.TransformType.NONE:
-                            continue
-
-                        if patient == "yIt7Z7VHXU0" and transform != utils.TransformType.NONLINEAR:
+                        if patient == self.dummy_patient_name:
                             continue
 
                         temp_rad_map.append(
@@ -89,7 +120,33 @@ class StudyData:
             if randomise:
                 random.shuffle(temp_rad_map)
 
+            start_and_end_task = []
+            for task in tasks.TASK_ORDER.values():
+                start_and_end_task.append(
+                    (self.dummy_patient_name, task.value, utils.TransformType.NONLINEAR.value))
+            random.shuffle(start_and_end_task)
+
+            temp_rad_map = start_and_end_task + temp_rad_map + start_and_end_task
+
+            test_names = self.get_training_case_names(rad_id)
+            test_comb_1 = (test_names[0], tasks.Task.TEST_RIGID.value,
+                           utils.TransformType.LINEAR.value)
+            test_comb_2 = (test_names[1], tasks.Task.TEST_ROTATION.value,
+                           utils.TransformType.LINEAR.value)
+            test_comb_3 = (test_names[2], tasks.Task.TEST_NONLINEAR.value,
+                           utils.TransformType.NONLINEAR.value)
+
+            temp_rad_map.insert(0, test_comb_1)
+            temp_rad_map.insert(1, test_comb_2)
+            temp_rad_map.insert(2, test_comb_3)
+
             self.case_task_transformation_map[rad_id] = temp_rad_map
+
+            for a in self.case_task_transformation_map[rad_id]:
+                print(a)
+
+            participant = self.participants.get(rad_id, None)
+            participant["patients"].insert(0, self.dummy_patient_name)
 
 
 def load_all_study_data(self: "registrationViewerWidget") -> None:
@@ -113,15 +170,24 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
 
 def load_study_volumes(self: "registrationViewerWidget") -> int:
 
+    percentage_patient = 0
+
+    patient_list = self.study_data_master.patient_list(
+        self.current_radiologist_id)
+    paths_cases = [
+        f"{self.study_data_master.path_study_input_cases}{patient_name}" for patient_name in patient_list]
     size = len(self.study_data_master.patient_list(
         self.current_radiologist_id))
 
-    percentage_patient = 0
-    for patient_name in self.study_data_master.patient_list(self.current_radiologist_id):
+    if self.study_data_master.show_training_cases(self.current_radiologist_id):
 
-        print(patient_name)
+        training_list = self.study_data_master.get_training_case_names(
+            self.current_radiologist_id)
+        patient_list += training_list
+        paths_cases += [f"{self.study_data_master.path_study_training_cases}{patient_name}" for patient_name in training_list]
+        size = len(patient_list)
 
-        path_case = f"{self.study_data_master.path_study_input_cases}{patient_name}"
+    for patient_name, path_case in zip(patient_list, paths_cases):
 
         path_volume_fixed, path_volume_moving, \
             _, _, \
@@ -149,19 +215,29 @@ def load_study_volumes(self: "registrationViewerWidget") -> int:
         utils.update_progress_window(
             (percentage_patient * 90) / (size), f"Loading data...")
         percentage_patient += 0.05
-        node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
-                                                         {'show': False})[1]
-        name_transform_fixed = os.path.basename(
-            path_transform_fixed).replace(".h5", "")
+        if path_transform_fixed is None:
+            node_transform_fixed = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLLinearTransformNode")
+            name_transform_fixed = "Fixed_t"
+        else:
+            node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
+                                                             {'show': False})[1]
+            name_transform_fixed = os.path.basename(
+                path_transform_fixed).replace(".h5", "")
         node_transform_fixed.SetName(name_transform_fixed)
 
         utils.update_progress_window(
             (percentage_patient * 90) / (size), f"Loading data...")
         percentage_patient += 0.05
-        node_transform_moving = slicer.util.loadTransform(path_transform_moving,
-                                                          {'show': False})[1]
-        name_transform_moving = os.path.basename(
-            path_transform_moving).replace(".h5", "")
+        if path_transform_moving is None:
+            node_transform_moving = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLLinearTransformNode")
+            name_transform_moving = "Moving_t"
+        else:
+            node_transform_moving = slicer.util.loadTransform(path_transform_moving,
+                                                              {'show': False})[1]
+            name_transform_moving = os.path.basename(
+                path_transform_moving).replace(".h5", "")
         node_transform_moving.SetName(name_transform_moving)
 
         utils.update_progress_window(
@@ -201,6 +277,7 @@ def load_ground_truth_annotations(self: "registrationViewerWidget", start_percen
 
         volume_moving_name = self.study_loaded_data[patient_name]["moving"].GetName(
         )
+
         study_moving_name = volume_moving_name.split('~')[1]
 
         path_annotations = os.path.join(self.study_data_master.path_study_input_cases,
@@ -262,21 +339,11 @@ def load_ground_truth_annotations(self: "registrationViewerWidget", start_percen
                 continue
 
             # create new point with new name and position from current index
-            new_point = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLMarkupsFiducialNode")
             current_position = points_node.GetNthControlPointPosition(
                 current_point_idx)
-            new_point.AddControlPoint(current_position, 'p')
-
-            new_point.LockedOn()
-
-            new_point.SetName(current_point_name)
-
-            utils.show_node_only_in_views(new_point,
-                                          self.views_second_row)
-            new_point.SetDisplayVisibility(False)
-            new_point.GetDisplayNode().SetSelectedColor(utils.Colors.BLUE.value)
-            new_point.GetDisplayNode().SetGlyphScale(1.0)
+            new_point = utils.create_gt_point(current_point_name,
+                                              current_position,
+                                              self.views_second_row)
 
             if patient_name not in self.study_node_groundtruth_points:
                 self.study_node_groundtruth_points[patient_name] = {}
@@ -284,6 +351,20 @@ def load_ground_truth_annotations(self: "registrationViewerWidget", start_percen
             self.study_node_groundtruth_points[patient_name][task_name] = new_point
 
         slicer.mrmlScene.RemoveNode(points_node)
+
+    # add dummy test points
+    test_patient_names = self.study_data_master.get_training_case_names(
+        self.current_radiologist_id)
+
+    self.study_node_groundtruth_points[test_patient_names[0]] = {tasks.Task.TEST_RIGID: utils.create_gt_point(tasks.Task.TEST_RIGID.value,
+                                                                                                              (0, 0, 0),
+                                                                                                              [])}
+    self.study_node_groundtruth_points[test_patient_names[1]] = {tasks.Task.TEST_ROTATION: utils.create_gt_point(tasks.Task.TEST_ROTATION.value,
+                                                                                                                 (0, 0, 0),
+                                                                                                                 [])}
+    self.study_node_groundtruth_points[test_patient_names[2]] = {tasks.Task.TEST_NONLINEAR: utils.create_gt_point(tasks.Task.TEST_NONLINEAR.value,
+                                                                                                                  (0, 0, 0),
+                                                                                                                  [])}
 
     slicer.progressWindow.close()
 
@@ -296,7 +377,13 @@ def save_annotations(self: "registrationViewerWidget",
     if self.current_combination_idx < 0:
         return
 
-    path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_patient_name}/{self.current_patient_transform_type.value}"  # nopep8
+    if self.current_patient_name == self.study_data_master.dummy_patient_name:
+        current_patient_name = self.current_patient_name + \
+            f"_{self.dummy_patient_step}"
+    else:
+        current_patient_name = self.current_patient_name
+
+    path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{current_patient_name}/{self.current_patient_transform_type.value}"  # nopep8
 
     if not os.path.exists(path_patient):
         os.makedirs(path_patient)
@@ -343,9 +430,7 @@ def clear_annotations(self: "registrationViewerWidget") -> None:
     self.study_lymphnode_size = "Size same"
     self.study_recurrence_present = False
 
-    self.ui_sub_6.study_checkbox.blockSignals(True)
-    self.ui_sub_6.study_checkbox.setChecked(False)
-    self.ui_sub_6.study_checkbox.blockSignals(False)
+    utils.set_checkbox_with_signal_block(self, False)
     self.ui_sub_6.study_dropdown.setCurrentText('Size same')
 
 

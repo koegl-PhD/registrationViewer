@@ -108,6 +108,34 @@
       </item>
     <!-- END start_task_number_label -->
 
+      <!-- START test_examples_SetCheckBox -->
+     <item row="17" column="0" alignment="Qt::AlignTop">
+        <widget class="QCheckBox" name="test_examples_SetCheckBox">
+        <property name="enabled">
+            <bool>true</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>16777215</height>
+         </size>
+         </property>
+        </widget>
+    </item>
+    <!-- END test_examples_SetCheckBox -->
+
+    <!-- START stest_examples_number_label -->
+      <item row="17" column="1" alignment="Qt::AlignTop">
+        <widget class="QLabel" name="stest_examples_number_label">
+          <property name="text">
+            <string>Show training examples</string>
+          </property>
+          <property name="alignment">
+            <set>Qt::AlignCenter</set>
+          </property>
+        </widget>
+      </item>
+    <!-- END stest_examples_number_label -->
 
     <!-- START start_study_button -->
       <item row="20" column="0" colspan="3" alignment="Qt::AlignTop">

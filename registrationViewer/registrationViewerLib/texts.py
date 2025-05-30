@@ -36,6 +36,7 @@ class Buttons(Enum):
 
     ADD_POINT_BUTTON = "Punkt hinzufügen"
     NEXT_TASK_BUTTON = "Nächste Aufgabe"
+    TEST_NEXT_TASK_BUTTON = "Nächste Testaufgabe"
 
     DROPDOWN_UNCHANGED = "Größe unverändert"
     DROPDOWN_INCREASED = "Größe vergrößert"
@@ -50,6 +51,8 @@ class Buttons(Enum):
 
     FINISH_STUDY = "Studie beenden"
 
+    PROCCED_TO_STUDY = "Zur Studie fortfahren"
+
     def __str__(self):
         return self.value
 
@@ -60,6 +63,7 @@ class Buttons(Enum):
 class Contents(Enum):
 
     NONE = ""
+    STUDY_BEGINS = "HAUPTSTUDIE FÄNGT AN"
     STUDY_DESCRIPTION = f"""
 Im Rahmen dieser Studie werden Sie mehrere Annotierungsaufgaben bearbeiten, die alle demselben Muster folgen.
 Sie sehen zwei Reihen von CT-Scans, wobei jedes Paar immer vom selben Patienten stammt.
@@ -85,6 +89,19 @@ Bei Aufgaben zu Lymphknoten erscheint zusätzlich ein Dropdown-Menü, in dem Sie
 Schließlich gibt es bei registrierten Fällen einen Button namens "{Buttons.TURN_TRANSFORMATION_ON}", mit dem die Registrierung aktiviert wird.
         """
 
+    TEST_STUDY_DESCRIPTION = f"""
+Vor Beginn der eigentlichen Studie werden Ihnen drei Testaufgaben gezeigt. Diese dienen dazu, sich mit der Oberfläche und den Aufgaben vertraut zu machen.
+
+In der ersten Aufgabe wird dasselbe Bild zweimal angezeigt – die Registrierung ist daher perfekt.
+
+In der zweiten Aufgabe wird ebenfalls dasselbe Bild angezeigt, jedoch wurde das untere Bild um 14° rotiert – die Registrierung ist immer noch perfekt, aber die Schnitte stimmen nicht mehr überein.
+
+In der dritten Aufgabe werden zwei Bilder aus unterschiedlichen Sitzungen desselben Patienten gezeigt – es liegt also eine echte Deformation vor, und die Registrierung ist nicht perfekt.
+
+In allen Aufgaben können Sie die Registrierung mit der Taste „t“ oder über den Button "{Buttons.TURN_TRANSFORMATION_ON}" ein- und ausschalten.
+Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: Die Position Ihrer Maus in einem Scan wird an der entsprechenden Stelle im anderen Scan angezeigt.
+    """
+
     WARNING_REMOVE_RECURRENCE_POINT = "Möchten Sie den Punkt entfernen, den Sie bereits für das Rezidiv gesetzt habt?"
 
     QUESTION_OVERWRITE_POINT = "Wollen Sie den Punkt überschreiben?"
@@ -92,6 +109,25 @@ Schließlich gibt es bei registrierten Fällen einen Button namens "{Buttons.TUR
     OK_TO_RESMUE = "Klicken Sie auf OK, um fortzufahren"
 
     STUDY_FINISHED = "Danke {insert}, Sie haben die Studie abgeschlossen!"
+
+    CURRENT_TASK = "Aktuelle Aufgabe"
+    TEST_CURRENT_TASK = "Aktuelle Testaufgabe"
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+    def format(self, *args, **kwargs):
+        return self.value.format(*args, **kwargs)
+
+
+class ToolTips(Enum):
+
+    NONE = ""
+
+    ADD_POINT_FIRST = "Bitte fügen Sie zuerst einen Punkt hinzu"
 
     def __str__(self):
         return self.value

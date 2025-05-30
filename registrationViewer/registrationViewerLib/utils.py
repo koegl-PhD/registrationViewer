@@ -564,6 +564,21 @@ def show_info_popup(title: str, content: str) -> None:
     msgBox.exec_()
 
 
+class FullscreenPopupDialog(qt.QDialog):
+    """Fullscreen QDialog that reroutes Esc to OK handler."""
+
+    def __init__(self, parent: qt.QWidget, on_ok: Callable[[], None]) -> None:
+        super().__init__(parent)
+        self._on_ok = on_ok
+
+    def keyPressEvent(self, event: qt.QKeyEvent) -> None:
+        if event.key() == qt.Qt.Key_Escape:
+            self._on_ok()
+            self.accept()
+        else:
+            qt.QDialog.keyPressEvent(self, event)
+
+
 def show_fullscreen_popup_with_callback(
     title: str,
     content: str,
@@ -571,7 +586,7 @@ def show_fullscreen_popup_with_callback(
     text_size: int = 24,
     on_ok: Callable[[], None] = lambda: None
 ) -> bool:
-    dialog = qt.QDialog(slicer.util.mainWindow())
+    dialog = FullscreenPopupDialog(slicer.util.mainWindow(), on_ok)
     dialog.setWindowTitle(title)
     dialog.setModal(True)
     layout = qt.QVBoxLayout(dialog)
@@ -634,7 +649,7 @@ def show_fullscreen_popup_with_image(
         on_ok: Callable[[], None] = lambda: None
 ) -> None:
     """Show a message box with an image instead of text."""
-    dialog = qt.QDialog(slicer.util.mainWindow())
+    dialog = FullscreenPopupDialog(slicer.util.mainWindow(), on_ok)
     dialog.setWindowTitle(title)
     dialog.setModal(True)
     layout = qt.QVBoxLayout(dialog)
@@ -863,6 +878,8 @@ def set_up_synchronisation(self: "registrationViewerWidget") -> None:
         print(f"{self.current_patient_name=}")
         raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
 
+    self.remove_custom_observers_from_crosshair()
+
 
 def set_up_data_nodes(self: "registrationViewerWidget") -> None:
 
@@ -910,6 +927,8 @@ def set_button_texts(self: "registrationViewerWidget") -> None:
         self.current_radiologist_name
     )
 
+    self.ui_sub_6.progress_label_2.setText(texts.Contents.CURRENT_TASK)
+
 
 def get_active_slice_view() -> str:
     """
@@ -923,3 +942,54 @@ def get_active_slice_view() -> str:
         widget = widget.parent()
 
     return "Unknown"
+
+
+def set_buttons_for_test_cases(self: "registrationViewerWidget") -> None:
+
+    self.ui_sub_6.synchronise_views_general.setVisible(False)
+
+    self.ui_sub_6.study_center_on_user_point_button.setVisible(False)
+    self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
+
+    self.ui_sub_6.study_add_point_button.setVisible(False)
+
+    self.ui_sub_6.progress_label_2.setText(texts.Contents.TEST_CURRENT_TASK)
+
+
+def reset_buttons_after_test_cases(self: "registrationViewerWidget") -> None:
+
+    self.ui_sub_6.progress_label_2.setText(texts.Contents.CURRENT_TASK)
+
+
+def create_gt_point(
+        point_name: str,
+        position: Tuple[float, float, float],
+        views: List[str]
+) -> slicer.vtkMRMLMarkupsFiducialNode:
+
+    new_point = slicer.mrmlScene.AddNewNodeByClass(
+        "vtkMRMLMarkupsFiducialNode")
+
+    new_point.AddControlPoint(position, 'p')
+
+    new_point.LockedOn()
+
+    new_point.SetName(point_name)
+
+    show_node_only_in_views(new_point, views)
+
+    new_point.SetDisplayVisibility(False)
+    new_point.GetDisplayNode().SetSelectedColor(Colors.BLUE.value)
+    new_point.GetDisplayNode().SetGlyphScale(1.0)
+
+    return new_point
+
+
+def set_checkbox_with_signal_block(self: "registrationViewerWidget", value: bool) -> None:
+    """
+    Set the value of a checkbox and block the signal to prevent unwanted callbacks.
+    """
+
+    self.ui_sub_6.study_checkbox.blockSignals(True)
+    self.ui_sub_6.study_checkbox.setChecked(value)
+    self.ui_sub_6.study_checkbox.blockSignals(False)

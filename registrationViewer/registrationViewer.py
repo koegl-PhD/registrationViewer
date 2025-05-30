@@ -196,7 +196,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_radiologist_id: str = ""
 
-        self.current_combination_idx = 0
+        self.current_combination_idx: int = 0
+        self.combination_starting_offset: int = 0
+        self.current_test_combination_idx: int = 0
+        self.applied_starting_offset: bool = False
 
         self.current_patient_list = []
 
@@ -210,6 +213,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.arrow_key_filter = utils.ArrowKeyFilter()
 
         self.slider_observers: Dict[str, Callable[[float], None]] = {}
+
+        self.first_time_description_show: bool = True
+        self.first_time_test_description_show: bool = True
+
+        self.checkbox_test_cases: bool = False
+
+        self.dummy_patient_step: Literal["start", "end"] = "start"
 
         # task specific
         self.study_gt_lymphnode_description: dict[str, str] = {}
@@ -293,7 +303,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.addObserver(slicer.mrmlScene,
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
-        self._remove_custom_observers_from_crosshair()
+        self.remove_custom_observers_from_crosshair()
         self._remove_view_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui_sub_4.synchronise_views_with_transform.setText(
@@ -384,7 +394,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def onSceneStartClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just before the scene is closed."""
 
-        self._remove_custom_observers_from_crosshair()
+        self.remove_custom_observers_from_crosshair()
         self._remove_view_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui_sub_4.synchronise_views_with_transform.setText(
@@ -634,7 +644,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.synchronise_manually_pressed = False
         else:
             print("pressed to unsynchronise")
-            self._remove_custom_observers_from_crosshair()
+            self.remove_custom_observers_from_crosshair()
             self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
             self.ui_sub_6.synchronise_views_general.setText(
@@ -661,7 +671,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         else:
             print("pressed to unsynchronise manually")
-            self._remove_custom_observers_from_crosshair()
+            self.remove_custom_observers_from_crosshair()
             self.ui_sub_4.synchronise_views_manually.setText(
                 "Synchronise views manually (m)")
 
@@ -679,7 +689,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def unsynchronise_views(self) -> None:
         print('unsynchronised')
-        self._remove_custom_observers_from_crosshair()
+        self.remove_custom_observers_from_crosshair()
         self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
         self.ui_sub_6.synchronise_views_general.setText(
@@ -789,9 +799,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair.node_transform_moving = self.node_transform_moving
             self.crosshair.use_only_linear_transform = self.use_only_linear_transform
 
-    def _remove_custom_observers_from_crosshair(self) -> None:
+    def remove_custom_observers_from_crosshair(self) -> None:
         for observer_tag in self.crosshair_custom_observer_tags:
-            self.node_crosshair.RemoveObserver(observer_tag)
+            if self.node_crosshair:
+                self.node_crosshair.RemoveObserver(observer_tag)
 
         self.crosshair_custom_observer_tags.clear()
 
@@ -834,11 +845,49 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return tasks.Task(self.current_patient_task_transform_comb[1])
 
     @property
+    def number_of_tasks(self) -> int:
+
+        if self.current_patient_list == []:
+            return 0
+
+        return self.study_data_master.number_of_tasks(self.current_radiologist_id) - self.number_of_test_tasks
+
+    @property
+    def number_of_test_tasks(self) -> int:
+        if self.current_patient_list == []:
+            return 0
+
+        if self.show_test_cases:
+            return 3
+        else:
+            return 0
+
+    @property
+    def show_test_cases(self) -> bool:
+        """
+        Check if the training cases should be shown.
+        """
+        if self.current_patient_list == []:
+            return False
+
+        return self.checkbox_test_cases
+
+    @property
     def current_patient_name(self) -> str:
         if self.current_patient_task_transform_comb == ("", "", ""):
             return "no_patient"
 
         return self.current_patient_task_transform_comb[0]
+
+    @property
+    def previous_patient_name(self) -> str:
+        if self.current_patient_task_transform_comb == ("", "", ""):
+            return "no_patient"
+
+        if self.current_combination_idx == 0:
+            return "no_patient"
+
+        return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx - 1][0]
 
     @property
     def current_patient_transform_type(self) -> utils.TransformType:
@@ -858,10 +907,56 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx]
 
+    def patient_task_transform_comb(self, idx: int) -> Tuple[str, str, str]:
+        if self.current_patient_list == []:
+            return ("", "", "")
+
+        return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][idx]
+
+    @property
+    def is_current_patient_task_transform_comb_test(self) -> bool:
+        """
+        Check if the current combination is a test task.
+        """
+        if self.current_patient_task_transform_comb == ("", "", ""):
+            return False
+
+        return tasks.Task(self.current_patient_task_transform_comb[1]) in [tasks.Task.TEST_RIGID, tasks.Task.TEST_ROTATION, tasks.Task.TEST_NONLINEAR]
+
+    def is_patient_task_transform_comb_test(self, idx: int) -> bool:
+        """
+        Check if the current combination is a test task.
+        """
+        if self.current_patient_task_transform_comb == ("", "", ""):
+            return False
+
+        return tasks.Task(self.patient_task_transform_comb(idx)[1]) in [tasks.Task.TEST_RIGID, tasks.Task.TEST_ROTATION, tasks.Task.TEST_NONLINEAR]
+
     @property
     def current_radiologist_name(self) -> str:
 
         return self.study_data_master.participants[self.current_radiologist_id]['name']
+
+    @property
+    def next_task_log_text(self) -> str:
+        if self.is_current_patient_task_transform_comb_test:
+            return "Next test task"
+
+        return "Next task"
+
+    @property
+    def start_task_log_text(self) -> str:
+        if self.is_current_patient_task_transform_comb_test:
+            return "Start test task"
+
+        return "Start task"
+
+    @property
+    def start_task_log_text_user(self) -> str:
+        if self.is_current_patient_task_transform_comb_test:
+            return "User started test task"
+
+        return "User started task"
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
