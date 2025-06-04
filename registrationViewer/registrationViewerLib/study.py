@@ -245,7 +245,7 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
             no_of_patients,
             progress_val)
 
-    # add dummy test points
+def add_dummy_test_points(self: "registrationViewerWidget") -> None:
     test_patient_names = self.study_data_master.get_training_case_names(
         self.current_radiologist_id)
 

@@ -254,17 +254,17 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
     self.ui_sub_6.current_rad_name.setVisible(True)
 
-    self.ui_sub_1.simple_ui_button.setVisible(False)
+    self.ui_sub_1.simple_ui_button.setVisible(True)
 
     utils.set_button_texts(self)
-    print(f"{self.show_test_cases=}")
     if self.show_test_cases:
         utils.set_buttons_for_test_cases(self)
     else:
         a = self.study_data_master.case_task_transformation_map[self.current_radiologist_id]
         self.study_data_master.case_task_transformation_map[self.current_radiologist_id] = a[3:]
 
-    study.load_all_study_data(self)
+    study.add_dummy_test_points(self)
+
 
     sectra.setup_sectra_movements(self)
 
