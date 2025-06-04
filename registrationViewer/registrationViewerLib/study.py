@@ -189,24 +189,11 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
 
     utils.set_up_progress_window("Loading data...")
 
-    end_percentage = load_study_volumes(self)
-
-    load_ground_truth_annotations(self, end_percentage)
-
-    slicer.progressWindow.close()
-
-    fullscreen_block.close()
-
-    log(logging.INFO, LogType.INTERNAL, "Finished loading study data")
-
-
-def load_study_volumes(self: "registrationViewerWidget") -> int:
-
-    percentage_patient = 0
-
+    ###########################################################################
+    ###########################################################################
     names_and_paths = self.study_data_master.patient_names_and_paths(
         self.current_radiologist_id)
-    size = len(names_and_paths)
+    no_of_patients = len(names_and_paths)
 
     if self.study_data_master.show_training_cases(self.current_radiologist_id):
 
@@ -215,175 +202,22 @@ def load_study_volumes(self: "registrationViewerWidget") -> int:
         names_and_paths += [(patient_name, f"{self.study_data_master.path_study_training_cases}{patient_name}")
                             for patient_name in training_list]
 
-        size = len(names_and_paths)
+        no_of_patients = len(names_and_paths)
 
-    for patient_name, path_case in names_and_paths:
+    for case_name, case_path in names_and_paths:
+        progress_val = load_one_case_voxels(
+            self,
+            case_name,
+            case_path,
+            no_of_patients,
+            progress_val)
 
-        path_volume_fixed, path_volume_moving, _, _, \
-            path_transform_fixed, path_transform_moving, \
-            path_deformation = utils.get_paths_to_load(path_case)
-
-        utils.update_progress_window(
-            (percentage_patient * 90) / (size), f"Loading data...")
-        percentage_patient += 0.2
-        node_volume_fixed = slicer.util.loadVolume(path_volume_fixed,
-                                                   {'show': False})
-        name_volume_fixed = os.path.basename(
-            path_volume_fixed).replace(".nii.gz", "")
-        node_volume_fixed.SetName(name_volume_fixed)
-
-        utils.update_progress_window(
-            (percentage_patient * 90) / (size), f"Loading data...")
-        percentage_patient += 0.2
-        node_volume_moving = slicer.util.loadVolume(path_volume_moving,
-                                                    {'show': False})
-        name_volume_moving = os.path.basename(
-            path_volume_moving).replace(".nii.gz", "")
-        node_volume_moving.SetName(name_volume_moving)
-
-        utils.update_progress_window(
-            (percentage_patient * 90) / (size), f"Loading data...")
-        percentage_patient += 0.05
-        if path_transform_fixed is None:
-            node_transform_fixed = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLLinearTransformNode")
-            name_transform_fixed = "Fixed_t"
-        else:
-            node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
-                                                             {'show': False})[1]
-            name_transform_fixed = os.path.basename(
-                path_transform_fixed).replace(".h5", "")
-        node_transform_fixed.SetName(name_transform_fixed)
-
-        utils.update_progress_window(
-            (percentage_patient * 90) / (size), f"Loading data...")
-        percentage_patient += 0.05
-        if path_transform_moving is None:
-            node_transform_moving = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLLinearTransformNode")
-            name_transform_moving = "Moving_t"
-        else:
-            node_transform_moving = slicer.util.loadTransform(path_transform_moving,
-                                                              {'show': False})[1]
-            name_transform_moving = os.path.basename(
-                path_transform_moving).replace(".h5", "")
-        node_transform_moving.SetName(name_transform_moving)
-
-        utils.update_progress_window(
-            (percentage_patient * 90) / (size), f"Loading data...")
-        percentage_patient += 0.5
-        if path_deformation is None:
-            node_deformation = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLLinearTransformNode")
-        else:
-            # node_deformation = slicer.mrmlScene.AddNewNodeByClass(
-            # "vtkMRMLLinearTransformNode")
-            node_deformation = slicer.util.loadTransform(path_deformation,
-                                                         {'show': False})[1]
-
-        if patient_name not in self.study_loaded_data:
-            self.study_loaded_data[patient_name] = {}
-        self.study_loaded_data[patient_name]["fixed"] = node_volume_fixed
-        self.study_loaded_data[patient_name]["moving"] = node_volume_moving
-        self.study_loaded_data[patient_name]["transform_fixed"] = node_transform_fixed
-        self.study_loaded_data[patient_name]["transform_moving"] = node_transform_moving
-        self.study_loaded_data[patient_name]["deformation"] = node_deformation
-
-        utils.hide_all_volumes_from_views(
-            self.views_first_row + self.views_second_row)
-
-    return percentage_patient
-
-
-def load_ground_truth_annotations(self: "registrationViewerWidget", start_percentage: int) -> None:
-
-    size = self.study_data_master.number_of_patients(
-        self.current_radiologist_id)
-
-    percentage_patient = start_percentage
-
-    for patient_name, patient_path in self.study_data_master.patient_names_and_paths(self.current_radiologist_id):
-
-        volume_moving_name = self.study_loaded_data[patient_name]["moving"].GetName(
-        )
-
-        study_moving_name = volume_moving_name.split('~')[1]
-
-        path_annotations = os.path.join(patient_path,
-                                        "preprocessed",
-                                        study_moving_name,
-                                        "annotations")
-
-        path_points = os.path.join(path_annotations,
-                                   f"points_{volume_moving_name}.mrk.json")
-        utils.update_progress_window(
-            (percentage_patient * 90) / (size))
-        percentage_patient += 0.05
-        points_node = slicer.util.loadMarkups(path_points)
-
-        points_node.SetName(os.path.basename(
-            path_points).replace(".mrk.json", ""))
-        points_node_name = points_node.GetName()
-
-        path_lymphnode = os.path.join(path_annotations,
-                                      f"roi_lymphnode_{volume_moving_name}.mrk.json")
-        utils.update_progress_window(
-            (percentage_patient * 90) / (size))
-        percentage_patient += 0.05
-        lymphnode = slicer.util.loadMarkups(path_lymphnode)
-        lymphnode.SetName('l')
-        lymphnode.LockedOn()
-
-        lymphnode.GetDisplayNode().SetInteractionHandleScale(0)
-        lymphnode.GetDisplayNode().SetFillVisibility(False)
-        lymphnode.GetDisplayNode().SetSelectedColor(utils.Colors.RED.value)
-        lymphnode.GetDisplayNode().SetVisibility(False)
-        utils.show_node_only_in_views(lymphnode,
-                                      self.views_second_row)
-
-        with open(os.path.join(path_annotations, "lymphnode_info.txt"), "r") as f:
-            self.study_gt_lymphnode_description[patient_name] = f.read().split(
-                "Description:")[-1].strip()
-
-        try:
-            with open(os.path.join(path_annotations, "recurrence.txt")) as f:
-                self.study_gt_recurrence_description[patient_name] = f.read()
-        except FileNotFoundError:
-            self.study_gt_recurrence_description[patient_name] = "No recurrence information available"
-            print(
-                f"Recurrence file not found for patient {patient_name}. Using default description.")
-
-        for task_name in tasks.TASK_ORDER.values():
-            if task_name == tasks.Task.LYMPH_NODE:
-                # it is not a point, but a ROI so we skip
-                self.study_node_groundtruth_points[patient_name][task_name] = lymphnode
-                continue
-            if task_name == tasks.Task.RECURRENCE:
-                # we don't need to show it so continue
-                continue
-
-            current_point_name = points_node_name.replace(
-                'points', f"point_{task_name.value}")
-            current_point_idx = utils.get_control_point_idx_by_name(points_node,
-                                                                    current_point_name)
-            if current_point_idx == -1:
-                slicer.util.errorDisplay(
-                    f"Point {current_point_name} not found")
-                continue
-
-            # create new point with new name and position from current index
-            current_position = points_node.GetNthControlPointPosition(
-                current_point_idx)
-            new_point = utils.create_gt_point(current_point_name,
-                                              current_position,
-                                              self.views_second_row)
-
-            if patient_name not in self.study_node_groundtruth_points:
-                self.study_node_groundtruth_points[patient_name] = {}
-
-            self.study_node_groundtruth_points[patient_name][task_name] = new_point
-
-        slicer.mrmlScene.RemoveNode(points_node)
+        progress_val = load_one_case_annotations(
+            self,
+            case_name,
+            case_path,
+            no_of_patients,
+            progress_val)
 
     # add dummy test points
     test_patient_names = self.study_data_master.get_training_case_names(
@@ -399,7 +233,191 @@ def load_ground_truth_annotations(self: "registrationViewerWidget", start_percen
                                                                                                                   (0, 0, 0),
                                                                                                                   [])}
 
+    ###########################################################################
+    ###########################################################################
+
     slicer.progressWindow.close()
+
+    fullscreen_block.close()
+
+    log(logging.INFO, LogType.INTERNAL, "Finished loading study data")
+
+
+def load_one_case_voxels(
+        self: "registrationViewerWidget",
+        case_name: str,
+        case_path: str,
+        no_of_patients: int,
+        progress_val: float,
+) -> float:
+
+    path_volume_fixed, path_volume_moving, _, _, \
+        path_transform_fixed, path_transform_moving, \
+        path_deformation = utils.get_paths_to_load(case_path)
+
+    utils.update_progress_window(
+        (progress_val * 90) / (no_of_patients), f"Loading data...")
+    progress_val += 0.2
+    node_volume_fixed = slicer.util.loadVolume(path_volume_fixed,
+                                               {'show': False})
+    name_volume_fixed = os.path.basename(
+        path_volume_fixed).replace(".nii.gz", "")
+    node_volume_fixed.SetName(name_volume_fixed)
+
+    utils.update_progress_window(
+        (progress_val * 90) / (no_of_patients), f"Loading data...")
+    progress_val += 0.2
+    node_volume_moving = slicer.util.loadVolume(path_volume_moving,
+                                                {'show': False})
+    name_volume_moving = os.path.basename(
+        path_volume_moving).replace(".nii.gz", "")
+    node_volume_moving.SetName(name_volume_moving)
+
+    utils.update_progress_window(
+        (progress_val * 90) / (no_of_patients), f"Loading data...")
+    progress_val += 0.05
+    if path_transform_fixed is None:
+        node_transform_fixed = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLLinearTransformNode")
+        name_transform_fixed = "Fixed_t"
+    else:
+        node_transform_fixed = slicer.util.loadTransform(path_transform_fixed,
+                                                         {'show': False})[1]
+        name_transform_fixed = os.path.basename(
+            path_transform_fixed).replace(".h5", "")
+    node_transform_fixed.SetName(name_transform_fixed)
+
+    utils.update_progress_window(
+        (progress_val * 90) / (no_of_patients), f"Loading data...")
+    progress_val += 0.05
+    if path_transform_moving is None:
+        node_transform_moving = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLLinearTransformNode")
+        name_transform_moving = "Moving_t"
+    else:
+        node_transform_moving = slicer.util.loadTransform(path_transform_moving,
+                                                          {'show': False})[1]
+        name_transform_moving = os.path.basename(
+            path_transform_moving).replace(".h5", "")
+    node_transform_moving.SetName(name_transform_moving)
+
+    utils.update_progress_window(
+        (progress_val * 90) / (no_of_patients), f"Loading data...")
+    progress_val += 0.5
+    if path_deformation is None:
+        node_deformation = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLLinearTransformNode")
+    else:
+        # node_deformation = slicer.mrmlScene.AddNewNodeByClass(
+        # "vtkMRMLLinearTransformNode")
+        node_deformation = slicer.util.loadTransform(path_deformation,
+                                                     {'show': False})[1]
+
+    if case_name not in self.study_loaded_data:
+        self.study_loaded_data[case_name] = {}
+
+    self.study_loaded_data[case_name]["fixed"] = node_volume_fixed
+    self.study_loaded_data[case_name]["moving"] = node_volume_moving
+    self.study_loaded_data[case_name]["transform_fixed"] = node_transform_fixed
+    self.study_loaded_data[case_name]["transform_moving"] = node_transform_moving
+    self.study_loaded_data[case_name]["deformation"] = node_deformation
+
+    utils.hide_all_volumes_from_views(
+        self.views_first_row + self.views_second_row)
+
+    return progress_val
+
+
+def load_one_case_annotations(
+        self: "registrationViewerWidget",
+        case_name: str,
+        case_path: str,
+        no_of_patients: int,
+        progress_val: float,
+) -> float:
+
+    volume_moving_name = self.study_loaded_data[case_name]["moving"].GetName(
+    )
+
+    study_moving_name = volume_moving_name.split('~')[1]
+
+    path_annotations = os.path.join(case_path,
+                                    "preprocessed",
+                                    study_moving_name,
+                                    "annotations")
+
+    path_points = os.path.join(path_annotations,
+                               f"points_{volume_moving_name}.mrk.json")
+    utils.update_progress_window(
+        (progress_val * 90) / (no_of_patients))
+    progress_val += 0.05
+    points_node = slicer.util.loadMarkups(path_points)
+
+    points_node.SetName(os.path.basename(
+        path_points).replace(".mrk.json", ""))
+    points_node_name = points_node.GetName()
+
+    path_lymphnode = os.path.join(path_annotations,
+                                  f"roi_lymphnode_{volume_moving_name}.mrk.json")
+    utils.update_progress_window(
+        (progress_val * 90) / (no_of_patients))
+    progress_val += 0.05
+    lymphnode = slicer.util.loadMarkups(path_lymphnode)
+    lymphnode.SetName('l')
+    lymphnode.LockedOn()
+
+    lymphnode.GetDisplayNode().SetInteractionHandleScale(0)
+    lymphnode.GetDisplayNode().SetFillVisibility(False)
+    lymphnode.GetDisplayNode().SetSelectedColor(utils.Colors.RED.value)
+    lymphnode.GetDisplayNode().SetVisibility(False)
+    utils.show_node_only_in_views(lymphnode,
+                                  self.views_second_row)
+
+    with open(os.path.join(path_annotations, "lymphnode_info.txt"), "r") as f:
+        self.study_gt_lymphnode_description[case_name] = f.read().split(
+            "Description:")[-1].strip()
+
+    try:
+        with open(os.path.join(path_annotations, "recurrence.txt")) as f:
+            self.study_gt_recurrence_description[case_name] = f.read()
+    except FileNotFoundError:
+        self.study_gt_recurrence_description[case_name] = "No recurrence information available"
+        print(
+            f"Recurrence file not found for patient {case_name}. Using default description.")
+
+    for task_name in tasks.TASK_ORDER.values():
+        if task_name == tasks.Task.LYMPH_NODE:
+            # it is not a point, but a ROI so we skip
+            self.study_node_groundtruth_points[case_name][task_name] = lymphnode
+            continue
+        if task_name == tasks.Task.RECURRENCE:
+            # we don't need to show it so continue
+            continue
+
+        current_point_name = points_node_name.replace(
+            'points', f"point_{task_name.value}")
+        current_point_idx = utils.get_control_point_idx_by_name(points_node,
+                                                                current_point_name)
+        if current_point_idx == -1:
+            slicer.util.errorDisplay(
+                f"Point {current_point_name} not found")
+            continue
+
+        # create new point with new name and position from current index
+        current_position = points_node.GetNthControlPointPosition(
+            current_point_idx)
+        new_point = utils.create_gt_point(current_point_name,
+                                          current_position,
+                                          self.views_second_row)
+
+        if case_name not in self.study_node_groundtruth_points:
+            self.study_node_groundtruth_points[case_name] = {}
+
+        self.study_node_groundtruth_points[case_name][task_name] = new_point
+
+    slicer.mrmlScene.RemoveNode(points_node)
+
+    return progress_val
 
 
 def save_annotations(self: "registrationViewerWidget",
