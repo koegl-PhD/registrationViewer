@@ -32,6 +32,8 @@ class StudyData:
 
         self.dummy_patient_name = "0e5fp8GltvE"
 
+        self._divide_patients_into_chunks()
+
         self._create_case_task_transformation_map(randomise=True)
 
     def save(self, json_path=None):
@@ -107,6 +109,26 @@ class StudyData:
 
         return training_cases
 
+    def _divide_patients_into_chunks(self) -> None:
+        random.seed(42)
+
+        max_chunk_size = 8
+
+        patients: List[str] = []
+
+        for _, rad_content in self.participants.items():
+            for present in ["positive", "negative"]:
+
+                for patient_name in rad_content["patients"][present]:
+
+                    patients.append(patient_name)
+
+        # randomize patients list
+        random.shuffle(patients)
+
+        self.chunked_patients = [patients[i:i+max_chunk_size]
+                                 for i in range(0, len(patients), max_chunk_size)]
+
     def _create_case_task_transformation_map(self, randomise: bool) -> None:
         """
         Create a mapping of task to transformation for the random case.
@@ -121,9 +143,11 @@ class StudyData:
 
             temp_rad_map = []
 
-            for present in ["positive", "negative"]:
+            for chunk in self.chunked_patients:
 
-                for patient in rad_content["patients"][present]:
+                temp_chunk_map = []
+
+                for patient in chunk:
 
                     for transform in utils.TransformType:
 
@@ -132,12 +156,14 @@ class StudyData:
                             if patient == self.dummy_patient_name:
                                 continue
 
-                            temp_rad_map.append(
+                            temp_chunk_map.append(
                                 (patient, task.value, transform.value))
 
-            if randomise:
-                temp_rad_map = utils.shuffle_without_consecutive_ab(
-                    temp_rad_map)
+                if randomise:
+                    temp_chunk_map = utils.shuffle_without_consecutive_ab(
+                        temp_chunk_map)
+
+                temp_rad_map += temp_chunk_map
 
             start_and_end_task = []
             for task in tasks.TASK_ORDER.values():
