@@ -87,7 +87,8 @@ def center_on_point(point: slicer.vtkMRMLMarkupsFiducialNode,
                                                         view)
 
 
-def get_paths_to_load(path_case_folder: str):
+def get_paths_to_load(path_case_folder: str,
+                      path_registrations: str):
     path_nii = os.path.dirname(path_case_folder)
     name_nii_folder = os.path.basename(path_nii)
     path_experiment = os.path.dirname(path_nii)
@@ -127,10 +128,11 @@ def get_paths_to_load(path_case_folder: str):
         path_transform_moving) == 0 else path_transform_moving[0]
 
     path_niftyreg = os.path.join(
-        path_experiment, f"{name_nii_folder}_registrations", 'BSplineNiftyReg')
+        path_registrations, 'BSplineNiftyReg')
 
     paths_deformations = sorted(glob.glob(os.path.join(
         path_niftyreg, '*', 'deformations', '*.nii.gz')))
+
     path_deformation = [
         x for x in paths_deformations if name_fixed in x and name_moving in x]
 

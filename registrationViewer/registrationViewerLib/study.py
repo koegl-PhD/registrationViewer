@@ -279,7 +279,8 @@ def load_one_case_voxels(
 
     path_volume_fixed, path_volume_moving, _, _, \
         path_transform_fixed, path_transform_moving, \
-        path_deformation = utils.get_paths_to_load(case_path)
+        path_deformation = utils.get_paths_to_load(case_path,
+                                                   self.study_data_master.path_study_input_registrations)
 
     utils.update_progress_window(
         (progress_val * 90) / (no_of_patients), f"Loading data...")
