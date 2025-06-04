@@ -265,6 +265,7 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
 
     study.add_dummy_test_points(self)
 
+    study.load_one_chunk(self)
 
     sectra.setup_sectra_movements(self)
 
@@ -371,6 +372,19 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         self.first_time_description_show = False
 
     randomise_starting_offset = False
+
+    if not self.study_data_master.in_current_chunk(self.current_patient_task_transform_comb[0]):
+        self.study_data_master.current_chunk_idx += 1
+        # now we have to load
+        # 0. show popup
+        # 1. clear current data
+        # 2. load new data
+        # 3 close popup
+
+        # 1
+        study.clear_one_chunk(self)
+        # 2
+        study.load_one_chunk(self)
 
     if self.current_combination_idx == self.number_of_tasks + self.number_of_test_tasks - 1:
         study.save_annotations(self,

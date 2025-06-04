@@ -24,6 +24,9 @@ class StudyData:
     case_task_transformation_map: dict[str,
                                        List[Tuple[str, str, str]]] = field(init=False)
 
+    chunked_patients: List[Tuple[str, str]] = field(default_factory=list)
+    current_chunk_idx: int = field(default=0)
+
     def __post_init__(self):
         with open(self.path, "r") as f:
             self.data = json.load(f)
@@ -51,19 +54,14 @@ class StudyData:
 
         return participant["patients"]["negative"].copy() + participant["patients"]["positive"].copy()
 
-    def patient_names_and_paths(self, rad_id: str) -> List[Tuple[str, str]]:
-        participant = self.participants.get(rad_id, None)
-        if participant is None:
-            raise ValueError(f"Rad id {rad_id} not found in data")
+    def chunked_patient_names_and_paths(self) -> List[Tuple[str, str]]:
 
         names_and_paths = []
 
-        for present, patients in participant["patients"].items():
-
-            for patient_name in patients:
-                p = self.data[f"path_study_input_cases_{present}"]
-                names_and_paths.append(
-                    (patient_name, f"{p}{patient_name}"))
+        for present, patient_name in self.chunked_patients[self.current_chunk_idx]:
+            p = self.data[f"path_study_input_cases_{present}"]
+            names_and_paths.append(
+                (patient_name, f"{p}{patient_name}"))
 
         return names_and_paths
 
@@ -98,7 +96,7 @@ class StudyData:
             raise ValueError(f"Rad id {rad_id} not found in data")
 
         # list all folders
-        path = self.path_study_training_cases
+        path = self.path_study_input_cases_training
 
         if not os.path.exists(path):
             raise FileNotFoundError(
@@ -121,7 +119,7 @@ class StudyData:
 
                 for patient_name in rad_content["patients"][present]:
 
-                    patients.append(patient_name)
+                    patients.append((present, patient_name))
 
         # randomize patients list
         random.shuffle(patients)
@@ -153,7 +151,7 @@ class StudyData:
 
                         for task in tasks.TASK_ORDER.values():
 
-                            if patient == self.dummy_patient_name:
+                            if patient[1] == self.dummy_patient_name:
                                 continue
 
                             temp_chunk_map.append(
@@ -168,18 +166,23 @@ class StudyData:
             start_and_end_task = []
             for task in tasks.TASK_ORDER.values():
                 start_and_end_task.append(
-                    (self.dummy_patient_name, task.value, utils.TransformType.NONLINEAR.value))
+                    (("dummy", self.dummy_patient_name), task.value, utils.TransformType.NONLINEAR.value))
             random.shuffle(start_and_end_task)
+
+            self.chunked_patients[0].insert(
+                0, ("dummy", self.dummy_patient_name))
+            self.chunked_patients[-1].append(
+                ("dummy", self.dummy_patient_name))
 
             temp_rad_map = start_and_end_task + temp_rad_map + start_and_end_task
 
             test_names = self.get_training_case_names(rad_id)
-            test_comb_1 = (test_names[0], tasks.Task.TEST_RIGID.value,
+            test_comb_1 = (("training", test_names[0]), tasks.Task.TEST_RIGID.value,
                            utils.TransformType.LINEAR.value)
-            test_comb_2 = (test_names[1], tasks.Task.TEST_ROTATION.value,
-                           utils.TransformType.LINEAR.value)
-            test_comb_3 = (test_names[2], tasks.Task.TEST_NONLINEAR.value,
-                           utils.TransformType.NONLINEAR.value)
+            test_comb_2 = (("training", test_names[1], tasks.Task.TEST_ROTATION.value,
+                           utils.TransformType.LINEAR.value))
+            test_comb_3 = (("training", test_names[2], tasks.Task.TEST_NONLINEAR.value,
+                           utils.TransformType.NONLINEAR.value))
 
             temp_rad_map.insert(0, test_comb_1)
             temp_rad_map.insert(1, test_comb_2)
@@ -189,10 +192,6 @@ class StudyData:
 
             for a in self.case_task_transformation_map[rad_id]:
                 print(a)
-
-            participant = self.participants.get(rad_id, None)
-            participant["patients"]["positive"].insert(
-                0, self.dummy_patient_name)
 
     def number_of_patients(self, rad_id: str) -> int:
         """
@@ -206,29 +205,35 @@ class StudyData:
         return len(participant["patients"]["positive"]) + \
             len(participant["patients"]["negative"])
 
+    def in_current_chunk(self, name: str) -> bool:
+        if name in self.chunked_patients[self.current_chunk_idx]:
+            return True
 
-def load_all_study_data(self: "registrationViewerWidget") -> None:
+        return False
 
-    log(logging.INFO, LogType.INTERNAL, "Start loading study data")
 
-    fullscreen_block = utils.show_fullscreen_block("", "")
+def load_one_chunk(self: "registrationViewerWidget") -> None:
+    log(logging.INFO, LogType.INTERNAL,
+        f"Start loading study data chunk {self.study_data_master.current_chunk_idx}/{len(self.study_data_master.chunked_patients)}")
+
+    # fullscreen_block = utils.show_fullscreen_block("", "")
 
     utils.set_up_progress_window("Loading data...")
 
-    ###########################################################################
-    ###########################################################################
-    names_and_paths = self.study_data_master.patient_names_and_paths(
-        self.current_radiologist_id)
+    names_and_paths = self.study_data_master.chunked_patient_names_and_paths()
+
     no_of_patients = len(names_and_paths)
 
     if self.study_data_master.show_training_cases(self.current_radiologist_id):
 
         training_list = self.study_data_master.get_training_case_names(
             self.current_radiologist_id)
-        names_and_paths += [(patient_name, f"{self.study_data_master.path_study_training_cases}{patient_name}")
-                            for patient_name in training_list]
+        names_and_paths = [(patient_name, f"{self.study_data_master.path_study_input_cases_training}{patient_name}")
+                           for patient_name in training_list] + names_and_paths
 
         no_of_patients = len(names_and_paths)
+
+    progress_val = 0
 
     for case_name, case_path in names_and_paths:
         progress_val = load_one_case_voxels(
@@ -245,6 +250,27 @@ def load_all_study_data(self: "registrationViewerWidget") -> None:
             no_of_patients,
             progress_val)
 
+    slicer.progressWindow.close()
+
+    # fullscreen_block.close()
+
+    log(logging.INFO, LogType.INTERNAL,
+        f"Finished loading study data chunk {self.study_data_master.current_chunk_idx}/{len(self.study_data_master.chunked_patients)}")
+
+
+def clear_one_chunk(self: "registrationViewerWidget") -> None:
+
+    for case_name, (node_type, node) in self.study_loaded_data.items():
+        slicer.mrmlScene.RemoveNode(node)
+
+    self.study_loaded_data = {}
+
+    for case_name, (node_type, node) in self.study_node_groundtruth_points.items():
+        slicer.mrmlScene.RemoveNode(node)
+
+    self.study_node_groundtruth_points = {}
+
+
 def add_dummy_test_points(self: "registrationViewerWidget") -> None:
     test_patient_names = self.study_data_master.get_training_case_names(
         self.current_radiologist_id)
@@ -258,15 +284,6 @@ def add_dummy_test_points(self: "registrationViewerWidget") -> None:
     self.study_node_groundtruth_points[test_patient_names[2]] = {tasks.Task.TEST_NONLINEAR: utils.create_gt_point(tasks.Task.TEST_NONLINEAR.value,
                                                                                                                   (0, 0, 0),
                                                                                                                   [])}
-
-    ###########################################################################
-    ###########################################################################
-
-    slicer.progressWindow.close()
-
-    fullscreen_block.close()
-
-    log(logging.INFO, LogType.INTERNAL, "Finished loading study data")
 
 
 def load_one_case_voxels(
@@ -352,6 +369,9 @@ def load_one_case_voxels(
     utils.hide_all_volumes_from_views(
         self.views_first_row + self.views_second_row)
 
+    print(f"Loaded volume {path_volume_fixed=}")
+    print(f"Loaded deform {path_deformation=}")
+
     return progress_val
 
 
@@ -362,6 +382,9 @@ def load_one_case_annotations(
         no_of_patients: int,
         progress_val: float,
 ) -> float:
+
+    if "test" in case_name.lower():
+        return progress_val
 
     volume_moving_name = self.study_loaded_data[case_name]["moving"].GetName(
     )
