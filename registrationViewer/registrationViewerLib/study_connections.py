@@ -250,6 +250,9 @@ def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
 
 
 def organiser_start_study(self: "registrationViewerWidget") -> None:
+    log_utils.log_all_chunks(self)
+    log_utils.log_all_tasks(self)
+
     on_simple_ui(self, True, inital=True)
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
     self.ui_sub_6.current_rad_name.setVisible(True)
@@ -268,17 +271,6 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     study.load_one_chunk(self)
 
     sectra.setup_sectra_movements(self)
-
-    l = len(
-        self.study_data_master.case_task_transformation_map[self.current_radiologist_id])
-
-    log(logging.INFO, LogType.INTERNAL, "All tasks to be done START")
-
-    for idx, combination in enumerate(self.study_data_master.case_task_transformation_map[self.current_radiologist_id]):
-        log(logging.INFO, LogType.INTERNAL,
-            f"Combination {idx}/{l - 1}: {combination}")
-
-    log(logging.INFO, LogType.INTERNAL, "All tasks to be done END")
 
 
 def btn_call_on_user_start_study(self: "registrationViewerWidget") -> None:
