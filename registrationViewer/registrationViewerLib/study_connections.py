@@ -311,7 +311,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     if self.show_test_cases and self.first_time_test_description_show and self.is_current_patient_task_transform_comb_test:
 
-        fullscreen_block = utils.show_fullscreen_block("", "")
+        self.full_screen_block.open()
 
         utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
                                                   content=texts.Contents.TEST_STUDY_DESCRIPTION,
@@ -321,8 +321,6 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
                                                title=texts.Titles.USER_ICONS,
                                                on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
-
-        fullscreen_block.close()
 
         self.study_progress_bar_tasks = utils.show_progressbar(
             ui=self.ui_sub_6,
@@ -335,7 +333,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     if self.first_time_description_show and not self.is_patient_task_transform_comb_test(self.current_combination_idx + 1):
 
-        fullscreen_block = utils.show_fullscreen_block("", "")
+        self.full_screen_block.open()
 
         if self.show_test_cases:
             utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
@@ -352,8 +350,6 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
                                                title=texts.Titles.USER_ICONS,
                                                on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
-
-        fullscreen_block.close()
 
         self.study_progress_bar_tasks = utils.show_progressbar(
             ui=self.ui_sub_6,
@@ -399,6 +395,10 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         if not self.study_data.in_chunk(self.current_patient_name, self.chunk_idx):
             self.chunk_idx = self.study_data.get_chunk_idx(
                 self.current_patient_name)
+
+            self.full_screen_block.open(title=texts.Titles.LOADING_DATA,
+                                        content=texts.Contents.LOADING_DATA)
+            self.full_screen_block.set_content(texts.Contents.LOADING_DATA)
             study.clear_one_chunk(self)
             study.load_current_chunk(self)
 

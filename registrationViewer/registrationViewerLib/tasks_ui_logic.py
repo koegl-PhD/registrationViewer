@@ -88,11 +88,15 @@ def show_task(
 
         TASK_UI_ADDITIONS[self.current_task.value](self.ui_sub_6)
 
+    def _on_popup_ok() -> None:
+        log(logging.INFO, LogType.U_BUTTON, self.start_task_log_text_user)
+        self.full_screen_block.close()
+
     utils.show_fullscreen_popup_with_callback(title=f"Aufgabe {self.current_combination_idx+1}/{self.number_of_tasks}",
                                               content=description.replace(
         "\n", "\n\n"),
         center_text=True,
-        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, self.start_task_log_text_user))
+        on_ok=_on_popup_ok)
 
 
 def save_point(

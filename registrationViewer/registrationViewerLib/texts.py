@@ -17,6 +17,8 @@ class Titles(Enum):
 
     STUDY_FINISHED = "STUDIE BEENDET"
 
+    LOADING_DATA = "DATEN WERDEN GELADEN"
+
     def __str__(self):
         return self.value
 
@@ -112,6 +114,8 @@ Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: 
 
     CURRENT_TASK = "Aktuelle Aufgabe"
     TEST_CURRENT_TASK = "Aktuelle Testaufgabe"
+
+    LOADING_DATA = "Daten werden geladen..."
 
     def __str__(self):
         return self.value
