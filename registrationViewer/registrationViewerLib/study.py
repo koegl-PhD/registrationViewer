@@ -22,10 +22,9 @@ class StudyData:
     data: dict = field(init=False)
 
     case_task_transformation_map: dict[str,
-                                       List[Tuple[str, str, str]]] = field(init=False)
+                                       List[Tuple[Tuple[str, str], str, str]]] = field(init=False)
 
     chunked_patients: List[Tuple[str, str]] = field(default_factory=list)
-    current_chunk_idx: int = field(default=0)
 
     def __post_init__(self):
         with open(self.path, "r") as f:
@@ -54,11 +53,15 @@ class StudyData:
 
         return participant["patients"]["negative"].copy() + participant["patients"]["positive"].copy()
 
-    def chunked_patient_names_and_paths(self) -> List[Tuple[str, str]]:
+    def get_chunked_patient_names_and_paths(
+            self,
+            patient_name: str,
+            chunk_idx: int
+    ) -> List[Tuple[str, str]]:
 
         names_and_paths = []
 
-        for present, patient_name in self.chunked_patients[self.current_chunk_idx]:
+        for present, patient_name in self.chunked_patients[chunk_idx]:
             p = self.data[f"path_study_input_cases_{present}"]
             names_and_paths.append(
                 (patient_name, f"{p}{patient_name}"))
@@ -72,24 +75,10 @@ class StudyData:
 
         return len(self.case_task_transformation_map[rad_id])
 
-    def show_training_cases(self, rad_id: str) -> bool:
-        """
-        Returns whether we should show training cases.
-        """
-
-        participant = self.participants.get(rad_id, None)
-        if participant is None:
-            raise ValueError(f"Rad id {rad_id} not found in data")
-
-        return participant["config"]["show_training_cases"]
-
     def get_training_case_names(self, rad_id: str) -> List[str]:
         """
         Returns the names of the cases used for training
         """
-
-        if not self.show_training_cases(rad_id):
-            return []
 
         participant = self.participants.get(rad_id, None)
         if participant is None:
@@ -110,7 +99,7 @@ class StudyData:
     def _divide_patients_into_chunks(self) -> None:
         random.seed(42)
 
-        max_chunk_size = 8
+        max_chunk_size = 2
 
         patients: List[str] = []
 
@@ -154,6 +143,9 @@ class StudyData:
                             if patient[1] == self.dummy_patient_name:
                                 continue
 
+                            if task != tasks.Task.RECURRENCE or transform != utils.TransformType.NONLINEAR:
+                                continue
+
                             temp_chunk_map.append(
                                 (patient, task.value, transform.value))
 
@@ -177,12 +169,17 @@ class StudyData:
             temp_rad_map = start_and_end_task + temp_rad_map + start_and_end_task
 
             test_names = self.get_training_case_names(rad_id)
-            test_comb_1 = (("training", test_names[0]), tasks.Task.TEST_RIGID.value,
+            test_comb_1 = (("training", test_names[0]), tasks.Task.TEST_NONE.value,
                            utils.TransformType.LINEAR.value)
-            test_comb_2 = (("training", test_names[1], tasks.Task.TEST_ROTATION.value,
-                           utils.TransformType.LINEAR.value))
-            test_comb_3 = (("training", test_names[2], tasks.Task.TEST_NONLINEAR.value,
-                           utils.TransformType.NONLINEAR.value))
+            test_comb_2 = (("training", test_names[1]), tasks.Task.TEST_ROTATION.value,
+                           utils.TransformType.LINEAR.value)
+            test_comb_3 = (("training", test_names[2]), tasks.Task.TEST_NONLINEAR.value,
+                           utils.TransformType.NONLINEAR.value)
+
+            test_chunk = [("training", test_names[0]),
+                          ("training", test_names[1]),
+                          ("training", test_names[2])]
+            self.chunked_patients.insert(0, test_chunk)
 
             temp_rad_map.insert(0, test_comb_1)
             temp_rad_map.insert(1, test_comb_2)
@@ -205,33 +202,47 @@ class StudyData:
         return len(participant["patients"]["positive"]) + \
             len(participant["patients"]["negative"])
 
-    def in_current_chunk(self, name: str) -> bool:
-        if name in self.chunked_patients[self.current_chunk_idx]:
-            return True
+    def in_chunk(self, patient_name: str, chunk_idx: int) -> bool:
+        for _, patient in self.chunked_patients[chunk_idx]:
+            if patient_name == patient:
+                return True
 
         return False
 
+    def get_chunk_idx(self, patient_name: str) -> int:
+        """
+        Returns the index of the chunk that contains the given combination.
+        """
 
-def load_one_chunk(self: "registrationViewerWidget") -> None:
+        for idx, chunk in enumerate(self.chunked_patients):
+            for patient in chunk:
+                if patient_name == patient[1]:
+                    return idx
+
+        raise ValueError(
+            f"Patient {patient_name} not found in chunks. Only found {self.chunked_patients=}.")
+
+    def remove_test_combinations(self, rad_id: str) -> None:
+        temp = self.case_task_transformation_map[rad_id]
+        self.case_task_transformation_map[rad_id] = temp[3:]
+
+
+def load_current_chunk(self: "registrationViewerWidget") -> None:
+
     log(logging.INFO, LogType.INTERNAL,
-        f"Start loading study data chunk {self.study_data_master.current_chunk_idx}/{len(self.study_data_master.chunked_patients)}")
+        f"Start loading study data chunk {self.chunk_idx+1}/{len(self.study_data.chunked_patients)}")
 
     # fullscreen_block = utils.show_fullscreen_block("", "")
 
     utils.set_up_progress_window("Loading data...")
 
-    names_and_paths = self.study_data_master.chunked_patient_names_and_paths()
+    names_and_paths = self.study_data.get_chunked_patient_names_and_paths(self.current_patient_name,
+                                                                          self.chunk_idx)
+
+    for name, _ in names_and_paths:
+        log(logging.INFO, LogType.INTERNAL, f"\t{name}")
 
     no_of_patients = len(names_and_paths)
-
-    if self.study_data_master.show_training_cases(self.current_radiologist_id):
-
-        training_list = self.study_data_master.get_training_case_names(
-            self.current_radiologist_id)
-        names_and_paths = [(patient_name, f"{self.study_data_master.path_study_input_cases_training}{patient_name}")
-                           for patient_name in training_list] + names_and_paths
-
-        no_of_patients = len(names_and_paths)
 
     progress_val = 0
 
@@ -255,29 +266,37 @@ def load_one_chunk(self: "registrationViewerWidget") -> None:
     # fullscreen_block.close()
 
     log(logging.INFO, LogType.INTERNAL,
-        f"Finished loading study data chunk {self.study_data_master.current_chunk_idx}/{len(self.study_data_master.chunked_patients)}")
+        f"Finished loading study data chunk {self.chunk_idx+1}/{len(self.study_data.chunked_patients)}")
 
 
 def clear_one_chunk(self: "registrationViewerWidget") -> None:
 
-    for case_name, (node_type, node) in self.study_loaded_data.items():
-        slicer.mrmlScene.RemoveNode(node)
+    log(logging.INFO, LogType.INTERNAL,
+        "Start clearing current study data chunk")
+
+    for node_type_and_node in self.study_loaded_data.values():
+        for node in node_type_and_node.values():
+            slicer.mrmlScene.RemoveNode(node)
 
     self.study_loaded_data = {}
 
-    for case_name, (node_type, node) in self.study_node_groundtruth_points.items():
-        slicer.mrmlScene.RemoveNode(node)
+    for node_type_and_node in self.study_node_groundtruth_points.values():
+        for node in node_type_and_node.values():
+            slicer.mrmlScene.RemoveNode(node)
 
     self.study_node_groundtruth_points = {}
 
+    log(logging.INFO, LogType.INTERNAL,
+        "Done clearing current study data chunk")
+
 
 def add_dummy_test_points(self: "registrationViewerWidget") -> None:
-    test_patient_names = self.study_data_master.get_training_case_names(
+    test_patient_names = self.study_data.get_training_case_names(
         self.current_radiologist_id)
 
-    self.study_node_groundtruth_points[test_patient_names[0]] = {tasks.Task.TEST_RIGID: utils.create_gt_point(tasks.Task.TEST_RIGID.value,
-                                                                                                              (0, 0, 0),
-                                                                                                              [])}
+    self.study_node_groundtruth_points[test_patient_names[0]] = {tasks.Task.TEST_NONE: utils.create_gt_point(tasks.Task.TEST_NONE.value,
+                                                                                                             (0, 0, 0),
+                                                                                                             [])}
     self.study_node_groundtruth_points[test_patient_names[1]] = {tasks.Task.TEST_ROTATION: utils.create_gt_point(tasks.Task.TEST_ROTATION.value,
                                                                                                                  (0, 0, 0),
                                                                                                                  [])}
@@ -297,7 +316,7 @@ def load_one_case_voxels(
     path_volume_fixed, path_volume_moving, _, _, \
         path_transform_fixed, path_transform_moving, \
         path_deformation = utils.get_paths_to_load(case_path,
-                                                   self.study_data_master.path_study_input_registrations)
+                                                   self.study_data.path_study_input_registrations)
 
     utils.update_progress_window(
         (progress_val * 90) / (no_of_patients), f"Loading data...")
@@ -368,9 +387,6 @@ def load_one_case_voxels(
 
     utils.hide_all_volumes_from_views(
         self.views_first_row + self.views_second_row)
-
-    print(f"Loaded volume {path_volume_fixed=}")
-    print(f"Loaded deform {path_deformation=}")
 
     return progress_val
 
@@ -478,13 +494,13 @@ def save_annotations(self: "registrationViewerWidget",
     if self.current_combination_idx < 0:
         return
 
-    if self.current_patient_name == self.study_data_master.dummy_patient_name:
+    if self.current_patient_name == self.study_data.dummy_patient_name:
         current_patient_name = self.current_patient_name + \
             f"_{self.dummy_patient_step}"
     else:
         current_patient_name = self.current_patient_name
 
-    path_patient = f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{current_patient_name}/{self.current_patient_transform_type.value}"  # nopep8
+    path_patient = f"{self.study_data.path_study_output}{self.current_radiologist_id}/{current_patient_name}/{self.current_patient_transform_type.value}"  # nopep8
 
     if not os.path.exists(path_patient):
         os.makedirs(path_patient)

@@ -12,18 +12,22 @@
             "patients": {
                 "positive":
                     [
+                        "0f9SYhwcPFc",
+                        "y9Zc0VfK-hE",
+                        "GIoTXpMU6rQ",
                         "YPEbc0OFC8I",
-                        "yIt7Z7VHXU0"
+                        "yYcNJD5knnY",
+                        "zNsYMilmwCo"
                     ],
                 "negative":
                     [
+                        "1q_1_G-1EPM",
                         "3dSDmvwSjek",
-                        "6vkfAvGWUPg"
-                    ]},
-            "config": {
-                "randomise": true,
-                "show_training_cases": true
-            }
+                        "6vkfAvGWUPg",
+                        "6WB8wP4uAl0",
+                        "7IZ0hAktN78",
+                        "7SwVHAAw5lM"
+                    ]}
         }
     }
 }

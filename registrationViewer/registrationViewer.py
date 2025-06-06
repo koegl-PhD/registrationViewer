@@ -192,10 +192,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.annotation_fixed_roi_recurrence = None
 
         # STUDY
-        self.study_data_master: 'study.StudyData' = None
+        self.study_data: 'study.StudyData' = None
 
         self.current_radiologist_id: str = ""
-
+        self.chunk_idx = 0
         self.current_combination_idx: int = 0
         self.combination_starting_offset: int = 0
         self.current_test_combination_idx: int = 0
@@ -819,7 +819,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_list == []:
             return ("", "", "")
 
-        return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][idx]
+        return self.study_data.case_task_transformation_map[self.current_radiologist_id][idx]
 
     @property
     def node_fixed(self) -> Any:
@@ -850,7 +850,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_list == []:
             return 0
 
-        return self.study_data_master.number_of_tasks(self.current_radiologist_id) - self.number_of_test_tasks
+        return self.study_data.number_of_tasks(self.current_radiologist_id) - self.number_of_test_tasks
 
     @property
     def number_of_test_tasks(self) -> int:
@@ -877,7 +877,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_task_transform_comb == ("", "", ""):
             return "no_patient"
 
-        return self.current_patient_task_transform_comb[0]
+        return self.current_patient_task_transform_comb[0][1]
 
     @property
     def previous_patient_name(self) -> str:
@@ -887,7 +887,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_combination_idx == 0:
             return "no_patient"
 
-        return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx - 1][0]
+        return self.study_data.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx - 1][0][1]
 
     @property
     def current_patient_transform_type(self) -> utils.TransformType:
@@ -901,13 +901,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_list == []:
             return ("", "", "")
 
-        return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx]
+        return self.study_data.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx]
 
     def patient_task_transform_comb(self, idx: int) -> Tuple[str, str, str]:
         if self.current_patient_list == []:
             return ("", "", "")
 
-        return self.study_data_master.case_task_transformation_map[self.current_radiologist_id][idx]
+        return self.study_data.case_task_transformation_map[self.current_radiologist_id][idx]
 
     @property
     def is_current_patient_task_transform_comb_test(self) -> bool:
@@ -917,7 +917,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_task_transform_comb == ("", "", ""):
             return False
 
-        return tasks.Task(self.current_patient_task_transform_comb[1]) in [tasks.Task.TEST_RIGID, tasks.Task.TEST_ROTATION, tasks.Task.TEST_NONLINEAR]
+        return tasks.Task(self.current_patient_task_transform_comb[1]) in [tasks.Task.TEST_NONE, tasks.Task.TEST_ROTATION, tasks.Task.TEST_NONLINEAR]
 
     def is_patient_task_transform_comb_test(self, idx: int) -> bool:
         """
@@ -926,12 +926,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_task_transform_comb == ("", "", ""):
             return False
 
-        return tasks.Task(self.patient_task_transform_comb(idx)[1]) in [tasks.Task.TEST_RIGID, tasks.Task.TEST_ROTATION, tasks.Task.TEST_NONLINEAR]
+        return tasks.Task(self.patient_task_transform_comb(idx)[1]) in [tasks.Task.TEST_NONE, tasks.Task.TEST_ROTATION, tasks.Task.TEST_NONLINEAR]
 
     @property
     def current_radiologist_name(self) -> str:
 
-        return self.study_data_master.participants[self.current_radiologist_id]['name']
+        return self.study_data.participants[self.current_radiologist_id]['name']
 
     @property
     def next_task_log_text(self) -> str:
