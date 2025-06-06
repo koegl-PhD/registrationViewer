@@ -5,7 +5,7 @@ from typing import Optional, TYPE_CHECKING, Literal
 import slicer
 import qt
 
-from registrationViewerLib import sectra, study, tasks, tasks_ui_logic, texts, utils, view_logic
+from registrationViewerLib import log_utils, sectra, study, tasks, tasks_ui_logic, texts, utils, view_logic
 from registrationViewerLib.custom_logging import configure_logger, log, LogType
 
 if TYPE_CHECKING:
@@ -153,7 +153,7 @@ def btn_call_on_set_radiologist_id(self: "registrationViewerWidget") -> None:
 
 def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
 
-    self.study_data_master = study.StudyData(
+    self.study_data = study.StudyData(
         self.ui_sub_2.data_master_path_edit.currentPath)
 
     radiologist_id: str = str(
@@ -163,12 +163,12 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
         slicer.util.errorDisplay("Please enter radiologist ID")
         return
 
-    if not self.study_data_master.participants.__contains__(radiologist_id):
+    if not self.study_data.participants.__contains__(radiologist_id):
         slicer.util.errorDisplay(
-            f"Radiologist {radiologist_id} not found in study data master. Only contains {self.study_data_master.participants.keys()}")
+            f"Radiologist {radiologist_id} not found in study data master. Only contains {self.study_data.participants.keys()}")
         return
 
-    radiologist_name = self.study_data_master.participants[radiologist_id]["name"]
+    radiologist_name = self.study_data.participants[radiologist_id]["name"]
 
     if not utils.show_question_popup(f"Are you sure {radiologist_name} is the desired participant?"):
         return
@@ -179,10 +179,10 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
     self.ui_sub_2.radiologistSetCheckBox.setChecked(True)
     self.ui_sub_2.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
 
-    self.current_patient_list = self.study_data_master.patient_list(self.current_radiologist_id)  # nopep8
+    self.current_patient_list = self.study_data.patient_list(self.current_radiologist_id)  # nopep8
 
     configure_logger(self,
-                     f"{self.study_data_master.path_study_output}{self.current_radiologist_id}/{self.current_radiologist_id}.log",
+                     f"{self.study_data.path_study_output}{self.current_radiologist_id}/{self.current_radiologist_id}.log",
                      "RegistrationEvaluation")  # nopep8
 
 
@@ -250,34 +250,31 @@ def btn_call_on_start_study(self: "registrationViewerWidget") -> None:
 
 
 def organiser_start_study(self: "registrationViewerWidget") -> None:
+    log_utils.log_all_chunks(self)
+    log_utils.log_all_tasks(self)
+
     on_simple_ui(self, True, inital=True)
+
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
     self.ui_sub_6.current_rad_name.setVisible(True)
-
-    self.ui_sub_1.simple_ui_button.setVisible(False)
+    self.ui_sub_1.simple_ui_button.setVisible(True)
 
     utils.set_button_texts(self)
-    print(f"{self.show_test_cases=}")
+
+    self.combination_starting_offset = int(
+        self.ui_sub_2.starting_task_numberTextEdit.toPlainText())
+
     if self.show_test_cases:
         utils.set_buttons_for_test_cases(self)
+        study.add_dummy_test_points(self)
     else:
-        a = self.study_data_master.case_task_transformation_map[self.current_radiologist_id]
-        self.study_data_master.case_task_transformation_map[self.current_radiologist_id] = a[3:]
+        self.current_combination_idx = self.combination_starting_offset
+        self.study_data.remove_test_combinations(self.current_radiologist_id)
+        self.chunk_idx = self.study_data.get_chunk_idx(
+            self.current_patient_name)
 
-    study.load_all_study_data(self)
-
+    study.load_current_chunk(self)
     sectra.setup_sectra_movements(self)
-
-    l = len(
-        self.study_data_master.case_task_transformation_map[self.current_radiologist_id])
-
-    log(logging.INFO, LogType.INTERNAL, "All tasks to be done START")
-
-    for idx, combination in enumerate(self.study_data_master.case_task_transformation_map[self.current_radiologist_id]):
-        log(logging.INFO, LogType.INTERNAL,
-            f"Combination {idx}/{l - 1}: {combination}")
-
-    log(logging.INFO, LogType.INTERNAL, "All tasks to be done END")
 
 
 def btn_call_on_user_start_study(self: "registrationViewerWidget") -> None:
@@ -299,9 +296,6 @@ def start_study(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.pause_button.setVisible(True)
     self.ui_sub_6.info_button.setVisible(True)
     self.ui_sub_6.study_next_task_button.setVisible(True)
-
-    self.combination_starting_offset = int(
-        self.ui_sub_2.starting_task_numberTextEdit.toPlainText())
 
     next_task(self, initial=True)
 
@@ -385,6 +379,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         return
 
     if not initial:
+
         study.save_annotations(self,
                                task_type=self.current_task,
                                serialise_to_log=True)
@@ -393,22 +388,28 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
         self.current_combination_idx += 1
         self.current_test_combination_idx += 1
+        if self.show_test_cases and self.current_test_combination_idx == 3:
+            self.current_combination_idx += self.combination_starting_offset
+
+        # now we have to load
+        # 0. show popup
+        # 1. clear current data
+        # 2. load new data
+        # 3 close popup
+        if not self.study_data.in_chunk(self.current_patient_name, self.chunk_idx):
+            self.chunk_idx = self.study_data.get_chunk_idx(
+                self.current_patient_name)
+            study.clear_one_chunk(self)
+            study.load_current_chunk(self)
 
         # if the previous patient was the same, randomize the offsets, so it seems like each point is new
         if self.get_combination(self.current_combination_idx - 1)[0] == self.get_combination(self.current_combination_idx)[0]:
             randomise_starting_offset = True
 
-        if self.show_test_cases:
-            if self.current_test_combination_idx == 3:
-                self.current_combination_idx += self.combination_starting_offset
-        elif not self.applied_starting_offset:
-            self.current_combination_idx += self.combination_starting_offset
-            self.applied_starting_offset = True
-
     if not self.is_current_patient_task_transform_comb_test:
-        if self.previous_patient_name == self.study_data_master.dummy_patient_name and self.current_patient_name != self.study_data_master.dummy_patient_name:
+        if self.previous_patient_name == self.study_data.dummy_patient_name and self.current_patient_name != self.study_data.dummy_patient_name:
             self.dummy_patient_step = "end"
-        if self.previous_patient_name != self.study_data_master.dummy_patient_name and self.current_patient_name != self.study_data_master.dummy_patient_name:
+        if self.previous_patient_name != self.study_data.dummy_patient_name and self.current_patient_name != self.study_data.dummy_patient_name:
             self.dummy_patient_step = "end"
 
     utils.set_up_synchronisation(self)

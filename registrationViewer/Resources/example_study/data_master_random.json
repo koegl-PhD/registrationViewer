@@ -1,22 +1,33 @@
 {
     "path_study": "/home/koeglf/data/preprocess_again/",
     "path_study_output": "/home/koeglf/data/preprocess_again/study_output/",
-    "path_study_input_cases": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/",
+    "path_study_input_cases_positive": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/positive/",
+    "path_study_input_cases_negative": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/negative/",
     "path_study_input_registrations": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans_registrations/",
-    "path_study_training_cases": "/home/koeglf/data/preprocess_again/example_cases/SerielleCTs_nii_forHumans/",
-    "path_study_training_registrations": "/home/koeglf/data/preprocess_again/example_cases/SerielleCTs_nii_forHumans_registrations/",
+    "path_study_input_cases_training": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/training/",
+    "path_study_input_cases_dummy": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/dummy/",
     "participants": {
         "rad_4": {
             "name": "Sebastian Ziegelmayer",
-            "patients":
-                [
-                    "YPEbc0OFC8I",
-                    "yIt7Z7VHXU0"
-                ],
-            "config": {
-                "randomise": true,
-                "show_training_cases": true
-            }
+            "patients": {
+                "positive":
+                    [
+                        "0f9SYhwcPFc",
+                        "y9Zc0VfK-hE",
+                        "GIoTXpMU6rQ",
+                        "YPEbc0OFC8I",
+                        "yYcNJD5knnY",
+                        "zNsYMilmwCo"
+                    ],
+                "negative":
+                    [
+                        "1q_1_G-1EPM",
+                        "3dSDmvwSjek",
+                        "6vkfAvGWUPg",
+                        "6WB8wP4uAl0",
+                        "7IZ0hAktN78",
+                        "7SwVHAAw5lM"
+                    ]}
         }
     }
 }
