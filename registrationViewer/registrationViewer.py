@@ -219,6 +219,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.first_time_description_show: bool = True
         self.first_time_test_description_show: bool = True
+        self.first_time_info_show: bool = True
 
         self.checkbox_test_cases: bool = False
 

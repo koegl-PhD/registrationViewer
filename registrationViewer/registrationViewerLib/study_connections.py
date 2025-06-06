@@ -309,9 +309,17 @@ def btn_call_on_next_task(self: "registrationViewerWidget") -> None:
 
 def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
-    if self.show_test_cases and self.first_time_test_description_show and self.is_current_patient_task_transform_comb_test:
-
+    if self.first_time_description_show:
         self.full_screen_block.open()
+
+        utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+                                                  content=texts.Contents.STUDY_DESCRIPTION,
+                                                  text_size=14,
+                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
+
+        self.first_time_description_show = False
+
+    if self.show_test_cases and self.first_time_test_description_show and self.is_current_patient_task_transform_comb_test:
 
         utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
                                                   content=texts.Contents.TEST_STUDY_DESCRIPTION,
@@ -331,7 +339,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
         self.first_time_test_description_show = False
 
-    if self.first_time_description_show and not self.is_patient_task_transform_comb_test(self.current_combination_idx + 1):
+    if self.first_time_info_show and not self.is_patient_task_transform_comb_test(self.current_combination_idx + 1):
 
         self.full_screen_block.open()
 
@@ -342,14 +350,10 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
                                                       center_text=True,
                                                       on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study begins"))
 
-        utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
-                                                  content=texts.Contents.STUDY_DESCRIPTION,
-                                                  text_size=14,
-                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
-
-        utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                               title=texts.Titles.USER_ICONS,
-                                               on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
+        if not self.show_test_cases:
+            utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+                                                   title=texts.Titles.USER_ICONS,
+                                                   on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
 
         self.study_progress_bar_tasks = utils.show_progressbar(
             ui=self.ui_sub_6,
@@ -358,7 +362,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
             maximum=self.number_of_tasks
         )
 
-        self.first_time_description_show = False
+        self.first_time_info_show = False
 
     randomise_starting_offset = False
 
