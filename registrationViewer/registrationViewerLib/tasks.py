@@ -9,7 +9,7 @@ class Task(Enum):
     A_CAROTISEXTERNA_L = "a_carotisexterna_l"
     LYMPH_NODE = "lymph_node"
     RECURRENCE = "recurrence"
-    TEST_RIGID = "test_rigid"
+    TEST_NONE = "test_none"
     TEST_ROTATION = "test_rotation"
     TEST_NONLINEAR = "test_nonlinear"
 
@@ -60,7 +60,7 @@ Entscheide, ob ein Rezidiv im Fixed Bild (obere Reihe) vorhanden ist ({recurrenc
 Wenn ja, setze einen Punkt in seine ungefähre Mitte.
 """,
 
-    Task.TEST_RIGID: """
+    Task.TEST_NONE: """
 Dies ist eine Testaufgabe. Dasselbe Bild wird in beiden Reihen angezeigt, daher ist die Registrierung perfekt.
 Sie können die Registrierung ein- und ausschalten, um den Effekt zu erkunden.
 """,
