@@ -69,6 +69,53 @@ class ArrowKeyFilter(qt.QObject):
         return False
 
 
+class FullScreenBlock():
+    def __init__(self) -> None:
+        """Initialize fullscreen block."""
+
+        self.dialog: qt.QDialog = None
+        self.is_open = False
+
+    def open(
+        self,
+        title: str = "",
+        content: str = "",
+        center_text: bool = False,
+        text_size: int = 24
+    ) -> None:
+        if self.is_open:
+            return
+
+        self.dialog = show_fullscreen_block(
+            title, content, center_text, text_size)
+
+        self.is_open = True
+
+        print("opened fullscreen block")
+
+    def close(self) -> None:
+        if not self.is_open:
+            return
+
+        if self.dialog is None:
+            return
+
+        self.dialog.close()
+
+        self.is_open = False
+
+        print("closed fullscreen block")
+
+    def set_content(self, content: str) -> None:
+        if not self.is_open:
+            return
+
+        if self.dialog is None:
+            return
+
+        self.dialog.property("contentLabel").setText(content)
+
+
 def center_on_point(point: slicer.vtkMRMLMarkupsFiducialNode,
                     view_group: Optional[int] = None) -> None:
 
@@ -639,6 +686,8 @@ def show_fullscreen_block(
         label.setAlignment(qt.Qt.AlignCenter)
     label.setStyleSheet(f"font-size: {text_size}px; padding: 30px;")
     layout.addWidget(label)
+
+    dialog.setProperty("contentLabel", label)
 
     dialog.setWindowState(qt.Qt.WindowFullScreen)
     dialog.show()

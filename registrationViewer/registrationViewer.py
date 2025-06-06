@@ -10,6 +10,7 @@ import numpy as np
 
 import ctk
 import vtk
+import qt
 import slicer
 import slicer.util
 from slicer.i18n import tr as _
@@ -193,6 +194,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # STUDY
         self.study_data: 'study.StudyData' = None
+
+        self.full_screen_block: utils.FullScreenBlock = utils.FullScreenBlock()
 
         self.current_radiologist_id: str = ""
         self.chunk_idx = 0
