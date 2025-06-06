@@ -1024,8 +1024,10 @@ def shuffle_without_consecutive_ab(
         candidates = [k for k in ab_keys if k != prev_ab]
 
         if not candidates:
-            raise ValueError(
-                "Cannot shuffle without consecutive (a, b) duplicates.")
+            print(
+                "\nCannot shuffle without consecutive (a, b) duplicates. Doing standard shuffle.\n")
+            random.shuffle(tuples)
+            return tuples
 
         choice = random.choice(candidates)
         item = ab_groups[choice].pop()
