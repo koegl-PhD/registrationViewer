@@ -24,7 +24,9 @@ class StudyData:
     case_task_transformation_map: dict[str,
                                        List[Tuple[Tuple[str, str], str, str]]] = field(init=False)
 
-    chunked_patients: List[Tuple[str, str]] = field(default_factory=list)
+
+    split: dict[int, dict[int, Tuple[str, utils.TransformType]]
+                ] = field(default_factory=dict)
 
     def __post_init__(self):
         with open(self.path, "r") as f:
@@ -32,11 +34,15 @@ class StudyData:
 
         self.__dict__.update(self.data)
 
-        self.dummy_patient_name = "0e5fp8GltvE"
+        self.dummy_patient_name = "dummy_0e5fp8GltvE"
+
+        random.seed(0)
+
+        self._create_data_split()
 
         self._divide_patients_into_chunks()
 
-        self._create_case_task_transformation_map(randomise=True)
+        self._create_case_task_transformation_map()
 
     def save(self, json_path=None):
         if json_path is None:
@@ -45,13 +51,97 @@ class StudyData:
         with open(json_path, "w") as f:
             json.dump(self.data, f, indent=4)
 
-    def patient_list(self, rad_id: str) -> List[str]:
+    def _create_data_split(self) -> None:
 
-        participant = self.participants.get(rad_id, None)
-        if participant is None:
-            raise ValueError(f"Rad id {rad_id} not found in data")
+        patients_positive = self.data["patients"]["positive"]
+        patients_negative = self.data["patients"]["negative"]
 
-        return participant["patients"]["negative"].copy() + participant["patients"]["positive"].copy()
+        split_g1 = {patients_positive[i]: ("positive", utils.TransformType.NONE)
+                    for i in range(0, 7)}
+        split_g1.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
+                        for i in range(0, 7)})
+        split_g1.update({patients_positive[i]: ("positive", utils.TransformType.LINEAR)
+                        for i in range(7, 14)})
+        split_g1.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
+                        for i in range(7, 14)})
+        split_g1.update({patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
+                        for i in range(14, 21)})
+        split_g1.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
+                        for i in range(14, 21)})
+
+        split_g2 = {patients_positive[i]: ("positive", utils.TransformType.LINEAR)
+                    for i in range(0, 7)}
+        split_g2.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
+                        for i in range(0, 7)})
+        split_g2.update({patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
+                        for i in range(7, 14)})
+        split_g2.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
+                        for i in range(7, 14)})
+        split_g2.update({patients_positive[i]: ("positive", utils.TransformType.NONE)
+                        for i in range(14, 21)})
+        split_g2.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
+                        for i in range(14, 21)})
+
+        split_g3 = {patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
+                    for i in range(0, 7)}
+        split_g3.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
+                        for i in range(0, 7)})
+        split_g3.update({patients_positive[i]: ("positive", utils.TransformType.NONE)
+                        for i in range(7, 14)})
+        split_g3.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
+                        for i in range(7, 14)})
+        split_g3.update({patients_positive[i]: ("positive", utils.TransformType.LINEAR)
+                        for i in range(14, 21)})
+        split_g3.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
+                        for i in range(14, 21)})
+
+        self.split = {
+            1: split_g1,
+            2: split_g2,
+            3: split_g3
+        }
+
+        self._shuffle_data_split()
+
+        """
+        print('\t' * 2 + 'Group 1' + '\t' * 5 +
+              'Group 2' + '\t' * 5 + 'Group 3')
+        for (i1, p1), (i2, p2), (i3, p3) in zip(self.split[1].items(), self.split[2].items(), self.split[3].items()):
+
+            if p1[1] != utils.TransformType.NONLINEAR:
+                t1 = 1
+            else:
+                t1 = 1
+
+            if p2[1] != utils.TransformType.NONLINEAR:
+                t2 = 1
+            else:
+                t2 = 1
+            if p3[1] != utils.TransformType.NONLINEAR:
+                t3 = 1
+            else:
+                t3 = 1
+
+            print(
+                str(i1) + '\t\t' + p1[0] + '\t' * t1 + p1[1].value + '\t\t' +
+                str(i2) + '\t\t' + p2[0] + '\t' * t2 + p2[1].value + '\t\t' +
+                str(i3) + '\t\t' + p3[0] + '\t' * t3 + p3[1].value
+            )
+        print()
+        print()
+        print()
+        print()
+        """
+
+    def _shuffle_data_split(self) -> None:
+
+        shuffled_keys = list(self.split[1].keys())
+
+        random.shuffle(shuffled_keys)
+
+        self.split[1] = {k: self.split[1][k] for k in shuffled_keys}
+        self.split[2] = {k: self.split[2][k] for k in shuffled_keys}
+        self.split[3] = {k: self.split[3][k] for k in shuffled_keys}
 
     def get_chunked_patient_names_and_paths(
             self,
