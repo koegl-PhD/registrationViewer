@@ -4,7 +4,7 @@ import logging
 import os
 import random
 
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 import slicer
 
@@ -24,6 +24,8 @@ class StudyData:
     case_task_transformation_map: dict[str,
                                        List[Tuple[Tuple[str, str], str, str]]] = field(init=False)
 
+    chunked_patients: Dict[int, List[List[Tuple[str, utils.TransformType, str]]]] = field(
+        default_factory=dict)
 
     split: dict[int, dict[int, Tuple[str, utils.TransformType]]
                 ] = field(default_factory=dict)
@@ -165,14 +167,10 @@ class StudyData:
 
         return len(self.case_task_transformation_map[rad_id])
 
-    def get_training_case_names(self, rad_id: str) -> List[str]:
+    def get_training_case_names(self) -> List[str]:
         """
         Returns the names of the cases used for training
         """
-
-        participant = self.participants.get(rad_id, None)
-        if participant is None:
-            raise ValueError(f"Rad id {rad_id} not found in data")
 
         # list all folders
         path = self.path_study_input_cases_training
@@ -187,61 +185,55 @@ class StudyData:
         return training_cases
 
     def _divide_patients_into_chunks(self) -> None:
-        random.seed(42)
 
-        max_chunk_size = 2
+        max_chunk_size = 7
 
         patients: List[str] = []
 
-        for _, rad_content in self.participants.items():
-            for present in ["positive", "negative"]:
+        for group, split in self.split.items():
 
-                for patient_name in rad_content["patients"][present]:
+            for patient_name, (present, transform) in split.items():
 
-                    patients.append((present, patient_name))
+                patients.append((patient_name, transform, present))
 
-        # randomize patients list
-        random.shuffle(patients)
+            self.chunked_patients[group] = [patients[i:i+max_chunk_size]
+                                            for i in range(0, len(patients), max_chunk_size)]
 
-        self.chunked_patients = [patients[i:i+max_chunk_size]
-                                 for i in range(0, len(patients), max_chunk_size)]
-
-    def _create_case_task_transformation_map(self, randomise: bool) -> None:
+    def _create_case_task_transformation_map(self) -> None:
         """
         Create a mapping of task to transformation for the random case.
         This is used to create the random case in the study.
         """
 
-        random.seed(42)
-
         self.case_task_transformation_map = {}
+
+        pat_idx = 0
 
         for rad_id, rad_content in self.participants.items():
 
+            group = int(rad_content["group"])
+
             temp_rad_map = []
 
-            for chunk in self.chunked_patients:
+            for chunk in self.chunked_patients[group]:
 
                 temp_chunk_map = []
 
-                for patient in chunk:
+                for patient_name, transform, present in chunk:
 
-                    for transform in utils.TransformType:
+                    for task in tasks.TASK_ORDER.values():
 
-                        for task in tasks.TASK_ORDER.values():
+                        if patient_name == self.dummy_patient_name:
+                            continue
 
-                            if patient[1] == self.dummy_patient_name:
-                                continue
+                        # or transform != utils.TransformType.NONLINEAR:
+                        if task != tasks.Task.RECURRENCE:
+                            continue
 
-                            if task != tasks.Task.RECURRENCE or transform != utils.TransformType.NONLINEAR:
-                                continue
+                        temp_chunk_map.append(
+                            (patient_name, task.value, transform.value))
 
-                            temp_chunk_map.append(
-                                (patient, task.value, transform.value))
-
-                if randomise:
-                    temp_chunk_map = utils.shuffle_without_consecutive_ab(
-                        temp_chunk_map)
+                    pat_idx += 1
 
                 temp_rad_map += temp_chunk_map
 

@@ -14,11 +14,14 @@ def log_all_chunks(self: "registrationViewerWidget") -> None:
     """
 
     log(logging.INFO, LogType.INTERNAL, "All chunks START")
-    for i, chunk in enumerate(self.study_data.chunked_patients):
-        log(logging.INFO, LogType.INTERNAL,
-            f"Chunk {i+1}/{len(self.study_data.chunked_patients)}:")
 
-        for present, patient_name in chunk:
+    for i, chunk in enumerate(self.study_data.chunked_patients[1]):
+        log(logging.INFO, LogType.INTERNAL,
+            f"Chunk {i+1}/{len(self.study_data.chunked_patients[1])}:")
+
+        print(f"{chunk=}")
+
+        for patient_name, transform, present in chunk:
             log(logging.INFO, LogType.INTERNAL,
                 f"\t{present} - {patient_name}")
     log(logging.INFO, LogType.INTERNAL, "All chunks END")
