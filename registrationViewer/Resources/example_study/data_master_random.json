@@ -6,28 +6,60 @@
     "path_study_input_registrations": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans_registrations/",
     "path_study_input_cases_training": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/training/",
     "path_study_input_cases_dummy": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/dummy/",
+    "patients": {
+        "positive":
+            [
+                "guqcK-4iXaE",
+                "zNsYMilmwCo",
+                "yYcNJD5knnY",
+                "YPEbc0OFC8I",
+                "yIt7Z7VHXU0",
+                "y9Zc0VfK-hE",
+                "xYbaegYf_mw",
+                "XKgRKTaLeEo",
+                "WeMcC01ZNgY",
+                "VUIaoA1iqhI",
+                "urqkluKweXA",
+                "ur1u5glVZIE",
+                "TwU508CCA9Y",
+                "TMxGak0IQOg",
+                "pP5CHNLQspI",
+                "pnxsbLeerXU",
+                "LeJQ4K8qv5c",
+                "LB9oATPd0mE",
+                "iqzgKhiRxxc",
+                "hmJfXqxVMk0",
+                "fNvYEk8SSJs"
+            ],
+        "negative":
+            [
+                "ZmTnkjJY0WA",
+                "7SwVHAAw5lM",
+                "wl0SZz-0IAI",
+                "hkvdD_XVYqo",
+                "CSSdmYlgjew",
+                "7IZ0hAktN78",
+                "PfzTYxllBQc",
+                "g-chOlbtzBQ",
+                "96-du2ceM4o",
+                "87J-_CHHkzI",
+                "UoYxcCNwdxA",
+                "J0XX6t7vZ1I",
+                "vQC_zG5VpaI",
+                "ccucLKGWtSQ",
+                "XliJZuWCOzs",
+                "VIhRI27e_qA",
+                "tpcakZfjy40",
+                "tjrrBb3AK9M",
+                "SAxkPtG7yrk",
+                "pEQnvh_Lbhc",
+                "og9nL1ncPf4"
+            ]},
     "participants": {
         "rad_4": {
             "name": "Sebastian Ziegelmayer",
-            "patients": {
-                "positive":
-                    [
-                        "0f9SYhwcPFc",
-                        "y9Zc0VfK-hE",
-                        "GIoTXpMU6rQ",
-                        "YPEbc0OFC8I",
-                        "yYcNJD5knnY",
-                        "zNsYMilmwCo"
-                    ],
-                "negative":
-                    [
-                        "1q_1_G-1EPM",
-                        "3dSDmvwSjek",
-                        "6vkfAvGWUPg",
-                        "6WB8wP4uAl0",
-                        "7IZ0hAktN78",
-                        "7SwVHAAw5lM"
-                    ]}
+            "group": "1"
         }
     }
 }
+    
