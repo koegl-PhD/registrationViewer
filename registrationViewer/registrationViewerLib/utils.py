@@ -931,6 +931,8 @@ def set_up_synchronisation(self: "registrationViewerWidget") -> None:
         print(f"{self.current_patient_name=}")
         raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
 
+    self.synchronise_with_displacement_pressed = False
+
     self.remove_custom_observers_from_crosshair()
 
 
