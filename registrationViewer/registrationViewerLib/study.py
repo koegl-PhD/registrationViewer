@@ -155,40 +155,60 @@ class StudyData:
 
                 temp_rad_map += temp_chunk_map
 
-            start_and_end_task = []
-            for task in tasks.TASK_ORDER.values():
-                start_and_end_task.append(
-                    (("dummy", self.dummy_patient_name), task.value, utils.TransformType.NONLINEAR.value))
-            random.shuffle(start_and_end_task)
+            temp_rad_map = self._insert_dummy_tasks(temp_rad_map, group)
 
-            self.chunked_patients[0].insert(
-                0, ("dummy", self.dummy_patient_name))
-            self.chunked_patients[-1].append(
-                ("dummy", self.dummy_patient_name))
-
-            temp_rad_map = start_and_end_task + temp_rad_map + start_and_end_task
-
-            test_names = self.get_training_case_names(rad_id)
-            test_comb_1 = (("training", test_names[0]), tasks.Task.TEST_NONE.value,
-                           utils.TransformType.LINEAR.value)
-            test_comb_2 = (("training", test_names[1]), tasks.Task.TEST_ROTATION.value,
-                           utils.TransformType.LINEAR.value)
-            test_comb_3 = (("training", test_names[2]), tasks.Task.TEST_NONLINEAR.value,
-                           utils.TransformType.NONLINEAR.value)
-
-            test_chunk = [("training", test_names[0]),
-                          ("training", test_names[1]),
-                          ("training", test_names[2])]
-            self.chunked_patients.insert(0, test_chunk)
-
-            temp_rad_map.insert(0, test_comb_1)
-            temp_rad_map.insert(1, test_comb_2)
-            temp_rad_map.insert(2, test_comb_3)
+            temp_rad_map = self._insert_training_cases(temp_rad_map, group)
 
             self.case_task_transformation_map[rad_id] = temp_rad_map
 
             for a in self.case_task_transformation_map[rad_id]:
                 print(a)
+
+    def _insert_dummy_tasks(
+            self,
+            temp_rad_map: List[List[Tuple[str, str, str]]],
+            group: int
+    ) -> List[List[Tuple[str, str, str]]]:
+
+        start_and_end_task = []
+        for task in tasks.TASK_ORDER.values():
+            start_and_end_task.append(
+                (self.dummy_patient_name, task.value, utils.TransformType.NONLINEAR.value))
+
+        self.chunked_patients[group][0].insert(
+            0, (self.dummy_patient_name, utils.TransformType.NONLINEAR, "positive"))
+        self.chunked_patients[group][-1].append(
+            (self.dummy_patient_name, utils.TransformType.NONLINEAR, "positive"))
+
+        temp_rad_map = start_and_end_task + temp_rad_map + start_and_end_task
+
+        return temp_rad_map
+
+    def _insert_training_cases(
+            self,
+            temp_rad_map: List[List[Tuple[str, str, str]]],
+            group: int
+    ) -> List[List[Tuple[str, str, str]]]:
+
+        training_names = self.get_training_case_names()
+
+        training_comb_1 = (training_names[0], tasks.Task.TRAINING_NONE.value,
+                           utils.TransformType.LINEAR.value)
+        training_comb_2 = (training_names[1], tasks.Task.TRAINING_ROTATION.value,
+                           utils.TransformType.LINEAR.value)
+        training_comb_3 = (training_names[2], tasks.Task.TRAINING_NONLINEAR.value,
+                           utils.TransformType.NONLINEAR.value)
+
+        training_chunk = [(training_names[0], utils.TransformType.NONE, "training"),       # nopep8
+                          (training_names[1], utils.TransformType.LINEAR, "training"),     # nopep8
+                          (training_names[2], utils.TransformType.NONLINEAR, "training")]  # nopep8
+        self.chunked_patients[group].insert(0, training_chunk)
+
+        temp_rad_map.insert(0, training_comb_1)
+        temp_rad_map.insert(1, training_comb_2)
+        temp_rad_map.insert(2, training_comb_3)
+
+        return temp_rad_map
 
     def number_of_patients(self, rad_id: str) -> int:
         """
