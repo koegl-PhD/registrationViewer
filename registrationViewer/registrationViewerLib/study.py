@@ -222,7 +222,7 @@ class StudyData:
         raise ValueError(
             f"Patient {patient_name} not found in chunks. Only found {self.chunked_patients=}.")
 
-    def remove_test_combinations(self, rad_id: str) -> None:
+    def remove_training_combinations(self, rad_id: str) -> None:
         temp = self.case_task_transformation_map[rad_id]
         self.case_task_transformation_map[rad_id] = temp[3:]
 
@@ -290,19 +290,18 @@ def clear_one_chunk(self: "registrationViewerWidget") -> None:
         "Done clearing current study data chunk")
 
 
-def add_dummy_test_points(self: "registrationViewerWidget") -> None:
-    test_patient_names = self.study_data.get_training_case_names(
-        self.current_radiologist_id)
+def add_dummy_training_points(self: "registrationViewerWidget") -> None:
+    training_patient_names = self.study_data.get_training_case_names()
 
-    self.study_node_groundtruth_points[test_patient_names[0]] = {tasks.Task.TEST_NONE: utils.create_gt_point(tasks.Task.TEST_NONE.value,
-                                                                                                             (0, 0, 0),
-                                                                                                             [])}
-    self.study_node_groundtruth_points[test_patient_names[1]] = {tasks.Task.TEST_ROTATION: utils.create_gt_point(tasks.Task.TEST_ROTATION.value,
-                                                                                                                 (0, 0, 0),
-                                                                                                                 [])}
-    self.study_node_groundtruth_points[test_patient_names[2]] = {tasks.Task.TEST_NONLINEAR: utils.create_gt_point(tasks.Task.TEST_NONLINEAR.value,
-                                                                                                                  (0, 0, 0),
-                                                                                                                  [])}
+    self.study_node_groundtruth_points[training_patient_names[0]] = {tasks.Task.TRAINING_NONE: utils.create_gt_point(tasks.Task.TRAINING_NONE.value,
+                                                                                                                     (0, 0, 0),
+                                                                                                                     [])}
+    self.study_node_groundtruth_points[training_patient_names[1]] = {tasks.Task.TRAINING_ROTATION: utils.create_gt_point(tasks.Task.TRAINING_ROTATION.value,
+                                                                                                                         (0, 0, 0),
+                                                                                                                         [])}
+    self.study_node_groundtruth_points[training_patient_names[2]] = {tasks.Task.TRAINING_NONLINEAR: utils.create_gt_point(tasks.Task.TRAINING_NONLINEAR.value,
+                                                                                                                          (0, 0, 0),
+                                                                                                                          [])}
 
 
 def load_one_case_voxels(
@@ -399,7 +398,7 @@ def load_one_case_annotations(
         progress_val: float,
 ) -> float:
 
-    if "test" in case_name.lower():
+    if "training" in case_name.lower():
         return progress_val
 
     volume_moving_name = self.study_loaded_data[case_name]["moving"].GetName(

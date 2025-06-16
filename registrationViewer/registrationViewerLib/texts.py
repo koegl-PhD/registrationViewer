@@ -38,7 +38,7 @@ class Buttons(Enum):
 
     ADD_POINT_BUTTON = "Punkt hinzufügen"
     NEXT_TASK_BUTTON = "Nächste Aufgabe"
-    TEST_NEXT_TASK_BUTTON = "Nächste Testaufgabe"
+    TRAINING_NEXT_TASK_BUTTON = "Nächste Testaufgabe"
 
     DROPDOWN_UNCHANGED = "Größe unverändert"
     DROPDOWN_INCREASED = "Größe vergrößert"
@@ -91,7 +91,7 @@ Bei Aufgaben zu Lymphknoten erscheint zusätzlich ein Dropdown-Menü, in dem Sie
 Schließlich gibt es bei registrierten Fällen einen Button namens "{Buttons.TURN_TRANSFORMATION_ON}", mit dem die Registrierung aktiviert wird.
         """
 
-    TEST_STUDY_DESCRIPTION = f"""
+    TRAINING_STUDY_DESCRIPTION = f"""
 Vor Beginn der eigentlichen Studie werden Ihnen drei Testaufgaben gezeigt. Diese dienen dazu, sich mit der Oberfläche und den Aufgaben vertraut zu machen.
 
 In der ersten Aufgabe wird dasselbe Bild zweimal angezeigt – die Registrierung ist daher perfekt.
@@ -113,7 +113,7 @@ Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: 
     STUDY_FINISHED = "Danke {insert}, Sie haben die Studie abgeschlossen!"
 
     CURRENT_TASK = "Aktuelle Aufgabe"
-    TEST_CURRENT_TASK = "Aktuelle Testaufgabe"
+    TRAINING_CURRENT_TASK = "Aktuelle Testaufgabe"
 
     LOADING_DATA = "Daten werden geladen..."
 

@@ -997,7 +997,7 @@ def get_active_slice_view() -> str:
     return "Unknown"
 
 
-def set_buttons_for_test_cases(self: "registrationViewerWidget") -> None:
+def set_buttons_for_training_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.synchronise_views_general.setVisible(False)
 
@@ -1006,10 +1006,11 @@ def set_buttons_for_test_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.study_add_point_button.setVisible(False)
 
-    self.ui_sub_6.progress_label_2.setText(texts.Contents.TEST_CURRENT_TASK)
+    self.ui_sub_6.progress_label_2.setText(
+        texts.Contents.TRAINING_CURRENT_TASK)
 
 
-def reset_buttons_after_test_cases(self: "registrationViewerWidget") -> None:
+def reset_buttons_after_training_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.progress_label_2.setText(texts.Contents.CURRENT_TASK)
 

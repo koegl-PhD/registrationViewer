@@ -17,8 +17,8 @@ def set_connections(self: "registrationViewerWidget") -> None:
     Set all UI-backend connections
     """
 
-    self.ui_sub_2.test_examples_SetCheckBox.toggled.connect(
-        lambda: btn_call_on_test_example_checkbox(self)
+    self.ui_sub_2.training_examples_SetCheckBox.toggled.connect(
+        lambda: btn_call_on_training_example_checkbox(self)
     )
 
     self.ui_sub_2.data_master_path_edit.currentPathChanged.connect(
@@ -179,16 +179,14 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
     self.ui_sub_2.radiologistSetCheckBox.setChecked(True)
     self.ui_sub_2.start_study_button.toolTip = f"Press to start the study with {radiologist_name}"  # nopep8
 
-    self.current_patient_list = self.study_data.patient_list(self.current_radiologist_id)  # nopep8
-
     configure_logger(self,
                      f"{self.study_data.path_study_output}{self.current_radiologist_id}/{self.current_radiologist_id}.log",
                      "RegistrationEvaluation")  # nopep8
 
 
-def btn_call_on_test_example_checkbox(self: "registrationViewerWidget") -> None:
+def btn_call_on_training_example_checkbox(self: "registrationViewerWidget") -> None:
 
-    self.checkbox_test_cases = self.ui_sub_2.test_examples_SetCheckBox.isChecked()
+    self.checkbox_training_cases = self.ui_sub_2.training_examples_SetCheckBox.isChecked()
 
 
 def btn_call_on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None) -> None:
@@ -264,12 +262,13 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     self.combination_starting_offset = int(
         self.ui_sub_2.starting_task_numberTextEdit.toPlainText())
 
-    if self.show_test_cases:
-        utils.set_buttons_for_test_cases(self)
-        study.add_dummy_test_points(self)
+    if self.show_training_cases:
+        utils.set_buttons_for_training_cases(self)
+        study.add_dummy_training_points(self)
     else:
         self.current_combination_idx = self.combination_starting_offset
-        self.study_data.remove_test_combinations(self.current_radiologist_id)
+        self.study_data.remove_training_combinations(
+            self.current_radiologist_id)
         self.chunk_idx = self.study_data.get_chunk_idx(
             self.current_patient_name)
 
@@ -319,12 +318,12 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
         self.first_time_description_show = False
 
-    if self.show_test_cases and self.first_time_test_description_show and self.is_current_patient_task_transform_comb_test:
+    if self.show_training_cases and self.first_time_training_description_show and self.is_current_patient_task_transform_comb_training:
 
         utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
-                                                  content=texts.Contents.TEST_STUDY_DESCRIPTION,
+                                                  content=texts.Contents.TRAINING_STUDY_DESCRIPTION,
                                                   text_size=14,
-                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed test study description"))
+                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed training study description"))
 
         utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
                                                title=texts.Titles.USER_ICONS,
@@ -337,20 +336,20 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
             maximum=3
         )
 
-        self.first_time_test_description_show = False
+        self.first_time_training_description_show = False
 
-    if self.first_time_info_show and not self.is_patient_task_transform_comb_test(self.current_combination_idx + 1):
+    if self.first_time_info_show and not self.is_patient_task_transform_comb_training(self.current_combination_idx + 1):
 
         self.full_screen_block.open()
 
-        if self.show_test_cases:
+        if self.show_training_cases:
             utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
                                                       content=texts.Contents.STUDY_BEGINS,
                                                       text_size=40,
                                                       center_text=True,
                                                       on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study begins"))
 
-        if not self.show_test_cases:
+        if not self.show_training_cases:
             utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
                                                    title=texts.Titles.USER_ICONS,
                                                    on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
@@ -366,7 +365,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     randomise_starting_offset = False
 
-    if self.current_combination_idx == self.number_of_tasks + self.number_of_test_tasks - 1:
+    if self.current_combination_idx == self.number_of_tasks + self.number_of_training_tasks - 1:
         study.save_annotations(self,
                                task_type=self.current_task,
                                serialise_to_log=True)
@@ -387,8 +386,8 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         study.clear_current_user_annotation(self)
 
         self.current_combination_idx += 1
-        self.current_test_combination_idx += 1
-        if self.show_test_cases and self.current_test_combination_idx == 3:
+        self.current_training_combination_idx += 1
+        if self.show_training_cases and self.current_training_combination_idx == 3:
             self.current_combination_idx += self.combination_starting_offset
 
         # now we have to load
@@ -410,7 +409,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         if self.get_combination(self.current_combination_idx - 1)[0] == self.get_combination(self.current_combination_idx)[0]:
             randomise_starting_offset = True
 
-    if not self.is_current_patient_task_transform_comb_test:
+    if not self.is_current_patient_task_transform_comb_training:
         if self.previous_patient_name == self.study_data.dummy_patient_name and self.current_patient_name != self.study_data.dummy_patient_name:
             self.dummy_patient_step = "end"
         if self.previous_patient_name != self.study_data.dummy_patient_name and self.current_patient_name != self.study_data.dummy_patient_name:
@@ -429,12 +428,12 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
     self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
 
-    if self.is_current_patient_task_transform_comb_test:
+    if self.is_current_patient_task_transform_comb_training:
         self.study_progress_bar_tasks.setValue(
             self.current_combination_idx + 1)
     else:
         self.study_progress_bar_tasks.setValue(
-            self.current_combination_idx - self.number_of_test_tasks + 1)
+            self.current_combination_idx - self.number_of_training_tasks + 1)
 
     tasks_ui_logic.show_task(self, randomise_starting_offset)
     self.study_recurrence_present = False
@@ -442,15 +441,15 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
     self.ui_sub_6.study_next_task_button.setText(
         texts.Buttons.NEXT_TASK_BUTTON)
 
-    if self.show_test_cases:
-        if self.is_current_patient_task_transform_comb_test:
+    if self.show_training_cases:
+        if self.is_current_patient_task_transform_comb_training:
             self.ui_sub_6.study_next_task_button.setText(
-                texts.Buttons.TEST_NEXT_TASK_BUTTON)
-        if self.current_combination_idx == self.number_of_test_tasks - 1:
+                texts.Buttons.TRAINING_NEXT_TASK_BUTTON)
+        if self.current_combination_idx == self.number_of_training_tasks - 1:
             self.ui_sub_6.study_next_task_button.setText(
                 texts.Buttons.PROCCED_TO_STUDY)
 
-    if self.current_combination_idx == self.number_of_tasks + self.number_of_test_tasks - 1:
+    if self.current_combination_idx == self.number_of_tasks + self.number_of_training_tasks - 1:
         self.ui_sub_6.study_next_task_button.setText(
             texts.Buttons.FINISH_STUDY)
 
