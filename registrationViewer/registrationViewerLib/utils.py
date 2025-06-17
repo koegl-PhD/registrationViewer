@@ -123,6 +123,10 @@ class ProgressBar():
 
 
 class FullScreenBlock():
+    """
+    Wrapper class aroung a full screen block that handles opening and closing it.
+    """
+
     def __init__(self) -> None:
         """Initialize fullscreen block."""
 
@@ -131,22 +135,28 @@ class FullScreenBlock():
 
     def open(
         self,
-        title: str = "",
         content: str = "",
         center_text: bool = False,
         text_size: int = 24
     ) -> None:
+        """
+        Opens the full screen block if it wasn't opened yet.
+        """
+
         if self.is_open:
+            self.set_content(content)
             return
 
         self.dialog = show_fullscreen_block(
-            title, content, center_text, text_size)
+            "", content, center_text, text_size)
 
         self.is_open = True
 
-        print("opened fullscreen block")
-
     def close(self) -> None:
+        """
+        Closes the full screen block if it wasn't closed yet.
+        """
+
         if not self.is_open:
             return
 
@@ -157,9 +167,11 @@ class FullScreenBlock():
 
         self.is_open = False
 
-        print("closed fullscreen block")
-
     def set_content(self, content: str) -> None:
+        """
+        Sets the content of the block if it is open.
+        """
+
         if not self.is_open:
             return
 
@@ -1036,6 +1048,7 @@ def set_button_texts(self: "registrationViewerWidget") -> None:
     )
 
     self.ui_sub_6.progress_label_2.setText(texts.Contents.CURRENT_TASK)
+    self.ui_sub_6.progress_label_1.setText(texts.Contents.CURRENT_PATIENT)
 
 
 def get_active_slice_view() -> str:
@@ -1063,11 +1076,14 @@ def set_buttons_for_training_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.progress_label_2.setText(
         texts.Contents.TRAINING_CURRENT_TASK)
+    self.ui_sub_6.progress_label_1.setText(
+        texts.Contents.TRAINING_CURRENT_PATIENT)
 
 
 def reset_buttons_after_training_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.progress_label_2.setText(texts.Contents.CURRENT_TASK)
+    self.ui_sub_6.progress_label_1.setText(texts.Contents.CURRENT_PATIENT)
 
 
 def create_gt_point(

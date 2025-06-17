@@ -9,9 +9,9 @@ class Task(Enum):
     A_CAROTISEXTERNA_L = "a_carotisexterna_l"
     LYMPH_NODE = "lymph_node"
     RECURRENCE = "recurrence"
-    TRAINING_NONE = "training_none"
-    TRAINING_ROTATION = "training_rotation"
-    TRAINING_NONLINEAR = "training_nonlinear"
+    TRAINING_NONE = "training_1_none"
+    TRAINING_ROTATION = "training_2_rotation"
+    TRAINING_NONLINEAR = "training_3_nonlinear"
 
 
 TASK_ORDER = {

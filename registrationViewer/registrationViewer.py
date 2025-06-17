@@ -848,17 +848,36 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return tasks.Task(self.current_patient_task_transform_comb[1])
 
     @property
-    def number_of_tasks(self) -> int:
+    def number_of_all_tasks(self) -> int:
+        """
+        Get the number of all tasks for the current radiologist.
+        This includes training tasks.
+        """
+        return self.study_data.number_of_tasks()
 
-        return self.study_data.number_of_tasks(self.current_radiologist_id) - self.number_of_training_tasks
+    @property
+    def number_of_study_tasks(self) -> int:
+
+        return self.study_data.number_of_tasks() - self.study_data.number_of_training_tasks()
 
     @property
     def number_of_training_tasks(self) -> int:
 
-        if self.show_training_cases:
-            return 3
-        else:
-            return 0
+        return self.study_data.number_of_training_tasks()
+
+    def number_of_study_patients(self, with_dummy: bool = False) -> int:
+
+        return self.study_data.number_of_patients(with_dummy)
+
+    @property
+    def number_of_training_patients(self) -> int:
+
+        return self.study_data.number_of_training_patients()
+
+    @property
+    def current_patient_idx(self) -> int:
+
+        return self.study_data.current_patient_idx(self.current_radiologist_id, self.current_patient_name)
 
     @property
     def show_training_cases(self) -> bool:
@@ -872,7 +891,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_task_transform_comb == ("", "", ""):
             return "no_patient"
 
-        return self.current_patient_task_transform_comb[0][1]
+        return self.current_patient_task_transform_comb[0]
 
     @property
     def previous_patient_name(self) -> str:
@@ -882,7 +901,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_combination_idx == 0:
             return "no_patient"
 
-        return self.study_data.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx - 1][0][1]
+        return self.study_data.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx - 1][0]
 
     @property
     def current_patient_transform_type(self) -> utils.TransformType:
@@ -901,7 +920,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return self.study_data.case_task_transformation_map[self.current_radiologist_id][idx]
 
     @property
-    def is_current_patient_task_transform_comb_training(self) -> bool:
+    def is_current_task_training(self) -> bool:
         """
         Check if the current combination is a training task.
         """
@@ -926,21 +945,21 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def next_task_log_text(self) -> str:
-        if self.is_current_patient_task_transform_comb_training:
+        if self.is_current_task_training:
             return "Next training task"
 
         return "Next task"
 
     @property
     def start_task_log_text(self) -> str:
-        if self.is_current_patient_task_transform_comb_training:
+        if self.is_current_task_training:
             return "Start training task"
 
         return "Start task"
 
     @property
     def start_task_log_text_user(self) -> str:
-        if self.is_current_patient_task_transform_comb_training:
+        if self.is_current_task_training:
             return "User started training task"
 
         return "User started task"

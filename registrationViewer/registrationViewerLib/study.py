@@ -36,7 +36,8 @@ class StudyData:
 
         self.__dict__.update(self.data)
 
-        self.dummy_patient_name = "dummy_0e5fp8GltvE"
+        self.dummy_patient_name_start = "dummy_start_0e5fp8GltvE"
+        self.dummy_patient_name_end = "dummy_end_0e5fp8GltvE"
 
         random.seed(0)
 
@@ -153,19 +154,38 @@ class StudyData:
 
         names_and_paths = []
 
-        for present, patient_name in self.chunked_patients[chunk_idx]:
+        for patient_name, transform, present in self.chunked_patients[1][chunk_idx]:
             p = self.data[f"path_study_input_cases_{present}"]
             names_and_paths.append(
                 (patient_name, f"{p}{patient_name}"))
 
         return names_and_paths
 
-    def number_of_tasks(self, rad_id: str) -> int:
-        participant = self.participants.get(rad_id, None)
-        if participant is None:
-            raise ValueError(f"Rad id {rad_id} not found in data")
+    def number_of_tasks(self) -> int:
 
-        return len(self.case_task_transformation_map[rad_id])
+        dummy_id = list(self.data["participants"].keys())[0]
+
+        return len(self.case_task_transformation_map[dummy_id])
+
+    def number_of_training_tasks(self) -> int:
+
+        return 3
+
+    def current_patient_idx(self, rad_id: str, patient_name: str) -> int:
+        """
+        Returns the index of the current patient across the chunked patient lists.
+        """
+
+        idx = 0
+
+        for chunk in self.chunked_patients[1]:
+            for patient, _, _ in chunk:
+                if patient == patient_name:
+                    return idx
+                idx += 1
+
+        raise ValueError(
+            f"Patient {patient_name} not found in chunks. Only found {self.chunked_patients[1]=}.")
 
     def get_training_case_names(self) -> List[str]:
         """
@@ -186,7 +206,7 @@ class StudyData:
 
     def _divide_patients_into_chunks(self) -> None:
 
-        max_chunk_size = 7
+        max_chunk_size = 2
 
         patients: List[str] = []
 
@@ -223,12 +243,11 @@ class StudyData:
 
                     for task in tasks.TASK_ORDER.values():
 
-                        if patient_name == self.dummy_patient_name:
+                        if patient_name in [self.dummy_patient_name_start, self.dummy_patient_name_end]:
                             continue
 
-                        # or transform != utils.TransformType.NONLINEAR:
-                        if task != tasks.Task.RECURRENCE:
-                            continue
+                        # if task not in [tasks.Task.RECURRENCE, tasks.Task.A_VERTEBRALIS_R]:
+                        #     continue
 
                         temp_chunk_map.append(
                             (patient_name, task.value, transform.value))
@@ -252,17 +271,21 @@ class StudyData:
             group: int
     ) -> List[List[Tuple[str, str, str]]]:
 
-        start_and_end_task = []
+        dummy_tasks_start = []
+        dummy_tasks_end = []
         for task in tasks.TASK_ORDER.values():
-            start_and_end_task.append(
-                (self.dummy_patient_name, task.value, utils.TransformType.NONLINEAR.value))
+            dummy_tasks_start.append(
+                (self.dummy_patient_name_start, task.value, utils.TransformType.NONLINEAR.value))
+            dummy_tasks_end.append(
+                (self.dummy_patient_name_end, task.value, utils.TransformType.NONLINEAR.value))
 
         self.chunked_patients[group][0].insert(
-            0, (self.dummy_patient_name, utils.TransformType.NONLINEAR, "positive"))
-        self.chunked_patients[group][-1].append(
-            (self.dummy_patient_name, utils.TransformType.NONLINEAR, "positive"))
+            0, (self.dummy_patient_name_start, utils.TransformType.NONLINEAR, "dummy"))
 
-        temp_rad_map = start_and_end_task + temp_rad_map + start_and_end_task
+        self.chunked_patients[group][-1].append(
+            (self.dummy_patient_name_end, utils.TransformType.NONLINEAR, "dummy"))
+
+        temp_rad_map = dummy_tasks_start + temp_rad_map + dummy_tasks_end
 
         return temp_rad_map
 
@@ -292,20 +315,24 @@ class StudyData:
 
         return temp_rad_map
 
-    def number_of_patients(self, rad_id: str) -> int:
+    def number_of_patients(self, with_dummy: bool = False) -> int:
         """
         Returns the number of patients in the study.
         """
 
-        participant = self.participants.get(rad_id, None)
-        if participant is None:
-            raise ValueError(f"Rad id {rad_id} not found in data")
+        if with_dummy:
+            increase = 2
+        else:
+            increase = 0
 
-        return len(participant["patients"]["positive"]) + \
-            len(participant["patients"]["negative"])
+        return len(self.data["patients"]["positive"]) + \
+            len(self.data["patients"]["negative"]) + increase
+
+    def number_of_training_patients(self) -> int:
+        return 3
 
     def in_chunk(self, patient_name: str, chunk_idx: int) -> bool:
-        for _, patient in self.chunked_patients[chunk_idx]:
+        for patient, _, _ in self.chunked_patients[1][chunk_idx]:
             if patient_name == patient:
                 return True
 
@@ -316,23 +343,32 @@ class StudyData:
         Returns the index of the chunk that contains the given combination.
         """
 
-        for idx, chunk in enumerate(self.chunked_patients):
-            for patient in chunk:
-                if patient_name == patient[1]:
+        for idx, chunk in enumerate(self.chunked_patients[1]):
+            for patient, _, _ in chunk:
+                if patient_name == patient:
                     return idx
 
         raise ValueError(
-            f"Patient {patient_name} not found in chunks. Only found {self.chunked_patients=}.")
+            f"Patient {patient_name} not found in chunks. Only found {self.chunked_patients[1]=}.")
 
     def remove_training_combinations(self, rad_id: str) -> None:
         temp = self.case_task_transformation_map[rad_id]
         self.case_task_transformation_map[rad_id] = temp[3:]
 
+        temp = self.chunked_patients[1]
+        self.chunked_patients[1] = temp[1:]
+        self.chunked_patients[2] = temp[1:]
+        self.chunked_patients[3] = temp[1:]
+
+    def group(self, rad_id: str) -> int:
+
+        return self.data["participants"][rad_id]["group"]
+
 
 def load_current_chunk(self: "registrationViewerWidget") -> None:
 
     log(logging.INFO, LogType.INTERNAL,
-        f"Start loading study data chunk {self.chunk_idx+1}/{len(self.study_data.chunked_patients)}")
+        f"Start loading study data chunk {self.chunk_idx+1}/{len(self.study_data.chunked_patients[1])}")
 
     # fullscreen_block = utils.show_fullscreen_block("", "")
 
@@ -368,7 +404,7 @@ def load_current_chunk(self: "registrationViewerWidget") -> None:
     # fullscreen_block.close()
 
     log(logging.INFO, LogType.INTERNAL,
-        f"Finished loading study data chunk {self.chunk_idx+1}/{len(self.study_data.chunked_patients)}")
+        f"Finished loading study data chunk {self.chunk_idx+1}/{len(self.study_data.chunked_patients[1])}")
 
 
 def clear_one_chunk(self: "registrationViewerWidget") -> None:

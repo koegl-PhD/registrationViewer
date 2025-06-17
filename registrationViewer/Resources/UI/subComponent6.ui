@@ -301,7 +301,7 @@
   </item>
       <!-- END progress_bar_1 -->
 
-      <!-- START progress_bar_1 -->
+      <!-- START progress_bar_2 -->
       <item row="1">
         <widget class="QLabel" name="empty_label">
           <property name="text">
@@ -369,7 +369,7 @@
     </property>
   </widget>
   </item>
-      <!-- END progress_bar_1 -->
+      <!-- END progress_bar_2 -->
 
 
       <!-- START study_current_task_description_label -->
