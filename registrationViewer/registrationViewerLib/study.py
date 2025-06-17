@@ -595,11 +595,7 @@ def save_annotations(self: "registrationViewerWidget",
     if self.current_combination_idx < 0:
         return
 
-    if self.current_patient_name == self.study_data.dummy_patient_name:
-        current_patient_name = self.current_patient_name + \
-            f"_{self.dummy_patient_step}"
-    else:
-        current_patient_name = self.current_patient_name
+    current_patient_name = self.current_patient_name
 
     path_patient = f"{self.study_data.path_study_output}{self.current_radiologist_id}/{current_patient_name}/{self.current_patient_transform_type.value}"  # nopep8
 

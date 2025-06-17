@@ -221,8 +221,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.checkbox_training_cases: bool = False
 
-        self.dummy_patient_step: Literal["start", "end"] = "start"
-
         # task specific
         self.study_gt_lymphnode_description: dict[str, str] = {}
         self.study_gt_recurrence_description: dict[str, str] = {}
