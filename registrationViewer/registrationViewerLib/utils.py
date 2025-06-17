@@ -69,6 +69,59 @@ class ArrowKeyFilter(qt.QObject):
         return False
 
 
+class ProgressBar():
+    """
+    Wrapper class around a progress bar that handles showing and updating it.
+    """
+
+    def __init__(
+        self,
+        ui,
+        index: int,
+        initial: int,
+        maximum: int
+    ) -> None:
+        """
+        Initialises the progress bar
+        """
+
+        if index not in [1, 2]:
+            raise ValueError("Index must be 1 or 2")
+
+        self.bar = getattr(ui, f"progress_bar_{index}")
+        self.label = getattr(ui, f"progress_label_{index}")
+
+        self.bar.setValue(initial)
+        self.bar.setMaximum(maximum)
+
+        self.bar.setVisible(False)
+        self.label.setVisible(False)
+
+    def show(self) -> None:
+        """
+        Shows the progress bar and the corresponding label
+        """
+
+        self.bar.setVisible(True)
+        self.label.setVisible(True)
+
+        print("showing")
+
+    def set_value(self, value: int) -> None:
+        """
+        Sets the value of the progress bar
+        """
+
+        self.bar.setValue(value)
+
+    def set_max(self, value: int) -> None:
+        """
+        Sets the maximum value of the progress bar
+        """
+        print(f"setting amximum to {value}")
+        self.bar.setMaximum(value)
+
+
 class FullScreenBlock():
     def __init__(self) -> None:
         """Initialize fullscreen block."""

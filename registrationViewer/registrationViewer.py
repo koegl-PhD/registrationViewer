@@ -230,8 +230,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.study_recurrence_present: bool = False
 
-        self.study_progress_bar_patients = None
-        self.study_progress_bar_tasks = None
+        self.study_progress_bar_patients: utils.ProgressBar
+        self.study_progress_bar_tasks: utils.ProgressBar
 
         self.current_view: str = ""
         self.current_view_observer_tag = []
@@ -342,6 +342,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.on_linear_only)
         self.ui_sub_4.remove_all_data.connect(
             "clicked(bool)", self.on_remove_all_data)
+
+        self.study_progress_bar_patients = utils.ProgressBar(
+            self.ui_sub_6, 1, 1, 3)
+        self.study_progress_bar_tasks = utils.ProgressBar(
+            self.ui_sub_6, 2, 1, 3)
 
         # ANOOTATIONS
         annotations_connections.set_connections(self)
