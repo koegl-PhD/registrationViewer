@@ -363,7 +363,6 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
         self.first_time_info_show = False
 
-    randomise_starting_offset = False
 
     if self.current_combination_idx == self.number_of_tasks + self.number_of_training_tasks - 1:
         study.save_annotations(self,
@@ -405,9 +404,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
             study.clear_one_chunk(self)
             study.load_current_chunk(self)
 
-        # if the previous patient was the same, randomize the offsets, so it seems like each point is new
-        if self.get_combination(self.current_combination_idx - 1)[0] == self.get_combination(self.current_combination_idx)[0]:
-            randomise_starting_offset = True
+
 
     if not self.is_current_patient_task_transform_comb_training:
         if self.previous_patient_name == self.study_data.dummy_patient_name and self.current_patient_name != self.study_data.dummy_patient_name:
@@ -435,7 +432,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         self.study_progress_bar_tasks.setValue(
             self.current_combination_idx - self.number_of_training_tasks + 1)
 
-    tasks_ui_logic.show_task(self, randomise_starting_offset)
+    tasks_ui_logic.show_task(self)
     self.study_recurrence_present = False
 
     self.ui_sub_6.study_next_task_button.setText(
