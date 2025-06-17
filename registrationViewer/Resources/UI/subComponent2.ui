@@ -88,7 +88,7 @@
          </size>
          </property>
         <property name="plainText">
-      <string>0</string>
+      <string>1</string>
     </property>
        </widget>
       </item>
@@ -99,7 +99,7 @@
       <item row="15" column="2" alignment="Qt::AlignTop">
         <widget class="QLabel" name="start_task_number_label">
           <property name="text">
-            <string>Choose starting task number (0-based)</string>
+            <string>Choose starting task number (1-based)</string>
           </property>
           <property name="alignment">
             <set>Qt::AlignCenter</set>

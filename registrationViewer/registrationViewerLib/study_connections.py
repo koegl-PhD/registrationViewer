@@ -260,7 +260,7 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     utils.set_button_texts(self)
 
     self.combination_starting_offset = int(
-        self.ui_sub_2.starting_task_numberTextEdit.toPlainText())
+        self.ui_sub_2.starting_task_numberTextEdit.toPlainText()) - 1
 
     if self.show_training_cases:
         utils.set_buttons_for_training_cases(self)
