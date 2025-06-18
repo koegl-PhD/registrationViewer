@@ -219,7 +219,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.first_time_training_description_show: bool = True
         self.first_time_info_show: bool = True
 
-        self.checkbox_training_cases: bool = False
+        self.checkbox_training_cases: bool = True
 
         # task specific
         self.study_gt_lymphnode_description: dict[str, str] = {}

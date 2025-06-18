@@ -88,7 +88,7 @@
          </size>
          </property>
         <property name="plainText">
-      <string>1</string>
+      <string>-1</string>
     </property>
        </widget>
       </item>
@@ -113,6 +113,9 @@
         <widget class="QCheckBox" name="training_examples_SetCheckBox">
         <property name="enabled">
             <bool>true</bool>
+        </property>
+        <property name="checked">
+          <bool>true</bool>
         </property>
         <property name="maximumSize">
          <size>

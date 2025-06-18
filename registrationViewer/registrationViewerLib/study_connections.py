@@ -183,6 +183,10 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
                      f"{self.study_data.path_study_output}{self.current_radiologist_id}/{self.current_radiologist_id}.log",
                      "RegistrationEvaluation")  # nopep8
 
+    if self.ui_sub_2.starting_task_numberTextEdit.toPlainText() == "-1":
+        self.ui_sub_2.starting_task_numberTextEdit.setText(
+            self.number_of_training_tasks + 1)
+
 
 def btn_call_on_training_example_checkbox(self: "registrationViewerWidget") -> None:
 
@@ -260,6 +264,11 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     self.combination_starting_offset = int(
         self.ui_sub_2.starting_task_numberTextEdit.toPlainText()) - 1
 
+    if self.combination_starting_offset < self.number_of_full_training_tasks:
+        raise ValueError(
+            f"You have to start with at least the first normal task, which is {self.number_of_simple_training_tasks + 1}"
+        )
+
     if self.show_training_cases:
         self.current_combination_idx = 0
         self.chunk_idx = 0
@@ -267,11 +276,7 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
         utils.set_buttons_for_simple_training_cases(self)
         study.add_dummy_training_points(self)
     else:
-
-        if self.combination_starting_offset == 0:
-            self.current_combination_idx = self.number_of_training_tasks
-        else:
-            self.current_combination_idx = self.combination_starting_offset
+        self.current_combination_idx = self.combination_starting_offset
 
         self.chunk_idx = self.study_data.get_chunk_idx(
             self.current_patient_name)
@@ -394,9 +399,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         self.current_training_combination_idx += 1
 
         if self.show_training_cases and self.current_training_combination_idx == self.number_of_training_tasks:
-            if self.combination_starting_offset != 0:
-                self.current_combination_idx += self.combination_starting_offset - \
-                    self.number_of_training_tasks
+            self.current_combination_idx = self.combination_starting_offset
 
         if not self.study_data.in_chunk(self.current_patient_name, self.chunk_idx):
             self.chunk_idx = self.study_data.get_chunk_idx(
