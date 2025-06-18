@@ -100,7 +100,7 @@ Vor Beginn der eigentlichen Studie werden Ihnen drei Testaufgaben gezeigt. Diese
 
 In der ersten Aufgabe wird dasselbe Bild zweimal angezeigt – die Registrierung ist daher perfekt.
 
-In der zweiten Aufgabe wird ebenfalls dasselbe Bild angezeigt, jedoch wurde das untere Bild um 14° rotiert – die Registrierung ist immer noch perfekt, aber die Schnitte stimmen nicht mehr überein.
+In der zweiten Aufgabe wird ebenfalls dasselbe Bild angezeigt, jedoch wurde das untere Bild um 10° rotiert – die Registrierung ist immer noch perfekt, aber die Schnitte stimmen nicht mehr überein.
 
 In der dritten Aufgabe werden zwei Bilder aus unterschiedlichen Sitzungen desselben Patienten gezeigt – es liegt also eine echte Deformation vor, und die Registrierung ist nicht perfekt.
 
@@ -124,8 +124,11 @@ Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: 
 
     LOADING_DATA = "Daten werden geladen..."
 
-    CURRENT_PATIENT_COUNTER = "Patient {current}/{total}"
-    CURRENT_PATIENT_COUNTER_TRAINING = "Test-Patient {current}/{total}"
+    REGISTRATION_AVAILABLE = "Registrierung ist verfügbar"
+    REGISTRATION_NOT_AVAILABLE = "Registrierung ist nicht verfügbar. Sie können die Bilder manuell verlinken"
+
+    CURRENT_PATIENT_COUNTER = "Patient {current}/{total}\n{registration}."
+    CURRENT_PATIENT_COUNTER_TRAINING = "Test-Patient {current}/{total}\n{registration}"
 
     def __str__(self):
         return self.value
@@ -151,3 +154,8 @@ class ToolTips(Enum):
 
     def format(self, *args, **kwargs):
         return self.value.format(*args, **kwargs)
+
+
+"""
+Registrierung ist verfügbar
+"""

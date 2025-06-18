@@ -430,9 +430,13 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         def _on_popup_ok() -> None:
             log(logging.INFO, LogType.U_BUTTON, "User started next patient")
 
+        reg_text = texts.Contents.REGISTRATION_NOT_AVAILABLE if self.current_patient_transform_type == utils.TransformType.NONE else texts.Contents.REGISTRATION_AVAILABLE
+
         utils.show_fullscreen_popup_with_callback(title="",
                                                   content=texts.Contents.CURRENT_PATIENT_COUNTER.format(current=self.current_patient_idx + 1 - self.number_of_training_patients,
-                                                                                                        total=self.number_of_study_patients(with_dummy=True)),
+                                                                                                        total=self.number_of_study_patients(
+                                                                                                            with_dummy=True),
+                                                                                                        registration=reg_text),
                                                   center_text=True,
                                                   on_ok=_on_popup_ok)
 
@@ -442,9 +446,12 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         def _on_popup_ok() -> None:
             log(logging.INFO, LogType.U_BUTTON, "User started next patient")
 
+        reg_text = texts.Contents.REGISTRATION_NOT_AVAILABLE if self.current_patient_transform_type == utils.TransformType.NONE else texts.Contents.REGISTRATION_AVAILABLE
+
         utils.show_fullscreen_popup_with_callback(title="",
                                                   content=texts.Contents.CURRENT_PATIENT_COUNTER_TRAINING.format(current=self.current_patient_idx + 1,
-                                                                                                                 total=self.number_of_training_patients),
+                                                                                                                 total=self.number_of_training_patients,
+                                                                                                                 registration=reg_text),
                                                   center_text=True,
                                                   on_ok=_on_popup_ok)
 
