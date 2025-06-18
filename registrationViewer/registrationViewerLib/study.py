@@ -30,6 +30,14 @@ class StudyData:
     split: dict[int, dict[int, Tuple[str, utils.TransformType]]
                 ] = field(default_factory=dict)
 
+    number_of_training_patients: int = field(init=False)
+    number_of_simple_training_patients: int = field(init=False)
+    number_of_full_training_patients: int = field(init=False)
+
+    number_of_training_tasks: int = field(init=False)
+    number_of_simple_training_tasks: int = field(init=False)
+    number_of_full_training_tasks: int = field(init=False)
+
     def __post_init__(self):
         with open(self.path, "r") as f:
             self.data = json.load(f)
@@ -167,11 +175,7 @@ class StudyData:
 
         return len(self.case_task_transformation_map[dummy_id])
 
-    def number_of_training_tasks(self) -> int:
-
-        return 3
-
-    def current_patient_idx(self, rad_id: str, patient_name: str) -> int:
+    def current_patient_idx(self, patient_name: str) -> int:
         """
         Returns the index of the current patient across the chunked patient lists.
         """
@@ -243,9 +247,6 @@ class StudyData:
 
                     for task in tasks.TASK_ORDER.values():
 
-                        if patient_name in [self.dummy_patient_name_start, self.dummy_patient_name_end]:
-                            continue
-
                         # if task not in [tasks.Task.RECURRENCE, tasks.Task.A_VERTEBRALIS_R]:
                         #     continue
 
@@ -297,21 +298,44 @@ class StudyData:
 
         training_names = self.get_training_case_names()
 
-        training_comb_1 = (training_names[0], tasks.Task.TRAINING_NONE.value,
-                           utils.TransformType.LINEAR.value)
-        training_comb_2 = (training_names[1], tasks.Task.TRAINING_ROTATION.value,
-                           utils.TransformType.LINEAR.value)
-        training_comb_3 = (training_names[2], tasks.Task.TRAINING_NONLINEAR.value,
-                           utils.TransformType.NONLINEAR.value)
-
         training_chunk = [(training_names[0], utils.TransformType.NONE, "training"),       # nopep8
                           (training_names[1], utils.TransformType.LINEAR, "training"),     # nopep8
-                          (training_names[2], utils.TransformType.NONLINEAR, "training")]  # nopep8
+                          (training_names[2], utils.TransformType.NONLINEAR, "training"),  # nopep8
+                          (training_names[3], utils.TransformType.NONE, "training"),       # nopep8
+                          (training_names[4], utils.TransformType.LINEAR, "training"),     # nopep8
+                          (training_names[5], utils.TransformType.NONLINEAR, "training")]  # nopep8
         self.chunked_patients[group].insert(0, training_chunk)
 
-        temp_rad_map.insert(0, training_comb_1)
-        temp_rad_map.insert(1, training_comb_2)
-        temp_rad_map.insert(2, training_comb_3)
+        training_comb_1 = [(training_names[0], tasks.Task.TRAINING_NONE.value,
+                           utils.TransformType.LINEAR.value)]
+        training_comb_2 = [(training_names[1], tasks.Task.TRAINING_ROTATION.value,
+                           utils.TransformType.LINEAR.value)]
+        training_comb_3 = [(training_names[2], tasks.Task.TRAINING_NONLINEAR.value,
+                           utils.TransformType.NONLINEAR.value)]
+        training_comb_4, training_comb_5, training_comb_6 = [], [], []
+
+        for task in tasks.TASK_ORDER.values():
+            training_comb_4.append(
+                (training_names[3], task.value, utils.TransformType.NONE.value))
+            training_comb_5.append(
+                (training_names[4], task.value, utils.TransformType.LINEAR.value))
+            training_comb_6.append(
+                (training_names[5], task.value, utils.TransformType.NONLINEAR.value))
+
+        all_combinations = training_comb_1 + training_comb_2 + training_comb_3 + \
+            training_comb_4 + training_comb_5 + training_comb_6
+
+        temp_rad_map = all_combinations + temp_rad_map
+
+        self.number_of_training_patients = len(training_chunk)
+        self.number_of_simple_training_patients = 3
+        self.number_of_full_training_patients = 3
+
+        self.number_of_training_tasks = len(all_combinations)
+        self.number_of_simple_training_tasks = len(
+            training_comb_1) + len(training_comb_2) + len(training_comb_3)
+        self.number_of_full_training_tasks = len(
+            training_comb_4) + len(training_comb_5) + len(training_comb_6)
 
         return temp_rad_map
 
@@ -327,9 +351,6 @@ class StudyData:
 
         return len(self.data["patients"]["positive"]) + \
             len(self.data["patients"]["negative"]) + increase
-
-    def number_of_training_patients(self) -> int:
-        return 3
 
     def in_chunk(self, patient_name: str, chunk_idx: int) -> bool:
         for patient, _, _ in self.chunked_patients[1][chunk_idx]:
@@ -536,7 +557,9 @@ def load_one_case_annotations(
         progress_val: float,
 ) -> float:
 
-    if "training" in case_name.lower():
+    l = case_name.lower()
+
+    if "training_1" in l or "training_2" in l or "training_3" in l:
         return progress_val
 
     volume_moving_name = self.study_loaded_data[case_name]["moving"].GetName(

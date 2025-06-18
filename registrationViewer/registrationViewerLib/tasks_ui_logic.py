@@ -75,7 +75,7 @@ def show_task(
         self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 
     # we don't want to center on training tasks because those are not real tasks
-    elif self.is_current_task_training:
+    elif self.is_current_task_simple_training_example:
         self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
     else:
         utils.center_on_point(

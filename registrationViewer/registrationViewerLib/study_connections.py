@@ -183,6 +183,10 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
                      f"{self.study_data.path_study_output}{self.current_radiologist_id}/{self.current_radiologist_id}.log",
                      "RegistrationEvaluation")  # nopep8
 
+    if self.ui_sub_2.starting_task_numberTextEdit.toPlainText() == "-1":
+        self.ui_sub_2.starting_task_numberTextEdit.setText(
+            self.number_of_training_tasks + 1)
+
 
 def btn_call_on_training_example_checkbox(self: "registrationViewerWidget") -> None:
 
@@ -260,18 +264,19 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
     self.combination_starting_offset = int(
         self.ui_sub_2.starting_task_numberTextEdit.toPlainText()) - 1
 
+    if self.combination_starting_offset < self.number_of_full_training_tasks:
+        raise ValueError(
+            f"You have to start with at least the first normal task, which is {self.number_of_simple_training_tasks + 1}"
+        )
+
     if self.show_training_cases:
         self.current_combination_idx = 0
         self.chunk_idx = 0
 
-        utils.set_buttons_for_training_cases(self)
+        utils.set_buttons_for_simple_training_cases(self)
         study.add_dummy_training_points(self)
     else:
-
-        if self.combination_starting_offset == 0:
-            self.current_combination_idx = self.number_of_training_tasks
-        else:
-            self.current_combination_idx = self.combination_starting_offset
+        self.current_combination_idx = self.combination_starting_offset
 
         self.chunk_idx = self.study_data.get_chunk_idx(
             self.current_patient_name)
@@ -342,7 +347,8 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
             self.first_time_training_description_show = False
 
-            self.study_progress_bar_patients.set_max(3)
+            self.study_progress_bar_patients.set_max(
+                self.number_of_training_patients)
             self.study_progress_bar_tasks.set_max(1)
 
     if self.first_time_info_show and not self.is_patient_task_transform_comb_training(self.current_combination_idx + 1):
@@ -363,7 +369,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
         self.study_progress_bar_patients.set_max(
             self.number_of_study_patients(with_dummy=True))
-        self.study_progress_bar_tasks.set_max(6)
+        self.study_progress_bar_tasks.set_max(len(tasks.TASK_ORDER))
 
         self.first_time_info_show = False
 
@@ -393,9 +399,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         self.current_training_combination_idx += 1
 
         if self.show_training_cases and self.current_training_combination_idx == self.number_of_training_tasks:
-            if self.combination_starting_offset != 0:
-                self.current_combination_idx += self.combination_starting_offset - \
-                    self.number_of_training_tasks
+            self.current_combination_idx = self.combination_starting_offset
 
         if not self.study_data.in_chunk(self.current_patient_name, self.chunk_idx):
             self.chunk_idx = self.study_data.get_chunk_idx(
@@ -404,6 +408,10 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
             self.full_screen_block.open(content=texts.Contents.LOADING_DATA)
             study.clear_one_chunk(self)
             study.load_current_chunk(self)
+
+    if self.is_current_task_full_training_example:
+        self.study_progress_bar_tasks.set_max(len(tasks.TASK_ORDER))
+        utils.set_buttons_for_full_training_cases(self)
 
     if self.current_task == tasks.Task.A_VERTEBRALIS_R and not self.is_current_task_training:
         self.full_screen_block.open("", "")
@@ -414,6 +422,18 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         utils.show_fullscreen_popup_with_callback(title="",
                                                   content=texts.Contents.CURRENT_PATIENT_COUNTER.format(current=self.current_patient_idx + 1 - self.number_of_training_patients,
                                                                                                         total=self.number_of_study_patients(with_dummy=True)),
+                                                  center_text=True,
+                                                  on_ok=_on_popup_ok)
+
+    if self.current_task == tasks.Task.A_VERTEBRALIS_R and self.is_current_task_full_training_example:
+        self.full_screen_block.open("", "")
+
+        def _on_popup_ok() -> None:
+            log(logging.INFO, LogType.U_BUTTON, "User started next patient")
+
+        utils.show_fullscreen_popup_with_callback(title="",
+                                                  content=texts.Contents.CURRENT_PATIENT_COUNTER_TRAINING.format(current=self.current_patient_idx + 1,
+                                                                                                                 total=self.number_of_training_patients),
                                                   center_text=True,
                                                   on_ok=_on_popup_ok)
 
@@ -431,14 +451,15 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
     self.ui_sub_6.study_center_on_user_point_button.setEnabled(False)
 
     if self.is_current_task_training:
-        self.study_progress_bar_tasks.set_value(
-            (self.current_combination_idx % 6) + 1)
         self.study_progress_bar_patients.set_value(
             self.current_patient_idx + 1
         )
+        if self.is_current_task_simple_training_example:
+            self.study_progress_bar_tasks.set_value(1)
+        else:
+            self.study_progress_bar_tasks.set_value(
+                ((self.current_combination_idx - self.number_of_simple_training_tasks) % 6) + 1)
     else:
-        print(f"{self.current_patient_idx=}")
-        print(f"{self.number_of_training_patients=}")
 
         self.study_progress_bar_tasks.set_value(
             (self.current_combination_idx - self.number_of_training_tasks) % 6 + 1)
@@ -450,14 +471,21 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
     self.study_recurrence_present = False
 
     if self.current_task == tasks.Task.RECURRENCE:
-        self.ui_sub_6.study_next_task_button.setText(
-            texts.Buttons.NEXT_PATIENT_BUTTON)
+        if self.is_current_task_full_training_example:
+            self.ui_sub_6.study_next_task_button.setText(
+                texts.Buttons.TRAINING_NEXT_PATIENT_BUTTON)
+        else:
+            self.ui_sub_6.study_next_task_button.setText(
+                texts.Buttons.NEXT_PATIENT_BUTTON)
     else:
         self.ui_sub_6.study_next_task_button.setText(
             texts.Buttons.NEXT_TASK_BUTTON)
 
     if self.show_training_cases:
-        if self.is_current_task_training:
+        if self.is_current_task_simple_training_example:
+            self.ui_sub_6.study_next_task_button.setText(
+                texts.Buttons.TRAINING_NEXT_PATIENT_BUTTON)
+        if self.is_current_task_full_training_example:
             self.ui_sub_6.study_next_task_button.setText(
                 texts.Buttons.TRAINING_NEXT_TASK_BUTTON)
         if self.current_combination_idx == self.number_of_training_tasks - 1:
