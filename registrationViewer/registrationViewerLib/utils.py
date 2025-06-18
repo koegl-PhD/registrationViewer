@@ -105,8 +105,6 @@ class ProgressBar():
         self.bar.setVisible(True)
         self.label.setVisible(True)
 
-        print("showing")
-
     def set_value(self, value: int) -> None:
         """
         Sets the value of the progress bar
@@ -118,7 +116,6 @@ class ProgressBar():
         """
         Sets the maximum value of the progress bar
         """
-        print(f"setting amximum to {value}")
         self.bar.setMaximum(value)
 
 
@@ -1065,7 +1062,7 @@ def get_active_slice_view() -> str:
     return "Unknown"
 
 
-def set_buttons_for_training_cases(self: "registrationViewerWidget") -> None:
+def set_buttons_for_simple_training_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.synchronise_views_general.setVisible(False)
 
@@ -1073,6 +1070,21 @@ def set_buttons_for_training_cases(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
 
     self.ui_sub_6.study_add_point_button.setVisible(False)
+
+    self.ui_sub_6.progress_label_2.setText(
+        texts.Contents.TRAINING_CURRENT_TASK)
+    self.ui_sub_6.progress_label_1.setText(
+        texts.Contents.TRAINING_CURRENT_PATIENT)
+
+
+def set_buttons_for_full_training_cases(self: "registrationViewerWidget") -> None:
+
+    self.ui_sub_6.synchronise_views_general.setVisible(True)
+
+    self.ui_sub_6.study_center_on_user_point_button.setVisible(True)
+    self.ui_sub_6.study_center_on_gt_point_button.setVisible(True)
+
+    self.ui_sub_6.study_add_point_button.setVisible(True)
 
     self.ui_sub_6.progress_label_2.setText(
         texts.Contents.TRAINING_CURRENT_TASK)
