@@ -557,7 +557,9 @@ def load_one_case_annotations(
         progress_val: float,
 ) -> float:
 
-    if "training" in case_name.lower():
+    l = case_name.lower()
+
+    if "training_1" in l or "training_2" in l or "training_3" in l:
         return progress_val
 
     volume_moving_name = self.study_loaded_data[case_name]["moving"].GetName(
