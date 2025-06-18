@@ -962,10 +962,10 @@ def set_up_synchronisation(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.synchronise_views_general.setVisible(True)
 
     if self.current_patient_transform_type == TransformType.NONE:
+        self.study_current_transform_type = TransformType.NONE
         self.unsynchronise_views()
         self.ui_sub_6.synchronise_views_general.setText(
-            texts.Buttons.TRANFORMATION_NOT_AVAILABLE)
-        self.ui_sub_6.synchronise_views_general.setEnabled(False)
+            texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
 
     elif self.current_patient_transform_type == TransformType.LINEAR:
         self.use_only_linear_transform = True
@@ -993,7 +993,7 @@ def set_up_synchronisation(self: "registrationViewerWidget") -> None:
         print(f"{self.current_patient_name=}")
         raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
 
-    self.synchronise_with_displacement_pressed = False
+    self.synchronise_pressed = False
 
     self.remove_custom_observers_from_crosshair()
 
