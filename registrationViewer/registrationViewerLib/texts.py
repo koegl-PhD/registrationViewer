@@ -39,6 +39,7 @@ class Buttons(Enum):
     ADD_POINT_BUTTON = "Punkt hinzufügen"
     NEXT_TASK_BUTTON = "Nächste Aufgabe"
     NEXT_PATIENT_BUTTON = "Nächster Patient"
+    TRAINING_NEXT_PATIENT_BUTTON = "Nächster Test-Patient"
     TRAINING_NEXT_TASK_BUTTON = "Nächste Testaufgabe"
 
     DROPDOWN_UNCHANGED = "Größe unverändert"
@@ -122,6 +123,7 @@ Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: 
     LOADING_DATA = "Daten werden geladen..."
 
     CURRENT_PATIENT_COUNTER = "Patient {current}/{total}"
+    CURRENT_PATIENT_COUNTER_TRAINING = "Test-Patient {current}/{total}"
 
     def __str__(self):
         return self.value
