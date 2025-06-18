@@ -665,8 +665,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.synchronise_manually_pressed is True:
             self._set_up_crosshair(self.synchronise_manually_pressed)
             print("pressed to synchronise manually")
-            self.ui_sub_4.synchronise_views_manually.setTfnext(
+            self.ui_sub_4.synchronise_views_manually.setText(
                 "Unsynchronise views manually (m)")
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_MANUAL_TRANSFORMATION_OFF)
 
             self.use_transform = self.crosshair.use_transform = False
             self.ui_sub_4.synchronise_views_with_transform.setText(

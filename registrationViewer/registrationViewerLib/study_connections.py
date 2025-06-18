@@ -94,7 +94,7 @@ def on_info_button() -> None:
 
 def btn_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
 
-    if self.synchronise_with_displacement_pressed:
+    if self.synchronise_with_displacement_pressed or self.synchronise_manually_pressed:
         text = f"User unsynchronised views ~ {self.study_current_transform_type}"
     else:
         text = f"User synchronised views ~ {self.study_current_transform_type}"
@@ -106,7 +106,7 @@ def btn_call_on_synchronise_views_general(self: "registrationViewerWidget") -> N
 
 def key_call_on_synchronise_views_general(self: "registrationViewerWidget") -> None:
 
-    if self.synchronise_with_displacement_pressed:
+    if self.synchronise_with_displacement_pressed or self.synchronise_manually_pressed:
         text = f"User unsynchronised views ~ {self.study_current_transform_type}"
     else:
         text = f"User synchronised views ~ {self.study_current_transform_type}"
@@ -122,7 +122,8 @@ def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
         return
 
     if self.study_current_transform_type == utils.TransformType.NONE:
-        pass
+        print("manual")
+        self.on_synchronise_views_manually()
     elif self.study_current_transform_type == utils.TransformType.LINEAR:
         print("linear")
         self.on_synchronise_views_wth_trasform()
@@ -136,12 +137,20 @@ def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
     else:
         raise ValueError("Unknown transformation mode")
 
-    if self.synchronise_with_displacement_pressed:
-        self.ui_sub_6.synchronise_views_general.setText(
-            texts.Buttons.TURN_TRANSFORMATION_OFF)
+    if self.synchronise_with_displacement_pressed or self.synchronise_manually_pressed:
+        if self.current_patient_transform_type == utils.TransformType.NONE:
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_MANUAL_TRANSFORMATION_OFF)
+        else:
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_TRANSFORMATION_OFF)
     else:
-        self.ui_sub_6.synchronise_views_general.setText(
-            texts.Buttons.TURN_TRANSFORMATION_ON)
+        if self.current_patient_transform_type == utils.TransformType.NONE:
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
+        else:
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_TRANSFORMATION_ON)
 
     self.ui_sub_4.synchronise_views_with_transform.setVisible(False)
     self.ui_sub_4.synchronise_views_manually.setVisible(False)
@@ -186,6 +195,8 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
     if self.ui_sub_2.starting_task_numberTextEdit.toPlainText() == "-1":
         self.ui_sub_2.starting_task_numberTextEdit.setText(
             self.number_of_training_tasks + 1)
+
+    self._set_up_crosshair(False)
 
 
 def btn_call_on_training_example_checkbox(self: "registrationViewerWidget") -> None:

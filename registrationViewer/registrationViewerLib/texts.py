@@ -49,6 +49,8 @@ class Buttons(Enum):
 
     TURN_TRANSFORMATION_ON = "Transformation aktivieren"
     TURN_TRANSFORMATION_OFF = "Transformation deaktivieren"
+    TURN_MANUAL_TRANSFORMATION_ON = "Manuelles verlinken aktivieren"
+    TURN_MANUAL_TRANSFORMATION_OFF = "Manuelles verlinken deaktivieren"
     TRANFORMATION_NOT_AVAILABLE = "Transformation nicht verfügbar"
 
     START_STUDY = "Studie starten"
