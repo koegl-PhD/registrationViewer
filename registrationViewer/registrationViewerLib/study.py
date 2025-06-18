@@ -171,7 +171,7 @@ class StudyData:
 
         return 3
 
-    def current_patient_idx(self, rad_id: str, patient_name: str) -> int:
+    def current_patient_idx(self, patient_name: str) -> int:
         """
         Returns the index of the current patient across the chunked patient lists.
         """
@@ -243,9 +243,6 @@ class StudyData:
 
                     for task in tasks.TASK_ORDER.values():
 
-                        if patient_name in [self.dummy_patient_name_start, self.dummy_patient_name_end]:
-                            continue
-
                         # if task not in [tasks.Task.RECURRENCE, tasks.Task.A_VERTEBRALIS_R]:
                         #     continue
 
@@ -297,21 +294,34 @@ class StudyData:
 
         training_names = self.get_training_case_names()
 
-        training_comb_1 = (training_names[0], tasks.Task.TRAINING_NONE.value,
-                           utils.TransformType.LINEAR.value)
-        training_comb_2 = (training_names[1], tasks.Task.TRAINING_ROTATION.value,
-                           utils.TransformType.LINEAR.value)
-        training_comb_3 = (training_names[2], tasks.Task.TRAINING_NONLINEAR.value,
-                           utils.TransformType.NONLINEAR.value)
-
         training_chunk = [(training_names[0], utils.TransformType.NONE, "training"),       # nopep8
                           (training_names[1], utils.TransformType.LINEAR, "training"),     # nopep8
-                          (training_names[2], utils.TransformType.NONLINEAR, "training")]  # nopep8
+                          (training_names[2], utils.TransformType.NONLINEAR, "training"),  # nopep8
+                          (training_names[3], utils.TransformType.NONE, "training"),       # nopep8
+                          (training_names[4], utils.TransformType.LINEAR, "training"),     # nopep8
+                          (training_names[5], utils.TransformType.NONLINEAR, "training")]  # nopep8
         self.chunked_patients[group].insert(0, training_chunk)
 
-        temp_rad_map.insert(0, training_comb_1)
-        temp_rad_map.insert(1, training_comb_2)
-        temp_rad_map.insert(2, training_comb_3)
+        training_comb_1 = [(training_names[0], tasks.Task.TRAINING_NONE.value,
+                           utils.TransformType.LINEAR.value)]
+        training_comb_2 = [(training_names[1], tasks.Task.TRAINING_ROTATION.value,
+                           utils.TransformType.LINEAR.value)]
+        training_comb_3 = [(training_names[2], tasks.Task.TRAINING_NONLINEAR.value,
+                           utils.TransformType.NONLINEAR.value)]
+        training_comb_4, training_comb_5, training_comb_6 = [], [], []
+
+        for task in tasks.TASK_ORDER.values():
+            training_comb_4.append(
+                (training_names[3], task.value, utils.TransformType.NONE.value))
+            training_comb_5.append(
+                (training_names[4], task.value, utils.TransformType.LINEAR.value))
+            training_comb_6.append(
+                (training_names[5], task.value, utils.TransformType.NONLINEAR.value))
+
+        all_combinations = training_comb_1 + training_comb_2 + training_comb_3 + \
+            training_comb_4 + training_comb_5 + training_comb_6
+
+        temp_rad_map = all_combinations + temp_rad_map
 
         return temp_rad_map
 
