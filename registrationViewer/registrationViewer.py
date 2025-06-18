@@ -858,12 +858,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     @property
     def number_of_study_tasks(self) -> int:
 
-        return self.study_data.number_of_tasks() - self.study_data.number_of_training_tasks()
+        return self.study_data.number_of_tasks() - self.study_data.number_of_training_tasks
 
     @property
     def number_of_training_tasks(self) -> int:
 
-        return self.study_data.number_of_training_tasks()
+        return self.study_data.number_of_training_tasks
+
+    @property
+    def number_of_simple_training_tasks(self) -> int:
+        return self.study_data.number_of_simple_training_tasks
+
+    @property
+    def number_of_full_training_tasks(self) -> int:
+        return self.study_data.number_of_full_training_tasks
 
     def number_of_study_patients(self, with_dummy: bool = False) -> int:
 
@@ -872,12 +880,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     @property
     def number_of_training_patients(self) -> int:
 
-        return self.study_data.number_of_training_patients()
+        return self.study_data.number_of_training_patients
+
+    @property
+    def number_of_simple_training_patients(self) -> int:
+        return self.study_data.number_of_simple_training_patients
+
+    @property
+    def number_of_full_training_patients(self) -> int:
+        return self.study_data.number_of_full_training_patients
 
     @property
     def current_patient_idx(self) -> int:
 
-        return self.study_data.current_patient_idx(self.current_radiologist_id, self.current_patient_name)
+        return self.study_data.current_patient_idx(self.current_patient_name)
 
     @property
     def show_training_cases(self) -> bool:
@@ -927,7 +943,43 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_task_transform_comb == ("", "", ""):
             return False
 
-        return tasks.Task(self.current_patient_task_transform_comb[1]) in [tasks.Task.TRAINING_NONE, tasks.Task.TRAINING_ROTATION, tasks.Task.TRAINING_NONLINEAR]
+        return "training" in self.current_patient_task_transform_comb[0]
+
+    @property
+    def is_current_task_full_training_example(self) -> bool:
+        """
+        Check if the current combination is a full training task.
+        """
+
+        if self.current_patient_task_transform_comb == ("", "", ""):
+            return False
+
+        if not self.is_current_task_training:
+            return False
+
+        current_task = tasks.Task(self.current_patient_task_transform_comb[1])
+
+        return current_task not in [tasks.Task.TRAINING_NONE,
+                                    tasks.Task.TRAINING_ROTATION,
+                                    tasks.Task.TRAINING_NONLINEAR]
+
+    @property
+    def is_current_task_simple_training_example(self) -> bool:
+        """
+        Check if the current combination is a full training task.
+        """
+
+        if self.current_patient_task_transform_comb == ("", "", ""):
+            return False
+
+        if not self.is_current_task_training:
+            return False
+
+        current_task = tasks.Task(self.current_patient_task_transform_comb[1])
+
+        return current_task in [tasks.Task.TRAINING_NONE,
+                                tasks.Task.TRAINING_ROTATION,
+                                tasks.Task.TRAINING_NONLINEAR]
 
     def is_patient_task_transform_comb_training(self, idx: int) -> bool:
         """
@@ -936,7 +988,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_task_transform_comb == ("", "", ""):
             return False
 
-        return tasks.Task(self.patient_task_transform_comb(idx)[1]) in [tasks.Task.TRAINING_NONE, tasks.Task.TRAINING_ROTATION, tasks.Task.TRAINING_NONLINEAR]
+        return "training" in self.patient_task_transform_comb(idx)[0]
 
     @property
     def current_radiologist_name(self) -> str:

@@ -30,6 +30,14 @@ class StudyData:
     split: dict[int, dict[int, Tuple[str, utils.TransformType]]
                 ] = field(default_factory=dict)
 
+    number_of_training_patients: int = field(init=False)
+    number_of_simple_training_patients: int = field(init=False)
+    number_of_full_training_patients: int = field(init=False)
+
+    number_of_training_tasks: int = field(init=False)
+    number_of_simple_training_tasks: int = field(init=False)
+    number_of_full_training_tasks: int = field(init=False)
+
     def __post_init__(self):
         with open(self.path, "r") as f:
             self.data = json.load(f)
@@ -166,10 +174,6 @@ class StudyData:
         dummy_id = list(self.data["participants"].keys())[0]
 
         return len(self.case_task_transformation_map[dummy_id])
-
-    def number_of_training_tasks(self) -> int:
-
-        return 3
 
     def current_patient_idx(self, patient_name: str) -> int:
         """
@@ -323,6 +327,16 @@ class StudyData:
 
         temp_rad_map = all_combinations + temp_rad_map
 
+        self.number_of_training_patients = len(training_chunk)
+        self.number_of_simple_training_patients = 3
+        self.number_of_full_training_patients = 3
+
+        self.number_of_training_tasks = len(all_combinations)
+        self.number_of_simple_training_tasks = len(
+            training_comb_1) + len(training_comb_2) + len(training_comb_3)
+        self.number_of_full_training_tasks = len(
+            training_comb_4) + len(training_comb_5) + len(training_comb_6)
+
         return temp_rad_map
 
     def number_of_patients(self, with_dummy: bool = False) -> int:
@@ -337,9 +351,6 @@ class StudyData:
 
         return len(self.data["patients"]["positive"]) + \
             len(self.data["patients"]["negative"]) + increase
-
-    def number_of_training_patients(self) -> int:
-        return 3
 
     def in_chunk(self, patient_name: str, chunk_idx: int) -> bool:
         for patient, _, _ in self.chunked_patients[1][chunk_idx]:
