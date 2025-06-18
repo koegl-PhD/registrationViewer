@@ -74,8 +74,8 @@ def show_task(
         self.ui_sub_6.study_next_task_button.setEnabled(True)
         self.ui_sub_6.study_next_task_button.toolTip = ""  # nopep8
 
-    # we don't want to center on test tasks because those are not real tasks
-    elif self.is_current_patient_task_transform_comb_test:
+    # we don't want to center on training tasks because those are not real tasks
+    elif self.is_current_task_training:
         self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
     else:
         utils.center_on_point(
@@ -92,7 +92,7 @@ def show_task(
         log(logging.INFO, LogType.U_BUTTON, self.start_task_log_text_user)
         self.full_screen_block.close()
 
-    utils.show_fullscreen_popup_with_callback(title=f"Aufgabe {self.current_combination_idx+1}/{self.number_of_tasks}",
+    utils.show_fullscreen_popup_with_callback(title=f"Aufgabe {self.current_combination_idx+1}/{self.number_of_study_tasks}",
                                               content=description.replace(
         "\n", "\n\n"),
         center_text=True,

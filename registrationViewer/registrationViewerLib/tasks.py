@@ -9,9 +9,9 @@ class Task(Enum):
     A_CAROTISEXTERNA_L = "a_carotisexterna_l"
     LYMPH_NODE = "lymph_node"
     RECURRENCE = "recurrence"
-    TEST_NONE = "test_none"
-    TEST_ROTATION = "test_rotation"
-    TEST_NONLINEAR = "test_nonlinear"
+    TRAINING_NONE = "training_1_none"
+    TRAINING_ROTATION = "training_2_rotation"
+    TRAINING_NONLINEAR = "training_3_nonlinear"
 
 
 TASK_ORDER = {
@@ -60,18 +60,18 @@ Entscheide, ob ein Rezidiv im Fixed Bild (obere Reihe) vorhanden ist ({recurrenc
 Wenn ja, setze einen Punkt in seine ungefähre Mitte.
 """,
 
-    Task.TEST_NONE: """
+    Task.TRAINING_NONE: """
 Dies ist eine Testaufgabe. Dasselbe Bild wird in beiden Reihen angezeigt, daher ist die Registrierung perfekt.
 Sie können die Registrierung ein- und ausschalten, um den Effekt zu erkunden.
 """,
 
-    Task.TEST_ROTATION: """
+    Task.TRAINING_ROTATION: """
 Dies ist eine Testaufgabe. Dasselbe Bild wird in beiden Reihen angezeigt, jedoch wurde das Bild in der unteren Reihe um 14° rotiert.
 Das bedeutet, dass es keine korrespondierenden Schichten zwischen den beiden Bildern mehr gibt.
 Sie können die Registrierung ein- und ausschalten, um den Effekt zu erkunden.
 """,
 
-    Task.TEST_NONLINEAR: """
+    Task.TRAINING_NONLINEAR: """
 Dies ist eine Testaufgabe. Es werden zwei Bilder desselben Patienten angezeigt, daher liegt eine echte Deformation zwischen den Bildern vor.
 Das obere Bild ist das neuere.
 Dies entspricht den Daten, die während der Studie verwendet werden.

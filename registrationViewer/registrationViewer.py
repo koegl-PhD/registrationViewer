@@ -26,7 +26,7 @@ from slicer.parameterNodeWrapper import (
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
 import registrationViewerLib
-from registrationViewerLib import annotations_connections, custom_logging, utils, sectra, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, texts
+from registrationViewerLib import annotations_connections, custom_logging, log_utils, utils, sectra, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, texts
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -87,7 +87,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         modules = [
             "annotations_connections", "utils", "sectra", "crosshairs",
             "view_logic", "drop_data_loading", "study_connections",
-            "study", "tasks", "texts", "custom_logging"
+            "study", "tasks", "texts", "custom_logging", "log_utils"
         ]
 
         for name in modules:
@@ -201,10 +201,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.chunk_idx = 0
         self.current_combination_idx: int = 0
         self.combination_starting_offset: int = 0
-        self.current_test_combination_idx: int = 0
+        self.current_training_combination_idx: int = 0
         self.applied_starting_offset: bool = False
-
-        self.current_patient_list = []
 
         self.study_loaded_data: dict[str,
                                      dict[str, vtkMRMLScalarVolumeNode]] = {}
@@ -218,12 +216,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.slider_observers: Dict[str, Callable[[float], None]] = {}
 
         self.first_time_description_show: bool = True
-        self.first_time_test_description_show: bool = True
+        self.first_time_training_description_show: bool = True
         self.first_time_info_show: bool = True
 
-        self.checkbox_test_cases: bool = False
-
-        self.dummy_patient_step: Literal["start", "end"] = "start"
+        self.checkbox_training_cases: bool = False
 
         # task specific
         self.study_gt_lymphnode_description: dict[str, str] = {}
@@ -234,8 +230,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.study_recurrence_present: bool = False
 
-        self.study_progress_bar_patients = None
-        self.study_progress_bar_tasks = None
+        self.study_progress_bar_patients: utils.ProgressBar
+        self.study_progress_bar_tasks: utils.ProgressBar
 
         self.current_view: str = ""
         self.current_view_observer_tag = []
@@ -346,6 +342,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.on_linear_only)
         self.ui_sub_4.remove_all_data.connect(
             "clicked(bool)", self.on_remove_all_data)
+
+        self.study_progress_bar_patients = utils.ProgressBar(
+            self.ui_sub_6, 1, 1, 3)
+        self.study_progress_bar_tasks = utils.ProgressBar(
+            self.ui_sub_6, 2, 1, 3)
 
         # ANOOTATIONS
         annotations_connections.set_connections(self)
@@ -623,7 +624,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if not self.synchronisation_checks():
             return
 
-        if self.current_patient_list != [] and self.current_patient_transform_type == utils.TransformType.NONE:
+        if self.current_patient_transform_type == utils.TransformType.NONE:
             print('not synchronising because we have None transform')
             return
 
@@ -820,8 +821,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """
         Get the combination of patient name, task and transformation type
         """
-        if self.current_patient_list == []:
-            return ("", "", "")
 
         return self.study_data.case_task_transformation_map[self.current_radiologist_id][idx]
 
@@ -849,39 +848,50 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return tasks.Task(self.current_patient_task_transform_comb[1])
 
     @property
-    def number_of_tasks(self) -> int:
-
-        if self.current_patient_list == []:
-            return 0
-
-        return self.study_data.number_of_tasks(self.current_radiologist_id) - self.number_of_test_tasks
-
-    @property
-    def number_of_test_tasks(self) -> int:
-        if self.current_patient_list == []:
-            return 0
-
-        if self.show_test_cases:
-            return 3
-        else:
-            return 0
+    def number_of_all_tasks(self) -> int:
+        """
+        Get the number of all tasks for the current radiologist.
+        This includes training tasks.
+        """
+        return self.study_data.number_of_tasks()
 
     @property
-    def show_test_cases(self) -> bool:
+    def number_of_study_tasks(self) -> int:
+
+        return self.study_data.number_of_tasks() - self.study_data.number_of_training_tasks()
+
+    @property
+    def number_of_training_tasks(self) -> int:
+
+        return self.study_data.number_of_training_tasks()
+
+    def number_of_study_patients(self, with_dummy: bool = False) -> int:
+
+        return self.study_data.number_of_patients(with_dummy)
+
+    @property
+    def number_of_training_patients(self) -> int:
+
+        return self.study_data.number_of_training_patients()
+
+    @property
+    def current_patient_idx(self) -> int:
+
+        return self.study_data.current_patient_idx(self.current_radiologist_id, self.current_patient_name)
+
+    @property
+    def show_training_cases(self) -> bool:
         """
         Check if the training cases should be shown.
         """
-        if self.current_patient_list == []:
-            return False
-
-        return self.checkbox_test_cases
+        return self.checkbox_training_cases
 
     @property
     def current_patient_name(self) -> str:
         if self.current_patient_task_transform_comb == ("", "", ""):
             return "no_patient"
 
-        return self.current_patient_task_transform_comb[0][1]
+        return self.current_patient_task_transform_comb[0]
 
     @property
     def previous_patient_name(self) -> str:
@@ -891,7 +901,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_combination_idx == 0:
             return "no_patient"
 
-        return self.study_data.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx - 1][0][1]
+        return self.study_data.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx - 1][0]
 
     @property
     def current_patient_transform_type(self) -> utils.TransformType:
@@ -902,35 +912,31 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def current_patient_task_transform_comb(self) -> Tuple[str, str, str]:
-        if self.current_patient_list == []:
-            return ("", "", "")
 
         return self.study_data.case_task_transformation_map[self.current_radiologist_id][self.current_combination_idx]
 
     def patient_task_transform_comb(self, idx: int) -> Tuple[str, str, str]:
-        if self.current_patient_list == []:
-            return ("", "", "")
 
         return self.study_data.case_task_transformation_map[self.current_radiologist_id][idx]
 
     @property
-    def is_current_patient_task_transform_comb_test(self) -> bool:
+    def is_current_task_training(self) -> bool:
         """
-        Check if the current combination is a test task.
-        """
-        if self.current_patient_task_transform_comb == ("", "", ""):
-            return False
-
-        return tasks.Task(self.current_patient_task_transform_comb[1]) in [tasks.Task.TEST_NONE, tasks.Task.TEST_ROTATION, tasks.Task.TEST_NONLINEAR]
-
-    def is_patient_task_transform_comb_test(self, idx: int) -> bool:
-        """
-        Check if the current combination is a test task.
+        Check if the current combination is a training task.
         """
         if self.current_patient_task_transform_comb == ("", "", ""):
             return False
 
-        return tasks.Task(self.patient_task_transform_comb(idx)[1]) in [tasks.Task.TEST_NONE, tasks.Task.TEST_ROTATION, tasks.Task.TEST_NONLINEAR]
+        return tasks.Task(self.current_patient_task_transform_comb[1]) in [tasks.Task.TRAINING_NONE, tasks.Task.TRAINING_ROTATION, tasks.Task.TRAINING_NONLINEAR]
+
+    def is_patient_task_transform_comb_training(self, idx: int) -> bool:
+        """
+        Check if the current combination is a training task.
+        """
+        if self.current_patient_task_transform_comb == ("", "", ""):
+            return False
+
+        return tasks.Task(self.patient_task_transform_comb(idx)[1]) in [tasks.Task.TRAINING_NONE, tasks.Task.TRAINING_ROTATION, tasks.Task.TRAINING_NONLINEAR]
 
     @property
     def current_radiologist_name(self) -> str:
@@ -939,22 +945,22 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def next_task_log_text(self) -> str:
-        if self.is_current_patient_task_transform_comb_test:
-            return "Next test task"
+        if self.is_current_task_training:
+            return "Next training task"
 
         return "Next task"
 
     @property
     def start_task_log_text(self) -> str:
-        if self.is_current_patient_task_transform_comb_test:
-            return "Start test task"
+        if self.is_current_task_training:
+            return "Start training task"
 
         return "Start task"
 
     @property
     def start_task_log_text_user(self) -> str:
-        if self.is_current_patient_task_transform_comb_test:
-            return "User started test task"
+        if self.is_current_task_training:
+            return "User started training task"
 
         return "User started task"
 

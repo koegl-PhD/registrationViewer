@@ -4,7 +4,7 @@ import logging
 import os
 import random
 
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 import slicer
 
@@ -24,7 +24,11 @@ class StudyData:
     case_task_transformation_map: dict[str,
                                        List[Tuple[Tuple[str, str], str, str]]] = field(init=False)
 
-    chunked_patients: List[Tuple[str, str]] = field(default_factory=list)
+    chunked_patients: Dict[int, List[List[Tuple[str, utils.TransformType, str]]]] = field(
+        default_factory=dict)
+
+    split: dict[int, dict[int, Tuple[str, utils.TransformType]]
+                ] = field(default_factory=dict)
 
     def __post_init__(self):
         with open(self.path, "r") as f:
@@ -32,11 +36,16 @@ class StudyData:
 
         self.__dict__.update(self.data)
 
-        self.dummy_patient_name = "0e5fp8GltvE"
+        self.dummy_patient_name_start = "dummy_start_0e5fp8GltvE"
+        self.dummy_patient_name_end = "dummy_end_0e5fp8GltvE"
+
+        random.seed(0)
+
+        self._create_data_split()
 
         self._divide_patients_into_chunks()
 
-        self._create_case_task_transformation_map(randomise=True)
+        self._create_case_task_transformation_map()
 
     def save(self, json_path=None):
         if json_path is None:
@@ -45,13 +54,97 @@ class StudyData:
         with open(json_path, "w") as f:
             json.dump(self.data, f, indent=4)
 
-    def patient_list(self, rad_id: str) -> List[str]:
+    def _create_data_split(self) -> None:
 
-        participant = self.participants.get(rad_id, None)
-        if participant is None:
-            raise ValueError(f"Rad id {rad_id} not found in data")
+        patients_positive = self.data["patients"]["positive"]
+        patients_negative = self.data["patients"]["negative"]
 
-        return participant["patients"]["negative"].copy() + participant["patients"]["positive"].copy()
+        split_g1 = {patients_positive[i]: ("positive", utils.TransformType.NONE)
+                    for i in range(0, 7)}
+        split_g1.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
+                        for i in range(0, 7)})
+        split_g1.update({patients_positive[i]: ("positive", utils.TransformType.LINEAR)
+                        for i in range(7, 14)})
+        split_g1.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
+                        for i in range(7, 14)})
+        split_g1.update({patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
+                        for i in range(14, 21)})
+        split_g1.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
+                        for i in range(14, 21)})
+
+        split_g2 = {patients_positive[i]: ("positive", utils.TransformType.LINEAR)
+                    for i in range(0, 7)}
+        split_g2.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
+                        for i in range(0, 7)})
+        split_g2.update({patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
+                        for i in range(7, 14)})
+        split_g2.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
+                        for i in range(7, 14)})
+        split_g2.update({patients_positive[i]: ("positive", utils.TransformType.NONE)
+                        for i in range(14, 21)})
+        split_g2.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
+                        for i in range(14, 21)})
+
+        split_g3 = {patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
+                    for i in range(0, 7)}
+        split_g3.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
+                        for i in range(0, 7)})
+        split_g3.update({patients_positive[i]: ("positive", utils.TransformType.NONE)
+                        for i in range(7, 14)})
+        split_g3.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
+                        for i in range(7, 14)})
+        split_g3.update({patients_positive[i]: ("positive", utils.TransformType.LINEAR)
+                        for i in range(14, 21)})
+        split_g3.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
+                        for i in range(14, 21)})
+
+        self.split = {
+            1: split_g1,
+            2: split_g2,
+            3: split_g3
+        }
+
+        self._shuffle_data_split()
+
+        """
+        print('\t' * 2 + 'Group 1' + '\t' * 5 +
+              'Group 2' + '\t' * 5 + 'Group 3')
+        for (i1, p1), (i2, p2), (i3, p3) in zip(self.split[1].items(), self.split[2].items(), self.split[3].items()):
+
+            if p1[1] != utils.TransformType.NONLINEAR:
+                t1 = 1
+            else:
+                t1 = 1
+
+            if p2[1] != utils.TransformType.NONLINEAR:
+                t2 = 1
+            else:
+                t2 = 1
+            if p3[1] != utils.TransformType.NONLINEAR:
+                t3 = 1
+            else:
+                t3 = 1
+
+            print(
+                str(i1) + '\t\t' + p1[0] + '\t' * t1 + p1[1].value + '\t\t' +
+                str(i2) + '\t\t' + p2[0] + '\t' * t2 + p2[1].value + '\t\t' +
+                str(i3) + '\t\t' + p3[0] + '\t' * t3 + p3[1].value
+            )
+        print()
+        print()
+        print()
+        print()
+        """
+
+    def _shuffle_data_split(self) -> None:
+
+        shuffled_keys = list(self.split[1].keys())
+
+        random.shuffle(shuffled_keys)
+
+        self.split[1] = {k: self.split[1][k] for k in shuffled_keys}
+        self.split[2] = {k: self.split[2][k] for k in shuffled_keys}
+        self.split[3] = {k: self.split[3][k] for k in shuffled_keys}
 
     def get_chunked_patient_names_and_paths(
             self,
@@ -61,28 +154,43 @@ class StudyData:
 
         names_and_paths = []
 
-        for present, patient_name in self.chunked_patients[chunk_idx]:
+        for patient_name, transform, present in self.chunked_patients[1][chunk_idx]:
             p = self.data[f"path_study_input_cases_{present}"]
             names_and_paths.append(
                 (patient_name, f"{p}{patient_name}"))
 
         return names_and_paths
 
-    def number_of_tasks(self, rad_id: str) -> int:
-        participant = self.participants.get(rad_id, None)
-        if participant is None:
-            raise ValueError(f"Rad id {rad_id} not found in data")
+    def number_of_tasks(self) -> int:
 
-        return len(self.case_task_transformation_map[rad_id])
+        dummy_id = list(self.data["participants"].keys())[0]
 
-    def get_training_case_names(self, rad_id: str) -> List[str]:
+        return len(self.case_task_transformation_map[dummy_id])
+
+    def number_of_training_tasks(self) -> int:
+
+        return 3
+
+    def current_patient_idx(self, rad_id: str, patient_name: str) -> int:
+        """
+        Returns the index of the current patient across the chunked patient lists.
+        """
+
+        idx = 0
+
+        for chunk in self.chunked_patients[1]:
+            for patient, _, _ in chunk:
+                if patient == patient_name:
+                    return idx
+                idx += 1
+
+        raise ValueError(
+            f"Patient {patient_name} not found in chunks. Only found {self.chunked_patients[1]=}.")
+
+    def get_training_case_names(self) -> List[str]:
         """
         Returns the names of the cases used for training
         """
-
-        participant = self.participants.get(rad_id, None)
-        if participant is None:
-            raise ValueError(f"Rad id {rad_id} not found in data")
 
         # list all folders
         path = self.path_study_input_cases_training
@@ -97,113 +205,134 @@ class StudyData:
         return training_cases
 
     def _divide_patients_into_chunks(self) -> None:
-        random.seed(42)
 
         max_chunk_size = 2
 
         patients: List[str] = []
 
-        for _, rad_content in self.participants.items():
-            for present in ["positive", "negative"]:
+        for group, split in self.split.items():
 
-                for patient_name in rad_content["patients"][present]:
+            for patient_name, (present, transform) in split.items():
 
-                    patients.append((present, patient_name))
+                patients.append((patient_name, transform, present))
 
-        # randomize patients list
-        random.shuffle(patients)
+            self.chunked_patients[group] = [patients[i:i+max_chunk_size]
+                                            for i in range(0, len(patients), max_chunk_size)]
 
-        self.chunked_patients = [patients[i:i+max_chunk_size]
-                                 for i in range(0, len(patients), max_chunk_size)]
-
-    def _create_case_task_transformation_map(self, randomise: bool) -> None:
+    def _create_case_task_transformation_map(self) -> None:
         """
         Create a mapping of task to transformation for the random case.
         This is used to create the random case in the study.
         """
 
-        random.seed(42)
-
         self.case_task_transformation_map = {}
+
+        pat_idx = 0
 
         for rad_id, rad_content in self.participants.items():
 
+            group = int(rad_content["group"])
+
             temp_rad_map = []
 
-            for chunk in self.chunked_patients:
+            for chunk in self.chunked_patients[group]:
 
                 temp_chunk_map = []
 
-                for patient in chunk:
+                for patient_name, transform, present in chunk:
 
-                    for transform in utils.TransformType:
+                    for task in tasks.TASK_ORDER.values():
 
-                        for task in tasks.TASK_ORDER.values():
+                        if patient_name in [self.dummy_patient_name_start, self.dummy_patient_name_end]:
+                            continue
 
-                            if patient[1] == self.dummy_patient_name:
-                                continue
+                        # if task not in [tasks.Task.RECURRENCE, tasks.Task.A_VERTEBRALIS_R]:
+                        #     continue
 
-                            if task != tasks.Task.RECURRENCE or transform != utils.TransformType.NONLINEAR:
-                                continue
+                        temp_chunk_map.append(
+                            (patient_name, task.value, transform.value))
 
-                            temp_chunk_map.append(
-                                (patient, task.value, transform.value))
-
-                if randomise:
-                    temp_chunk_map = utils.shuffle_without_consecutive_ab(
-                        temp_chunk_map)
+                    pat_idx += 1
 
                 temp_rad_map += temp_chunk_map
 
-            start_and_end_task = []
-            for task in tasks.TASK_ORDER.values():
-                start_and_end_task.append(
-                    (("dummy", self.dummy_patient_name), task.value, utils.TransformType.NONLINEAR.value))
-            random.shuffle(start_and_end_task)
+            temp_rad_map = self._insert_dummy_tasks(temp_rad_map, group)
 
-            self.chunked_patients[0].insert(
-                0, ("dummy", self.dummy_patient_name))
-            self.chunked_patients[-1].append(
-                ("dummy", self.dummy_patient_name))
-
-            temp_rad_map = start_and_end_task + temp_rad_map + start_and_end_task
-
-            test_names = self.get_training_case_names(rad_id)
-            test_comb_1 = (("training", test_names[0]), tasks.Task.TEST_NONE.value,
-                           utils.TransformType.LINEAR.value)
-            test_comb_2 = (("training", test_names[1]), tasks.Task.TEST_ROTATION.value,
-                           utils.TransformType.LINEAR.value)
-            test_comb_3 = (("training", test_names[2]), tasks.Task.TEST_NONLINEAR.value,
-                           utils.TransformType.NONLINEAR.value)
-
-            test_chunk = [("training", test_names[0]),
-                          ("training", test_names[1]),
-                          ("training", test_names[2])]
-            self.chunked_patients.insert(0, test_chunk)
-
-            temp_rad_map.insert(0, test_comb_1)
-            temp_rad_map.insert(1, test_comb_2)
-            temp_rad_map.insert(2, test_comb_3)
+            temp_rad_map = self._insert_training_cases(temp_rad_map, group)
 
             self.case_task_transformation_map[rad_id] = temp_rad_map
 
             for a in self.case_task_transformation_map[rad_id]:
                 print(a)
 
-    def number_of_patients(self, rad_id: str) -> int:
+    def _insert_dummy_tasks(
+            self,
+            temp_rad_map: List[List[Tuple[str, str, str]]],
+            group: int
+    ) -> List[List[Tuple[str, str, str]]]:
+
+        dummy_tasks_start = []
+        dummy_tasks_end = []
+        for task in tasks.TASK_ORDER.values():
+            dummy_tasks_start.append(
+                (self.dummy_patient_name_start, task.value, utils.TransformType.NONLINEAR.value))
+            dummy_tasks_end.append(
+                (self.dummy_patient_name_end, task.value, utils.TransformType.NONLINEAR.value))
+
+        self.chunked_patients[group][0].insert(
+            0, (self.dummy_patient_name_start, utils.TransformType.NONLINEAR, "dummy"))
+
+        self.chunked_patients[group][-1].append(
+            (self.dummy_patient_name_end, utils.TransformType.NONLINEAR, "dummy"))
+
+        temp_rad_map = dummy_tasks_start + temp_rad_map + dummy_tasks_end
+
+        return temp_rad_map
+
+    def _insert_training_cases(
+            self,
+            temp_rad_map: List[List[Tuple[str, str, str]]],
+            group: int
+    ) -> List[List[Tuple[str, str, str]]]:
+
+        training_names = self.get_training_case_names()
+
+        training_comb_1 = (training_names[0], tasks.Task.TRAINING_NONE.value,
+                           utils.TransformType.LINEAR.value)
+        training_comb_2 = (training_names[1], tasks.Task.TRAINING_ROTATION.value,
+                           utils.TransformType.LINEAR.value)
+        training_comb_3 = (training_names[2], tasks.Task.TRAINING_NONLINEAR.value,
+                           utils.TransformType.NONLINEAR.value)
+
+        training_chunk = [(training_names[0], utils.TransformType.NONE, "training"),       # nopep8
+                          (training_names[1], utils.TransformType.LINEAR, "training"),     # nopep8
+                          (training_names[2], utils.TransformType.NONLINEAR, "training")]  # nopep8
+        self.chunked_patients[group].insert(0, training_chunk)
+
+        temp_rad_map.insert(0, training_comb_1)
+        temp_rad_map.insert(1, training_comb_2)
+        temp_rad_map.insert(2, training_comb_3)
+
+        return temp_rad_map
+
+    def number_of_patients(self, with_dummy: bool = False) -> int:
         """
         Returns the number of patients in the study.
         """
 
-        participant = self.participants.get(rad_id, None)
-        if participant is None:
-            raise ValueError(f"Rad id {rad_id} not found in data")
+        if with_dummy:
+            increase = 2
+        else:
+            increase = 0
 
-        return len(participant["patients"]["positive"]) + \
-            len(participant["patients"]["negative"])
+        return len(self.data["patients"]["positive"]) + \
+            len(self.data["patients"]["negative"]) + increase
+
+    def number_of_training_patients(self) -> int:
+        return 3
 
     def in_chunk(self, patient_name: str, chunk_idx: int) -> bool:
-        for _, patient in self.chunked_patients[chunk_idx]:
+        for patient, _, _ in self.chunked_patients[1][chunk_idx]:
             if patient_name == patient:
                 return True
 
@@ -214,23 +343,32 @@ class StudyData:
         Returns the index of the chunk that contains the given combination.
         """
 
-        for idx, chunk in enumerate(self.chunked_patients):
-            for patient in chunk:
-                if patient_name == patient[1]:
+        for idx, chunk in enumerate(self.chunked_patients[1]):
+            for patient, _, _ in chunk:
+                if patient_name == patient:
                     return idx
 
         raise ValueError(
-            f"Patient {patient_name} not found in chunks. Only found {self.chunked_patients=}.")
+            f"Patient {patient_name} not found in chunks. Only found {self.chunked_patients[1]=}.")
 
-    def remove_test_combinations(self, rad_id: str) -> None:
+    def remove_training_combinations(self, rad_id: str) -> None:
         temp = self.case_task_transformation_map[rad_id]
         self.case_task_transformation_map[rad_id] = temp[3:]
+
+        temp = self.chunked_patients[1]
+        self.chunked_patients[1] = temp[1:]
+        self.chunked_patients[2] = temp[1:]
+        self.chunked_patients[3] = temp[1:]
+
+    def group(self, rad_id: str) -> int:
+
+        return self.data["participants"][rad_id]["group"]
 
 
 def load_current_chunk(self: "registrationViewerWidget") -> None:
 
     log(logging.INFO, LogType.INTERNAL,
-        f"Start loading study data chunk {self.chunk_idx+1}/{len(self.study_data.chunked_patients)}")
+        f"Start loading study data chunk {self.chunk_idx+1}/{len(self.study_data.chunked_patients[1])}")
 
     # fullscreen_block = utils.show_fullscreen_block("", "")
 
@@ -266,7 +404,7 @@ def load_current_chunk(self: "registrationViewerWidget") -> None:
     # fullscreen_block.close()
 
     log(logging.INFO, LogType.INTERNAL,
-        f"Finished loading study data chunk {self.chunk_idx+1}/{len(self.study_data.chunked_patients)}")
+        f"Finished loading study data chunk {self.chunk_idx+1}/{len(self.study_data.chunked_patients[1])}")
 
 
 def clear_one_chunk(self: "registrationViewerWidget") -> None:
@@ -290,19 +428,18 @@ def clear_one_chunk(self: "registrationViewerWidget") -> None:
         "Done clearing current study data chunk")
 
 
-def add_dummy_test_points(self: "registrationViewerWidget") -> None:
-    test_patient_names = self.study_data.get_training_case_names(
-        self.current_radiologist_id)
+def add_dummy_training_points(self: "registrationViewerWidget") -> None:
+    training_patient_names = self.study_data.get_training_case_names()
 
-    self.study_node_groundtruth_points[test_patient_names[0]] = {tasks.Task.TEST_NONE: utils.create_gt_point(tasks.Task.TEST_NONE.value,
-                                                                                                             (0, 0, 0),
-                                                                                                             [])}
-    self.study_node_groundtruth_points[test_patient_names[1]] = {tasks.Task.TEST_ROTATION: utils.create_gt_point(tasks.Task.TEST_ROTATION.value,
-                                                                                                                 (0, 0, 0),
-                                                                                                                 [])}
-    self.study_node_groundtruth_points[test_patient_names[2]] = {tasks.Task.TEST_NONLINEAR: utils.create_gt_point(tasks.Task.TEST_NONLINEAR.value,
-                                                                                                                  (0, 0, 0),
-                                                                                                                  [])}
+    self.study_node_groundtruth_points[training_patient_names[0]] = {tasks.Task.TRAINING_NONE: utils.create_gt_point(tasks.Task.TRAINING_NONE.value,
+                                                                                                                     (0, 0, 0),
+                                                                                                                     [])}
+    self.study_node_groundtruth_points[training_patient_names[1]] = {tasks.Task.TRAINING_ROTATION: utils.create_gt_point(tasks.Task.TRAINING_ROTATION.value,
+                                                                                                                         (0, 0, 0),
+                                                                                                                         [])}
+    self.study_node_groundtruth_points[training_patient_names[2]] = {tasks.Task.TRAINING_NONLINEAR: utils.create_gt_point(tasks.Task.TRAINING_NONLINEAR.value,
+                                                                                                                          (0, 0, 0),
+                                                                                                                          [])}
 
 
 def load_one_case_voxels(
@@ -399,7 +536,7 @@ def load_one_case_annotations(
         progress_val: float,
 ) -> float:
 
-    if "test" in case_name.lower():
+    if "training" in case_name.lower():
         return progress_val
 
     volume_moving_name = self.study_loaded_data[case_name]["moving"].GetName(
@@ -494,11 +631,7 @@ def save_annotations(self: "registrationViewerWidget",
     if self.current_combination_idx < 0:
         return
 
-    if self.current_patient_name == self.study_data.dummy_patient_name:
-        current_patient_name = self.current_patient_name + \
-            f"_{self.dummy_patient_step}"
-    else:
-        current_patient_name = self.current_patient_name
+    current_patient_name = self.current_patient_name
 
     path_patient = f"{self.study_data.path_study_output}{self.current_radiologist_id}/{current_patient_name}/{self.current_patient_transform_type.value}"  # nopep8
 

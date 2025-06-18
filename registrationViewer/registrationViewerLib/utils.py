@@ -69,7 +69,64 @@ class ArrowKeyFilter(qt.QObject):
         return False
 
 
+class ProgressBar():
+    """
+    Wrapper class around a progress bar that handles showing and updating it.
+    """
+
+    def __init__(
+        self,
+        ui,
+        index: int,
+        initial: int,
+        maximum: int
+    ) -> None:
+        """
+        Initialises the progress bar
+        """
+
+        if index not in [1, 2]:
+            raise ValueError("Index must be 1 or 2")
+
+        self.bar = getattr(ui, f"progress_bar_{index}")
+        self.label = getattr(ui, f"progress_label_{index}")
+
+        self.bar.setValue(initial)
+        self.bar.setMaximum(maximum)
+
+        self.bar.setVisible(False)
+        self.label.setVisible(False)
+
+    def show(self) -> None:
+        """
+        Shows the progress bar and the corresponding label
+        """
+
+        self.bar.setVisible(True)
+        self.label.setVisible(True)
+
+        print("showing")
+
+    def set_value(self, value: int) -> None:
+        """
+        Sets the value of the progress bar
+        """
+
+        self.bar.setValue(value)
+
+    def set_max(self, value: int) -> None:
+        """
+        Sets the maximum value of the progress bar
+        """
+        print(f"setting amximum to {value}")
+        self.bar.setMaximum(value)
+
+
 class FullScreenBlock():
+    """
+    Wrapper class aroung a full screen block that handles opening and closing it.
+    """
+
     def __init__(self) -> None:
         """Initialize fullscreen block."""
 
@@ -78,22 +135,28 @@ class FullScreenBlock():
 
     def open(
         self,
-        title: str = "",
         content: str = "",
         center_text: bool = False,
         text_size: int = 24
     ) -> None:
+        """
+        Opens the full screen block if it wasn't opened yet.
+        """
+
         if self.is_open:
+            self.set_content(content)
             return
 
         self.dialog = show_fullscreen_block(
-            title, content, center_text, text_size)
+            "", content, center_text, text_size)
 
         self.is_open = True
 
-        print("opened fullscreen block")
-
     def close(self) -> None:
+        """
+        Closes the full screen block if it wasn't closed yet.
+        """
+
         if not self.is_open:
             return
 
@@ -104,9 +167,11 @@ class FullScreenBlock():
 
         self.is_open = False
 
-        print("closed fullscreen block")
-
     def set_content(self, content: str) -> None:
+        """
+        Sets the content of the block if it is open.
+        """
+
         if not self.is_open:
             return
 
@@ -931,6 +996,8 @@ def set_up_synchronisation(self: "registrationViewerWidget") -> None:
         print(f"{self.current_patient_name=}")
         raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
 
+    self.synchronise_with_displacement_pressed = False
+
     self.remove_custom_observers_from_crosshair()
 
 
@@ -981,6 +1048,7 @@ def set_button_texts(self: "registrationViewerWidget") -> None:
     )
 
     self.ui_sub_6.progress_label_2.setText(texts.Contents.CURRENT_TASK)
+    self.ui_sub_6.progress_label_1.setText(texts.Contents.CURRENT_PATIENT)
 
 
 def get_active_slice_view() -> str:
@@ -997,7 +1065,7 @@ def get_active_slice_view() -> str:
     return "Unknown"
 
 
-def set_buttons_for_test_cases(self: "registrationViewerWidget") -> None:
+def set_buttons_for_training_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.synchronise_views_general.setVisible(False)
 
@@ -1006,12 +1074,16 @@ def set_buttons_for_test_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.study_add_point_button.setVisible(False)
 
-    self.ui_sub_6.progress_label_2.setText(texts.Contents.TEST_CURRENT_TASK)
+    self.ui_sub_6.progress_label_2.setText(
+        texts.Contents.TRAINING_CURRENT_TASK)
+    self.ui_sub_6.progress_label_1.setText(
+        texts.Contents.TRAINING_CURRENT_PATIENT)
 
 
-def reset_buttons_after_test_cases(self: "registrationViewerWidget") -> None:
+def reset_buttons_after_training_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.progress_label_2.setText(texts.Contents.CURRENT_TASK)
+    self.ui_sub_6.progress_label_1.setText(texts.Contents.CURRENT_PATIENT)
 
 
 def create_gt_point(
