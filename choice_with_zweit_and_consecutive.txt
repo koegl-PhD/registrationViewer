@@ -1,0 +1,65 @@
+positive        artefakte   consecutive     rezidiv
+0e5fp8GltvE     ja          no
+0f9SYhwcPFc     ja
+2pO8AtRxHAg     ja
+2VO-i_onOGw     ja                          no
+2w1vVKUCbcg     ja
+7sp2FiVa4WI     ja
+820_BQlC1tI     ja
+aBQe2EfmXv8     ja
+eiJvX7Bw25o     ja
+fNvYEk8SSJs     nein                        no
+Fw2lRBfYxtM     ja                          no
+hmJfXqxVMk0     ja
+LB9oATPd0mE     ja                          no
+Of-K39ULY0Q     ja
+pnxsbLeerXU     ja                          no
+pP5CHNLQspI     ja
+sBPRtWefCTc     ja                          no
+SzZUcvM5JpU     nein
+TMxGak0IQOg     ja
+TwU508CCA9Y     nein
+urqkluKweXA     ja
+VUIaoA1iqhI     ja
+WeMcC01ZNgY     ja
+XKgRKTaLeEo     nein
+xYbaegYf_mw     ja                          no
+y9Zc0VfK-hE     ja         no               no
+yYcNJD5knnY     ja
+zNsYMilmwCo     ja
+
+
+negative
+1q_1_G-1EPM     ja
+3dSDmvwSjek     nein
+6vkfAvGWUPg     ja
+6WB8wP4uAl0     ja
+7IZ0hAktN78     ja
+7SwVHAAw5lM     ja
+87J-_CHHkzI     ja
+96-du2ceM4o     ja
+a9ebcF7RKU4     ja
+CCL2MqdD19g     nein
+ccucLKGWtSQ     ja
+CD8Gu0llvgk     ja
+CSSdmYlgjew     ja
+fEHc3cCOu-M     ja
+F-JlS0Cl1K0     nein
+g-chOlbtzBQ     ja
+hkvdD_XVYqo     ja
+I307KZkh1VM     ja
+J0XX6t7vZ1I     ja
+jjvGyNeBKKg     ja
+LCaTvVa1d0s     ja
+NerH54N5IrY     nein
+og9nL1ncPf4     ja
+pEQnvh_Lbhc     nein
+PfzTYxllBQc     ja
+tjrrBb3AK9M     ja
+tpcakZfjy40     nein
+UoYxcCNwdxA     ja
+VIhRI27e_qA     ja
+vQC_zG5VpaI     ja
+wl0SZz-0IAI     ja
+XliJZuWCOzs     ja
+ZmTnkjJY0WA     ja
