@@ -113,7 +113,8 @@ class DropWidget(qt.QFrame):
             path_volume_fixed, path_volume_moving, \
                 path_seg_fixed, path_seg_moving, \
                 path_transform_fixed, path_transform_moving, \
-                path_deformation = utils.get_paths_to_load(dropped_folder_path)
+                path_deformation = utils.get_paths_to_load(
+                    dropped_folder_path, "")
 
             if utils.update_progress_window(0, f"Loading fixed volume..."):
                 node_volume_fixed = slicer.util.loadVolume(path_volume_fixed)
