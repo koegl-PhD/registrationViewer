@@ -68,49 +68,51 @@ class StudyData:
         patients_negative = self.data["patients"]["negative"]
 
         split_g1 = {patients_positive[i]: ("positive", utils.TransformType.NONE)
-                    for i in range(0, 7)}
+                    for i in range(0, 6)}
         split_g1.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
-                        for i in range(0, 7)})
+                        for i in range(0, 6)})
         split_g1.update({patients_positive[i]: ("positive", utils.TransformType.LINEAR)
-                        for i in range(7, 14)})
+                        for i in range(6, 12)})
         split_g1.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
-                        for i in range(7, 14)})
+                        for i in range(6, 12)})
         split_g1.update({patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
-                        for i in range(14, 21)})
+                        for i in range(12, 18)})
         split_g1.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
-                        for i in range(14, 21)})
+                        for i in range(12, 18)})
 
         split_g2 = {patients_positive[i]: ("positive", utils.TransformType.LINEAR)
-                    for i in range(0, 7)}
+                    for i in range(0, 6)}
         split_g2.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
-                        for i in range(0, 7)})
+                        for i in range(0, 6)})
         split_g2.update({patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
-                        for i in range(7, 14)})
+                        for i in range(6, 12)})
         split_g2.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
-                        for i in range(7, 14)})
+                        for i in range(6, 12)})
         split_g2.update({patients_positive[i]: ("positive", utils.TransformType.NONE)
-                        for i in range(14, 21)})
+                        for i in range(12, 18)})
         split_g2.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
-                        for i in range(14, 21)})
+                        for i in range(12, 18)})
 
         split_g3 = {patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
-                    for i in range(0, 7)}
+                    for i in range(0, 6)}
         split_g3.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
-                        for i in range(0, 7)})
+                        for i in range(0, 6)})
         split_g3.update({patients_positive[i]: ("positive", utils.TransformType.NONE)
-                        for i in range(7, 14)})
+                        for i in range(6, 12)})
         split_g3.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
-                        for i in range(7, 14)})
+                        for i in range(6, 12)})
         split_g3.update({patients_positive[i]: ("positive", utils.TransformType.LINEAR)
-                        for i in range(14, 21)})
+                        for i in range(12, 18)})
         split_g3.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
-                        for i in range(14, 21)})
+                        for i in range(12, 18)})
 
         self.split = {
             1: split_g1,
             2: split_g2,
             3: split_g3
         }
+
+        print(f"{len(split_g1)=}")
 
         self._shuffle_data_split()
 
