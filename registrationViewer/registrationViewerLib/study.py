@@ -44,9 +44,6 @@ class StudyData:
 
         self.__dict__.update(self.data)
 
-        self.dummy_patient_name_start = "dummy_start_0e5fp8GltvE"
-        self.dummy_patient_name_end = "dummy_end_0e5fp8GltvE"
-
         random.seed(0)
 
         self._create_data_split()
@@ -112,8 +109,6 @@ class StudyData:
             3: split_g3
         }
 
-        print(f"{len(split_g1)=}")
-
         self._shuffle_data_split()
 
         """
@@ -173,9 +168,9 @@ class StudyData:
 
     def number_of_tasks(self) -> int:
 
-        dummy_id = list(self.data["participants"].keys())[0]
+        calibration_id = list(self.data["participants"].keys())[0]
 
-        return len(self.case_task_transformation_map[dummy_id])
+        return len(self.case_task_transformation_map[calibration_id])
 
     def current_patient_idx(self, patient_name: str) -> int:
         """
@@ -209,6 +204,23 @@ class StudyData:
             path) if os.path.isdir(os.path.join(path, f))])
 
         return training_cases
+
+    def get_calibration_case_names(self) -> list[str]:
+        """
+        Returns the names of the cases used for calibration
+        """
+
+        # list all folders
+        path = self.path_study_input_cases_calibration
+
+        if not os.path.exists(path):
+            raise FileNotFoundError(
+                f"Path {path} does not exist. Please check the study configuration.")
+
+        calibration_cases = sorted([f for f in os.listdir(
+            path) if os.path.isdir(os.path.join(path, f))])
+
+        return calibration_cases
 
     def _divide_patients_into_chunks(self) -> None:
 
@@ -259,7 +271,7 @@ class StudyData:
 
                 temp_rad_map += temp_chunk_map
 
-            temp_rad_map = self._insert_dummy_tasks(temp_rad_map, group)
+            temp_rad_map = self._insert_calibration_cases(temp_rad_map, group)
 
             temp_rad_map = self._insert_training_cases(temp_rad_map, group)
 
@@ -268,27 +280,32 @@ class StudyData:
             for a in self.case_task_transformation_map[rad_id]:
                 print(a)
 
-    def _insert_dummy_tasks(
+    def _insert_calibration_cases(
             self,
             temp_rad_map: List[List[Tuple[str, str, str]]],
             group: int
     ) -> List[List[Tuple[str, str, str]]]:
 
-        dummy_tasks_start = []
-        dummy_tasks_end = []
-        for task in tasks.TASK_ORDER.values():
-            dummy_tasks_start.append(
-                (self.dummy_patient_name_start, task.value, utils.TransformType.NONLINEAR.value))
-            dummy_tasks_end.append(
-                (self.dummy_patient_name_end, task.value, utils.TransformType.NONLINEAR.value))
+        calibration_names = self.get_calibration_case_names()
 
-        self.chunked_patients[group][0].insert(
-            0, (self.dummy_patient_name_start, utils.TransformType.NONLINEAR, "dummy"))
+        calibration_tasks_start = []
+        calibration_tasks_end = []
+        for name, transform in zip(calibration_names[:-1], [utils.TransformType.NONLINEAR, utils.TransformType.NONE, utils.TransformType.LINEAR]):
+            for task in tasks.TASK_ORDER.values():
+                calibration_tasks_start.append(
+                    (name, task.value, transform.value))
+
+            self.chunked_patients[group][0].insert(
+                0, (name, transform, "calibration"))
+
+        for task in tasks.TASK_ORDER.values():
+            calibration_tasks_end.append(
+                (calibration_names[-1], task.value, utils.TransformType.NONLINEAR.value))
 
         self.chunked_patients[group][-1].append(
-            (self.dummy_patient_name_end, utils.TransformType.NONLINEAR, "dummy"))
+            (calibration_names[-1], utils.TransformType.NONLINEAR, "calibration"))
 
-        temp_rad_map = dummy_tasks_start + temp_rad_map + dummy_tasks_end
+        temp_rad_map = calibration_tasks_start + temp_rad_map + calibration_tasks_end
 
         return temp_rad_map
 
@@ -341,12 +358,12 @@ class StudyData:
 
         return temp_rad_map
 
-    def number_of_patients(self, with_dummy: bool = False) -> int:
+    def number_of_patients(self, with_calibration: bool = False) -> int:
         """
         Returns the number of patients in the study.
         """
 
-        if with_dummy:
+        if with_calibration:
             increase = 2
         else:
             increase = 0
@@ -451,7 +468,7 @@ def clear_one_chunk(self: "registrationViewerWidget") -> None:
         "Done clearing current study data chunk")
 
 
-def add_dummy_training_points(self: "registrationViewerWidget") -> None:
+def add_calibration_training_points(self: "registrationViewerWidget") -> None:
     training_patient_names = self.study_data.get_training_case_names()
 
     self.study_node_groundtruth_points[training_patient_names[0]] = {tasks.Task.TRAINING_NONE: utils.create_gt_point(tasks.Task.TRAINING_NONE.value,
