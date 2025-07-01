@@ -285,7 +285,7 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
         self.chunk_idx = 0
 
         utils.set_buttons_for_simple_training_cases(self)
-        study.add_dummy_training_points(self)
+        study.add_calibration_training_points(self)
     else:
         self.current_combination_idx = self.combination_starting_offset
 
@@ -379,7 +379,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
                                                    on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
 
         self.study_progress_bar_patients.set_max(
-            self.number_of_study_patients(with_dummy=True))
+            self.number_of_study_patients(with_calibration=True))
         self.study_progress_bar_tasks.set_max(len(tasks.TASK_ORDER))
 
         self.first_time_info_show = False
@@ -435,7 +435,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         utils.show_fullscreen_popup_with_callback(title="",
                                                   content=texts.Contents.CURRENT_PATIENT_COUNTER.format(current=self.current_patient_idx + 1 - self.number_of_training_patients,
                                                                                                         total=self.number_of_study_patients(
-                                                                                                            with_dummy=True),
+                                                                                                            with_calibration=True),
                                                                                                         registration=reg_text),
                                                   center_text=True,
                                                   on_ok=_on_popup_ok)

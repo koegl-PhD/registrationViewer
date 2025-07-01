@@ -138,7 +138,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.console_visible = not self.console_visible
 
         utils.create_shortcuts(
-            ('s', self.on_synchronise_views_wth_trasform),
+            ('s', self.on_synchronise_views_wth_trasform_outside_of_study),
             # ('m', self.on_synchronise_views_manually),
             ('t', lambda: study_connections.key_call_on_synchronise_views_general(self)),
             ('Ctrl+k', lambda: toggle_simple_ui_button_visibility(self)),
@@ -655,6 +655,37 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_TRANSFORMATION_ON)
 
+    def on_synchronise_views_wth_trasform_outside_of_study(self) -> None:
+        if not self.synchronisation_checks():
+            return
+
+        self.synchronise_with_displacement_pressed = not self.synchronise_with_displacement_pressed
+
+        if self.synchronise_with_displacement_pressed is True:
+            self._set_up_crosshair(self.synchronise_with_displacement_pressed)
+            print("pressed to synchronise")
+            self.ui_sub_4.synchronise_views_with_transform.setText(
+                "Unsynchronise views with transform (t)")
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_TRANSFORMATION_OFF)
+
+            self.use_transform = self.crosshair.use_transform = True
+            self.crosshair.use_only_linear_transform = self.use_only_linear_transform
+            print(f"{self.use_only_linear_transform=}")
+
+            self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
+            self.crosshair.apply_offsets = False
+            self.ui_sub_4.synchronise_views_manually.setText(
+                "Synchronise views manually (m)")
+            self.synchronise_manually_pressed = False
+        else:
+            print("pressed to unsynchronise")
+            self.remove_custom_observers_from_crosshair()
+            self.ui_sub_4.synchronise_views_with_transform.setText(
+                "Synchronise views with transform (t)")
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_TRANSFORMATION_ON)
+
     def on_synchronise_views_manually(self) -> None:
 
         if not self.synchronisation_checks():
@@ -875,9 +906,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def number_of_full_training_tasks(self) -> int:
         return self.study_data.number_of_full_training_tasks
 
-    def number_of_study_patients(self, with_dummy: bool = False) -> int:
+    def number_of_study_patients(self, with_calibration: bool = False) -> int:
 
-        return self.study_data.number_of_patients(with_dummy)
+        return self.study_data.number_of_patients(with_calibration)
 
     @property
     def number_of_training_patients(self) -> int:
