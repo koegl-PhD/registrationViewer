@@ -5,8 +5,23 @@
     "path_study_input_cases_negative": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/negative/",
     "path_study_input_registrations": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans_registrations/",
     "path_study_input_cases_training": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/training/",
-    "path_study_input_cases_dummy": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/dummy/",
+    "path_study_input_cases_calibration": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/calibration/",
     "patients": {
+        "training":
+            [
+                "training_1_none",
+                "training_2_rotation",
+                "training_3_nonlinear",
+                "training_4_yIt7Z7VHXU0",
+                "training_6_YPEbc0OFC8I"
+            ],
+        "calibration":
+            [
+                "calibration_1_start_0e5fp8GltvE",
+                "calibration_2_LB9oATPd0mE",
+                "calibration_3_2VO-i_onOGw",
+                "calibration_4_end_0e5fp8GltvE"
+            ],
         "positive":
             [
                 "0f9SYhwcPFc",
