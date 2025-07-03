@@ -269,7 +269,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_2.data_master_path_edit.nameFilters = [
             "JSON files (*.json)"]
 
-        default_path = "/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master_random.json"
+        default_path = "/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
         if os.path.exists(default_path):
             self.ui_sub_2.data_master_path_edit.currentPath = default_path
 
@@ -705,7 +705,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_4.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
             self.synchronise_with_displacement_pressed = False
-            self.ui_sub_4.linearTransformationCheckBox.setEnabled(False)
+            utils.set_linear_checkbox_with_signal_block(self, False)
 
         else:
             print("pressed to unsynchronise manually")
@@ -822,7 +822,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                offset_diffs=self.current_offset,
                                                apply_offsets=self.synchronise_manually_pressed)
 
-        self.ui_sub_4.linearTransformationCheckBox.setEnabled(True)
+        utils.set_linear_checkbox_with_signal_block(self, True)
 
         if turn_synchronisation_on:
             observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
