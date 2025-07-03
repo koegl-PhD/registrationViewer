@@ -216,7 +216,8 @@ class StudyData:
 
         return self.training_case_names[3:]
 
-    def get_calibration_case_names(self) -> list[str]:
+    @property
+    def calibration_case_names(self) -> list[str]:
         """
         Returns the names of the cases used for calibration
         """
@@ -297,12 +298,10 @@ class StudyData:
             group: int
     ) -> List[List[Tuple[str, str, str]]]:
 
-        calibration_names = self.get_calibration_case_names()
-
         calibration_tasks_start = []
         calibration_tasks_end = []
         calibration_patients = []
-        for name, transform in zip(calibration_names[:-1], [utils.TransformType.NONLINEAR, utils.TransformType.NONE, utils.TransformType.LINEAR]):
+        for name, transform in zip(self.calibration_case_names[:-1], [utils.TransformType.NONLINEAR, utils.TransformType.NONE, utils.TransformType.LINEAR]):
             for task in tasks.TASK_ORDER.values():
 
                 # if task != tasks.Task.RECURRENCE:
@@ -320,10 +319,10 @@ class StudyData:
             # if task != tasks.Task.RECURRENCE:
             #     continue
             calibration_tasks_end.append(
-                (calibration_names[-1], task.value, utils.TransformType.NONLINEAR.value))
+                (self.calibration_case_names[-1], task.value, utils.TransformType.NONLINEAR.value))
 
         self.chunked_patients[group][-1].append(
-            (calibration_names[-1], utils.TransformType.NONLINEAR, "calibration"))
+            (self.calibration_case_names[-1], utils.TransformType.NONLINEAR, "calibration"))
 
         temp_rad_map = calibration_tasks_start + temp_rad_map + calibration_tasks_end
 
@@ -386,7 +385,7 @@ class StudyData:
         """
 
         if with_calibration:
-            increase = 2
+            increase = len(self.calibration_case_names)
         else:
             increase = 0
 
