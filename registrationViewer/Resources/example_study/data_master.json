@@ -1,21 +1,70 @@
 {
-    "path_study": "/home/koeglf/data/preprocess_again/",
-    "path_study_output": "/home/koeglf/data/preprocess_again/study_output/",
-    "path_study_input_cases": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/",
-    "path_study_input_registrations": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans_registrations/",
-    "path_study_input_annotations": "/home/koeglf/data/preprocess_again/ground_truth_annotations/",
+    "path_study": "/home/koeglf/data/registrationStudy/",
+    "path_study_output": "/home/koeglf/data/registrationStudy/study_output/",
+    "path_study_input_cases_positive": "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/positive/",
+    "path_study_input_cases_negative": "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/negative/",
+    "path_study_input_registrations": "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans_registrations/",
+    "path_study_input_cases_training": "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/training/",
+    "path_study_input_cases_calibration": "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/calibration/",
+    "patients": {
+        "training": [
+            "training_1_none",
+            "training_2_rotation",
+            "training_3_nonlinear",
+            "training_4_yIt7Z7VHXU0",
+            "training_6_YPEbc0OFC8I"
+        ],
+        "calibration": [
+            "calibration_1_start_0e5fp8GltvE",
+            "calibration_2_LB9oATPd0mE",
+            "calibration_3_2VO-i_onOGw",
+            "calibration_4_end_0e5fp8GltvE"
+        ],
+        "positive": [
+            "0f9SYhwcPFc",
+            "2pO8AtRxHAg",
+            "2w1vVKUCbcg",
+            "7sp2FiVa4WI",
+            "820_BQlC1tI",
+            "aBQe2EfmXv8",
+            "eiJvX7Bw25o",
+            "hmJfXqxVMk0",
+            "Of-K39ULY0Q",
+            "pP5CHNLQspI",
+            "SzZUcvM5JpU",
+            "TMxGak0IQOg",
+            "TwU508CCA9Y",
+            "urqkluKweXA",
+            "VUIaoA1iqhI",
+            "WeMcC01ZNgY",
+            "XKgRKTaLeEo",
+            "yYcNJD5knnY"
+        ],
+        "negative": [
+            "1q_1_G-1EPM",
+            "3dSDmvwSjek",
+            "6vkfAvGWUPg",
+            "6WB8wP4uAl0",
+            "7IZ0hAktN78",
+            "7SwVHAAw5lM",
+            "87J-_CHHkzI",
+            "96-du2ceM4o",
+            "a9ebcF7RKU4",
+            "CCL2MqdD19g",
+            "ccucLKGWtSQ",
+            "CD8Gu0llvgk",
+            "CSSdmYlgjew",
+            "fEHc3cCOu-M",
+            "F-JlS0Cl1K0",
+            "g-chOlbtzBQ",
+            "hkvdD_XVYqo",
+            "I307KZkh1VM"
+        ]
+    },
     "participants": {
         "rad_4": {
-            "name": "John Smith",
-            "patient_transform_combinations":
-                [
-                    ["none", "TMxGak0IQOg"],
-                    ["linear", "TMxGak0IQOg"],
-                    ["none", "LB9oATPd0mE"],
-                    ["nonlinear", "TMxGak0IQOg"],
-                    ["linear", "LB9oATPd0mE"],
-                    ["nonlinear", "LB9oATPd0mE"]
-                ]
+            "name": "Sebastian Ziegelmayer",
+            "group": "1"
         }
     }
 }

@@ -110,11 +110,13 @@ class DropWidget(qt.QFrame):
                 f"Loading data...")
             slicer.app.processEvents()
 
+            path_registrations = "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans_registrations"
+
             path_volume_fixed, path_volume_moving, \
                 path_seg_fixed, path_seg_moving, \
                 path_transform_fixed, path_transform_moving, \
                 path_deformation = utils.get_paths_to_load(
-                    dropped_folder_path, "")
+                    dropped_folder_path, path_registrations)
 
             if utils.update_progress_window(0, f"Loading fixed volume..."):
                 node_volume_fixed = slicer.util.loadVolume(path_volume_fixed)

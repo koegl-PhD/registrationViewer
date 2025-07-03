@@ -1,0 +1,51 @@
+training = [
+    "yIt7Z7VHXU0",
+    "YPEbc0OFC8I",
+    "Fw2lRBfYxtM"
+]
+calibration = [
+    "0e5fp8GltvE",
+    "2VO-i_onOGw",
+    "LB9oATPd0mE"
+]
+positive = [
+    "0f9SYhwcPFc",
+    "2pO8AtRxHAg",
+    "2w1vVKUCbcg",
+    "7sp2FiVa4WI",
+    "820_BQlC1tI",
+    "aBQe2EfmXv8",
+    "eiJvX7Bw25o",
+    "hmJfXqxVMk0",
+    "Of-K39ULY0Q",
+    "pP5CHNLQspI",
+    "SzZUcvM5JpU",
+    "TMxGak0IQOg",
+    "TwU508CCA9Y",
+    "urqkluKweXA",
+    "VUIaoA1iqhI",
+    "WeMcC01ZNgY",
+    "XKgRKTaLeEo",
+    "yYcNJD5knnY"
+]
+negative = [
+    "1q_1_G-1EPM",
+    "3dSDmvwSjek",
+    "6vkfAvGWUPg",
+    "6WB8wP4uAl0",
+    "7IZ0hAktN78",
+    "7SwVHAAw5lM",
+    "87J-_CHHkzI",
+    "96-du2ceM4o",
+    "a9ebcF7RKU4",
+    "CCL2MqdD19g",
+    "ccucLKGWtSQ",
+    "CD8Gu0llvgk",
+    "CSSdmYlgjew",
+    "fEHc3cCOu-M",
+    "F-JlS0Cl1K0",
+    "g-chOlbtzBQ",
+    "hkvdD_XVYqo",
+    "I307KZkh1VM",
+    "J0XX6t7vZ1I"
+]
