@@ -310,6 +310,11 @@
           <property name="alignment">
             <set>Qt::AlignCenter</set>
           </property>
+          <property name="styleSheet">
+            <string notr="true">
+              background: transparent;
+            </string>
+          </property>
         </widget>
       </item>
   <item row="2" column="0" colspan="3">
