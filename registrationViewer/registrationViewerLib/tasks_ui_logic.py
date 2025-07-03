@@ -45,6 +45,9 @@ def show_task(
         description = tasks.TASK_DESCRIPTIONS[self.current_task].format(
             recurrence_description=self.study_gt_recurrence_description[self.current_patient_name])
         self.ui_sub_6.study_center_on_gt_point_button.setText("")
+    elif self.current_task in [tasks.Task.TRAINING_NONE, tasks.Task.TRAINING_ROTATION, tasks.Task.TRAINING_NONLINEAR]:
+        description = tasks.TASK_DESCRIPTIONS[self.current_task].format(
+            button=texts.Buttons.TURN_TRANSFORMATION_ON.value)
     else:
         description = tasks.TASK_DESCRIPTIONS[self.current_task]
         self.ui_sub_6.study_center_on_gt_point_button.setText(

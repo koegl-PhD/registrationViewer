@@ -56,26 +56,26 @@ Der Lymphknoten ist im älterem Moving Bild markiert (untere Reihe).
 """,
 
     Task.RECURRENCE: """
-Entscheiden Sie, ob ein Rezidiv im neuerem Fixed Bild (obere Reihe) vorhanden ist. Die ursprüngliche Tumorresektion erfolgte im Bereich ({recurrence_description}).
+Entscheiden Sie, ob ein Rezidiv im neuerem Fixed Bild (obere Reihe) vorhanden ist. Die ursprüngliche Tumorresektion erfolgte im Bereich {recurrence_description}.
 Falls Sie ein Rezidiv erkennen, setzen Sie einen Punkt in dessen ungefähre Mitte.
 """,
 
     Task.TRAINING_NONE: """
 Dies ist eine Testaufgabe. In beiden Reihen wird dasselbe Bild angezeigt, daher ist die Registrierung perfekt.
-Sie können die Registrierung mit der Taste „t“ oder dem Button "{Buttons.TURN_TRANSFORMATION_ON}" ein- und ausschalten, um den Effekt zu erkunden.
+Sie können die Registrierung mit der Taste „t“ oder dem Button "{button}" ein- und ausschalten, um den Effekt zu erkunden.
 """,
 
     Task.TRAINING_ROTATION: """
 Dies ist eine Testaufgabe. In beiden Reihen wird dasselbe Bild angezeigt, jedoch wurde das Bild in der unteren Reihe um 10° rotiert.
 Es gibt daher keine exakt korrespondierenden Schichten zwischen den beiden Bildern.
-Schalten Sie die Registrierung mit der Taste „t“ oder dem Button "{Buttons.TURN_TRANSFORMATION_ON}" ein und aus, um den Effekt zu erkunden.
+Schalten Sie die Registrierung mit der Taste „t“ oder dem Button "{button}" ein und aus, um den Effekt zu erkunden.
 """,
 
     Task.TRAINING_NONLINEAR: """
 Dies ist eine Testaufgabe. Es werden zwei CT-Bilder desselben Patienten angezeigt, aufgenommen zu unterschiedlichen Zeitpunkten.
 Das obere Bild ist das neuere – zwischen den Bildern liegt eine reale Deformation vor.
 Diese Situation entspricht den Fällen, die in der eigentlichen Studie verwendet werden.
-Schalten Sie die Registrierung mit der Taste „t“ oder dem Button "{Buttons.TURN_TRANSFORMATION_ON}" ein und aus, um den Effekt zu erkunden.
+Schalten Sie die Registrierung mit der Taste „t“ oder dem Button "{button}" ein und aus, um den Effekt zu erkunden.
 """
 }
 
