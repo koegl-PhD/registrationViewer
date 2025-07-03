@@ -44,7 +44,7 @@ class StudyData:
 
         self.__dict__.update(self.data)
 
-        random.seed(0)
+        random.seed(1)
 
         self._create_data_split()
 
