@@ -261,8 +261,8 @@ class StudyData:
 
                     for task in tasks.TASK_ORDER.values():
 
-                        # if task not in [tasks.Task.RECURRENCE, tasks.Task.A_VERTEBRALIS_R]:
-                        #     continue
+                        if task not in [tasks.Task.RECURRENCE]:
+                            continue
 
                         temp_chunk_map.append(
                             (patient_name, task.value, transform.value))
@@ -292,6 +292,10 @@ class StudyData:
         calibration_tasks_end = []
         for name, transform in zip(calibration_names[:-1], [utils.TransformType.NONLINEAR, utils.TransformType.NONE, utils.TransformType.LINEAR]):
             for task in tasks.TASK_ORDER.values():
+
+                # if task != tasks.Task.RECURRENCE:
+                #     continue
+
                 calibration_tasks_start.append(
                     (name, task.value, transform.value))
 
@@ -299,6 +303,8 @@ class StudyData:
                 0, (name, transform, "calibration"))
 
         for task in tasks.TASK_ORDER.values():
+            # if task != tasks.Task.RECURRENCE:
+            #     continue
             calibration_tasks_end.append(
                 (calibration_names[-1], task.value, utils.TransformType.NONLINEAR.value))
 
@@ -334,6 +340,8 @@ class StudyData:
         training_comb_4, training_comb_5, training_comb_6 = [], [], []
 
         for task in tasks.TASK_ORDER.values():
+            # if task != tasks.Task.RECURRENCE:
+            #     continue
             training_comb_4.append(
                 (training_names[3], task.value, utils.TransformType.NONE.value))
             training_comb_5.append(
