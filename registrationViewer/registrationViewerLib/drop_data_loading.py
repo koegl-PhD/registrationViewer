@@ -110,7 +110,7 @@ class DropWidget(qt.QFrame):
                 f"Loading data...")
             slicer.app.processEvents()
 
-            path_registrations = "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans_registrations"
+            path_registrations = "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans_registrations"
 
             path_volume_fixed, path_volume_moving, \
                 path_seg_fixed, path_seg_moving, \

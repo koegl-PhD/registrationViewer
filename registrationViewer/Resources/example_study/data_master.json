@@ -1,11 +1,11 @@
 {
-    "path_study": "/home/koeglf/data/preprocess_again/",
-    "path_study_output": "/home/koeglf/data/preprocess_again/study_output/",
-    "path_study_input_cases_positive": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/positive/",
-    "path_study_input_cases_negative": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/negative/",
-    "path_study_input_registrations": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans_registrations/",
-    "path_study_input_cases_training": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/training/",
-    "path_study_input_cases_calibration": "/home/koeglf/data/preprocess_again/SerielleCTs_nii_forHumans/calibration/",
+    "path_study": "/home/koeglf/data/registrationStudy/",
+    "path_study_output": "/home/koeglf/data/registrationStudy/study_output/",
+    "path_study_input_cases_positive": "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/positive/",
+    "path_study_input_cases_negative": "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/negative/",
+    "path_study_input_registrations": "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans_registrations/",
+    "path_study_input_cases_training": "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/training/",
+    "path_study_input_cases_calibration": "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/calibration/",
     "patients": {
         "training": [
             "training_1_none",
