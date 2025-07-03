@@ -973,10 +973,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """
         Check if the current combination is a training task.
         """
-        if self.current_patient_task_transform_comb == ("", "", ""):
-            return False
 
-        return "training" in self.current_patient_task_transform_comb[0]
+        return self.current_patient_name in self.study_data.training_case_names
 
     @property
     def is_current_task_full_training_example(self) -> bool:
@@ -984,17 +982,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         Check if the current combination is a full training task.
         """
 
-        if self.current_patient_task_transform_comb == ("", "", ""):
-            return False
-
-        if not self.is_current_task_training:
-            return False
-
-        current_task = tasks.Task(self.current_patient_task_transform_comb[1])
-
-        return current_task not in [tasks.Task.TRAINING_NONE,
-                                    tasks.Task.TRAINING_ROTATION,
-                                    tasks.Task.TRAINING_NONLINEAR]
+        return self.current_patient_name in self.study_data.full_training_case_names
 
     @property
     def is_current_task_simple_training_example(self) -> bool:
@@ -1002,17 +990,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         Check if the current combination is a full training task.
         """
 
-        if self.current_patient_task_transform_comb == ("", "", ""):
-            return False
-
-        if not self.is_current_task_training:
-            return False
-
-        current_task = tasks.Task(self.current_patient_task_transform_comb[1])
-
-        return current_task in [tasks.Task.TRAINING_NONE,
-                                tasks.Task.TRAINING_ROTATION,
-                                tasks.Task.TRAINING_NONLINEAR]
+        return self.current_patient_name in self.study_data.simple_training_case_names
 
     def is_patient_task_transform_comb_training(self, idx: int) -> bool:
         """

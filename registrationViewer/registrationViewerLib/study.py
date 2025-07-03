@@ -188,7 +188,8 @@ class StudyData:
         raise ValueError(
             f"Patient {patient_name} not found in chunks. Only found {self.chunked_patients[1]=}.")
 
-    def get_training_case_names(self) -> List[str]:
+    @property
+    def training_case_names(self) -> List[str]:
         """
         Returns the names of the cases used for training
         """
@@ -204,6 +205,16 @@ class StudyData:
             path) if os.path.isdir(os.path.join(path, f))])
 
         return training_cases
+
+    @property
+    def simple_training_case_names(self) -> List[str]:
+
+        return self.training_case_names[:3]
+
+    @property
+    def full_training_case_names(self) -> List[str]:
+
+        return self.training_case_names[3:]
 
     def get_calibration_case_names(self) -> list[str]:
         """
@@ -321,7 +332,7 @@ class StudyData:
             group: int
     ) -> List[List[Tuple[str, str, str]]]:
 
-        training_names = self.get_training_case_names()
+        training_names = self.training_case_names
 
         training_chunk = [(training_names[0], utils.TransformType.NONE, "training"),       # nopep8
                           (training_names[1], utils.TransformType.LINEAR, "training"),     # nopep8
@@ -477,7 +488,7 @@ def clear_one_chunk(self: "registrationViewerWidget") -> None:
 
 
 def add_calibration_training_points(self: "registrationViewerWidget") -> None:
-    training_patient_names = self.study_data.get_training_case_names()
+    training_patient_names = self.study_data.training_case_names
 
     self.study_node_groundtruth_points[training_patient_names[0]] = {tasks.Task.TRAINING_NONE: utils.create_gt_point(tasks.Task.TRAINING_NONE.value,
                                                                                                                      (0, 0, 0),
