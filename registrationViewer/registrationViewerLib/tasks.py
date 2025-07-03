@@ -26,55 +26,56 @@ TASK_ORDER = {
 TASK_DESCRIPTIONS = {
 
     Task.A_VERTEBRALIS_L: """
-Finde den Abgang der A. vertebralis links im Fixed Bild (obere Reihe).
-Setze einen Punkt in die Mitte des Abgangs.
-Der Abgang ist im Moving Bild markiert (untere Reihe).
+Finden Sie den Abgang der A. vertebralis links im neuerem Fixed Bild (obere Reihe).
+Setzen Sie einen Punkt in die Mitte des Abgangs.
+Der Abgang ist im älterem Moving Bild markiert (untere Reihe).
 """,
 
     Task.A_VERTEBRALIS_R: """
-Finde den Abgang der A. vertebralis rechts im Fixed Bild (obere Reihe).
-Setze einen Punkt in die Mitte des Abgangs.
-Der Abgang ist im Moving Bild markiert (untere Reihe).
+Finden Sie den Abgang der A. vertebralis rechts im neuerem Fixed Bild (obere Reihe).
+Setzen Sie einen Punkt in die Mitte des Abgangs.
+Der Abgang ist im älterem Moving Bild markiert (untere Reihe).
 """,
 
     Task.A_CAROTISEXTERNA_L: """
-Finde den Abgang der A. carotis externa links im Fixed Bild (obere Reihe).
-Setze einen Punkt in die Mitte des Abgangs.
-Der Abgang ist im Moving Bild markiert (untere Reihe).
+Finden Sie den Abgang der A. carotis externa links im neuerem Fixed Bild (obere Reihe).
+Setzen Sie einen Punkt in die Mitte des Abgangs.
+Der Abgang ist im älterem Moving Bild markiert (untere Reihe).
 """,
 
     Task.A_CAROTISEXTERNA_R: """
-Finde den Abgang der A. carotis externa rechts im Fixed Bild (obere Reihe).
-Setze einen Punkt in die Mitte des Abgangs.
-Der Abgang ist im Moving Bild markiert (untere Reihe).
+Finden Sie den Abgang der A. carotis externa rechts im neuerem Fixed Bild (obere Reihe).
+Setzen Sie einen Punkt in die Mitte des Abgangs.
+Der Abgang ist im älterem Moving Bild markiert (untere Reihe).
 """,
 
     Task.LYMPH_NODE: """
-Finde den Lymphknoten im Fixed Bild (obere Reihe) ({lymphnode_description}).
-Setze einen Punkt in die Mitte des Lymphknotens.
-Der Lymphknoten ist im Moving Bild markiert (untere Reihe).
+Finden Sie den Lymphknoten ({lymphnode_description}) im neuerem Fixed Bild (obere Reihe).
+Setzen Sie einen Punkt in die Mitte des Lymphknotens.
+Der Lymphknoten ist im älterem Moving Bild markiert (untere Reihe).
 """,
 
     Task.RECURRENCE: """
-Entscheide, ob ein Rezidiv im Fixed Bild (obere Reihe) vorhanden ist ({recurrence_description}).
-Wenn ja, setze einen Punkt in seine ungefähre Mitte.
+Entscheiden Sie, ob ein Rezidiv im neuerem Fixed Bild (obere Reihe) vorhanden ist. Die ursprüngliche Tumorresektion erfolgte im Bereich ({recurrence_description}).
+Falls Sie ein Rezidiv erkennen, setzen Sie einen Punkt in dessen ungefähre Mitte.
 """,
 
     Task.TRAINING_NONE: """
-Dies ist eine Testaufgabe. Dasselbe Bild wird in beiden Reihen angezeigt, daher ist die Registrierung perfekt.
-Sie können die Registrierung ein- und ausschalten, um den Effekt zu erkunden.
+Dies ist eine Testaufgabe. In beiden Reihen wird dasselbe Bild angezeigt, daher ist die Registrierung perfekt.
+Sie können die Registrierung mit der Taste „t“ oder dem Button "{Buttons.TURN_TRANSFORMATION_ON}" ein- und ausschalten, um den Effekt zu erkunden.
 """,
 
     Task.TRAINING_ROTATION: """
-Dies ist eine Testaufgabe. Dasselbe Bild wird in beiden Reihen angezeigt, jedoch wurde das Bild in der unteren Reihe um 14° rotiert.
-Das bedeutet, dass es keine korrespondierenden Schichten zwischen den beiden Bildern mehr gibt.
-Sie können die Registrierung ein- und ausschalten, um den Effekt zu erkunden.
+Dies ist eine Testaufgabe. In beiden Reihen wird dasselbe Bild angezeigt, jedoch wurde das Bild in der unteren Reihe um 10° rotiert.
+Es gibt daher keine exakt korrespondierenden Schichten zwischen den beiden Bildern.
+Schalten Sie die Registrierung mit der Taste „t“ oder dem Button "{Buttons.TURN_TRANSFORMATION_ON}" ein und aus, um den Effekt zu erkunden.
 """,
 
     Task.TRAINING_NONLINEAR: """
-Dies ist eine Testaufgabe. Es werden zwei Bilder desselben Patienten angezeigt, daher liegt eine echte Deformation zwischen den Bildern vor.
-Das obere Bild ist das neuere.
-Dies entspricht den Daten, die während der Studie verwendet werden.
+Dies ist eine Testaufgabe. Es werden zwei CT-Bilder desselben Patienten angezeigt, aufgenommen zu unterschiedlichen Zeitpunkten.
+Das obere Bild ist das neuere – zwischen den Bildern liegt eine reale Deformation vor.
+Diese Situation entspricht den Fällen, die in der eigentlichen Studie verwendet werden.
+Schalten Sie die Registrierung mit der Taste „t“ oder dem Button "{Buttons.TURN_TRANSFORMATION_ON}" ein und aus, um den Effekt zu erkunden.
 """
 }
 

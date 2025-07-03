@@ -71,40 +71,47 @@ class Contents(Enum):
     NONE = ""
     STUDY_BEGINS = "HAUPTSTUDIE FÄNGT AN"
     STUDY_DESCRIPTION = f"""
-Im Rahmen dieser Studie werden Sie mehrere Annotierungsaufgaben bearbeiten, die alle demselben Muster folgen.
-Sie sehen zwei Reihen von CT-Scans, wobei jedes Paar immer vom selben Patienten stammt.
-Die obere Reihe zeigt den aktuellsten Scan, den wir „Fixed“ nennen; die untere Reihe zeigt einen älteren Scan, den wir „Moving“ nennen.
+Im Rahmen dieser Studie bearbeiten Sie mehrere Annotierungsaufgaben, die alle demselben Muster folgen. Sie sehen zwei Reihen von CT-Scans, wobei jedes Paar vom selben Patienten stammt:
+Die obere Reihe zeigt den aktuellsten Scan („Fixed“), die untere Reihe einen älteren Scan („Moving“).
 
 
-Bei einigen Aufgaben sind die beiden Bilder miteinander registriert. Sie können diese Registrierung mit der Taste „t“ oder über den Button "{Buttons.TURN_TRANSFORMATION_ON}" ein- und ausschalten. Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: Die Position Ihrer Maus in einem Scan wird an der entsprechenden Stelle im anderen Scan angezeigt.
+Alle Patient:innen haben eine Tumorresektion im Kopf-Hals-Bereich durchlaufen. Nach der Operation kamen sie regelmäßig zur weiteren CT-Bildgebung zurück. 
+Die in dieser Studie gezeigten Aufnahmen zeigen zwei follow-up Bilder, wobei das letzte auf ein Rezidiv untersucht werden muss.
 
 
-Achten Sie darauf, die Registrierung zu deaktivieren, wenn Sie von einer Ansicht zur nächsten wechseln.
-In jeder Aufgabe müssen Sie einen Punkt in der oberen Reihe (dem neueren Scan) setzen, der einer Struktur im unteren Scan entspricht.
+In einigen Aufgaben sind die beiden Bilder miteinander registriert. Die Qualität dieser Registrierungen reicht von schlecht über akzeptabel bis hin zu sehr gut – insbesondere bei Fällen mit starken Deformationen kann die Qualität deutlich variieren. Für Fälle, in denen keine Registrierung verfügbar ist, können Sie die Schichten manuell verlinken, ähnlich wie es in SECTRA möglich ist.
+
+Sie können die Registrierung oder das Verlinken mit der Taste „t“ oder dem Button "{Buttons.TURN_TRANSFORMATION_ON}/{Buttons.TURN_MANUAL_TRANSFORMATION_ON}" ein- und ausschalten. Ist die Registrierung oder das Verlinken aktiviert, wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt – die Position Ihrer Maus im einen Scan wird also an entsprechender Stelle im anderen Scan angezeigt.
+Wir empfehlen Ihnen, eine Hand auf der Taste „t“ zu lassen und mit der anderen Hand die Maus zu bedienen. So können Sie die Registrierung oder das Verlinken schnell ein- und ausschalten, während Sie gleichzeitig die Bilder und Bedienelemente steuern.
 
 
-Sie können auf den grünen Info-Button klicken, um die Steuerung anzuzeigen, und auf den orangefarbenen Pause-Button klicken, um die Studie zu pausieren.
+Bitte achten Sie darauf, die Registrierung zu deaktivieren, bevor Sie zur nächsten Aufgabe wechseln.
 
 
-Links werden Ihnen vier Buttons angezeigt: zwei zum Zentrieren auf Punkte (einer für den Referenzpunkt und einer für den von Ihnen gesetzten Punkt). Außerdem gibt es einen Button zum Hinzufügen eines Punktes (nach dem Setzen kann dieser an die gewünschte Stelle gezogen werden) sowie einen Button zum Fortfahren mit der nächsten Aufgabe, der aktiviert wird, sobald Sie einen Punkt gesetzt haben.  
+In jeder Aufgabe sollen Sie einen Punkt im oberen Scan (dem aktuelleren Bild) setzen, der einer Struktur im unteren Scan entspricht.
+Links stehen Ihnen dafür vier Buttons zur Verfügung:
+- Zwei Buttons zum Zentrieren auf Punkte (ein Button für den Referenzpunkt, einer für den von Ihnen gesetzten Punkt),
+- ein Button zum Hinzufügen eines neuen Punktes (dieser kann nach dem Setzen verschoben werden),
+- sowie ein Button zum Fortfahren mit der nächsten Aufgabe (wird aktiviert, sobald ein Punkt gesetzt wurde).
 
 
-Schließlich gibt es bei registrierten Fällen einen Button namens "{Buttons.TURN_TRANSFORMATION_ON}", mit dem die Registrierung aktiviert wird.
+Zusätzlich können Sie über den grünen Info-Button eine Übersicht der Steuerung aufrufen oder mit dem orangefarbenen Pause-Button die Studie pausieren.
         """
 
     TRAINING_STUDY_DESCRIPTION = f"""
-Vor Beginn der eigentlichen Studie werden Ihnen drei Testaufgaben gezeigt. Diese dienen dazu, sich mit der Oberfläche und den Aufgaben vertraut zu machen.
+Bevor die eigentliche Studie beginnt, werden Ihnen drei Testaufgaben gezeigt. Diese dienen dazu, sich mit der Benutzeroberfläche und dem Ablauf der Aufgaben vertraut zu machen.
 
-In der ersten Aufgabe wird dasselbe Bild zweimal angezeigt – die Registrierung ist daher perfekt.
+In der ersten Testaufgabe wird dasselbe Bild zweimal angezeigt – die Registrierung ist daher perfekt.
 
-In der zweiten Aufgabe wird ebenfalls dasselbe Bild angezeigt, jedoch wurde das untere Bild um 10° rotiert – die Registrierung ist immer noch perfekt, aber die Schnitte stimmen nicht mehr überein.
+In der zweiten Testaufgabe wird ebenfalls dasselbe Bild angezeigt, jedoch wurde das untere Bild um 10° rotiert. Die Registrierung ist weiterhin perfekt, aber die Schichten stimmen nicht mehr exakt überein.
 
-In der dritten Aufgabe werden zwei Bilder aus unterschiedlichen Sitzungen desselben Patienten gezeigt – es liegt also eine echte Deformation vor, und die Registrierung ist nicht perfekt.
+In der dritten Testaufgabe sehen Sie zwei Bilder aus unterschiedlichen CT-Sitzungen desselben Patienten. Es liegt also eine echte Deformation vor, und die Registrierung ist nicht perfekt.
 
-In allen Aufgaben können Sie die Registrierung mit der Taste „t“ oder über den Button "{Buttons.TURN_TRANSFORMATION_ON}" ein- und ausschalten.
-Dadurch wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt, das heißt: Die Position Ihrer Maus in einem Scan wird an der entsprechenden Stelle im anderen Scan angezeigt.
+Anschließend drei vollständige Testfälle gezeigt
 
-Um zur nächsten Aufgabe zu gelangen, müssen Sie einen Punkt hinzufügen.
+In allen Testaufgaben können Sie die Registrierung oder das Verlinken mit der Taste „t“ oder über den Button "{Buttons.TURN_TRANSFORMATION_ON}/{Buttons.TURN_MANUAL_TRANSFORMATION_ON}" ein- und ausschalten.
+Ist die Registrierung oder das Verlinken aktiviert, wird Ihre Mausbewegung zwischen den beiden Bildern gekoppelt – das heißt: Die Position Ihrer Maus im einen Bild wird an entsprechender Stelle im anderen Bild angezeigt.
+Um zu nächsten Aufgabe zu kommen müssen Sie einen Punkt setzen.
     """
 
     WARNING_REMOVE_RECURRENCE_POINT = "Möchten Sie den Punkt entfernen, den Sie bereits für das Rezidiv gesetzt habt?"
