@@ -273,8 +273,8 @@ class StudyData:
 
                     for task in tasks.TASK_ORDER.values():
 
-                        if task not in [tasks.Task.RECURRENCE]:
-                            continue
+                        # if task not in [tasks.Task.RECURRENCE]:
+                        # continue
 
                         temp_chunk_map.append(
                             (patient_name, task.value, transform.value))
