@@ -128,12 +128,12 @@ def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
         print("linear")
         self.on_synchronise_views_wth_trasform()
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = True
-        self.ui_sub_4.linearTransformationCheckBox.setChecked(True)
+        utils.set_linear_checkbox_with_signal_block(self, True)
     elif self.study_current_transform_type == utils.TransformType.NONLINEAR:
         print("nonlinear")
         self.on_synchronise_views_wth_trasform()
         self.use_only_linear_transform = self.crosshair.use_only_linear_transform = False
-        self.ui_sub_4.linearTransformationCheckBox.setChecked(False)
+        utils.set_linear_checkbox_with_signal_block(self, False)
     else:
         raise ValueError("Unknown transformation mode")
 

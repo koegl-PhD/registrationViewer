@@ -1132,6 +1132,15 @@ def set_checkbox_with_signal_block(self: "registrationViewerWidget", value: bool
     self.ui_sub_6.study_checkbox.blockSignals(False)
 
 
+def set_linear_checkbox_with_signal_block(self: "registrationViewerWidget", value: bool) -> None:
+    """
+    Set the value of the linear checkbox and block the signal to prevent unwanted callbacks.
+    """
+    self.ui_sub_4.linearTransformationCheckBox.blockSignals(True)
+    self.ui_sub_4.linearTransformationCheckBox.setChecked(value)
+    self.ui_sub_4.linearTransformationCheckBox.blockSignals(False)
+
+
 def shuffle_without_consecutive_ab(
     tuples: List[Tuple[str, str, str]]
 ) -> List[Tuple[str, str, str]]:
