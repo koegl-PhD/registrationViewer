@@ -301,6 +301,7 @@ class StudyData:
 
         calibration_tasks_start = []
         calibration_tasks_end = []
+        calibration_patients = []
         for name, transform in zip(calibration_names[:-1], [utils.TransformType.NONLINEAR, utils.TransformType.NONE, utils.TransformType.LINEAR]):
             for task in tasks.TASK_ORDER.values():
 
@@ -310,8 +311,10 @@ class StudyData:
                 calibration_tasks_start.append(
                     (name, task.value, transform.value))
 
-            self.chunked_patients[group][0].insert(
-                0, (name, transform, "calibration"))
+            calibration_patients.append((name, transform, "calibration"))
+
+        self.chunked_patients[group][0] = calibration_patients + \
+            self.chunked_patients[group][0]
 
         for task in tasks.TASK_ORDER.values():
             # if task != tasks.Task.RECURRENCE:
