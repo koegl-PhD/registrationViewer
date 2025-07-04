@@ -318,6 +318,7 @@ def start_study(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.pause_button.setVisible(True)
     self.ui_sub_6.info_button.setVisible(True)
     self.ui_sub_6.study_next_task_button.setVisible(True)
+    self.ui_sub_6.synchronise_views_general.setVisible(True)
 
     next_task(self, initial=True)
 
@@ -458,6 +459,9 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
                                                                                                                  registration=reg_text),
                                                   center_text=True,
                                                   on_ok=_on_popup_ok)
+
+    if self.is_current_task_simple_training_example:
+        is_next_patient = True
 
     utils.set_up_synchronisation(self, is_next_patient)
     utils.set_up_data_nodes(self)
