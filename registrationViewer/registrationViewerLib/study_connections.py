@@ -331,6 +331,8 @@ def btn_call_on_next_task(self: "registrationViewerWidget") -> None:
 
 def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
+    is_next_patient = False
+
     self.study_progress_bar_patients.show()
     self.study_progress_bar_tasks.show()
 
@@ -425,6 +427,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
         utils.set_buttons_for_full_training_cases(self)
 
     if self.current_task == tasks.Task.A_VERTEBRALIS_R and not self.is_current_task_training:
+        is_next_patient = True
         self.full_screen_block.open("", "")
 
         def _on_popup_ok() -> None:
@@ -441,6 +444,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
                                                   on_ok=_on_popup_ok)
 
     if self.current_task == tasks.Task.A_VERTEBRALIS_R and self.is_current_task_full_training_example:
+        is_next_patient = True
         self.full_screen_block.open("", "")
 
         def _on_popup_ok() -> None:
@@ -455,7 +459,7 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
                                                   center_text=True,
                                                   on_ok=_on_popup_ok)
 
-    utils.set_up_synchronisation(self)
+    utils.set_up_synchronisation(self, is_next_patient)
     utils.set_up_data_nodes(self)
 
     log(logging.INFO, LogType.INTERNAL, self.start_task_log_text)

@@ -730,8 +730,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.remove_custom_observers_from_crosshair()
         self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
-        self.ui_sub_6.synchronise_views_general.setText(
-            texts.Buttons.TURN_TRANSFORMATION_ON)
+
+        if self.current_patient_transform_type == utils.TransformType.NONE:
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
+        else:
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_TRANSFORMATION_ON)
 
     def on_linear_only(self) -> None:
         print("on linear only")
