@@ -781,6 +781,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         def wrapper(self: "registrationViewerWidget", callee, event):  # pylint: disable=unused-argument
             position = self.node_crosshair.GetCursorPositionXYZ([0]*3)
             if position is not None:
+                print(f"[DEBUG] update_cursor_view: {position.GetName()=}")
                 self.crosshair.cursor_view = position.GetName()
 
         observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
@@ -792,6 +793,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         def wrapper(self: "registrationViewerWidget", callee, event):  # pylint: disable=unused-argument
             position = self.node_crosshair.GetCursorPositionXYZ([0]*3)
             if position is not None:
+                print(f"[DEBUG] update_current_view: {position.GetName()=}")
                 self.current_view = position.GetName()
 
         observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
