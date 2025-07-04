@@ -138,7 +138,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.console_visible = not self.console_visible
 
         utils.create_shortcuts(
-            ('s', self.on_synchronise_views_wth_trasform_outside_of_study),
+            # ('s', self.on_synchronise_views_wth_trasform_outside_of_study),
             # ('m', self.on_synchronise_views_manually),
             ('t', lambda: study_connections.key_call_on_synchronise_views_general(self)),
             ('Ctrl+k', lambda: toggle_simple_ui_button_visibility(self)),
