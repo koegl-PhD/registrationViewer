@@ -955,47 +955,50 @@ def hide_all_volumes_from_views(views: List[str]) -> None:
             pass
 
 
-def set_up_synchronisation(self: "registrationViewerWidget") -> None:
+def set_up_synchronisation(self: "registrationViewerWidget", is_next_patient: bool) -> None:
     """
     Set up synchronisation between the views based on the current transform type
     """
-    self.ui_sub_6.synchronise_views_general.setVisible(True)
+    if is_next_patient:
+        print("setting up synchrnoisation")
+        self.ui_sub_6.synchronise_views_general.setVisible(True)
+        self.ui_sub_6.synchronise_views_general.setEnabled(True)
 
-    if self.current_patient_transform_type == TransformType.NONE:
-        self.study_current_transform_type = TransformType.NONE
+        if self.current_patient_transform_type == TransformType.NONE:
+            self.study_current_transform_type = TransformType.NONE
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
+            print("setting button to manual")
+
+        elif self.current_patient_transform_type == TransformType.LINEAR:
+            self.use_only_linear_transform = True
+
+            if self.crosshair:
+                self.crosshair.use_only_linear_transform = True
+
+            self.study_current_transform_type = TransformType.LINEAR
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_TRANSFORMATION_ON)
+            print("setting button to linear")
+
+        elif self.current_patient_transform_type == TransformType.NONLINEAR:
+            self.use_only_linear_transform = False
+
+            if self.crosshair:
+                self.crosshair.use_only_linear_transform = False
+
+            self.study_current_transform_type = TransformType.NONLINEAR
+            self.ui_sub_6.synchronise_views_general.setText(
+                texts.Buttons.TURN_TRANSFORMATION_ON)
+            print("setting button to nonlinear")
+
+        else:
+            print(f"{self.current_patient_name=}")
+            raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
+
         self.unsynchronise_views()
-        self.ui_sub_6.synchronise_views_general.setText(
-            texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
-
-    elif self.current_patient_transform_type == TransformType.LINEAR:
-        self.use_only_linear_transform = True
-
-        if self.crosshair:
-            self.crosshair.use_only_linear_transform = True
-
-        self.study_current_transform_type = TransformType.LINEAR
-        self.ui_sub_6.synchronise_views_general.setEnabled(True)
-        self.ui_sub_6.synchronise_views_general.setText(
-            texts.Buttons.TURN_TRANSFORMATION_ON)
-
-    elif self.current_patient_transform_type == TransformType.NONLINEAR:
-        self.use_only_linear_transform = False
-
-        if self.crosshair:
-            self.crosshair.use_only_linear_transform = False
-
-        self.study_current_transform_type = TransformType.NONLINEAR
-        self.ui_sub_6.synchronise_views_general.setEnabled(True)
-        self.ui_sub_6.synchronise_views_general.setText(
-            texts.Buttons.TURN_TRANSFORMATION_ON)
-
-    else:
-        print(f"{self.current_patient_name=}")
-        raise ValueError(f"Unknown transformation type {self.current_patient_name}")  # nopep8
-
-    self.synchronise_pressed = False
-
-    self.remove_custom_observers_from_crosshair()
+        self.synchronise_pressed = False
+        self.remove_custom_observers_from_crosshair()
 
 
 def set_up_data_nodes(self: "registrationViewerWidget") -> None:
