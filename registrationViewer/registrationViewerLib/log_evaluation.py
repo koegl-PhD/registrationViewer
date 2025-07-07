@@ -2,6 +2,16 @@ import pandas as pd
 import numpy as np
 
 
+def load_log_v2_to_df(file_path):
+    with open(file_path, "r") as file:
+        rows = []
+        for line in file:
+            parsed = parse_log_line_v2(line)
+            if parsed:
+                rows.append(parsed)
+    return pd.DataFrame(rows)
+
+
 def parse_log_line_v2(line):
     parts = line.strip().split(" ~ ")
     if len(parts) < 10:
@@ -32,16 +42,6 @@ def parse_log_line_v2(line):
         "action": action,
         "detail": detail
     }
-
-
-def load_log_v2_to_df(file_path):
-    with open(file_path, "r") as file:
-        rows = []
-        for line in file:
-            parsed = parse_log_line_v2(line)
-            if parsed:
-                rows.append(parsed)
-    return pd.DataFrame(rows)
 
 
 def compute_scroll_stats_grouped_v2(df):
@@ -158,34 +158,80 @@ def compute_task_scroll_stats_v2(df):
     return merged
 
 
-def compute_task_duration_by_index_v2(df):
-    # Ensure timestamp is in datetime format
-    df['timestamp'] = pd.to_datetime(
-        df['timestamp'], format="%Y-%m-%d %H:%M:%S,%f", errors='coerce')
-
-    # Filter for U_BUTTON events with action markers
+def extract_task_start_end_times(df):
+    """Extracts start and end times for each task."""
     task_control_df = df[(df['event_type'] == 'U_BUTTON') & (
         df['action'].isin(['User started task', 'Next task']))].copy()
-
-    # Split start and end markers
     start_df = task_control_df[task_control_df['action']
                                == 'User started task'].copy()
     end_df = task_control_df[task_control_df['action'] == 'Next task'].copy()
-
-    # Select relevant columns
     start_df = start_df[['user_id', 'patient_id',
                          'transform_type', 'task_id', 'task_index', 'timestamp']]
     end_df = end_df[['user_id', 'patient_id', 'transform_type',
                      'task_id', 'task_index', 'timestamp']]
     start_df.rename(columns={'timestamp': 'start_time'}, inplace=True)
     end_df.rename(columns={'timestamp': 'end_time'}, inplace=True)
-
-    # Merge start and end rows by full task identity
     duration_df = pd.merge(start_df, end_df, on=[
-                           'user_id', 'patient_id', 'transform_type', 'task_id', 'task_index'], how='inner')
+        'user_id', 'patient_id', 'transform_type', 'task_id', 'task_index'], how='inner')
+    return duration_df
 
-    # Compute duration
+
+def extract_pause_resume_pairs(df):
+    """Extracts and pairs pause and resume events for each task."""
+    pause_df = df[(df['event_type'] == 'U_BUTTON') & (
+        df['action'] == 'User paused study')].copy()
+    resume_df = df[(df['event_type'] == 'U_BUTTON') & (
+        df['action'] == 'User resumed study')].copy()
+    pause_df = pause_df[['user_id', 'patient_id',
+                         'transform_type', 'task_id', 'task_index', 'timestamp']]
+    resume_df = resume_df[['user_id', 'patient_id',
+                           'transform_type', 'task_id', 'task_index', 'timestamp']]
+    pause_df = pause_df.rename(columns={'timestamp': 'pause_time'})
+    resume_df = resume_df.rename(columns={'timestamp': 'resume_time'})
+    # Pair each pause with the next resume for the same task
+    pause_resume_df = pd.merge_asof(
+        pause_df.sort_values('pause_time'),
+        resume_df.sort_values('resume_time'),
+        by=['user_id', 'patient_id', 'transform_type', 'task_id', 'task_index'],
+        left_on='pause_time',
+        right_on='resume_time',
+        direction='forward'
+    )
+    return pause_resume_df
+
+
+def sum_pause_durations(pause_resume_df):
+    """Sums pause durations for each task."""
+    pause_resume_df['pause_duration'] = (
+        pause_resume_df['resume_time'] - pause_resume_df['pause_time']).dt.total_seconds()
+    pause_sums = pause_resume_df.groupby([
+        'user_id', 'patient_id', 'transform_type', 'task_id', 'task_index'
+    ])['pause_duration'].sum().reset_index()
+    pause_sums.rename(
+        columns={'pause_duration': 'total_pause_seconds'}, inplace=True)
+    return pause_sums
+
+
+def compute_task_duration_by_index_v2(df):
+    # Ensure timestamp is in datetime format
+    df['timestamp'] = pd.to_datetime(
+        df['timestamp'], format="%Y-%m-%d %H:%M:%S,%f", errors='coerce')
+
+    # Extract start and end times
+    duration_df = extract_task_start_end_times(df)
+
+    # Extract pause/resume pairs and sum pause durations
+    pause_resume_df = extract_pause_resume_pairs(df)
+    pause_sums = sum_pause_durations(pause_resume_df)
+
+    # Merge pause sums into duration_df
+    duration_df = pd.merge(duration_df, pause_sums, on=[
+                           'user_id', 'patient_id', 'transform_type', 'task_id', 'task_index'], how='left')
+    duration_df['total_pause_seconds'] = duration_df['total_pause_seconds'].fillna(
+        0)
+
+    # Compute net duration
     duration_df['duration_seconds'] = (
-        duration_df['end_time'] - duration_df['start_time']).dt.total_seconds()
+        duration_df['end_time'] - duration_df['start_time']).dt.total_seconds() - duration_df['total_pause_seconds']
 
     return duration_df
