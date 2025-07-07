@@ -2,7 +2,7 @@ from typing import List, Literal, Optional
 
 import slicer
 
-from registrationViewerLib import view_logic
+from registrationViewerLib import view_logic, utils
 
 
 class Crosshairs():
@@ -33,7 +33,6 @@ class Crosshairs():
         self.offset_diffs = offset_diffs
         self.apply_offsets = apply_offsets
 
-        self.cursor_view: str = ""
         self.reverse_transf_direction: bool = False
 
         self.views_1 = ["Red1", "Green1", "Yellow1"]
@@ -160,7 +159,7 @@ class Crosshairs():
 
         # only jump the *other* slice views in this group; leave the active view’s slice unchanged
         for view in views:
-            if view == self.cursor_view:
+            if view == utils.get_cursor_view_name():
                 continue
 
             view_logic.set_offset_to_ras(initial_position, view)
@@ -171,7 +170,7 @@ class Crosshairs():
 
         """
 
-        if self.cursor_view in self.views_1:
+        if utils.get_cursor_view_name() in self.views_1:
             self.place_crosshair_without_transformation(views=self.views_1,
                                                         crosshair_nodes=self.crosshairs_1)
             self.place_crosshair_with_transformation(views=self.views_2,
@@ -179,7 +178,7 @@ class Crosshairs():
                                                      reverse_transf_direction=self.reverse_transf_direction,
                                                      offset_direction='neg')
 
-        elif self.cursor_view in self.views_2:
+        elif utils.get_cursor_view_name() in self.views_2:
             self.place_crosshair_with_transformation(views=self.views_1,
                                                      crosshair_nodes=self.crosshairs_1,
                                                      reverse_transf_direction=not self.reverse_transf_direction,
@@ -253,8 +252,8 @@ class Crosshairs():
             if display_node is not None:
                 display_node.SetVisibility(True)
 
-        if self.cursor_view in self.crosshair_nodes:
-            display_node = self.crosshair_nodes[self.cursor_view].GetDisplayNode(
+        if utils.get_cursor_view_name() in self.crosshair_nodes:
+            display_node = self.crosshair_nodes[utils.get_cursor_view_name()].GetDisplayNode(
             )
             if display_node is not None:
                 display_node.SetVisibility(False)
