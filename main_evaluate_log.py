@@ -14,6 +14,8 @@ df = log_evaluation.load_log_v2_to_df(path)
 
 df_duration = log_evaluation.compute_task_duration_by_index_v2(df)
 
+all_evaluations.plot_duration_by_task_and_transform_violin(df)
+
 
 def get_recurrence_durations(df: pd.DataFrame) -> Tuple[List[float], List[float], List[float]]:
     """
