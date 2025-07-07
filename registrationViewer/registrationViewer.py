@@ -1013,15 +1013,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def next_task_log_text(self) -> str:
-        if self.is_current_task_training:
-            return "Next training task"
+        # if self.is_current_task_training:
+        #     return "Next training task"
 
         return "Next task"
 
     @property
     def start_task_log_text(self) -> str:
-        if self.is_current_task_training:
-            return "Start training task"
+        # if self.is_current_task_training:
+        #     return "Start training task"
 
         return "Start task"
 
