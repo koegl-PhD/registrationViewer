@@ -458,7 +458,7 @@ def set_ui_simplification(self: "registrationViewerWidget") -> None:
     ).self().reloadCollapsibleButton.visible = value
 
     # hide python console
-    # slicer.util.setPythonConsoleVisible(value)
+    slicer.util.setPythonConsoleVisible(value)
 
 
 def print_affine_matrix(transformNode):
@@ -1184,3 +1184,20 @@ def shuffle_without_consecutive_ab(
             del ab_groups[choice]
 
     return result
+
+
+def get_cursor_view_name() -> str:
+    """
+    Get the name of the view where the cursor is currently located.
+    """
+    node_crosshair = slicer.util.getNode("Crosshair")
+
+    if node_crosshair is None:
+        return ""
+
+    position = node_crosshair.GetCursorPositionXYZ([0]*3)
+
+    if position is not None:
+        return position.GetName()
+
+    return ""

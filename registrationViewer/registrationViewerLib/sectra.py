@@ -198,9 +198,9 @@ def setup_sectra_movements(
 
             dragging[view_name]["last_mouse_position"] = current_mouse_position
 
-            if self.current_view in self.views_first_row:
+            if utils.get_cursor_view_name() in self.views_first_row:
                 current_node = self.node_fixed
-            elif self.current_view in self.views_second_row:
+            elif utils.get_cursor_view_name() in self.views_second_row:
                 current_node = self.node_moving
             else:
                 return
