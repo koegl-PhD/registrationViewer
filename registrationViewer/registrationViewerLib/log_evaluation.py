@@ -177,9 +177,11 @@ def extract_task_start_end_times(df):
 
 
 def extract_pause_resume_pairs(df):
-    """Extracts and pairs pause and resume events for each task."""
+    """Extracts and pairs pause and resume events for each task, including both 'User paused study' and 'User clicked on info button' as pause events."""
+    # Both types of pause events
     pause_df = df[(df['event_type'] == 'U_BUTTON') & (
-        df['action'] == 'User paused study')].copy()
+        df['action'].isin(['User paused study', 'User clicked on info button'])
+    )].copy()
     resume_df = df[(df['event_type'] == 'U_BUTTON') & (
         df['action'] == 'User resumed study')].copy()
     pause_df = pause_df[['user_id', 'patient_id',
