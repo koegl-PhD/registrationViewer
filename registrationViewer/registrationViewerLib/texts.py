@@ -85,6 +85,7 @@ Wir empfehlen Ihnen, eine Hand auf der Taste „t“ zu lassen und mit der ander
 Bitte achten Sie darauf, die Registrierung zu deaktivieren, bevor Sie zur einer anderen Ansicht wechseln (Axial, Sagittal, Coronal).
 
 In jeder Aufgabe sollen Sie einen Punkt im oberen Scan (dem aktuelleren Bild) setzen, der einer Struktur im unteren Scan entspricht.
+Versuchen Sie dabei sicherzustellen, dass der Punkt in allen drei Ansichten (Axial, Sagittal, Coronal) korrekt gesetzt ist.
 Links stehen Ihnen dafür vier Buttons zur Verfügung:
 - Zwei Buttons zum Zentrieren auf Punkte (ein Button für den Referenzpunkt, einer für den von Ihnen gesetzten Punkt),
 - ein Button zum Hinzufügen eines neuen Punktes (dieser kann nach dem Setzen verschoben werden),
