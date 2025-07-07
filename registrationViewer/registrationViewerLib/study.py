@@ -236,7 +236,7 @@ class StudyData:
 
     def _divide_patients_into_chunks(self) -> None:
 
-        max_chunk_size = 6
+        max_chunk_size = 2
 
         patients: List[str] = []
 

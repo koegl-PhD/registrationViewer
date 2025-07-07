@@ -236,6 +236,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.current_view: str = ""
         self.current_view_observer_tag = []
 
+        self.temp_enabled = False
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -375,6 +377,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.update_current_view()
 
+        a = r"/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/training/training_4_yIt7Z7VHXU0"
+        self.dropWidget.load_data_from_dropped_folder(a)
+
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
         sectra.disable_sectra_movements()
@@ -491,12 +496,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _enable_sectr_movements(self) -> None:
 
-        custom_logging.configure_logger(self,
+        if self.temp_enabled is False:
+            custom_logging.configure_logger(self,
                      "/home/koeglf/Documents/code/registrationViewer/registrationViewer/default.log",
                      "RegistrationEvaluation")  # nopep8
 
-        sectra.setup_sectra_movements(self)
-        sectra.enable_sectra_movements()
+            sectra.setup_sectra_movements(self)
+            sectra.enable_sectra_movements()
+
+            self.temp_enabled = True
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
@@ -656,6 +664,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 texts.Buttons.TURN_TRANSFORMATION_ON)
 
     def on_synchronise_views_wth_trasform_outside_of_study(self) -> None:
+
+        self._enable_sectr_movements()
+
         if not self.synchronisation_checks():
             return
 

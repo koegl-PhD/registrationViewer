@@ -224,7 +224,7 @@ def on_simple_ui(self: "registrationViewerWidget", value: Optional[bool] = None,
 
     if self.ui_is_simple:
         self.ui_sub_1.simple_ui_button.setText("Advanced UI")
-        sectra.set_sectra_style_sheet()
+        # sectra.set_sectra_style_sheet()
         sectra.enable_sectra_movements()
         view_logic.attach_continuous_slice_offset_observers(self)
         view_logic.attach_key_arrow_observers(self)
@@ -268,7 +268,7 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
     self.ui_sub_6.current_rad_name.setVisible(True)
-    self.ui_sub_1.simple_ui_button.setVisible(False)
+    self.ui_sub_1.simple_ui_button.setVisible(True)
 
     utils.set_button_texts(self)
 

@@ -2,6 +2,8 @@ from typing import List, Literal, Optional
 
 import slicer
 
+from registrationViewerLib import view_logic
+
 
 class Crosshairs():
 
@@ -93,13 +95,13 @@ class Crosshairs():
 
         return crosshair_node
 
-    def place_crosshair_with_transformation(self,
-                                            view_group: int,
-                                            crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
-                                            reverse_transf_direction: bool,
-                                            offset_direction: Literal['pos',
-                                                                      'neg', 'nan']
-                                            ) -> None:
+    def place_crosshair_with_transformation(
+        self,
+        views: List[str],
+        crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
+        reverse_transf_direction: bool,
+        offset_direction: Literal['pos', 'neg', 'nan']
+    ) -> None:
         """
         Places the crosshair in the current view and transforms it to the new position.
         """
@@ -134,35 +136,34 @@ class Crosshairs():
                         new_position[1] + offset[1],
                         new_position[2] + offset[0]]
 
-        slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
-                                                            new_position[1],
-                                                            new_position[2],
-                                                            False,
-                                                            view_group)
+        for view in views:
+            view_logic.set_offset_to_ras(new_position, view)
 
         self.set_crosshair_visibility()
 
         self.set_crosshair_nodes_to_position(crosshair_nodes,
                                              new_position)
 
-    def place_crosshair_without_transformation(self,
-                                               view_group: int,
-                                               crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
-                                               ) -> None:
+    def place_crosshair_without_transformation(
+        self,
+        views: List[str],
+        crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
+    ) -> None:
 
         initial_position: list[float] = [0., 0., 0.]
         self.node_cursor.GetCursorPositionRAS(initial_position)
-
-        slicer.modules.markups.logic().JumpSlicesToLocation(initial_position[0],
-                                                            initial_position[1],
-                                                            initial_position[2],
-                                                            False,
-                                                            view_group)
 
         self.set_crosshair_visibility()
 
         self.set_crosshair_nodes_to_position(crosshair_nodes,
                                              initial_position)
+
+        # only jump the *other* slice views in this group; leave the active view’s slice unchanged
+        for view in views:
+            if view == self.cursor_view:
+                continue
+
+            view_logic.set_offset_to_ras(initial_position, view)
 
     def on_mouse_moved_place_crosshair(self, observer, eventid) -> None:  # pylint: disable=unused-argument
         """
@@ -171,36 +172,20 @@ class Crosshairs():
         """
 
         if self.cursor_view in self.views_1:
-            self.place_crosshair_without_transformation(view_group=1,
+            self.place_crosshair_without_transformation(views=self.views_1,
                                                         crosshair_nodes=self.crosshairs_1)
-            self.place_crosshair_with_transformation(view_group=2,
+            self.place_crosshair_with_transformation(views=self.views_2,
                                                      crosshair_nodes=self.crosshairs_2,
                                                      reverse_transf_direction=self.reverse_transf_direction,
                                                      offset_direction='neg')
-            self.place_crosshair_without_transformation(view_group=3,
-                                                        crosshair_nodes=self.crosshairs_3)
 
         elif self.cursor_view in self.views_2:
-            self.place_crosshair_with_transformation(view_group=1,
+            self.place_crosshair_with_transformation(views=self.views_1,
                                                      crosshair_nodes=self.crosshairs_1,
                                                      reverse_transf_direction=not self.reverse_transf_direction,
                                                      offset_direction='pos')
-            self.place_crosshair_without_transformation(view_group=2,
+            self.place_crosshair_without_transformation(views=self.views_2,
                                                         crosshair_nodes=self.crosshairs_2)
-            self.place_crosshair_with_transformation(view_group=3,
-                                                     crosshair_nodes=self.crosshairs_3,
-                                                     reverse_transf_direction=not self.reverse_transf_direction,
-                                                     offset_direction='pos')
-
-        elif self.cursor_view in self.views_3:
-            self.place_crosshair_without_transformation(view_group=1,
-                                                        crosshair_nodes=self.crosshairs_1)
-            self.place_crosshair_with_transformation(view_group=2,
-                                                     crosshair_nodes=self.crosshairs_2,
-                                                     reverse_transf_direction=self.reverse_transf_direction,
-                                                     offset_direction='neg')
-            self.place_crosshair_without_transformation(view_group=3,
-                                                        crosshair_nodes=self.crosshairs_3)
 
     def transform_crosshair_nodes(self,
                                   crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
