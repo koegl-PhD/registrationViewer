@@ -413,6 +413,31 @@ def set_view_offset(view: str, offset: float) -> None:
     sliceNode.SetSliceOffset(offset)
 
 
+def set_offset_to_ras(position_ras, view):
+
+    layoutManager = slicer.app.layoutManager()
+
+    sliceWidget = layoutManager.sliceWidget(view)
+
+    sliceLogic = sliceWidget.sliceLogic()
+    sliceNode = sliceLogic.GetSliceNode()
+
+    # Get the SliceToRAS matrix for the current slice view.
+    sliceToRAS = sliceNode.GetSliceToRAS()
+
+    # Typically, the third column of the SliceToRAS matrix is the slice normal.
+    normal = [sliceToRAS.GetElement(0, 2),
+              sliceToRAS.GetElement(1, 2),
+              sliceToRAS.GetElement(2, 2)]
+
+    # Compute the offset as the dot product of the slice normal with the target RAS position.
+    offset = normal[0]*position_ras[0] + normal[1] * \
+        position_ras[1] + normal[2]*position_ras[2]
+
+    # Set the computed offset for this view.
+    set_view_offset(view, offset)
+
+
 def randomise_offsets(views: List[str], min_v: int = 10, max_v: int = 15) -> None:
     """
     Randomly change the offset of the given views.
