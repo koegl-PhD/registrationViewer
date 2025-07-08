@@ -5,13 +5,13 @@ from scipy.stats import ttest_ind
 import seaborn as sns
 from statsmodels.stats.multitest import multipletests
 
-from typing import Literal
+from typing import Literal, Optional
 
 from registrationViewer.registrationViewerLib import log_evaluation
 
 
 # mean durations
-def plot_duration_by_task_and_transform(df: pd.DataFrame, type: Literal['bar', 'violin'], significance: bool = False) -> None:
+def plot_duration_by_task_and_transform(df: pd.DataFrame, type: Literal['bar', 'violin'], significance: bool = False) -> Optional[pd.DataFrame]:
     """
     Plot duration_seconds grouped by task_id and transform_type.
     Supports 'bar' (mean ± std) and 'violin' plots.
@@ -83,10 +83,14 @@ def plot_duration_by_task_and_transform(df: pd.DataFrame, type: Literal['bar', '
         )
         annotator.set_pvalues_and_annotate(pvalues)
 
+        return test_results
+
     plt.legend(title='Transform Type')
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
     plt.show()
+
+    return None
 
 
 def statistical_significance_duration(df: pd.DataFrame) -> pd.DataFrame:

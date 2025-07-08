@@ -9,7 +9,6 @@ path = r"/home/fryderyk/Downloads/rad_test.log"
 
 df = log_evaluation.load_log_v2_to_df(path)
 
-
 all_evaluations.plot_duration_by_task_and_transform(
     df, type='bar', significance=True)
 all_evaluations.plot_duration_by_task_and_transform(
