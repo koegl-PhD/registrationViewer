@@ -1,3 +1,4 @@
+from __future__ import annotations
 import functools
 import importlib
 import logging
@@ -138,7 +139,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.console_visible = not self.console_visible
 
         utils.create_shortcuts(
-            # ('s', self.on_synchronise_views_wth_trasform_outside_of_study),
+            ('s', self.on_synchronise_views_wth_trasform_outside_of_study),
             # ('m', self.on_synchronise_views_manually),
             ('t', lambda: study_connections.key_call_on_synchronise_views_general(self)),
             ('Ctrl+k', lambda: toggle_simple_ui_button_visibility(self)),
@@ -1031,6 +1032,156 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             return "User started training task"
 
         return "User started task"
+
+    def transform_crosshair_nodes(self,
+                                  node: slicer.vtkMRMLMarkupsFiducialNode,
+                                  invert: bool) -> None:
+        """
+        Transform every crosshair from the list of nodes with the current transformation.
+        """
+        # first move to fixed space, then deform then move back to moving space
+
+        if self.node_transform_nonlinear:
+            if invert:
+                if self.node_transform_fixed:
+                    node.ApplyTransform(
+                        self.node_transform_fixed.GetTransformToParent())
+                if not self.use_only_linear_transform:
+                    node.ApplyTransform(
+                        self.node_transform_nonlinear.GetTransformFromParent())
+                if self.node_transform_moving:
+                    node.ApplyTransform(
+                        self.node_transform_moving.GetTransformFromParent())
+            else:
+                if self.node_transform_moving:
+                    node.ApplyTransform(
+                        self.node_transform_moving.GetTransformToParent())
+                if not self.use_only_linear_transform:
+                    node.ApplyTransform(
+                        self.node_transform_nonlinear.GetTransformToParent())
+                if self.node_transform_fixed:
+                    node.ApplyTransform(
+                        self.node_transform_fixed.GetTransformFromParent())
+
+        else:
+            print("No transformation available")
+
+    def evaluate(self) -> None:
+
+        logger = logging.getLogger("Evaluation")
+        logger.setLevel(logging.DEBUG)
+
+        if logger.hasHandlers():
+            logger.handlers.clear()
+
+        fh = logging.FileHandler(
+            "/home/koeglf/Documents/code/registrationViewer/registrationViewer/evaluate.log")
+        fh.setLevel(logging.DEBUG)
+
+        logger.addHandler(fh)
+
+        import numpy as np
+        import glob
+
+        all_patients_neg = glob.glob(
+            "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/negative/*")
+        all_patients_pos = glob.glob(
+            "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/positive/*")
+        all_patients_cal = glob.glob(
+            "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/calibration/*")
+        all_patients_train = glob.glob(
+            "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/training/*")
+
+        all_patients = all_patients_neg + all_patients_pos + \
+            all_patients_cal + all_patients_train
+        self.distances = {}
+
+        count = 0
+
+        for patient in all_patients:
+            try:
+                count += 1
+                patient_name = patient.split('/')[-1]
+
+                self.distances[patient_name] = {}
+
+                self.dropWidget.load_data_from_dropped_folder(patient)
+
+                paths_studies = glob.glob(patient + "/preprocessed/*")
+                paths_studies.sort()
+
+                study_a = paths_studies[0] + "/annotations"
+                study_b = paths_studies[1] + "/annotations"
+
+                path_points_a = glob.glob(study_a + "/points_*.mrk.json")[0]
+                path_points_b = glob.glob(study_b + "/points_*.mrk.json")[0]
+
+                points_a = slicer.util.loadMarkups(path_points_a)
+                points_b = slicer.util.loadMarkups(path_points_b)
+                self.transform_crosshair_nodes(points_b, invert=True)
+
+                dict_points_a = {}
+                dict_points_b = {}
+
+                for i in range(points_a.GetNumberOfControlPoints()):
+                    pos_a = np.array(points_a.GetNthControlPointPosition(i))
+                    pos_b = np.array(points_b.GetNthControlPointPosition(i))
+
+                    name_a = points_a.GetNthControlPointLabel(i)
+                    name_b = points_b.GetNthControlPointLabel(i)
+
+                    name_a = '_'.join(name_a.split('_')[1:4])
+                    name_b = '_'.join(name_b.split('_')[1:4])
+
+                    dict_points_a[name_a] = pos_a
+                    dict_points_b[name_b] = pos_b
+
+                if set(dict_points_a.keys()) != set(dict_points_b.keys()):
+                    # print(f"{dict_points_a=}")
+                    # print(f"{dict_points_b=}")
+                    logger.log(logging.ERROR,
+                               f"Points do not match for {patient_name}")
+                    continue
+
+                for name, pos_a in dict_points_a.items():
+
+                    pos_b = dict_points_b[name]
+
+                    distance = np.linalg.norm(pos_a - pos_b)
+
+                    self.distances[patient_name][name] = distance
+                    logger.log(
+                        logging.DEBUG, f"({count}/{len(all_patients)}) {patient_name} ~ {name.ljust(18)} ~ {distance:05.2f}")
+
+                # delete
+                slicer.mrmlScene.RemoveNode(self.node_seg_fixed)
+                slicer.mrmlScene.RemoveNode(self.node_seg_moving)
+                slicer.mrmlScene.RemoveNode(self.node_transform_fixed)
+                slicer.mrmlScene.RemoveNode(self.node_transform_moving)
+                slicer.mrmlScene.RemoveNode(
+                    self.ui_sub_3.inputSelector_transformation.currentNode())
+                slicer.mrmlScene.RemoveNode(points_a)
+                slicer.mrmlScene.RemoveNode(points_b)
+
+                # return
+
+            except:
+                logger.log(logging.ERROR, f"couldn't evaluate {patient_name}")
+
+                try:
+                    slicer.mrmlScene.RemoveNode(self.node_seg_fixed)
+                    slicer.mrmlScene.RemoveNode(self.node_seg_moving)
+                    slicer.mrmlScene.RemoveNode(self.node_transform_fixed)
+                    slicer.mrmlScene.RemoveNode(self.node_transform_moving)
+                    slicer.mrmlScene.RemoveNode(
+                        self.ui_sub_3.inputSelector_transformation.currentNode())
+                    slicer.mrmlScene.RemoveNode(points_a)
+                    slicer.mrmlScene.RemoveNode(points_b)
+                except:
+                    pass
+
+            # if count >= 2:
+            #     return
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
