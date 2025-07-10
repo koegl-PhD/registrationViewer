@@ -38,6 +38,9 @@ class StudyData:
     number_of_simple_training_tasks: int = field(init=False)
     number_of_full_training_tasks: int = field(init=False)
 
+    calibration_inserted: Dict[int, bool] = field(init=False)
+    training_inserted: Dict[int, bool] = field(init=False)
+
     def __post_init__(self):
         with open(self.path, "r") as f:
             self.data = json.load(f)
@@ -45,6 +48,9 @@ class StudyData:
         self.__dict__.update(self.data)
 
         random.seed(1)
+
+        self.calibration_inserted = {}
+        self.training_inserted = {}
 
         self._create_data_split()
 
@@ -312,8 +318,9 @@ class StudyData:
 
             calibration_patients.append((name, transform, "calibration"))
 
-        self.chunked_patients[group][0] = calibration_patients + \
-            self.chunked_patients[group][0]
+        if group not in self.calibration_inserted:
+            self.chunked_patients[group][0] = calibration_patients + \
+                self.chunked_patients[group][0]
 
         for task in tasks.TASK_ORDER.values():
             # if task != tasks.Task.RECURRENCE:
@@ -321,10 +328,13 @@ class StudyData:
             calibration_tasks_end.append(
                 (self.calibration_case_names[-1], task.value, utils.TransformType.NONLINEAR.value))
 
-        self.chunked_patients[group][-1].append(
-            (self.calibration_case_names[-1], utils.TransformType.NONLINEAR, "calibration"))
+        if group not in self.calibration_inserted:
+            self.chunked_patients[group][-1].append(
+                (self.calibration_case_names[-1], utils.TransformType.NONLINEAR, "calibration"))
 
         temp_rad_map = calibration_tasks_start + temp_rad_map + calibration_tasks_end
+
+        self.calibration_inserted[group] = True
 
         return temp_rad_map
 
@@ -342,7 +352,9 @@ class StudyData:
                           (training_names[3], utils.TransformType.NONE, "training"),       # nopep8
                           (training_names[4], utils.TransformType.LINEAR, "training"),     # nopep8
                           (training_names[5], utils.TransformType.NONLINEAR, "training")]  # nopep8
-        self.chunked_patients[group].insert(0, training_chunk)
+
+        if group not in self.training_inserted:
+            self.chunked_patients[group].insert(0, training_chunk)
 
         training_comb_1 = [(training_names[0], tasks.Task.TRAINING_NONE.value,
                            utils.TransformType.LINEAR.value)]
@@ -376,6 +388,8 @@ class StudyData:
             training_comb_1) + len(training_comb_2) + len(training_comb_3)
         self.number_of_full_training_tasks = len(
             training_comb_4) + len(training_comb_5) + len(training_comb_6)
+
+        self.training_inserted[group] = True
 
         return temp_rad_map
 
