@@ -80,12 +80,11 @@ Die in dieser Studie gezeigten Aufnahmen zeigen zwei follow-up Bilder, wobei das
 In einigen Aufgaben sind die beiden Bilder miteinander registriert. Die Qualität dieser Registrierungen reicht von schlecht über akzeptabel bis hin zu sehr gut – insbesondere bei Fällen mit starken Deformationen kann die Qualität deutlich variieren. Für Fälle, in denen keine Registrierung verfügbar ist, können Sie die Schichten manuell verlinken, ähnlich wie es in SECTRA möglich ist.
 
 Sie können die Registrierung oder das Verlinken mit der Taste „t“ oder dem Button "{Buttons.TURN_TRANSFORMATION_ON.value}/{Buttons.TURN_MANUAL_TRANSFORMATION_ON.value}" ein- und ausschalten. Ist die Registrierung oder das Verlinken aktiviert, wird Ihre Mausbewegung zwischen den beiden Scans gekoppelt – die Position Ihrer Maus im einen Scan wird also an entsprechender Stelle im anderen Scan angezeigt.
-Wir empfehlen Ihnen, eine Hand auf der Taste „t“ zu lassen und mit der anderen Hand die Maus zu bedienen. So können Sie die Registrierung oder das Verlinken schnell ein- und ausschalten, während Sie gleichzeitig die Bilder und Bedienelemente steuern.
+Wir empfehlen Ihnen, eine Hand auf der Taste „t“ zu lassen und mit der anderen Hand die Maus zu bedienen. So können fSie die Registrierung oder das Verlinken schnell ein- und ausschalten, während Sie gleichzeitig die Bilder und Bedienelemente steuern.
 
 Bitte achten Sie darauf, die Registrierung zu deaktivieren, bevor Sie zur einer anderen Ansicht wechseln (Axial, Sagittal, Coronal).
 
 In jeder Aufgabe sollen Sie einen Punkt im oberen Scan (dem aktuelleren Bild) setzen, der einer Struktur im unteren Scan entspricht.
-Versuchen Sie dabei sicherzustellen, dass der Punkt in allen drei Ansichten (Axial, Sagittal, Coronal) korrekt gesetzt ist.
 Links stehen Ihnen dafür vier Buttons zur Verfügung:
 - Zwei Buttons zum Zentrieren auf Punkte (ein Button für den Referenzpunkt, einer für den von Ihnen gesetzten Punkt),
 - ein Button zum Hinzufügen eines neuen Punktes (dieser kann nach dem Setzen verschoben werden),
