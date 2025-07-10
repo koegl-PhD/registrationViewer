@@ -1,352 +1,398 @@
-"(1/46) 7SwVHAAw5lM ~ a_carotisexterna_l ~ 10.01
-"(1/46) 7SwVHAAw5lM ~ a_carotisexterna_r ~ 00.84
-"(1/46) 7SwVHAAw5lM ~ a_vertebralis_l    ~ 01.39
-"(1/46) 7SwVHAAw5lM ~ a_vertebralis_r    ~ 00.91
-"(2/46) hkvdD_XVYqo ~ a_carotisexterna_l ~ 02.29
-"(2/46) hkvdD_XVYqo ~ a_carotisexterna_r ~ 03.97
-"(2/46) hkvdD_XVYqo ~ a_vertebralis_l    ~ 64.78
-"(2/46) hkvdD_XVYqo ~ a_vertebralis_r    ~ 57.40
-"(3/46) a9ebcF7RKU4 ~ a_carotisexterna_l ~ 03.68
-"(3/46) a9ebcF7RKU4 ~ a_carotisexterna_r ~ 01.83
-"(3/46) a9ebcF7RKU4 ~ a_vertebralis_l    ~ 03.55
-"(3/46) a9ebcF7RKU4 ~ a_vertebralis_r    ~ 01.89
-"(4/46) CSSdmYlgjew ~ a_carotisexterna_l ~ 03.96
-"(4/46) CSSdmYlgjew ~ a_carotisexterna_r ~ 03.63
-"(4/46) CSSdmYlgjew ~ a_vertebralis_l    ~ 36.09
-"(4/46) CSSdmYlgjew ~ a_vertebralis_r    ~ 34.43
-"(5/46) fEHc3cCOu-M ~ a_carotisexterna_l ~ 01.72
-"(5/46) fEHc3cCOu-M ~ a_carotisexterna_r ~ 01.62
-"(5/46) fEHc3cCOu-M ~ a_vertebralis_l    ~ 02.67
-"(5/46) fEHc3cCOu-M ~ a_vertebralis_r    ~ 01.59
-"(6/46) 3dSDmvwSjek ~ a_vertebralis_r    ~ 01.24
-"(6/46) 3dSDmvwSjek ~ a_carotisexterna_r ~ 01.37
-"(6/46) 3dSDmvwSjek ~ a_carotisexterna_l ~ 00.90
-"(6/46) 3dSDmvwSjek ~ a_vertebralis_l    ~ 02.55
-"(7/46) 7IZ0hAktN78 ~ a_carotisexterna_l ~ 02.95
-"(7/46) 7IZ0hAktN78 ~ a_carotisexterna_r ~ 04.12
-"(7/46) 7IZ0hAktN78 ~ a_vertebralis_l    ~ 02.10
-"(7/46) 7IZ0hAktN78 ~ a_vertebralis_r    ~ 01.16
-"(8/46) 87J-_CHHkzI ~ a_carotisexterna_l ~ 00.78
-"(8/46) 87J-_CHHkzI ~ a_carotisexterna_r ~ 01.58
-"(8/46) 87J-_CHHkzI ~ a_vertebralis_l    ~ 01.31
-"(8/46) 87J-_CHHkzI ~ a_vertebralis_r    ~ 01.63
-"(9/46) g-chOlbtzBQ ~ a_carotisexterna_r ~ 02.25
-"(9/46) g-chOlbtzBQ ~ a_carotisexterna_l ~ 02.02
-"(9/46) g-chOlbtzBQ ~ a_vertebralis_r    ~ 00.39
-"(9/46) g-chOlbtzBQ ~ a_vertebralis_l    ~ 03.30
-"(10/46) CD8Gu0llvgk ~ a_carotisexterna_l ~ 01.26
-"(10/46) CD8Gu0llvgk ~ a_carotisexterna_r ~ 01.03
-"(10/46) CD8Gu0llvgk ~ a_vertebralis_l    ~ 01.01
-"(10/46) CD8Gu0llvgk ~ a_vertebralis_r    ~ 00.95
-"(11/46) 96-du2ceM4o ~ a_carotisexterna_l ~ 01.05
-"(11/46) 96-du2ceM4o ~ a_carotisexterna_r ~ 07.39
-"(11/46) 96-du2ceM4o ~ a_vertebralis_l    ~ 01.05
-"(11/46) 96-du2ceM4o ~ a_vertebralis_r    ~ 01.62
-"(12/46) 6vkfAvGWUPg ~ a_vertebralis_l    ~ 01.04
-"(12/46) 6vkfAvGWUPg ~ a_vertebralis_r    ~ 01.33
-"(12/46) 6vkfAvGWUPg ~ a_carotisexterna_l ~ 01.31
-"(12/46) 6vkfAvGWUPg ~ a_carotisexterna_r ~ 04.54
-"(13/46) I307KZkh1VM ~ a_carotisexterna_l ~ 03.67
-"(13/46) I307KZkh1VM ~ a_carotisexterna_r ~ 02.88
-"(13/46) I307KZkh1VM ~ a_vertebralis_l    ~ 05.07
-"(13/46) I307KZkh1VM ~ a_vertebralis_r    ~ 07.24
-"(14/46) CCL2MqdD19g ~ a_carotisexterna_r ~ 01.47
-"(14/46) CCL2MqdD19g ~ a_carotisexterna_l ~ 02.58
-"(14/46) CCL2MqdD19g ~ a_vertebralis_l    ~ 06.55
-"(14/46) CCL2MqdD19g ~ a_vertebralis_r    ~ 01.88
-"(15/46) ccucLKGWtSQ ~ a_carotisexterna_r ~ 03.19
-"(15/46) ccucLKGWtSQ ~ a_carotisexterna_l ~ 00.79
-"(15/46) ccucLKGWtSQ ~ a_vertebralis_l    ~ 05.83
-"(15/46) ccucLKGWtSQ ~ a_vertebralis_r    ~ 07.38
-"(16/46) 1q_1_G-1EPM ~ a_vertebralis_r    ~ 29.26
-"(16/46) 1q_1_G-1EPM ~ a_vertebralis_l    ~ 46.41
-"(16/46) 1q_1_G-1EPM ~ a_carotisexterna_l ~ 03.57
-"(16/46) 1q_1_G-1EPM ~ a_carotisexterna_r ~ 02.12
-"(17/46) F-JlS0Cl1K0 ~ a_carotisexterna_l ~ 01.75
-"(17/46) F-JlS0Cl1K0 ~ a_carotisexterna_r ~ 00.65
-"(17/46) F-JlS0Cl1K0 ~ a_vertebralis_l    ~ 04.03
-"(17/46) F-JlS0Cl1K0 ~ a_vertebralis_r    ~ 02.53
-"(18/46) 6WB8wP4uAl0 ~ a_carotisexterna_l ~ 02.61
-"(18/46) 6WB8wP4uAl0 ~ a_carotisexterna_r ~ 00.35
-"(18/46) 6WB8wP4uAl0 ~ a_vertebralis_l    ~ 01.55
-"(18/46) 6WB8wP4uAl0 ~ a_vertebralis_r    ~ 02.22
-"(19/46) pP5CHNLQspI ~ a_vertebralis_l    ~ 02.46
-"(19/46) pP5CHNLQspI ~ a_vertebralis_r    ~ 00.97
-"(19/46) pP5CHNLQspI ~ a_carotisexterna_l ~ 00.54
-"(19/46) pP5CHNLQspI ~ a_carotisexterna_r ~ 00.67
-"(20/46) 7sp2FiVa4WI ~ a_carotisexterna_r ~ 03.65
-"(20/46) 7sp2FiVa4WI ~ a_carotisexterna_l ~ 01.54
-"(20/46) 7sp2FiVa4WI ~ a_vertebralis_l    ~ 46.97
-"(20/46) 7sp2FiVa4WI ~ a_vertebralis_r    ~ 29.75
-"(21/46) hmJfXqxVMk0 ~ a_carotisexterna_l ~ 01.44
-"(21/46) hmJfXqxVMk0 ~ a_carotisexterna_r ~ 02.48
-"(21/46) hmJfXqxVMk0 ~ a_vertebralis_l    ~ 13.33
-"(21/46) hmJfXqxVMk0 ~ a_vertebralis_r    ~ 14.68
-"(22/46) 820_BQlC1tI ~ a_carotisexterna_r ~ 02.22
-"(22/46) 820_BQlC1tI ~ a_carotisexterna_l ~ 02.13
-"(22/46) 820_BQlC1tI ~ a_vertebralis_l    ~ 02.54
-"(22/46) 820_BQlC1tI ~ a_vertebralis_r    ~ 01.22
-"(23/46) XKgRKTaLeEo ~ a_carotisexterna_r ~ 07.69
-"(23/46) XKgRKTaLeEo ~ a_carotisexterna_l ~ 03.78
-"(23/46) XKgRKTaLeEo ~ a_vertebralis_l    ~ 00.90
-"(23/46) XKgRKTaLeEo ~ a_vertebralis_r    ~ 02.74
-"(24/46) SzZUcvM5JpU ~ a_carotisexterna_r ~ 00.68
-"(24/46) SzZUcvM5JpU ~ a_carotisexterna_l ~ 02.61
-"(24/46) SzZUcvM5JpU ~ a_vertebralis_r    ~ 05.49
-"(24/46) SzZUcvM5JpU ~ a_vertebralis_l    ~ 10.14
-"(25/46) urqkluKweXA ~ a_carotisexterna_l ~ 01.42
-"(25/46) urqkluKweXA ~ a_carotisexterna_r ~ 01.79
-"(25/46) urqkluKweXA ~ a_vertebralis_l    ~ 06.36
-"(25/46) urqkluKweXA ~ a_vertebralis_r    ~ 00.87
-"(26/46) Of-K39ULY0Q ~ a_carotisexterna_l ~ 01.38
-"(26/46) Of-K39ULY0Q ~ a_carotisexterna_r ~ 01.92
-"(26/46) Of-K39ULY0Q ~ a_vertebralis_l    ~ 02.10
-"(26/46) Of-K39ULY0Q ~ a_vertebralis_r    ~ 02.06
-"(27/46) aBQe2EfmXv8 ~ a_carotisexterna_l ~ 02.01
-"(27/46) aBQe2EfmXv8 ~ a_carotisexterna_r ~ 00.11
-"(27/46) aBQe2EfmXv8 ~ a_vertebralis_l    ~ 05.30
-"(27/46) aBQe2EfmXv8 ~ a_vertebralis_r    ~ 05.41
-"(28/46) TMxGak0IQOg ~ a_vertebralis_r    ~ 05.91
-"(28/46) TMxGak0IQOg ~ a_vertebralis_l    ~ 01.88
-"(28/46) TMxGak0IQOg ~ a_carotisexterna_r ~ 00.25
-"(28/46) TMxGak0IQOg ~ a_carotisexterna_l ~ 03.68
-"(29/46) WeMcC01ZNgY ~ a_carotisexterna_l ~ 01.18
-"(29/46) WeMcC01ZNgY ~ a_carotisexterna_r ~ 02.13
-"(29/46) WeMcC01ZNgY ~ a_vertebralis_l    ~ 23.68
-"(29/46) WeMcC01ZNgY ~ a_vertebralis_r    ~ 01.07
-"(30/46) eiJvX7Bw25o ~ a_carotisexterna_l ~ 01.37
-"(30/46) eiJvX7Bw25o ~ a_carotisexterna_r ~ 00.55
-"(30/46) eiJvX7Bw25o ~ a_vertebralis_l    ~ 18.38
-"(30/46) eiJvX7Bw25o ~ a_vertebralis_r    ~ 17.82
-"(31/46) yYcNJD5knnY ~ a_carotisexterna_l ~ 02.17
-"(31/46) yYcNJD5knnY ~ a_carotisexterna_r ~ 01.66
-"(31/46) yYcNJD5knnY ~ a_vertebralis_l    ~ 02.75
-"(31/46) yYcNJD5knnY ~ a_vertebralis_r    ~ 02.18
-"(32/46) 2pO8AtRxHAg ~ a_carotisexterna_l ~ 01.69
-"(32/46) 2pO8AtRxHAg ~ a_carotisexterna_r ~ 01.68
-"(32/46) 2pO8AtRxHAg ~ a_vertebralis_l    ~ 02.71
-"(32/46) 2pO8AtRxHAg ~ a_vertebralis_r    ~ 07.67
-"(33/46) VUIaoA1iqhI ~ a_vertebralis_l    ~ 03.36
-"(33/46) VUIaoA1iqhI ~ a_vertebralis_r    ~ 02.15
-"(33/46) VUIaoA1iqhI ~ a_carotisexterna_l ~ 01.77
-"(33/46) VUIaoA1iqhI ~ a_carotisexterna_r ~ 02.06
-"(34/46) 2w1vVKUCbcg ~ a_carotisexterna_l ~ 05.39
-"(34/46) 2w1vVKUCbcg ~ a_carotisexterna_r ~ 00.81
-"(34/46) 2w1vVKUCbcg ~ a_vertebralis_l    ~ 04.65
-"(34/46) 2w1vVKUCbcg ~ a_vertebralis_r    ~ 01.26
-"(35/46) 0f9SYhwcPFc ~ a_carotisexterna_l ~ 15.68
-"(35/46) 0f9SYhwcPFc ~ a_carotisexterna_r ~ 03.86
-"(35/46) 0f9SYhwcPFc ~ a_vertebralis_r    ~ 03.19
-"(35/46) 0f9SYhwcPFc ~ a_vertebralis_l    ~ 12.39
-"(36/46) TwU508CCA9Y ~ a_carotisexterna_l ~ 00.95
-"(36/46) TwU508CCA9Y ~ a_carotisexterna_r ~ 01.09
-"(36/46) TwU508CCA9Y ~ a_vertebralis_l    ~ 01.89
-"(36/46) TwU508CCA9Y ~ a_vertebralis_r    ~ 01.11
-"(37/46) calibration_4_end_0e5fp8GltvE ~ a_carotisexterna_r ~ 02.78
-"(37/46) calibration_4_end_0e5fp8GltvE ~ a_carotisexterna_l ~ 00.68
-"(37/46) calibration_4_end_0e5fp8GltvE ~ a_vertebralis_l    ~ 02.90
-"(37/46) calibration_4_end_0e5fp8GltvE ~ a_vertebralis_r    ~ 01.53
-"(38/46) calibration_3_2VO-i_onOGw ~ a_carotisexterna_l ~ 02.14
-"(38/46) calibration_3_2VO-i_onOGw ~ a_carotisexterna_r ~ 01.07
-"(38/46) calibration_3_2VO-i_onOGw ~ a_vertebralis_l    ~ 01.16
-"(38/46) calibration_3_2VO-i_onOGw ~ a_vertebralis_r    ~ 00.75
-"(39/46) calibration_1_start_0e5fp8GltvE ~ a_carotisexterna_r ~ 02.78
-"(39/46) calibration_1_start_0e5fp8GltvE ~ a_carotisexterna_l ~ 00.68
-"(39/46) calibration_1_start_0e5fp8GltvE ~ a_vertebralis_l    ~ 02.90
-"(39/46) calibration_1_start_0e5fp8GltvE ~ a_vertebralis_r    ~ 01.53
-"(40/46) calibration_2_LB9oATPd0mE ~ a_carotisexterna_l ~ 00.58
-"(40/46) calibration_2_LB9oATPd0mE ~ a_carotisexterna_r ~ 00.86
-"(40/46) calibration_2_LB9oATPd0mE ~ a_vertebralis_l    ~ 02.53
-"(40/46) calibration_2_LB9oATPd0mE ~ a_vertebralis_r    ~ 02.54
-"(41/46) training_3_nonlinear ~ a_carotisexterna_l ~ 01.04
-"(41/46) training_3_nonlinear ~ a_carotisexterna_r ~ 01.40
-"(41/46) training_3_nonlinear ~ a_vertebralis_r    ~ 01.02
-"(41/46) training_3_nonlinear ~ a_vertebralis_l    ~ 08.14
-"(42/46) training_6_YPEbc0OFC8I ~ a_carotisexterna_l ~ 01.14
-"(42/46) training_6_YPEbc0OFC8I ~ a_carotisexterna_r ~ 01.70
-"(42/46) training_6_YPEbc0OFC8I ~ a_vertebralis_l    ~ 00.46
-"(42/46) training_6_YPEbc0OFC8I ~ a_vertebralis_r    ~ 00.87
-"(45/46) training_4_yIt7Z7VHXU0 ~ a_carotisexterna_l ~ 01.04
-"(45/46) training_4_yIt7Z7VHXU0 ~ a_carotisexterna_r ~ 01.40
-"(45/46) training_4_yIt7Z7VHXU0 ~ a_vertebralis_r    ~ 01.02
-"(45/46) training_4_yIt7Z7VHXU0 ~ a_vertebralis_l    ~ 08.14
-"(46/46) training_5_Fw2lRBfYxtM ~ a_carotisexterna_l ~ 05.59
-"(46/46) training_5_Fw2lRBfYxtM ~ a_carotisexterna_r ~ 06.93
-"(46/46) training_5_Fw2lRBfYxtM ~ a_vertebralis_l    ~ 00.56
-"(46/46) training_5_Fw2lRBfYxtM ~ a_vertebralis_r    ~ 03.17
-"(1/46) 7SwVHAAw5lM ~ a_carotisexterna_l ~ 06.06
-"(1/46) 7SwVHAAw5lM ~ a_carotisexterna_r ~ 03.00
-"(1/46) 7SwVHAAw5lM ~ a_vertebralis_l    ~ 26.11
-"(1/46) 7SwVHAAw5lM ~ a_vertebralis_r    ~ 19.43
-"(2/46) hkvdD_XVYqo ~ a_carotisexterna_l ~ 22.09
-"(2/46) hkvdD_XVYqo ~ a_carotisexterna_r ~ 22.53
-"(2/46) hkvdD_XVYqo ~ a_vertebralis_l    ~ 69.97
-"(2/46) hkvdD_XVYqo ~ a_vertebralis_r    ~ 66.20
-"(3/46) a9ebcF7RKU4 ~ a_carotisexterna_l ~ 04.71
-"(3/46) a9ebcF7RKU4 ~ a_carotisexterna_r ~ 07.57
-"(3/46) a9ebcF7RKU4 ~ a_vertebralis_l    ~ 23.17
-"(3/46) a9ebcF7RKU4 ~ a_vertebralis_r    ~ 24.03
-"(4/46) CSSdmYlgjew ~ a_carotisexterna_l ~ 13.33
-"(4/46) CSSdmYlgjew ~ a_carotisexterna_r ~ 13.13
-"(4/46) CSSdmYlgjew ~ a_vertebralis_l    ~ 36.58
-"(4/46) CSSdmYlgjew ~ a_vertebralis_r    ~ 34.16
-"(5/46) fEHc3cCOu-M ~ a_carotisexterna_l ~ 04.79
-"(5/46) fEHc3cCOu-M ~ a_carotisexterna_r ~ 08.55
-"(5/46) fEHc3cCOu-M ~ a_vertebralis_l    ~ 20.82
-"(5/46) fEHc3cCOu-M ~ a_vertebralis_r    ~ 22.68
-"(6/46) 3dSDmvwSjek ~ a_vertebralis_r    ~ 09.80
-"(6/46) 3dSDmvwSjek ~ a_carotisexterna_r ~ 11.55
-"(6/46) 3dSDmvwSjek ~ a_carotisexterna_l ~ 06.26
-"(6/46) 3dSDmvwSjek ~ a_vertebralis_l    ~ 18.76
-"(7/46) 7IZ0hAktN78 ~ a_carotisexterna_l ~ 06.42
-"(7/46) 7IZ0hAktN78 ~ a_carotisexterna_r ~ 12.53
-"(7/46) 7IZ0hAktN78 ~ a_vertebralis_l    ~ 08.68
-"(7/46) 7IZ0hAktN78 ~ a_vertebralis_r    ~ 15.09
-"(8/46) 87J-_CHHkzI ~ a_carotisexterna_l ~ 03.34
-"(8/46) 87J-_CHHkzI ~ a_carotisexterna_r ~ 02.16
-"(8/46) 87J-_CHHkzI ~ a_vertebralis_l    ~ 06.57
-"(8/46) 87J-_CHHkzI ~ a_vertebralis_r    ~ 05.52
-"(9/46) g-chOlbtzBQ ~ a_carotisexterna_r ~ 02.73
-"(9/46) g-chOlbtzBQ ~ a_carotisexterna_l ~ 04.01
-"(9/46) g-chOlbtzBQ ~ a_vertebralis_r    ~ 14.45
-"(9/46) g-chOlbtzBQ ~ a_vertebralis_l    ~ 12.73
-"(10/46) CD8Gu0llvgk ~ a_carotisexterna_l ~ 07.07
-"(10/46) CD8Gu0llvgk ~ a_carotisexterna_r ~ 03.46
-"(10/46) CD8Gu0llvgk ~ a_vertebralis_l    ~ 15.96
-"(10/46) CD8Gu0llvgk ~ a_vertebralis_r    ~ 09.66
-"(11/46) 96-du2ceM4o ~ a_carotisexterna_l ~ 02.23
-"(11/46) 96-du2ceM4o ~ a_carotisexterna_r ~ 06.18
-"(11/46) 96-du2ceM4o ~ a_vertebralis_l    ~ 03.52
-"(11/46) 96-du2ceM4o ~ a_vertebralis_r    ~ 03.32
-"(12/46) 6vkfAvGWUPg ~ a_vertebralis_l    ~ 26.83
-"(12/46) 6vkfAvGWUPg ~ a_vertebralis_r    ~ 28.95
-"(12/46) 6vkfAvGWUPg ~ a_carotisexterna_l ~ 14.35
-"(12/46) 6vkfAvGWUPg ~ a_carotisexterna_r ~ 17.35
-"(13/46) I307KZkh1VM ~ a_carotisexterna_l ~ 06.40
-"(13/46) I307KZkh1VM ~ a_carotisexterna_r ~ 10.82
-"(13/46) I307KZkh1VM ~ a_vertebralis_l    ~ 12.94
-"(13/46) I307KZkh1VM ~ a_vertebralis_r    ~ 20.13
-"(14/46) CCL2MqdD19g ~ a_carotisexterna_r ~ 03.03
-"(14/46) CCL2MqdD19g ~ a_carotisexterna_l ~ 03.68
-"(14/46) CCL2MqdD19g ~ a_vertebralis_l    ~ 05.85
-"(14/46) CCL2MqdD19g ~ a_vertebralis_r    ~ 09.12
-"(15/46) ccucLKGWtSQ ~ a_carotisexterna_r ~ 10.95
-"(15/46) ccucLKGWtSQ ~ a_carotisexterna_l ~ 11.49
-"(15/46) ccucLKGWtSQ ~ a_vertebralis_l    ~ 47.14
-"(15/46) ccucLKGWtSQ ~ a_vertebralis_r    ~ 44.55
-"(16/46) 1q_1_G-1EPM ~ a_vertebralis_r    ~ 70.38
-"(16/46) 1q_1_G-1EPM ~ a_vertebralis_l    ~ 77.26
-"(16/46) 1q_1_G-1EPM ~ a_carotisexterna_l ~ 31.00
-"(16/46) 1q_1_G-1EPM ~ a_carotisexterna_r ~ 24.21
-"(17/46) F-JlS0Cl1K0 ~ a_carotisexterna_l ~ 02.93
-"(17/46) F-JlS0Cl1K0 ~ a_carotisexterna_r ~ 01.50
-"(17/46) F-JlS0Cl1K0 ~ a_vertebralis_l    ~ 16.51
-"(17/46) F-JlS0Cl1K0 ~ a_vertebralis_r    ~ 15.54
-"(18/46) 6WB8wP4uAl0 ~ a_carotisexterna_l ~ 05.40
-"(18/46) 6WB8wP4uAl0 ~ a_carotisexterna_r ~ 03.63
-"(18/46) 6WB8wP4uAl0 ~ a_vertebralis_l    ~ 15.25
-"(18/46) 6WB8wP4uAl0 ~ a_vertebralis_r    ~ 17.16
-"(19/46) pP5CHNLQspI ~ a_vertebralis_l    ~ 15.39
-"(19/46) pP5CHNLQspI ~ a_vertebralis_r    ~ 17.17
-"(19/46) pP5CHNLQspI ~ a_carotisexterna_l ~ 07.83
-"(19/46) pP5CHNLQspI ~ a_carotisexterna_r ~ 09.61
-"(20/46) 7sp2FiVa4WI ~ a_carotisexterna_r ~ 14.74
-"(20/46) 7sp2FiVa4WI ~ a_carotisexterna_l ~ 04.62
-"(20/46) 7sp2FiVa4WI ~ a_vertebralis_l    ~ 55.31
-"(20/46) 7sp2FiVa4WI ~ a_vertebralis_r    ~ 47.53
-"(21/46) hmJfXqxVMk0 ~ a_carotisexterna_l ~ 05.16
-"(21/46) hmJfXqxVMk0 ~ a_carotisexterna_r ~ 02.92
-"(21/46) hmJfXqxVMk0 ~ a_vertebralis_l    ~ 05.94
-"(21/46) hmJfXqxVMk0 ~ a_vertebralis_r    ~ 18.91
-"(22/46) 820_BQlC1tI ~ a_carotisexterna_r ~ 03.91
-"(22/46) 820_BQlC1tI ~ a_carotisexterna_l ~ 08.02
-"(22/46) 820_BQlC1tI ~ a_vertebralis_l    ~ 12.67
-"(22/46) 820_BQlC1tI ~ a_vertebralis_r    ~ 10.01
-"(23/46) XKgRKTaLeEo ~ a_carotisexterna_r ~ 12.77
-"(23/46) XKgRKTaLeEo ~ a_carotisexterna_l ~ 15.15
-"(23/46) XKgRKTaLeEo ~ a_vertebralis_l    ~ 40.00
-"(23/46) XKgRKTaLeEo ~ a_vertebralis_r    ~ 40.22
-"(24/46) SzZUcvM5JpU ~ a_carotisexterna_r ~ 04.49
-"(24/46) SzZUcvM5JpU ~ a_carotisexterna_l ~ 07.97
-"(24/46) SzZUcvM5JpU ~ a_vertebralis_r    ~ 06.47
-"(24/46) SzZUcvM5JpU ~ a_vertebralis_l    ~ 20.33
-"(25/46) urqkluKweXA ~ a_carotisexterna_l ~ 10.24
-"(25/46) urqkluKweXA ~ a_carotisexterna_r ~ 11.93
-"(25/46) urqkluKweXA ~ a_vertebralis_l    ~ 19.15
-"(25/46) urqkluKweXA ~ a_vertebralis_r    ~ 19.55
-"(26/46) Of-K39ULY0Q ~ a_carotisexterna_l ~ 02.59
-"(26/46) Of-K39ULY0Q ~ a_carotisexterna_r ~ 02.95
-"(26/46) Of-K39ULY0Q ~ a_vertebralis_l    ~ 03.65
-"(26/46) Of-K39ULY0Q ~ a_vertebralis_r    ~ 03.37
-"(27/46) aBQe2EfmXv8 ~ a_carotisexterna_l ~ 05.16
-"(27/46) aBQe2EfmXv8 ~ a_carotisexterna_r ~ 06.62
-"(27/46) aBQe2EfmXv8 ~ a_vertebralis_l    ~ 23.95
-"(27/46) aBQe2EfmXv8 ~ a_vertebralis_r    ~ 18.43
-"(28/46) TMxGak0IQOg ~ a_vertebralis_r    ~ 08.41
-"(28/46) TMxGak0IQOg ~ a_vertebralis_l    ~ 13.27
-"(28/46) TMxGak0IQOg ~ a_carotisexterna_r ~ 02.03
-"(28/46) TMxGak0IQOg ~ a_carotisexterna_l ~ 05.75
-"(29/46) WeMcC01ZNgY ~ a_carotisexterna_l ~ 03.40
-"(29/46) WeMcC01ZNgY ~ a_carotisexterna_r ~ 08.11
-"(29/46) WeMcC01ZNgY ~ a_vertebralis_l    ~ 37.75
-"(29/46) WeMcC01ZNgY ~ a_vertebralis_r    ~ 29.65
-"(30/46) eiJvX7Bw25o ~ a_carotisexterna_l ~ 04.28
-"(30/46) eiJvX7Bw25o ~ a_carotisexterna_r ~ 01.80
-"(30/46) eiJvX7Bw25o ~ a_vertebralis_l    ~ 14.47
-"(30/46) eiJvX7Bw25o ~ a_vertebralis_r    ~ 12.81
-"(31/46) yYcNJD5knnY ~ a_carotisexterna_l ~ 04.47
-"(31/46) yYcNJD5knnY ~ a_carotisexterna_r ~ 03.96
-"(31/46) yYcNJD5knnY ~ a_vertebralis_l    ~ 17.27
-"(31/46) yYcNJD5knnY ~ a_vertebralis_r    ~ 19.17
-"(32/46) 2pO8AtRxHAg ~ a_carotisexterna_l ~ 01.51
-"(32/46) 2pO8AtRxHAg ~ a_carotisexterna_r ~ 02.04
-"(32/46) 2pO8AtRxHAg ~ a_vertebralis_l    ~ 10.66
-"(32/46) 2pO8AtRxHAg ~ a_vertebralis_r    ~ 09.74
-"(33/46) VUIaoA1iqhI ~ a_vertebralis_l    ~ 05.45
-"(33/46) VUIaoA1iqhI ~ a_vertebralis_r    ~ 09.92
-"(33/46) VUIaoA1iqhI ~ a_carotisexterna_l ~ 05.34
-"(33/46) VUIaoA1iqhI ~ a_carotisexterna_r ~ 13.07
-"(34/46) 2w1vVKUCbcg ~ a_carotisexterna_l ~ 16.24
-"(34/46) 2w1vVKUCbcg ~ a_carotisexterna_r ~ 13.84
-"(34/46) 2w1vVKUCbcg ~ a_vertebralis_l    ~ 17.75
-"(34/46) 2w1vVKUCbcg ~ a_vertebralis_r    ~ 20.56
-"(35/46) 0f9SYhwcPFc ~ a_carotisexterna_l ~ 25.75
-"(35/46) 0f9SYhwcPFc ~ a_carotisexterna_r ~ 04.10
-"(35/46) 0f9SYhwcPFc ~ a_vertebralis_r    ~ 31.53
-"(35/46) 0f9SYhwcPFc ~ a_vertebralis_l    ~ 27.10
-"(36/46) TwU508CCA9Y ~ a_carotisexterna_l ~ 02.32
-"(36/46) TwU508CCA9Y ~ a_carotisexterna_r ~ 03.25
-"(36/46) TwU508CCA9Y ~ a_vertebralis_l    ~ 03.22
-"(36/46) TwU508CCA9Y ~ a_vertebralis_r    ~ 02.91
-"(37/46) calibration_4_end_0e5fp8GltvE ~ a_carotisexterna_r ~ 16.68
-"(37/46) calibration_4_end_0e5fp8GltvE ~ a_carotisexterna_l ~ 12.93
-"(37/46) calibration_4_end_0e5fp8GltvE ~ a_vertebralis_l    ~ 53.32
-"(37/46) calibration_4_end_0e5fp8GltvE ~ a_vertebralis_r    ~ 50.98
-"(38/46) calibration_3_2VO-i_onOGw ~ a_carotisexterna_l ~ 06.11
-"(38/46) calibration_3_2VO-i_onOGw ~ a_carotisexterna_r ~ 06.32
-"(38/46) calibration_3_2VO-i_onOGw ~ a_vertebralis_l    ~ 14.88
-"(38/46) calibration_3_2VO-i_onOGw ~ a_vertebralis_r    ~ 16.32
-"(39/46) calibration_1_start_0e5fp8GltvE ~ a_carotisexterna_r ~ 16.68
-"(39/46) calibration_1_start_0e5fp8GltvE ~ a_carotisexterna_l ~ 12.93
-"(39/46) calibration_1_start_0e5fp8GltvE ~ a_vertebralis_l    ~ 53.32
-"(39/46) calibration_1_start_0e5fp8GltvE ~ a_vertebralis_r    ~ 50.98
-"(40/46) calibration_2_LB9oATPd0mE ~ a_carotisexterna_l ~ 03.86
-"(40/46) calibration_2_LB9oATPd0mE ~ a_carotisexterna_r ~ 02.46
-"(40/46) calibration_2_LB9oATPd0mE ~ a_vertebralis_l    ~ 10.63
-"(40/46) calibration_2_LB9oATPd0mE ~ a_vertebralis_r    ~ 08.44
-"(41/46) training_3_nonlinear ~ a_carotisexterna_l ~ 02.54
-"(41/46) training_3_nonlinear ~ a_carotisexterna_r ~ 08.24
-"(41/46) training_3_nonlinear ~ a_vertebralis_r    ~ 10.52
-"(41/46) training_3_nonlinear ~ a_vertebralis_l    ~ 08.57
-"(42/46) training_6_YPEbc0OFC8I ~ a_carotisexterna_l ~ 10.00
-"(42/46) training_6_YPEbc0OFC8I ~ a_carotisexterna_r ~ 07.59
-"(42/46) training_6_YPEbc0OFC8I ~ a_vertebralis_l    ~ 24.42
-"(42/46) training_6_YPEbc0OFC8I ~ a_vertebralis_r    ~ 24.84
-"(45/46) training_4_yIt7Z7VHXU0 ~ a_carotisexterna_l ~ 02.54
-"(45/46) training_4_yIt7Z7VHXU0 ~ a_carotisexterna_r ~ 08.24
-"(45/46) training_4_yIt7Z7VHXU0 ~ a_vertebralis_r    ~ 10.52
-"(45/46) training_4_yIt7Z7VHXU0 ~ a_vertebralis_l    ~ 08.57
-"(46/46) training_5_Fw2lRBfYxtM ~ a_carotisexterna_l ~ 06.11
-"(46/46) training_5_Fw2lRBfYxtM ~ a_carotisexterna_r ~ 02.19
-"(46/46) training_5_Fw2lRBfYxtM ~ a_vertebralis_l    ~ 04.86
-"(46/46) training_5_Fw2lRBfYxtM ~ a_vertebralis_r    ~ 04.23
+import pandas as pd
+deformable = [
+    "7SwVHAAw5lM~a_carotisexterna_l~10.01",
+    "7SwVHAAw5lM~a_carotisexterna_r~00.84",
+    "7SwVHAAw5lM~a_vertebralis_l~01.39",
+    "7SwVHAAw5lM~a_vertebralis_r~00.91",
+    "hkvdD_XVYqo~a_carotisexterna_l~02.29",
+    "hkvdD_XVYqo~a_carotisexterna_r~03.97",
+    "hkvdD_XVYqo~a_vertebralis_l~64.78",
+    "hkvdD_XVYqo~a_vertebralis_r~57.40",
+    "a9ebcF7RKU4~a_carotisexterna_l~03.68",
+    "a9ebcF7RKU4~a_carotisexterna_r~01.83",
+    "a9ebcF7RKU4~a_vertebralis_l~03.55",
+    "a9ebcF7RKU4~a_vertebralis_r~01.89",
+    "CSSdmYlgjew~a_carotisexterna_l~03.96",
+    "CSSdmYlgjew~a_carotisexterna_r~03.63",
+    "CSSdmYlgjew~a_vertebralis_l~36.09",
+    "CSSdmYlgjew~a_vertebralis_r~34.43",
+    "fEHc3cCOu-M~a_carotisexterna_l~01.72",
+    "fEHc3cCOu-M~a_carotisexterna_r~01.62",
+    "fEHc3cCOu-M~a_vertebralis_l~02.67",
+    "fEHc3cCOu-M~a_vertebralis_r~01.59",
+    "3dSDmvwSjek~a_vertebralis_r~01.24",
+    "3dSDmvwSjek~a_carotisexterna_r~01.37",
+    "3dSDmvwSjek~a_carotisexterna_l~00.90",
+    "3dSDmvwSjek~a_vertebralis_l~02.55",
+    "7IZ0hAktN78~a_carotisexterna_l~02.95",
+    "7IZ0hAktN78~a_carotisexterna_r~04.12",
+    "7IZ0hAktN78~a_vertebralis_l~02.10",
+    "7IZ0hAktN78~a_vertebralis_r~01.16",
+    "87J-_CHHkzI~a_carotisexterna_l~00.78",
+    "87J-_CHHkzI~a_carotisexterna_r~01.58",
+    "87J-_CHHkzI~a_vertebralis_l~01.31",
+    "87J-_CHHkzI~a_vertebralis_r~01.63",
+    "g-chOlbtzBQ~a_carotisexterna_r~02.25",
+    "g-chOlbtzBQ~a_carotisexterna_l~02.02",
+    "g-chOlbtzBQ~a_vertebralis_r~00.39",
+    "g-chOlbtzBQ~a_vertebralis_l~03.30",
+    "CD8Gu0llvgk~a_carotisexterna_l~01.26",
+    "CD8Gu0llvgk~a_carotisexterna_r~01.03",
+    "CD8Gu0llvgk~a_vertebralis_l~01.01",
+    "CD8Gu0llvgk~a_vertebralis_r~00.95",
+    "96-du2ceM4o~a_carotisexterna_l~01.05",
+    "96-du2ceM4o~a_carotisexterna_r~07.39",
+    "96-du2ceM4o~a_vertebralis_l~01.05",
+    "96-du2ceM4o~a_vertebralis_r~01.62",
+    "6vkfAvGWUPg~a_vertebralis_l~01.04",
+    "6vkfAvGWUPg~a_vertebralis_r~01.33",
+    "6vkfAvGWUPg~a_carotisexterna_l~01.31",
+    "6vkfAvGWUPg~a_carotisexterna_r~04.54",
+    "I307KZkh1VM~a_carotisexterna_l~03.67",
+    "I307KZkh1VM~a_carotisexterna_r~02.88",
+    "I307KZkh1VM~a_vertebralis_l~05.07",
+    "I307KZkh1VM~a_vertebralis_r~07.24",
+    "CCL2MqdD19g~a_carotisexterna_r~01.47",
+    "CCL2MqdD19g~a_carotisexterna_l~02.58",
+    "CCL2MqdD19g~a_vertebralis_l~06.55",
+    "CCL2MqdD19g~a_vertebralis_r~01.88",
+    "ccucLKGWtSQ~a_carotisexterna_r~03.19",
+    "ccucLKGWtSQ~a_carotisexterna_l~00.79",
+    "ccucLKGWtSQ~a_vertebralis_l~05.83",
+    "ccucLKGWtSQ~a_vertebralis_r~07.38",
+    "1q_1_G-1EPM~a_vertebralis_r~29.26",
+    "1q_1_G-1EPM~a_vertebralis_l~46.41",
+    "1q_1_G-1EPM~a_carotisexterna_l~03.57",
+    "1q_1_G-1EPM~a_carotisexterna_r~02.12",
+    "F-JlS0Cl1K0~a_carotisexterna_l~01.75",
+    "F-JlS0Cl1K0~a_carotisexterna_r~00.65",
+    "F-JlS0Cl1K0~a_vertebralis_l~04.03",
+    "F-JlS0Cl1K0~a_vertebralis_r~02.53",
+    "6WB8wP4uAl0~a_carotisexterna_l~02.61",
+    "6WB8wP4uAl0~a_carotisexterna_r~00.35",
+    "6WB8wP4uAl0~a_vertebralis_l~01.55",
+    "6WB8wP4uAl0~a_vertebralis_r~02.22",
+    "pP5CHNLQspI~a_vertebralis_l~02.46",
+    "pP5CHNLQspI~a_vertebralis_r~00.97",
+    "pP5CHNLQspI~a_carotisexterna_l~00.54",
+    "pP5CHNLQspI~a_carotisexterna_r~00.67",
+    "7sp2FiVa4WI~a_carotisexterna_r~03.65",
+    "7sp2FiVa4WI~a_carotisexterna_l~01.54",
+    "7sp2FiVa4WI~a_vertebralis_l~46.97",
+    "7sp2FiVa4WI~a_vertebralis_r~29.75",
+    "hmJfXqxVMk0~a_carotisexterna_l~01.44",
+    "hmJfXqxVMk0~a_carotisexterna_r~02.48",
+    "hmJfXqxVMk0~a_vertebralis_l~13.33",
+    "hmJfXqxVMk0~a_vertebralis_r~14.68",
+    "820_BQlC1tI~a_carotisexterna_r~02.22",
+    "820_BQlC1tI~a_carotisexterna_l~02.13",
+    "820_BQlC1tI~a_vertebralis_l~02.54",
+    "820_BQlC1tI~a_vertebralis_r~01.22",
+    "XKgRKTaLeEo~a_carotisexterna_r~07.69",
+    "XKgRKTaLeEo~a_carotisexterna_l~03.78",
+    "XKgRKTaLeEo~a_vertebralis_l~00.90",
+    "XKgRKTaLeEo~a_vertebralis_r~02.74",
+    "SzZUcvM5JpU~a_carotisexterna_r~00.68",
+    "SzZUcvM5JpU~a_carotisexterna_l~02.61",
+    "SzZUcvM5JpU~a_vertebralis_r~05.49",
+    "SzZUcvM5JpU~a_vertebralis_l~10.14",
+    "urqkluKweXA~a_carotisexterna_l~01.42",
+    "urqkluKweXA~a_carotisexterna_r~01.79",
+    "urqkluKweXA~a_vertebralis_l~06.36",
+    "urqkluKweXA~a_vertebralis_r~00.87",
+    "Of-K39ULY0Q~a_carotisexterna_l~01.38",
+    "Of-K39ULY0Q~a_carotisexterna_r~01.92",
+    "Of-K39ULY0Q~a_vertebralis_l~02.10",
+    "Of-K39ULY0Q~a_vertebralis_r~02.06",
+    "aBQe2EfmXv8~a_carotisexterna_l~02.01",
+    "aBQe2EfmXv8~a_carotisexterna_r~00.11",
+    "aBQe2EfmXv8~a_vertebralis_l~05.30",
+    "aBQe2EfmXv8~a_vertebralis_r~05.41",
+    "TMxGak0IQOg~a_vertebralis_r~05.91",
+    "TMxGak0IQOg~a_vertebralis_l~01.88",
+    "TMxGak0IQOg~a_carotisexterna_r~00.25",
+    "TMxGak0IQOg~a_carotisexterna_l~03.68",
+    "WeMcC01ZNgY~a_carotisexterna_l~01.18",
+    "WeMcC01ZNgY~a_carotisexterna_r~02.13",
+    "WeMcC01ZNgY~a_vertebralis_l~23.68",
+    "WeMcC01ZNgY~a_vertebralis_r~01.07",
+    "eiJvX7Bw25o~a_carotisexterna_l~01.37",
+    "eiJvX7Bw25o~a_carotisexterna_r~00.55",
+    "eiJvX7Bw25o~a_vertebralis_l~18.38",
+    "eiJvX7Bw25o~a_vertebralis_r~17.82",
+    "yYcNJD5knnY~a_carotisexterna_l~02.17",
+    "yYcNJD5knnY~a_carotisexterna_r~01.66",
+    "yYcNJD5knnY~a_vertebralis_l~02.75",
+    "yYcNJD5knnY~a_vertebralis_r~02.18",
+    "2pO8AtRxHAg~a_carotisexterna_l~01.69",
+    "2pO8AtRxHAg~a_carotisexterna_r~01.68",
+    "2pO8AtRxHAg~a_vertebralis_l~02.71",
+    "2pO8AtRxHAg~a_vertebralis_r~07.67",
+    "VUIaoA1iqhI~a_vertebralis_l~03.36",
+    "VUIaoA1iqhI~a_vertebralis_r~02.15",
+    "VUIaoA1iqhI~a_carotisexterna_l~01.77",
+    "VUIaoA1iqhI~a_carotisexterna_r~02.06",
+    "2w1vVKUCbcg~a_carotisexterna_l~05.39",
+    "2w1vVKUCbcg~a_carotisexterna_r~00.81",
+    "2w1vVKUCbcg~a_vertebralis_l~04.65",
+    "2w1vVKUCbcg~a_vertebralis_r~01.26",
+    "0f9SYhwcPFc~a_carotisexterna_l~15.68",
+    "0f9SYhwcPFc~a_carotisexterna_r~03.86",
+    "0f9SYhwcPFc~a_vertebralis_r~03.19",
+    "0f9SYhwcPFc~a_vertebralis_l~12.39",
+    "TwU508CCA9Y~a_carotisexterna_l~00.95",
+    "TwU508CCA9Y~a_carotisexterna_r~01.09",
+    "TwU508CCA9Y~a_vertebralis_l~01.89",
+    "TwU508CCA9Y~a_vertebralis_r~01.11",
+    "calibration_4_end_0e5fp8GltvE~a_carotisexterna_r~02.78",
+    "calibration_4_end_0e5fp8GltvE~a_carotisexterna_l~00.68",
+    "calibration_4_end_0e5fp8GltvE~a_vertebralis_l~02.90",
+    "calibration_4_end_0e5fp8GltvE~a_vertebralis_r~01.53",
+    "calibration_3_2VO-i_onOGw~a_carotisexterna_l~02.14",
+    "calibration_3_2VO-i_onOGw~a_carotisexterna_r~01.07",
+    "calibration_3_2VO-i_onOGw~a_vertebralis_l~01.16",
+    "calibration_3_2VO-i_onOGw~a_vertebralis_r~00.75",
+    "calibration_1_start_0e5fp8GltvE~a_carotisexterna_r~02.78",
+    "calibration_1_start_0e5fp8GltvE~a_carotisexterna_l~00.68",
+    "calibration_1_start_0e5fp8GltvE~a_vertebralis_l~02.90",
+    "calibration_1_start_0e5fp8GltvE~a_vertebralis_r~01.53",
+    "calibration_2_LB9oATPd0mE~a_carotisexterna_l~00.58",
+    "calibration_2_LB9oATPd0mE~a_carotisexterna_r~00.86",
+    "calibration_2_LB9oATPd0mE~a_vertebralis_l~02.53",
+    "calibration_2_LB9oATPd0mE~a_vertebralis_r~02.54",
+    "training_3_nonlinear~a_carotisexterna_l~01.04",
+    "training_3_nonlinear~a_carotisexterna_r~01.40",
+    "training_3_nonlinear~a_vertebralis_r~01.02",
+    "training_3_nonlinear~a_vertebralis_l~08.14",
+    "training_6_YPEbc0OFC8I~a_carotisexterna_l~01.14",
+    "training_6_YPEbc0OFC8I~a_carotisexterna_r~01.70",
+    "training_6_YPEbc0OFC8I~a_vertebralis_l~00.46",
+    "training_6_YPEbc0OFC8I~a_vertebralis_r~00.87",
+    "training_4_yIt7Z7VHXU0~a_carotisexterna_l~01.04",
+    "training_4_yIt7Z7VHXU0~a_carotisexterna_r~01.40",
+    "training_4_yIt7Z7VHXU0~a_vertebralis_r~01.02",
+    "training_4_yIt7Z7VHXU0~a_vertebralis_l~08.14",
+    "training_5_Fw2lRBfYxtM~a_carotisexterna_l~05.59",
+    "training_5_Fw2lRBfYxtM~a_carotisexterna_r~06.93",
+    "training_5_Fw2lRBfYxtM~a_vertebralis_l~00.56",
+    "training_5_Fw2lRBfYxtM~a_vertebralis_r~03.17"
+]
+
+linear = [
+    "7SwVHAAw5lM~a_carotisexterna_l~06.06",
+    "7SwVHAAw5lM~a_carotisexterna_r~03.00",
+    "7SwVHAAw5lM~a_vertebralis_l~26.11",
+    "7SwVHAAw5lM~a_vertebralis_r~19.43",
+    "hkvdD_XVYqo~a_carotisexterna_l~22.09",
+    "hkvdD_XVYqo~a_carotisexterna_r~22.53",
+    "hkvdD_XVYqo~a_vertebralis_l~69.97",
+    "hkvdD_XVYqo~a_vertebralis_r~66.20",
+    "a9ebcF7RKU4~a_carotisexterna_l~04.71",
+    "a9ebcF7RKU4~a_carotisexterna_r~07.57",
+    "a9ebcF7RKU4~a_vertebralis_l~23.17",
+    "a9ebcF7RKU4~a_vertebralis_r~24.03",
+    "CSSdmYlgjew~a_carotisexterna_l~13.33",
+    "CSSdmYlgjew~a_carotisexterna_r~13.13",
+    "CSSdmYlgjew~a_vertebralis_l~36.58",
+    "CSSdmYlgjew~a_vertebralis_r~34.16",
+    "fEHc3cCOu-M~a_carotisexterna_l~04.79",
+    "fEHc3cCOu-M~a_carotisexterna_r~08.55",
+    "fEHc3cCOu-M~a_vertebralis_l~20.82",
+    "fEHc3cCOu-M~a_vertebralis_r~22.68",
+    "3dSDmvwSjek~a_vertebralis_r~09.80",
+    "3dSDmvwSjek~a_carotisexterna_r~11.55",
+    "3dSDmvwSjek~a_carotisexterna_l~06.26",
+    "3dSDmvwSjek~a_vertebralis_l~18.76",
+    "7IZ0hAktN78~a_carotisexterna_l~06.42",
+    "7IZ0hAktN78~a_carotisexterna_r~12.53",
+    "7IZ0hAktN78~a_vertebralis_l~08.68",
+    "7IZ0hAktN78~a_vertebralis_r~15.09",
+    "87J-_CHHkzI~a_carotisexterna_l~03.34",
+    "87J-_CHHkzI~a_carotisexterna_r~02.16",
+    "87J-_CHHkzI~a_vertebralis_l~06.57",
+    "87J-_CHHkzI~a_vertebralis_r~05.52",
+    "g-chOlbtzBQ~a_carotisexterna_r~02.73",
+    "g-chOlbtzBQ~a_carotisexterna_l~04.01",
+    "g-chOlbtzBQ~a_vertebralis_r~14.45",
+    "g-chOlbtzBQ~a_vertebralis_l~12.73",
+    "CD8Gu0llvgk~a_carotisexterna_l~07.07",
+    "CD8Gu0llvgk~a_carotisexterna_r~03.46",
+    "CD8Gu0llvgk~a_vertebralis_l~15.96",
+    "CD8Gu0llvgk~a_vertebralis_r~09.66",
+    "96-du2ceM4o~a_carotisexterna_l~02.23",
+    "96-du2ceM4o~a_carotisexterna_r~06.18",
+    "96-du2ceM4o~a_vertebralis_l~03.52",
+    "96-du2ceM4o~a_vertebralis_r~03.32",
+    "6vkfAvGWUPg~a_vertebralis_l~26.83",
+    "6vkfAvGWUPg~a_vertebralis_r~28.95",
+    "6vkfAvGWUPg~a_carotisexterna_l~14.35",
+    "6vkfAvGWUPg~a_carotisexterna_r~17.35",
+    "I307KZkh1VM~a_carotisexterna_l~06.40",
+    "I307KZkh1VM~a_carotisexterna_r~10.82",
+    "I307KZkh1VM~a_vertebralis_l~12.94",
+    "I307KZkh1VM~a_vertebralis_r~20.13",
+    "CCL2MqdD19g~a_carotisexterna_r~03.03",
+    "CCL2MqdD19g~a_carotisexterna_l~03.68",
+    "CCL2MqdD19g~a_vertebralis_l~05.85",
+    "CCL2MqdD19g~a_vertebralis_r~09.12",
+    "ccucLKGWtSQ~a_carotisexterna_r~10.95",
+    "ccucLKGWtSQ~a_carotisexterna_l~11.49",
+    "ccucLKGWtSQ~a_vertebralis_l~47.14",
+    "ccucLKGWtSQ~a_vertebralis_r~44.55",
+    "1q_1_G-1EPM~a_vertebralis_r~70.38",
+    "1q_1_G-1EPM~a_vertebralis_l~77.26",
+    "1q_1_G-1EPM~a_carotisexterna_l~31.00",
+    "1q_1_G-1EPM~a_carotisexterna_r~24.21",
+    "F-JlS0Cl1K0~a_carotisexterna_l~02.93",
+    "F-JlS0Cl1K0~a_carotisexterna_r~01.50",
+    "F-JlS0Cl1K0~a_vertebralis_l~16.51",
+    "F-JlS0Cl1K0~a_vertebralis_r~15.54",
+    "6WB8wP4uAl0~a_carotisexterna_l~05.40",
+    "6WB8wP4uAl0~a_carotisexterna_r~03.63",
+    "6WB8wP4uAl0~a_vertebralis_l~15.25",
+    "6WB8wP4uAl0~a_vertebralis_r~17.16",
+    "pP5CHNLQspI~a_vertebralis_l~15.39",
+    "pP5CHNLQspI~a_vertebralis_r~17.17",
+    "pP5CHNLQspI~a_carotisexterna_l~07.83",
+    "pP5CHNLQspI~a_carotisexterna_r~09.61",
+    "7sp2FiVa4WI~a_carotisexterna_r~14.74",
+    "7sp2FiVa4WI~a_carotisexterna_l~04.62",
+    "7sp2FiVa4WI~a_vertebralis_l~55.31",
+    "7sp2FiVa4WI~a_vertebralis_r~47.53",
+    "hmJfXqxVMk0~a_carotisexterna_l~05.16",
+    "hmJfXqxVMk0~a_carotisexterna_r~02.92",
+    "hmJfXqxVMk0~a_vertebralis_l~05.94",
+    "hmJfXqxVMk0~a_vertebralis_r~18.91",
+    "820_BQlC1tI~a_carotisexterna_r~03.91",
+    "820_BQlC1tI~a_carotisexterna_l~08.02",
+    "820_BQlC1tI~a_vertebralis_l~12.67",
+    "820_BQlC1tI~a_vertebralis_r~10.01",
+    "XKgRKTaLeEo~a_carotisexterna_r~12.77",
+    "XKgRKTaLeEo~a_carotisexterna_l~15.15",
+    "XKgRKTaLeEo~a_vertebralis_l~40.00",
+    "XKgRKTaLeEo~a_vertebralis_r~40.22",
+    "SzZUcvM5JpU~a_carotisexterna_r~04.49",
+    "SzZUcvM5JpU~a_carotisexterna_l~07.97",
+    "SzZUcvM5JpU~a_vertebralis_r~06.47",
+    "SzZUcvM5JpU~a_vertebralis_l~20.33",
+    "urqkluKweXA~a_carotisexterna_l~10.24",
+    "urqkluKweXA~a_carotisexterna_r~11.93",
+    "urqkluKweXA~a_vertebralis_l~19.15",
+    "urqkluKweXA~a_vertebralis_r~19.55",
+    "Of-K39ULY0Q~a_carotisexterna_l~02.59",
+    "Of-K39ULY0Q~a_carotisexterna_r~02.95",
+    "Of-K39ULY0Q~a_vertebralis_l~03.65",
+    "Of-K39ULY0Q~a_vertebralis_r~03.37",
+    "aBQe2EfmXv8~a_carotisexterna_l~05.16",
+    "aBQe2EfmXv8~a_carotisexterna_r~06.62",
+    "aBQe2EfmXv8~a_vertebralis_l~23.95",
+    "aBQe2EfmXv8~a_vertebralis_r~18.43",
+    "TMxGak0IQOg~a_vertebralis_r~08.41",
+    "TMxGak0IQOg~a_vertebralis_l~13.27",
+    "TMxGak0IQOg~a_carotisexterna_r~02.03",
+    "TMxGak0IQOg~a_carotisexterna_l~05.75",
+    "WeMcC01ZNgY~a_carotisexterna_l~03.40",
+    "WeMcC01ZNgY~a_carotisexterna_r~08.11",
+    "WeMcC01ZNgY~a_vertebralis_l~37.75",
+    "WeMcC01ZNgY~a_vertebralis_r~29.65",
+    "eiJvX7Bw25o~a_carotisexterna_l~04.28",
+    "eiJvX7Bw25o~a_carotisexterna_r~01.80",
+    "eiJvX7Bw25o~a_vertebralis_l~14.47",
+    "eiJvX7Bw25o~a_vertebralis_r~12.81",
+    "yYcNJD5knnY~a_carotisexterna_l~04.47",
+    "yYcNJD5knnY~a_carotisexterna_r~03.96",
+    "yYcNJD5knnY~a_vertebralis_l~17.27",
+    "yYcNJD5knnY~a_vertebralis_r~19.17",
+    "2pO8AtRxHAg~a_carotisexterna_l~01.51",
+    "2pO8AtRxHAg~a_carotisexterna_r~02.04",
+    "2pO8AtRxHAg~a_vertebralis_l~10.66",
+    "2pO8AtRxHAg~a_vertebralis_r~09.74",
+    "VUIaoA1iqhI~a_vertebralis_l~05.45",
+    "VUIaoA1iqhI~a_vertebralis_r~09.92",
+    "VUIaoA1iqhI~a_carotisexterna_l~05.34",
+    "VUIaoA1iqhI~a_carotisexterna_r~13.07",
+    "2w1vVKUCbcg~a_carotisexterna_l~16.24",
+    "2w1vVKUCbcg~a_carotisexterna_r~13.84",
+    "2w1vVKUCbcg~a_vertebralis_l~17.75",
+    "2w1vVKUCbcg~a_vertebralis_r~20.56",
+    "0f9SYhwcPFc~a_carotisexterna_l~25.75",
+    "0f9SYhwcPFc~a_carotisexterna_r~04.10",
+    "0f9SYhwcPFc~a_vertebralis_r~31.53",
+    "0f9SYhwcPFc~a_vertebralis_l~27.10",
+    "TwU508CCA9Y~a_carotisexterna_l~02.32",
+    "TwU508CCA9Y~a_carotisexterna_r~03.25",
+    "TwU508CCA9Y~a_vertebralis_l~03.22",
+    "TwU508CCA9Y~a_vertebralis_r~02.91",
+    "calibration_4_end_0e5fp8GltvE~a_carotisexterna_r~16.68",
+    "calibration_4_end_0e5fp8GltvE~a_carotisexterna_l~12.93",
+    "calibration_4_end_0e5fp8GltvE~a_vertebralis_l~53.32",
+    "calibration_4_end_0e5fp8GltvE~a_vertebralis_r~50.98",
+    "calibration_3_2VO-i_onOGw~a_carotisexterna_l~06.11",
+    "calibration_3_2VO-i_onOGw~a_carotisexterna_r~06.32",
+    "calibration_3_2VO-i_onOGw~a_vertebralis_l~14.88",
+    "calibration_3_2VO-i_onOGw~a_vertebralis_r~16.32",
+    "calibration_1_start_0e5fp8GltvE~a_carotisexterna_r~16.68",
+    "calibration_1_start_0e5fp8GltvE~a_carotisexterna_l~12.93",
+    "calibration_1_start_0e5fp8GltvE~a_vertebralis_l~53.32",
+    "calibration_1_start_0e5fp8GltvE~a_vertebralis_r~50.98",
+    "calibration_2_LB9oATPd0mE~a_carotisexterna_l~03.86",
+    "calibration_2_LB9oATPd0mE~a_carotisexterna_r~02.46",
+    "calibration_2_LB9oATPd0mE~a_vertebralis_l~10.63",
+    "calibration_2_LB9oATPd0mE~a_vertebralis_r~08.44",
+    "training_3_nonlinear~a_carotisexterna_l~02.54",
+    "training_3_nonlinear~a_carotisexterna_r~08.24",
+    "training_3_nonlinear~a_vertebralis_r~10.52",
+    "training_3_nonlinear~a_vertebralis_l~08.57",
+    "training_6_YPEbc0OFC8I~a_carotisexterna_l~10.00",
+    "training_6_YPEbc0OFC8I~a_carotisexterna_r~07.59",
+    "training_6_YPEbc0OFC8I~a_vertebralis_l~24.42",
+    "training_6_YPEbc0OFC8I~a_vertebralis_r~24.84",
+    "training_4_yIt7Z7VHXU0~a_carotisexterna_l~02.54",
+    "training_4_yIt7Z7VHXU0~a_carotisexterna_r~08.24",
+    "training_4_yIt7Z7VHXU0~a_vertebralis_r~10.52",
+    "training_4_yIt7Z7VHXU0~a_vertebralis_l~08.57",
+    "training_5_Fw2lRBfYxtM~a_carotisexterna_l~06.11",
+    "training_5_Fw2lRBfYxtM~a_carotisexterna_r~02.19",
+    "training_5_Fw2lRBfYxtM~a_vertebralis_l~04.86",
+    "training_5_Fw2lRBfYxtM~a_vertebralis_r~04.23"
+]
+
+
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', 260)
+pd.set_option('display.width', 0)  # 0 means auto-detect the terminal width
+
+
+def merge_tre_lists(deformable: list[str], linear: list[str]) -> pd.DataFrame:
+    """
+    Merge deformable and linear TRE lists into a single DataFrame.
+    """
+    def parse_list(data: list[str], tre_col: str) -> pd.DataFrame:
+        df = pd.DataFrame([item.split('~') for item in data], columns=[
+                          'patient_id', 'task_id', tre_col])
+        df[tre_col] = df[tre_col].astype(float)
+        return df
+
+    df_def = parse_list(deformable, 'tre_def')
+    df_lin = parse_list(linear, 'tre_lin')
+
+    df_merged = pd.merge(df_def, df_lin, on=[
+                         'patient_id', 'task_id'], how='outer')
+    return df_merged
+
+
+# Example usage
+df = merge_tre_lists(deformable, linear)
+
+
+# create new dataframe where tre_lin is greater than tre_def
+df_lin_smaller = df[df['tre_def'] > df['tre_lin']].copy()
+
+#calculate difference an dinsert nto df as new column
+df['tre_diff'] = df['tre_lin'] - df['tre_def']
+
+df.sort_values(by="result_rel", ascending=False)
+
+
+
+x = 0
