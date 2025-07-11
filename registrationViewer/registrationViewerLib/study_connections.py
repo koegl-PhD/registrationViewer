@@ -198,6 +198,9 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
 
     self._set_up_crosshair(False)
 
+    for a in self.study_data.case_task_transformation_map[radiologist_id]:
+        print(a)
+
 
 def btn_call_on_training_example_checkbox(self: "registrationViewerWidget") -> None:
 
