@@ -44,6 +44,9 @@ def set_connections(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.synchronise_views_general.connect("clicked(bool)",
                                                     lambda: btn_call_on_synchronise_views_general(self))
 
+    self.ui_sub_6.couple_views.connect("clicked(bool)",
+                                       lambda: btn_call_on_couple_views(self))
+
     self.ui_sub_6.start_study_by_user_button.connect("clicked(bool)",
                                                      lambda: btn_call_on_user_start_study(self))
     self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
@@ -154,6 +157,14 @@ def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_4.synchronise_views_with_transform.setVisible(False)
     self.ui_sub_4.synchronise_views_manually.setVisible(False)
+
+
+def btn_call_on_couple_views(self: "registrationViewerWidget") -> None:
+    on_couple_views(self)
+
+
+def on_couple_views(self: "registrationViewerWidget") -> None:
+    self.on_couple_views_manually()
 
 
 def btn_call_on_set_radiologist_id(self: "registrationViewerWidget") -> None:

@@ -687,6 +687,23 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_TRANSFORMATION_ON)
 
+    def on_couple_views_manually(self) -> None:
+
+        # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
+        offset_diff_red = view_logic.get_view_offset(
+            "Red1") - view_logic.get_view_offset("Red2")
+        offset_diff_green = view_logic.get_view_offset(
+            "Green1") - view_logic.get_view_offset("Green2")
+        offset_diff_yellow = view_logic.get_view_offset(
+            "Yellow1") - view_logic.get_view_offset("Yellow2")
+
+        self.current_offset = [
+            offset_diff_red, offset_diff_green, offset_diff_yellow]
+
+        self.offset_set = True
+
+        print(f"coupled views to {self.current_offset}")
+
     def on_synchronise_views_manually(self) -> None:
 
         if not self.synchronisation_checks():
