@@ -151,6 +151,8 @@ def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
         if self.current_patient_transform_type == utils.TransformType.NONE:
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
+            self.ui_sub_6.couple_views.setText(
+                texts.Buttons.COUPLE_VIEWS)
         else:
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_TRANSFORMATION_ON)
@@ -333,6 +335,7 @@ def start_study(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.info_button.setVisible(True)
     self.ui_sub_6.study_next_task_button.setVisible(True)
     self.ui_sub_6.synchronise_views_general.setVisible(True)
+    self.ui_sub_6.couple_views.setVisible(False)
 
     next_task(self, initial=True)
 

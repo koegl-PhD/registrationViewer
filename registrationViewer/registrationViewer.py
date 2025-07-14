@@ -752,6 +752,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_transform_type == utils.TransformType.NONE:
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
+            self.ui_sub_6.couple_views.setText(
+                texts.Buttons.COUPLE_VIEWS)
         else:
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_TRANSFORMATION_ON)
