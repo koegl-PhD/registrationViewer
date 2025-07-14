@@ -732,16 +732,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_4.synchronise_views_manually.setText(
                 "Synchronise views manually (m)")
 
-        # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
-        offset_diff_red = view_logic.get_view_offset(
-            "Red1") - view_logic.get_view_offset("Red2")
-        offset_diff_green = view_logic.get_view_offset(
-            "Green1") - view_logic.get_view_offset("Green2")
-        offset_diff_yellow = view_logic.get_view_offset(
-            "Yellow1") - view_logic.get_view_offset("Yellow2")
+        if self.offset_set is False:
+            self.on_couple_views_manually()
 
-        self.crosshair.offset_diffs = self.current_offset = [
-            offset_diff_red, offset_diff_green, offset_diff_yellow]
+        self.crosshair.offset_diffs = self.current_offset
+
         self.crosshair.apply_offsets = self.synchronise_manually_pressed
 
     def unsynchronise_views(self) -> None:
