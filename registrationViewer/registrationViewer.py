@@ -151,6 +151,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.use_only_linear_transform = False
         self.reverse_transformation_direction = True
         self.current_offset = [0.0, 0.0, 0.0]
+        self.offset_set = False
 
         self.crosshair = None
 
