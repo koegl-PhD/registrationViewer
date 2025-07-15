@@ -237,6 +237,11 @@ def setup_sectra_movements(
             dy = (current_mouse_position[1] -
                   dragging[view_name]["last_mouse_position"][1]) * sensitivity_zoom
 
+            # guard against inversion
+            if 1 - dy <= 0:
+                print("guarding against inv")
+                return
+
             dragging[view_name]["last_mouse_position"] = current_mouse_position
 
             slice_node = slicer.app.layoutManager().sliceWidget(view_name).sliceLogic().GetSliceNode()  # nopep8
