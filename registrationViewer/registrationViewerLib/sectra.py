@@ -250,8 +250,10 @@ def setup_sectra_movements(
             new_FOV_y = slice_node.GetFieldOfView()[1] * (1 - dy)  # nopep8 pylint: disable=invalid-name
             new_FOV_z = slice_node.GetFieldOfView()[2]             # nopep8 pylint: disable=invalid-name
 
-            slice_node.SetFieldOfView(new_FOV_x, new_FOV_y, new_FOV_z)
-            slice_node.UpdateMatrices()
+            # guard against zooming out too much: all have to be smaller than 2000
+            if all(fov < 2000 for fov in (new_FOV_x, new_FOV_y, new_FOV_z)):
+                slice_node.SetFieldOfView(new_FOV_x, new_FOV_y, new_FOV_z)
+                slice_node.UpdateMatrices()
 
             log(logging.INFO, LogType.U_MOUSE,
                 f"Zoom ~ {current_mouse_position} ~ d={dy:+}")
