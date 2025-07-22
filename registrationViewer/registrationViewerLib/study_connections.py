@@ -44,6 +44,9 @@ def set_connections(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.synchronise_views_general.connect("clicked(bool)",
                                                     lambda: btn_call_on_synchronise_views_general(self))
 
+    self.ui_sub_6.couple_views.connect("clicked(bool)",
+                                       lambda: btn_call_on_couple_views(self))
+
     self.ui_sub_6.start_study_by_user_button.connect("clicked(bool)",
                                                      lambda: btn_call_on_user_start_study(self))
     self.ui_sub_6.study_add_point_button.connect("clicked(bool)",
@@ -148,12 +151,22 @@ def on_synchronise_views_general(self: "registrationViewerWidget") -> None:
         if self.current_patient_transform_type == utils.TransformType.NONE:
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
+            self.ui_sub_6.couple_views.setText(
+                texts.Buttons.COUPLE_VIEWS)
         else:
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_TRANSFORMATION_ON)
 
     self.ui_sub_4.synchronise_views_with_transform.setVisible(False)
     self.ui_sub_4.synchronise_views_manually.setVisible(False)
+
+
+def btn_call_on_couple_views(self: "registrationViewerWidget") -> None:
+    on_couple_views(self)
+
+
+def on_couple_views(self: "registrationViewerWidget") -> None:
+    self.on_couple_views_manually()
 
 
 def btn_call_on_set_radiologist_id(self: "registrationViewerWidget") -> None:
@@ -197,6 +210,9 @@ def on_set_radiologist_id(self: "registrationViewerWidget") -> None:
             self.number_of_training_tasks + 1)
 
     self._set_up_crosshair(False)
+
+    for a in self.study_data.case_task_transformation_map[radiologist_id]:
+        print(a)
 
 
 def btn_call_on_training_example_checkbox(self: "registrationViewerWidget") -> None:
@@ -319,6 +335,7 @@ def start_study(self: "registrationViewerWidget") -> None:
     self.ui_sub_6.info_button.setVisible(True)
     self.ui_sub_6.study_next_task_button.setVisible(True)
     self.ui_sub_6.synchronise_views_general.setVisible(True)
+    self.ui_sub_6.couple_views.setVisible(False)
 
     next_task(self, initial=True)
 

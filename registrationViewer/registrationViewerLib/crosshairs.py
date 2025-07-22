@@ -2,6 +2,8 @@ from typing import List, Literal, Optional
 
 import slicer
 
+from registrationViewerLib import view_logic, utils
+
 
 class Crosshairs():
 
@@ -31,7 +33,6 @@ class Crosshairs():
         self.offset_diffs = offset_diffs
         self.apply_offsets = apply_offsets
 
-        self.cursor_view: str = ""
         self.reverse_transf_direction: bool = False
 
         self.views_1 = ["Red1", "Green1", "Yellow1"]
@@ -93,13 +94,13 @@ class Crosshairs():
 
         return crosshair_node
 
-    def place_crosshair_with_transformation(self,
-                                            view_group: int,
-                                            crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
-                                            reverse_transf_direction: bool,
-                                            offset_direction: Literal['pos',
-                                                                      'neg', 'nan']
-                                            ) -> None:
+    def place_crosshair_with_transformation(
+        self,
+        views: List[str],
+        crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
+        reverse_transf_direction: bool,
+        offset_direction: Literal['pos', 'neg', 'nan']
+    ) -> None:
         """
         Places the crosshair in the current view and transforms it to the new position.
         """
@@ -124,45 +125,46 @@ class Crosshairs():
         if not self.apply_offsets or offset_direction == 'nan':
             offset = [0.0, 0.0, 0.0]
         elif offset_direction == 'pos':
-            offset = self.offset_diffs
-            offset[2] = -offset[2]
+            offset = [self.offset_diffs[0],
+                      self.offset_diffs[1],
+                      -self.offset_diffs[2]]
         elif offset_direction == 'neg':
-            offset = [-self.offset_diffs[i] for i in range(3)]
-            offset[2] = -offset[2]
+            offset = [-self.offset_diffs[0],
+                      -self.offset_diffs[1],
+                      self.offset_diffs[2]]
 
         new_position = [new_position[0] + offset[2],
                         new_position[1] + offset[1],
                         new_position[2] + offset[0]]
 
-        slicer.modules.markups.logic().JumpSlicesToLocation(new_position[0],
-                                                            new_position[1],
-                                                            new_position[2],
-                                                            False,
-                                                            view_group)
+        for view in views:
+            view_logic.set_offset_to_ras(new_position, view)
 
         self.set_crosshair_visibility()
 
         self.set_crosshair_nodes_to_position(crosshair_nodes,
                                              new_position)
 
-    def place_crosshair_without_transformation(self,
-                                               view_group: int,
-                                               crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
-                                               ) -> None:
+    def place_crosshair_without_transformation(
+        self,
+        views: List[str],
+        crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
+    ) -> None:
 
         initial_position: list[float] = [0., 0., 0.]
         self.node_cursor.GetCursorPositionRAS(initial_position)
-
-        slicer.modules.markups.logic().JumpSlicesToLocation(initial_position[0],
-                                                            initial_position[1],
-                                                            initial_position[2],
-                                                            False,
-                                                            view_group)
 
         self.set_crosshair_visibility()
 
         self.set_crosshair_nodes_to_position(crosshair_nodes,
                                              initial_position)
+
+        # only jump the *other* slice views in this group; leave the active view’s slice unchanged
+        for view in views:
+            if view == utils.get_cursor_view_name():
+                continue
+
+            view_logic.set_offset_to_ras(initial_position, view)
 
     def on_mouse_moved_place_crosshair(self, observer, eventid) -> None:  # pylint: disable=unused-argument
         """
@@ -170,37 +172,21 @@ class Crosshairs():
 
         """
 
-        if self.cursor_view in self.views_1:
-            self.place_crosshair_without_transformation(view_group=1,
+        if utils.get_cursor_view_name() in self.views_1:
+            self.place_crosshair_without_transformation(views=self.views_1,
                                                         crosshair_nodes=self.crosshairs_1)
-            self.place_crosshair_with_transformation(view_group=2,
+            self.place_crosshair_with_transformation(views=self.views_2,
                                                      crosshair_nodes=self.crosshairs_2,
                                                      reverse_transf_direction=self.reverse_transf_direction,
                                                      offset_direction='neg')
-            self.place_crosshair_without_transformation(view_group=3,
-                                                        crosshair_nodes=self.crosshairs_3)
 
-        elif self.cursor_view in self.views_2:
-            self.place_crosshair_with_transformation(view_group=1,
+        elif utils.get_cursor_view_name() in self.views_2:
+            self.place_crosshair_with_transformation(views=self.views_1,
                                                      crosshair_nodes=self.crosshairs_1,
                                                      reverse_transf_direction=not self.reverse_transf_direction,
                                                      offset_direction='pos')
-            self.place_crosshair_without_transformation(view_group=2,
+            self.place_crosshair_without_transformation(views=self.views_2,
                                                         crosshair_nodes=self.crosshairs_2)
-            self.place_crosshair_with_transformation(view_group=3,
-                                                     crosshair_nodes=self.crosshairs_3,
-                                                     reverse_transf_direction=not self.reverse_transf_direction,
-                                                     offset_direction='pos')
-
-        elif self.cursor_view in self.views_3:
-            self.place_crosshair_without_transformation(view_group=1,
-                                                        crosshair_nodes=self.crosshairs_1)
-            self.place_crosshair_with_transformation(view_group=2,
-                                                     crosshair_nodes=self.crosshairs_2,
-                                                     reverse_transf_direction=self.reverse_transf_direction,
-                                                     offset_direction='neg')
-            self.place_crosshair_without_transformation(view_group=3,
-                                                        crosshair_nodes=self.crosshairs_3)
 
     def transform_crosshair_nodes(self,
                                   crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
@@ -268,8 +254,8 @@ class Crosshairs():
             if display_node is not None:
                 display_node.SetVisibility(True)
 
-        if self.cursor_view in self.crosshair_nodes:
-            display_node = self.crosshair_nodes[self.cursor_view].GetDisplayNode(
+        if utils.get_cursor_view_name() in self.crosshair_nodes:
+            display_node = self.crosshair_nodes[utils.get_cursor_view_name()].GetDisplayNode(
             )
             if display_node is not None:
                 display_node.SetVisibility(False)

@@ -962,12 +962,16 @@ def set_up_synchronisation(self: "registrationViewerWidget", is_next_patient: bo
     if is_next_patient:
         print("setting up synchrnoisation")
         self.ui_sub_6.synchronise_views_general.setVisible(True)
+        self.ui_sub_6.couple_views.setVisible(False)
         self.ui_sub_6.synchronise_views_general.setEnabled(True)
 
         if self.current_patient_transform_type == TransformType.NONE:
             self.study_current_transform_type = TransformType.NONE
+            self.ui_sub_6.couple_views.setVisible(True)
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
+            self.ui_sub_6.couple_views.setText(
+                texts.Buttons.COUPLE_VIEWS)
             print("setting button to manual")
 
         elif self.current_patient_transform_type == TransformType.LINEAR:
@@ -1068,6 +1072,7 @@ def get_active_slice_view() -> str:
 def set_buttons_for_simple_training_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.synchronise_views_general.setVisible(False)
+    self.ui_sub_6.couple_views.setVisible(False)
 
     self.ui_sub_6.study_center_on_user_point_button.setVisible(False)
     self.ui_sub_6.study_center_on_gt_point_button.setVisible(False)
@@ -1083,6 +1088,11 @@ def set_buttons_for_simple_training_cases(self: "registrationViewerWidget") -> N
 def set_buttons_for_full_training_cases(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.synchronise_views_general.setVisible(True)
+
+    if self.current_patient_transform_type == TransformType.NONE:
+        self.ui_sub_6.couple_views.setVisible(True)
+    else:
+        self.ui_sub_6.couple_views.setVisible(False)
 
     self.ui_sub_6.study_center_on_user_point_button.setVisible(True)
     self.ui_sub_6.study_center_on_gt_point_button.setVisible(True)
@@ -1184,3 +1194,20 @@ def shuffle_without_consecutive_ab(
             del ab_groups[choice]
 
     return result
+
+
+def get_cursor_view_name() -> str:
+    """
+    Get the name of the view where the cursor is currently located.
+    """
+    node_crosshair = slicer.util.getNode("Crosshair")
+
+    if node_crosshair is None:
+        return ""
+
+    position = node_crosshair.GetCursorPositionXYZ([0]*3)
+
+    if position is not None:
+        return position.GetName()
+
+    return ""

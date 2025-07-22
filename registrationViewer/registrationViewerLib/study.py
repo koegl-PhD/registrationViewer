@@ -38,6 +38,9 @@ class StudyData:
     number_of_simple_training_tasks: int = field(init=False)
     number_of_full_training_tasks: int = field(init=False)
 
+    calibration_inserted: Dict[int, bool] = field(init=False)
+    training_inserted: Dict[int, bool] = field(init=False)
+
     def __post_init__(self):
         with open(self.path, "r") as f:
             self.data = json.load(f)
@@ -45,6 +48,9 @@ class StudyData:
         self.__dict__.update(self.data)
 
         random.seed(1)
+
+        self.calibration_inserted = {}
+        self.training_inserted = {}
 
         self._create_data_split()
 
@@ -273,9 +279,6 @@ class StudyData:
 
                     for task in tasks.TASK_ORDER.values():
 
-                        # if task not in [tasks.Task.RECURRENCE]:
-                        # continue
-
                         temp_chunk_map.append(
                             (patient_name, task.value, transform.value))
 
@@ -283,66 +286,48 @@ class StudyData:
 
                 temp_rad_map += temp_chunk_map
 
-            temp_rad_map = self._insert_calibration_cases(temp_rad_map, group)
+            temp_rad_map = self._insert_calibration_tasks(temp_rad_map)
 
-            temp_rad_map = self._insert_training_cases(temp_rad_map, group)
+            temp_rad_map = self._insert_training_tasks(temp_rad_map)
 
             self.case_task_transformation_map[rad_id] = temp_rad_map
 
-            for a in self.case_task_transformation_map[rad_id]:
-                print(a)
+        # now insert into chunks
+        for rad_id, rad_content in self.participants.items():
 
-    def _insert_calibration_cases(
+            group = int(rad_content["group"])
+
+            self._insert_calibration_chunks(group)
+            self._insert_training_chunk(group)
+
+    def _insert_calibration_tasks(
             self,
-            temp_rad_map: List[List[Tuple[str, str, str]]],
-            group: int
+            temp_rad_map: List[List[Tuple[str, str, str]]]
     ) -> List[List[Tuple[str, str, str]]]:
 
         calibration_tasks_start = []
         calibration_tasks_end = []
-        calibration_patients = []
+
         for name, transform in zip(self.calibration_case_names[:-1], [utils.TransformType.NONLINEAR, utils.TransformType.NONE, utils.TransformType.LINEAR]):
             for task in tasks.TASK_ORDER.values():
-
-                # if task != tasks.Task.RECURRENCE:
-                #     continue
 
                 calibration_tasks_start.append(
                     (name, task.value, transform.value))
 
-            calibration_patients.append((name, transform, "calibration"))
-
-        self.chunked_patients[group][0] = calibration_patients + \
-            self.chunked_patients[group][0]
-
         for task in tasks.TASK_ORDER.values():
-            # if task != tasks.Task.RECURRENCE:
-            #     continue
             calibration_tasks_end.append(
                 (self.calibration_case_names[-1], task.value, utils.TransformType.NONLINEAR.value))
-
-        self.chunked_patients[group][-1].append(
-            (self.calibration_case_names[-1], utils.TransformType.NONLINEAR, "calibration"))
 
         temp_rad_map = calibration_tasks_start + temp_rad_map + calibration_tasks_end
 
         return temp_rad_map
 
-    def _insert_training_cases(
+    def _insert_training_tasks(
             self,
-            temp_rad_map: List[List[Tuple[str, str, str]]],
-            group: int
+            temp_rad_map: List[List[Tuple[str, str, str]]]
     ) -> List[List[Tuple[str, str, str]]]:
 
         training_names = self.training_case_names
-
-        training_chunk = [(training_names[0], utils.TransformType.NONE, "training"),       # nopep8
-                          (training_names[1], utils.TransformType.LINEAR, "training"),     # nopep8
-                          (training_names[2], utils.TransformType.NONLINEAR, "training"),  # nopep8
-                          (training_names[3], utils.TransformType.NONE, "training"),       # nopep8
-                          (training_names[4], utils.TransformType.LINEAR, "training"),     # nopep8
-                          (training_names[5], utils.TransformType.NONLINEAR, "training")]  # nopep8
-        self.chunked_patients[group].insert(0, training_chunk)
 
         training_comb_1 = [(training_names[0], tasks.Task.TRAINING_NONE.value,
                            utils.TransformType.LINEAR.value)]
@@ -353,8 +338,6 @@ class StudyData:
         training_comb_4, training_comb_5, training_comb_6 = [], [], []
 
         for task in tasks.TASK_ORDER.values():
-            # if task != tasks.Task.RECURRENCE:
-            #     continue
             training_comb_4.append(
                 (training_names[3], task.value, utils.TransformType.NONE.value))
             training_comb_5.append(
@@ -367,7 +350,6 @@ class StudyData:
 
         temp_rad_map = all_combinations + temp_rad_map
 
-        self.number_of_training_patients = len(training_chunk)
         self.number_of_simple_training_patients = 3
         self.number_of_full_training_patients = 3
 
@@ -378,6 +360,38 @@ class StudyData:
             training_comb_4) + len(training_comb_5) + len(training_comb_6)
 
         return temp_rad_map
+
+    def _insert_training_chunk(self, group: int) -> None:
+        training_names = self.training_case_names
+
+        training_chunk = [(training_names[0], utils.TransformType.NONE, "training"),       # nopep8
+                          (training_names[1], utils.TransformType.LINEAR, "training"),     # nopep8
+                          (training_names[2], utils.TransformType.NONLINEAR, "training"),  # nopep8
+                          (training_names[3], utils.TransformType.NONE, "training"),       # nopep8
+                          (training_names[4], utils.TransformType.LINEAR, "training"),     # nopep8
+                          (training_names[5], utils.TransformType.NONLINEAR, "training")]  # nopep8
+
+        if group not in self.training_inserted:
+            self.chunked_patients[group].insert(0, training_chunk)
+
+            self.training_inserted[group] = True
+
+        self.number_of_training_patients = len(training_chunk)
+
+    def _insert_calibration_chunks(self, group: int) -> None:
+
+        calibration_patients = []
+
+        for name, transform in zip(self.calibration_case_names[:-1], [utils.TransformType.NONLINEAR, utils.TransformType.NONE, utils.TransformType.LINEAR]):
+            calibration_patients.append((name, transform, "calibration"))
+
+        if group not in self.calibration_inserted:
+            self.chunked_patients[group][0] = calibration_patients + \
+                self.chunked_patients[group][0]
+            self.chunked_patients[group][-1].append(
+                (self.calibration_case_names[-1], utils.TransformType.NONLINEAR, "calibration"))
+
+            self.calibration_inserted[group] = True
 
     def number_of_patients(self, with_calibration: bool = False) -> int:
         """

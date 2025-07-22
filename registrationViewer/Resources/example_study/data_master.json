@@ -63,7 +63,19 @@
     },
     "participants": {
         "rad_test": {
+            "name": "Test User",
+            "group": "1"
+        },
+        "rad_0": {
             "name": "Ihssan",
+            "group": "1"
+        },
+        "rad_1": {
+            "name": "Da Eun Kang",
+            "group": "1"
+        },
+        "rad_2": {
+            "name": "Eva Haneder",
             "group": "1"
         }
     }

@@ -152,6 +152,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.use_only_linear_transform = False
         self.reverse_transformation_direction = True
         self.current_offset = [0.0, 0.0, 0.0]
+        self.offset_set = False
 
         self.crosshair = None
 
@@ -159,8 +160,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.synchronise_with_displacement_pressed = False
         self.synchronise_manually_pressed = False
-
-        self.cursor_view: str = ""
 
         self.node_moving_warped = None
         self.node_diff = None
@@ -175,7 +174,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.node_seg_fixed = None
         self.node_seg_moving = None
 
-        # we need to store our tags so we can specifically remove only them
         self.crosshair_custom_observer_tags = []
 
         self.current_loaded_case_path = ""
@@ -234,8 +232,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.study_progress_bar_patients: utils.ProgressBar
         self.study_progress_bar_tasks: utils.ProgressBar
 
-        self.current_view: str = ""
-        self.current_view_observer_tag = []
+        self.temp_enabled = False
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -305,7 +302,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         self.remove_custom_observers_from_crosshair()
-        self._remove_view_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
@@ -374,7 +370,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # slicer.util.setDataProbeVisible(False)
 
-        self.update_current_view()
+        a = r"/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/training/training_4_yIt7Z7VHXU0"
+        # self.dropWidget.load_data_from_dropped_folder(a)
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -401,7 +398,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called just before the scene is closed."""
 
         self.remove_custom_observers_from_crosshair()
-        self._remove_view_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui_sub_4.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
@@ -492,12 +488,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _enable_sectr_movements(self) -> None:
 
-        custom_logging.configure_logger(self,
+        if self.temp_enabled is False:
+            custom_logging.configure_logger(self,
                      "/home/koeglf/Documents/code/registrationViewer/registrationViewer/default.log",
                      "RegistrationEvaluation")  # nopep8
 
-        sectra.setup_sectra_movements(self)
-        sectra.enable_sectra_movements()
+            sectra.setup_sectra_movements(self)
+            sectra.enable_sectra_movements()
+
+            self.temp_enabled = True
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
@@ -657,6 +656,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 texts.Buttons.TURN_TRANSFORMATION_ON)
 
     def on_synchronise_views_wth_trasform_outside_of_study(self) -> None:
+
+        self._enable_sectr_movements()
+
         if not self.synchronisation_checks():
             return
 
@@ -687,6 +689,23 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_TRANSFORMATION_ON)
 
+    def on_couple_views_manually(self) -> None:
+
+        # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
+        offset_diff_red = view_logic.get_view_offset(
+            "Red1") - view_logic.get_view_offset("Red2")
+        offset_diff_green = view_logic.get_view_offset(
+            "Green1") - view_logic.get_view_offset("Green2")
+        offset_diff_yellow = view_logic.get_view_offset(
+            "Yellow1") - view_logic.get_view_offset("Yellow2")
+
+        self.current_offset = [
+            offset_diff_red, offset_diff_green, offset_diff_yellow]
+
+        self.offset_set = True
+
+        print(f"coupled views to {self.current_offset}")
+
     def on_synchronise_views_manually(self) -> None:
 
         if not self.synchronisation_checks():
@@ -714,16 +733,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_4.synchronise_views_manually.setText(
                 "Synchronise views manually (m)")
 
-        # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
-        offset_diff_red = view_logic.get_view_offset(
-            "Red1") - view_logic.get_view_offset("Red2")
-        offset_diff_green = view_logic.get_view_offset(
-            "Green1") - view_logic.get_view_offset("Green2")
-        offset_diff_yellow = view_logic.get_view_offset(
-            "Yellow1") - view_logic.get_view_offset("Yellow2")
+        if self.offset_set is False:
+            self.on_couple_views_manually()
 
-        self.crosshair.offset_diffs = self.current_offset = [
-            offset_diff_red, offset_diff_green, offset_diff_yellow]
+        self.crosshair.offset_diffs = self.current_offset
+
         self.crosshair.apply_offsets = self.synchronise_manually_pressed
 
     def unsynchronise_views(self) -> None:
@@ -735,6 +749,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.current_patient_transform_type == utils.TransformType.NONE:
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
+            self.ui_sub_6.couple_views.setText(
+                texts.Buttons.COUPLE_VIEWS)
         else:
             self.ui_sub_6.synchronise_views_general.setText(
                 texts.Buttons.TURN_TRANSFORMATION_ON)
@@ -777,28 +793,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.mrmlScene.RemoveNode(self.node_seg_moving)
             self.node_seg_moving = None
 
-    def update_cursor_view(self) -> None:
-
-        def wrapper(self: "registrationViewerWidget", callee, event):  # pylint: disable=unused-argument
-            position = self.node_crosshair.GetCursorPositionXYZ([0]*3)
-            if position is not None:
-                self.crosshair.cursor_view = position.GetName()
-
-        observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                                       functools.partial(wrapper, self))
-        self.crosshair_custom_observer_tags.append(observer_tag)
-
-    def update_current_view(self) -> None:
-
-        def wrapper(self: "registrationViewerWidget", callee, event):  # pylint: disable=unused-argument
-            position = self.node_crosshair.GetCursorPositionXYZ([0]*3)
-            if position is not None:
-                self.current_view = position.GetName()
-
-        observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                                       functools.partial(wrapper, self))
-        self.current_view_observer_tag.append(observer_tag)
-
     def _remove_custom_nodes(self) -> None:
         if self.node_diff is not None:
             slicer.mrmlScene.RemoveNode(self.node_diff)
@@ -834,7 +828,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                                                            self.crosshair.on_mouse_moved_place_crosshair)
             self.crosshair_custom_observer_tags.append(observer_tag)
-            self.update_cursor_view()
 
     def _update_crosshair_transformation(self) -> None:
         if self.crosshair:
@@ -849,12 +842,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.node_crosshair.RemoveObserver(observer_tag)
 
         self.crosshair_custom_observer_tags.clear()
-
-    def _remove_view_observers_from_crosshair(self) -> None:
-        for observer_tag in self.current_view_observer_tag:
-            self.node_crosshair.RemoveObserver(observer_tag)
-
-        self.current_view_observer_tag.clear()
 
     def get_combination(self, idx: int) -> Tuple[str, str, str]:
         """
@@ -1014,15 +1001,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def next_task_log_text(self) -> str:
-        if self.is_current_task_training:
-            return "Next training task"
+        # if self.is_current_task_training:
+        #     return "Next training task"
 
         return "Next task"
 
     @property
     def start_task_log_text(self) -> str:
-        if self.is_current_task_training:
-            return "Start training task"
+        # if self.is_current_task_training:
+        #     return "Start training task"
 
         return "Start task"
 
