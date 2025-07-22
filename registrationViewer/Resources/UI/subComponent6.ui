@@ -378,7 +378,7 @@
 
 
       <!-- START study_current_task_description_label -->
-      <item row="5" column="0" colspan="3">
+      <item row="4" column="0" colspan="3">
          <widget class="QLabel" name="study_current_task_description_label">
             <property name="text">
                <string>default task text</string>
@@ -395,6 +395,23 @@
          </widget>
       </item>
       <!-- END study_current_task_description_label -->
+
+
+      <!-- START couple_views -->
+      <item row="5" column="0" colspan="3">
+      <widget class="QPushButton" name="couple_views">
+      <property name="text">
+         <string>couple_views views (s)</string>
+      </property>
+      <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred"/>
+      </property>
+      <property name="visible">
+         <bool>false</bool>
+         </property>
+      </widget>
+      </item>
+      <!-- END couple_views -->
 
 
       <!-- START synchronise_views_general -->

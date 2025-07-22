@@ -125,11 +125,13 @@ class Crosshairs():
         if not self.apply_offsets or offset_direction == 'nan':
             offset = [0.0, 0.0, 0.0]
         elif offset_direction == 'pos':
-            offset = self.offset_diffs
-            offset[2] = -offset[2]
+            offset = [self.offset_diffs[0],
+                      self.offset_diffs[1],
+                      -self.offset_diffs[2]]
         elif offset_direction == 'neg':
-            offset = [-self.offset_diffs[i] for i in range(3)]
-            offset[2] = -offset[2]
+            offset = [-self.offset_diffs[0],
+                      -self.offset_diffs[1],
+                      self.offset_diffs[2]]
 
         new_position = [new_position[0] + offset[2],
                         new_position[1] + offset[1],
