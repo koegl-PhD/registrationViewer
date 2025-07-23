@@ -8,6 +8,7 @@ import time
 from typing import Optional, Any, Literal, Tuple, Dict, Callable
 
 import numpy as np
+import glob
 
 import ctk
 import vtk
@@ -1053,9 +1054,98 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         else:
             print("No transformation available")
 
-    def evaluate(self) -> None:
+    def evaluate_lymph_node(
+        self,
+        logger: logging.Logger,
+        study_a: str,
+        study_b: str,
+        patient_name: str,
+        count: int,
+        numbr_of_patients: int
+    ) -> None:
 
-        logger = logging.getLogger("Evaluation")
+        path_lymph_a = glob.glob(study_a + "/roi_lymphnode*.mrk.json")[0]
+        path_lymph_b = glob.glob(study_b + "/roi_lymphnode*.mrk.json")[0]
+
+        dist_dict = {}
+
+        for linear_only in [True, False]:
+
+            self.use_only_linear_transform = linear_only
+
+            lymph_a = slicer.util.loadMarkups(path_lymph_a)
+            lymph_b = slicer.util.loadMarkups(path_lymph_b)
+
+            self.transform_crosshair_nodes(lymph_b, invert=True)
+
+            center_a = np.array(lymph_a.GetNthControlPointPosition(0))
+            center_b = np.array(lymph_b.GetNthControlPointPosition(0))
+
+            distance = np.linalg.norm(center_a - center_b)
+
+            dist_dict[linear_only] = distance
+
+            slicer.mrmlScene.RemoveNode(lymph_a)
+            slicer.mrmlScene.RemoveNode(lymph_b)
+
+        logger.log(
+            logging.DEBUG, f"({count}/{numbr_of_patients}) {patient_name} ~ lymph node distance: {dist_dict[True]}, {dist_dict[False]}")
+
+    def evaluate_bifurcation(
+        self,
+        logger: logging.Logger,
+        study_a: str,
+        study_b: str,
+        patient_name: str,
+        count: int,
+        numbr_of_patients: int
+    ) -> None:
+        path_points_a = glob.glob(study_a + "/points_*.mrk.json")[0]
+        path_points_b = glob.glob(study_b + "/points_*.mrk.json")[0]
+
+        points_a = slicer.util.loadMarkups(path_points_a)
+        points_b = slicer.util.loadMarkups(path_points_b)
+        self.transform_crosshair_nodes(points_b, invert=True)
+
+        dict_points_a = {}
+        dict_points_b = {}
+
+        for i in range(points_a.GetNumberOfControlPoints()):
+            pos_a = np.array(points_a.GetNthControlPointPosition(i))
+            pos_b = np.array(points_b.GetNthControlPointPosition(i))
+
+            name_a = points_a.GetNthControlPointLabel(i)
+            name_b = points_b.GetNthControlPointLabel(i)
+
+            name_a = '_'.join(name_a.split('_')[1:4])
+            name_b = '_'.join(name_b.split('_')[1:4])
+
+            dict_points_a[name_a] = pos_a
+            dict_points_b[name_b] = pos_b
+
+        if set(dict_points_a.keys()) != set(dict_points_b.keys()):
+            # print(f"{dict_points_a=}")
+            # print(f"{dict_points_b=}")
+            logger.log(logging.ERROR,
+                       f"Points do not match for {patient_name}")
+            return
+
+        for name, pos_a in dict_points_a.items():
+
+            pos_b = dict_points_b[name]
+
+            distance = np.linalg.norm(pos_a - pos_b)
+
+            self.distances[patient_name][name] = distance
+            logger.log(
+                logging.DEBUG, f"({count}/{numbr_of_patients}) {patient_name} ~ {name.ljust(18)} ~ {distance:05.2f}")
+
+        slicer.mrmlScene.RemoveNode(points_a)
+        slicer.mrmlScene.RemoveNode(points_b)
+
+    def evaluate(self, obj: Literal['bifurcation', 'lymph_node']) -> None:
+
+        logger = logging.getLogger(f"Evaluation_{obj.capitalize()}")
         logger.setLevel(logging.DEBUG)
 
         if logger.hasHandlers():
@@ -1066,9 +1156,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         fh.setLevel(logging.DEBUG)
 
         logger.addHandler(fh)
-
-        import numpy as np
-        import glob
 
         all_patients_neg = glob.glob(
             "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/negative/*")
@@ -1100,46 +1187,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 study_a = paths_studies[0] + "/annotations"
                 study_b = paths_studies[1] + "/annotations"
 
-                path_points_a = glob.glob(study_a + "/points_*.mrk.json")[0]
-                path_points_b = glob.glob(study_b + "/points_*.mrk.json")[0]
-
-                points_a = slicer.util.loadMarkups(path_points_a)
-                points_b = slicer.util.loadMarkups(path_points_b)
-                self.transform_crosshair_nodes(points_b, invert=True)
-
-                dict_points_a = {}
-                dict_points_b = {}
-
-                for i in range(points_a.GetNumberOfControlPoints()):
-                    pos_a = np.array(points_a.GetNthControlPointPosition(i))
-                    pos_b = np.array(points_b.GetNthControlPointPosition(i))
-
-                    name_a = points_a.GetNthControlPointLabel(i)
-                    name_b = points_b.GetNthControlPointLabel(i)
-
-                    name_a = '_'.join(name_a.split('_')[1:4])
-                    name_b = '_'.join(name_b.split('_')[1:4])
-
-                    dict_points_a[name_a] = pos_a
-                    dict_points_b[name_b] = pos_b
-
-                if set(dict_points_a.keys()) != set(dict_points_b.keys()):
-                    # print(f"{dict_points_a=}")
-                    # print(f"{dict_points_b=}")
-                    logger.log(logging.ERROR,
-                               f"Points do not match for {patient_name}")
-                    continue
-
-                for name, pos_a in dict_points_a.items():
-
-                    pos_b = dict_points_b[name]
-
-                    distance = np.linalg.norm(pos_a - pos_b)
-
-                    self.distances[patient_name][name] = distance
-                    logger.log(
-                        logging.DEBUG, f"({count}/{len(all_patients)}) {patient_name} ~ {name.ljust(18)} ~ {distance:05.2f}")
-
+                if obj == 'bifurcation':
+                    self.evaluate_bifurcation(
+                        logger, study_a, study_b, patient_name, count, len(
+                            all_patients))
+                elif obj == 'lymph_node':
+                    self.evaluate_lymph_node(
+                        logger, study_a, study_b, patient_name, count, len(
+                            all_patients))
+                else:
+                    raise ValueError(
+                        f"Unknown object type: {obj}. Use 'bifurcation' or 'lymph_node'.")
                 # delete
                 slicer.mrmlScene.RemoveNode(self.node_seg_fixed)
                 slicer.mrmlScene.RemoveNode(self.node_seg_moving)
@@ -1147,8 +1205,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 slicer.mrmlScene.RemoveNode(self.node_transform_moving)
                 slicer.mrmlScene.RemoveNode(
                     self.ui_sub_3.inputSelector_transformation.currentNode())
-                slicer.mrmlScene.RemoveNode(points_a)
-                slicer.mrmlScene.RemoveNode(points_b)
+
+                slicer.mrmlScene.RemoveNode(self.node_fixed)
+                slicer.mrmlScene.RemoveNode(self.node_moving)
 
                 # return
 
@@ -1162,8 +1221,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     slicer.mrmlScene.RemoveNode(self.node_transform_moving)
                     slicer.mrmlScene.RemoveNode(
                         self.ui_sub_3.inputSelector_transformation.currentNode())
-                    slicer.mrmlScene.RemoveNode(points_a)
-                    slicer.mrmlScene.RemoveNode(points_b)
+                    slicer.mrmlScene.RemoveNode(self.node_fixed)
+                    slicer.mrmlScene.RemoveNode(self.node_moving)
                 except:
                     pass
 
