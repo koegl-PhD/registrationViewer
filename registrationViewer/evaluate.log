@@ -538,3 +538,51 @@ couldn't evaluate training_1_none
 (46/46) training_5_Fw2lRBfYxtM ~ a_carotisexterna_r ~ 02.19
 (46/46) training_5_Fw2lRBfYxtM ~ a_vertebralis_l    ~ 04.86
 (46/46) training_5_Fw2lRBfYxtM ~ a_vertebralis_r    ~ 04.23
+
+
+(1/46) 7SwVHAAw5lM ~ lymph node distance: 3.0044078663775013, 2.926904335930942
+(2/46) hkvdD_XVYqo ~ lymph node distance: 4.3935666494498555, 3.205833518184813
+(3/46) a9ebcF7RKU4 ~ lymph node distance: 2.7318691549908536, 2.2335407702866092
+(4/46) CSSdmYlgjew ~ lymph node distance: 6.2683585296547415, 1.0477123842802734
+(5/46) fEHc3cCOu-M ~ lymph node distance: 7.374437049529264, 2.338230498959794
+(6/46) 3dSDmvwSjek ~ lymph node distance: 22.09086203109264, 2.7088467708567494
+(7/46) 7IZ0hAktN78 ~ lymph node distance: 3.6046083095586248, 2.5753115771948925
+(8/46) 87J-_CHHkzI ~ lymph node distance: 8.472623616123672, 3.401513525440865
+(9/46) g-chOlbtzBQ ~ lymph node distance: 4.117318605592282, 1.521853344346211
+(10/46) CD8Gu0llvgk ~ lymph node distance: 1.6922859460187794, 1.9611173791863883
+(11/46) 96-du2ceM4o ~ lymph node distance: 2.226913999589664, 1.320807849279413
+(12/46) 6vkfAvGWUPg ~ lymph node distance: 25.664638811575045, 1.8956686544616037
+(13/46) I307KZkh1VM ~ lymph node distance: 7.4041210158397295, 4.0126082484078065
+(14/46) CCL2MqdD19g ~ lymph node distance: 4.724732001823599, 4.395430279538864
+(15/46) ccucLKGWtSQ ~ lymph node distance: 11.633023230826367, 9.695423843583312
+(16/46) 1q_1_G-1EPM ~ lymph node distance: 25.310505088306602, 20.747169362168272
+(17/46) F-JlS0Cl1K0 ~ lymph node distance: 0.955618993439883, 1.3470714825479255
+(18/46) 6WB8wP4uAl0 ~ lymph node distance: 1.8140647409406938, 1.8627330395414532
+(19/46) pP5CHNLQspI ~ lymph node distance: 13.783694850666931, 7.840941173437911
+(20/46) 7sp2FiVa4WI ~ lymph node distance: 9.1131281406738, 2.660751864709556
+(21/46) hmJfXqxVMk0 ~ lymph node distance: 3.327201852941497, 1.3643557192107356
+(22/46) 820_BQlC1tI ~ lymph node distance: 0.8898562137091075, 0.6167114110908564
+(23/46) XKgRKTaLeEo ~ lymph node distance: 24.637840088933306, 20.57506548007929
+(24/46) SzZUcvM5JpU ~ lymph node distance: 5.327125836818363, 1.3274006724615388
+(25/46) urqkluKweXA ~ lymph node distance: 3.955152685763294, 7.173192873456484
+(26/46) Of-K39ULY0Q ~ lymph node distance: 4.294660492603457, 1.6834919675057947
+(27/46) aBQe2EfmXv8 ~ lymph node distance: 8.491084063137498, 3.432076172222564
+(28/46) TMxGak0IQOg ~ lymph node distance: 17.512606443727602, 6.156684757975205
+(29/46) WeMcC01ZNgY ~ lymph node distance: 1.648305737588132, 1.25286597676246
+(30/46) eiJvX7Bw25o ~ lymph node distance: 5.0823217870620745, 4.3419398022521225
+(31/46) yYcNJD5knnY ~ lymph node distance: 2.292422889190648, 2.195203363947
+(32/46) 2pO8AtRxHAg ~ lymph node distance: 1.563472661878787, 1.4062970015070086
+(33/46) VUIaoA1iqhI ~ lymph node distance: 7.864767904819034, 2.700123456273355
+(34/46) 2w1vVKUCbcg ~ lymph node distance: 25.949939982530957, 3.802103345675478
+(35/46) 0f9SYhwcPFc ~ lymph node distance: 7.015999742019353, 3.713024201491358
+(36/46) TwU508CCA9Y ~ lymph node distance: 5.661802190146836, 0.26069080040043213
+(37/46) calibration_4_end_0e5fp8GltvE ~ lymph node distance: 7.07785420554474, 5.459636894320108
+(38/46) calibration_3_2VO-i_onOGw ~ lymph node distance: 3.2014145967431475, 2.473878877932924
+(39/46) calibration_1_start_0e5fp8GltvE ~ lymph node distance: 7.07785420554474, 5.459636894320108
+(40/46) calibration_2_LB9oATPd0mE ~ lymph node distance: 3.2052309422845884, 3.210635224634541
+(41/46) training_3_nonlinear ~ lymph node distance: 1.610490585778374, 1.7158072220481997
+(42/46) training_6_YPEbc0OFC8I ~ lymph node distance: 3.1455784433797795, 2.4366146806171205
+couldn't evaluate training_2_rotation
+couldn't evaluate training_1_none
+(45/46) training_4_yIt7Z7VHXU0 ~ lymph node distance: 1.610490585778374, 1.7158072220481997
+(46/46) training_5_Fw2lRBfYxtM ~ lymph node distance: 19.87453850342953, 6.8092720280246395
