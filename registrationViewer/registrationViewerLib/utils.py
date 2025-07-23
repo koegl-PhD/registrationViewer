@@ -774,8 +774,8 @@ def show_fullscreen_popup_with_image(
     pixmap = qt.QPixmap(image_path)
 
     screen_geometry = qt.QApplication.desktop().availableGeometry()
-    max_width = screen_geometry.width() * 0.6
-    max_height = screen_geometry.height() * 0.6
+    max_width = screen_geometry.width() * 0.9
+    max_height = screen_geometry.height() * 0.9
 
     scaled_pixmap = pixmap.scaled(
         max_width, max_height, qt.Qt.KeepAspectRatio, qt.Qt.SmoothTransformation)
