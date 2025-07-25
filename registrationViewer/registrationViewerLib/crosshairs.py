@@ -81,14 +81,17 @@ class Crosshairs():
 
         return crosshair_node
 
-    def _calculate_offset(self, offset_direction: Literal['pos', 'neg', 'nan']) -> list[float]:
-        """Calculate offset based on direction."""
+    def _calculate_offset(self, offset_direction: Literal['pos', 'neg', 'nan']) -> List[float]:
+        """Return coordinate offsets for given direction."""
+        dx, dy, dz = self.offset_diffs
+
         if offset_direction == 'nan':
             return [0.0, 0.0, 0.0]
-        elif offset_direction == 'pos':
-            return [self.offset_diffs[0], self.offset_diffs[1], -self.offset_diffs[2]]
-        elif offset_direction == 'neg':
-            return [-self.offset_diffs[0], -self.offset_diffs[1], self.offset_diffs[2]]
+        if offset_direction == 'pos':
+            return [-dz, dy, dx]
+        if offset_direction == 'neg':
+            return [dz, -dy, -dx]
+        return [0.0, 0.0, 0.0]
 
     def place_crosshair_with_transformation(
         self,
@@ -119,10 +122,8 @@ class Crosshairs():
 
         # Apply offset
         offset = self._calculate_offset(offset_direction)
-
-        new_position = [new_position[0] + offset[2],
-                        new_position[1] + offset[1],
-                        new_position[2] + offset[0]]
+        new_position = [coord + off for coord,
+                        off in zip(new_position, offset)]
 
         for view in views:
             view_logic.set_offset_to_ras(new_position, view)
