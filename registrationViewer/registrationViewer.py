@@ -235,9 +235,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         num_sub_components = len([f for f in os.listdir(self.resourcePath(
             "UI")) if "subComponent" in f and not 'TEMPLATE' in f]) + 1
+        num_sub_components = 6
 
         for i in range(1, num_sub_components + 1):  # 1-based index
-            if i == 5:
+            if i not in [3, 4]:
                 continue  # Skip subComponent5 as it is not used
             setattr(self,
                     f"sub_widget_{i}",
@@ -253,13 +254,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             self.all_uis.append(getattr(self, f"ui_sub_{i}"))
 
-        self.ui_sub_2.data_master_path_edit.filters = ctk.ctkPathLineEdit.Files
-        self.ui_sub_2.data_master_path_edit.nameFilters = [
-            "JSON files (*.json)"]
-
         default_path = "/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
-        if os.path.exists(default_path):
-            self.ui_sub_2.data_master_path_edit.currentPath = default_path
 
         slicer.app.processEvents()  # Ensures all widgets are fully rendered
 
@@ -267,7 +262,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         mainWidget.setMRMLScene(slicer.mrmlScene)
 
         # If sub-widgets contain MRML-aware widgets, set the scene for them
-        for widget in [self.sub_widget_1, self.sub_widget_2, self.sub_widget_3, self.sub_widget_4]:
+        for widget in [self.sub_widget_3, self.sub_widget_4]:
             for child in widget.findChildren(slicer.qMRMLWidget):
                 child.setMRMLScene(slicer.mrmlScene)
 
@@ -310,13 +305,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.app.layoutManager().sliceWidget(
                 self.views_third_row[i]).mrmlSliceNode().SetViewGroup(3)
 
-        # CONNECTIONS
-        # Study
-        study_connections.set_connections(self)
-
         # Buttons
-        self.ui_sub_1.simple_ui_button.connect(
-            "clicked(bool)", lambda: study_connections.btn_call_on_simple_ui(self))
         self.ui_sub_4.button_2x3.connect(
             "clicked(bool)", view_logic.set_2x3_layout)
         self.ui_sub_4.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
@@ -329,11 +318,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.on_linear_only)
         self.ui_sub_4.remove_all_data.connect(
             "clicked(bool)", self.on_remove_all_data)
-
-        self.study_progress_bar_patients = utils.ProgressBar(
-            self.ui_sub_6, 1, 1, 3)
-        self.study_progress_bar_tasks = utils.ProgressBar(
-            self.ui_sub_6, 2, 1, 3)
 
         # loading code
         drop_data_loading.create_loading_ui(self)
