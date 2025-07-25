@@ -28,7 +28,7 @@ from slicer.parameterNodeWrapper import (
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
 import registrationViewerLib
-from registrationViewerLib import custom_logging, log_utils, utils, sectra, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, texts
+from registrationViewerLib import custom_logging, log_utils, utils, sectra, crosshairs, view_logic, drop_data_loading, study, tasks, texts
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -88,7 +88,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         modules = [
             "utils", "sectra", "crosshairs",
-            "view_logic", "drop_data_loading", "study_connections",
+            "view_logic", "drop_data_loading",
             "study", "tasks", "texts", "custom_logging", "log_utils"
         ]
 
@@ -142,7 +142,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         utils.create_shortcuts(
             ('s', self.on_synchronise_views_wth_trasform_outside_of_study),
             # ('m', self.on_synchronise_views_manually),
-            ('t', lambda: study_connections.key_call_on_synchronise_views_general(self)),
             ('Ctrl+k', lambda: toggle_simple_ui_button_visibility(self)),
             ('Ctrl+p', lambda: toggle_console_visibility(self)),
         )
@@ -284,7 +283,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Buttons
         self.ui.synchronise_views_with_transform.connect(
-            "clicked(bool)", self.on_synchronise_views_wth_trasform)
+            "clicked(bool)", self.on_synchronise_views_wth_trasform_outside_of_study)
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -423,18 +422,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.link_views(self.views_first_row)
         view_logic.link_views(self.views_second_row)
         view_logic.link_views(self.views_third_row)
-
-    def _enable_sectr_movements(self) -> None:
-
-        if self.temp_enabled is False:
-            custom_logging.configure_logger(self,
-                     "/home/koeglf/Documents/code/registrationViewer/registrationViewer/default.log",
-                     "RegistrationEvaluation")  # nopep8
-
-            sectra.setup_sectra_movements(self)
-            sectra.enable_sectra_movements()
-
-            self.temp_enabled = True
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
@@ -595,8 +582,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_synchronise_views_wth_trasform_outside_of_study(self) -> None:
 
-        self._enable_sectr_movements()
-
         if not self.synchronisation_checks():
             return
 
@@ -605,10 +590,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.synchronise_with_displacement_pressed is True:
             self._set_up_crosshair(self.synchronise_with_displacement_pressed)
             print("pressed to synchronise")
-            self.ui_sub_4.synchronise_views_with_transform.setText(
+            self.ui.synchronise_views_with_transform.setText(
                 "Unsynchronise views with transform (t)")
-            self.ui_sub_6.synchronise_views_general.setText(
-                texts.Buttons.TURN_TRANSFORMATION_OFF)
 
             self.use_transform = self.crosshair.use_transform = True
             self.crosshair.use_only_linear_transform = self.use_only_linear_transform
@@ -616,16 +599,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
             self.crosshair.apply_offsets = False
-            self.ui_sub_4.synchronise_views_manually.setText(
-                "Synchronise views manually (m)")
             self.synchronise_manually_pressed = False
         else:
             print("pressed to unsynchronise")
             self.remove_custom_observers_from_crosshair()
-            self.ui_sub_4.synchronise_views_with_transform.setText(
+            self.ui.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
-            self.ui_sub_6.synchronise_views_general.setText(
-                texts.Buttons.TURN_TRANSFORMATION_ON)
 
     def on_couple_views_manually(self) -> None:
 
@@ -759,8 +738,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                use_only_linear_transform=self.use_only_linear_transform,
                                                offset_diffs=self.current_offset,
                                                apply_offsets=self.synchronise_manually_pressed)
-
-        utils.set_linear_checkbox_with_signal_block(self, True)
 
         if turn_synchronisation_on:
             observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
