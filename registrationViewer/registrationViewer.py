@@ -28,7 +28,7 @@ from slicer.parameterNodeWrapper import (
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
 import registrationViewerLib
-from registrationViewerLib import annotations_connections, custom_logging, log_utils, utils, sectra, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, texts
+from registrationViewerLib import custom_logging, log_utils, utils, sectra, crosshairs, view_logic, drop_data_loading, study_connections, study, tasks, texts
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -87,7 +87,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNodeGuiTags = []
 
         modules = [
-            "annotations_connections", "utils", "sectra", "crosshairs",
+            "utils", "sectra", "crosshairs",
             "view_logic", "drop_data_loading", "study_connections",
             "study", "tasks", "texts", "custom_logging", "log_utils"
         ]
@@ -179,19 +179,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.current_loaded_case_path = ""
 
-        # ANNOTATIONS
-        self.annotations_already_saved = False
-        self.annotation_fixed_roi_lymphnode = None
-        self.annotation_moving_roi_lymphnode = None
-        self.annotation_lymphnode_size: Literal["Size same",
-                                                "Size increased",
-                                                "Size decreased"] = "Size same"
-
-        self.annotation_fixed_points = None
-        self.annotation_moving_points = None
-
-        self.annotation_fixed_roi_recurrence = None
-
         # STUDY
         self.study_data: 'study.StudyData' = None
 
@@ -247,9 +234,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.all_uis = [self.ui]
 
         num_sub_components = len([f for f in os.listdir(self.resourcePath(
-            "UI")) if "subComponent" in f and not 'TEMPLATE' in f])
+            "UI")) if "subComponent" in f and not 'TEMPLATE' in f]) + 1
 
         for i in range(1, num_sub_components + 1):  # 1-based index
+            if i == 5:
+                continue  # Skip subComponent5 as it is not used
             setattr(self,
                     f"sub_widget_{i}",
                     slicer.util.loadUI(self.resourcePath(f"UI/subComponent{i}.ui")))
@@ -345,9 +334,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui_sub_6, 1, 1, 3)
         self.study_progress_bar_tasks = utils.ProgressBar(
             self.ui_sub_6, 2, 1, 3)
-
-        # ANOOTATIONS
-        annotations_connections.set_connections(self)
 
         # loading code
         drop_data_loading.create_loading_ui(self)
