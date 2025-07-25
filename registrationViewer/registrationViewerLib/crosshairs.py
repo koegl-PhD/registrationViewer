@@ -14,24 +14,17 @@ class Crosshairs():
     def __init__(self,
                  node_cursor: slicer.vtkMRMLCrosshairNode,
                  node_transform_nonlinear: slicer.vtkMRMLGridTransformNode,
-                 node_transform_fixed: Optional[slicer.vtkMRMLLinearTransformNode],
-                 node_transform_moving: Optional[slicer.vtkMRMLLinearTransformNode],
                  use_transform: bool,
-                 use_only_linear_transform: bool,
-                 offset_diffs: List[float],
-                 apply_offsets: bool) -> None:
+                 offset_diffs: List[float]
+                 ) -> None:
 
         self.node_cursor = node_cursor
 
         self.node_transform_nonlinear = node_transform_nonlinear
-        self.node_transform_fixed = node_transform_fixed
-        self.node_transform_moving = node_transform_moving
 
         self.use_transform = use_transform
-        self.use_only_linear_transform = use_only_linear_transform
 
         self.offset_diffs = offset_diffs
-        self.apply_offsets = apply_offsets
 
         self.reverse_transf_direction: bool = False
 
@@ -122,7 +115,7 @@ class Crosshairs():
                                                            new_position)
 
         # Apply offset
-        if not self.apply_offsets or offset_direction == 'nan':
+        if offset_direction == 'nan':
             offset = [0.0, 0.0, 0.0]
         elif offset_direction == 'pos':
             offset = [self.offset_diffs[0],
@@ -194,30 +187,17 @@ class Crosshairs():
         """
         Transform every crosshair from the list of nodes with the current transformation.
         """
-        # first move to fixed space, then deform then move back to moving space
 
         for node in crosshair_nodes:
             if self.node_transform_nonlinear:
                 if invert:
-                    if self.node_transform_fixed:
-                        node.ApplyTransform(
-                            self.node_transform_fixed.GetTransformToParent())
                     if not self.use_only_linear_transform:
                         node.ApplyTransform(
                             self.node_transform_nonlinear.GetTransformFromParent())
-                    if self.node_transform_moving:
-                        node.ApplyTransform(
-                            self.node_transform_moving.GetTransformFromParent())
                 else:
-                    if self.node_transform_moving:
-                        node.ApplyTransform(
-                            self.node_transform_moving.GetTransformToParent())
                     if not self.use_only_linear_transform:
                         node.ApplyTransform(
                             self.node_transform_nonlinear.GetTransformToParent())
-                    if self.node_transform_fixed:
-                        node.ApplyTransform(
-                            self.node_transform_fixed.GetTransformFromParent())
 
             else:
                 print("No transformation available")
