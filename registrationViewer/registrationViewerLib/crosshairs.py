@@ -207,8 +207,7 @@ class Crosshairs():
         """
 
         for node in crosshair_nodes:
-            node.SetNthControlPointPositionWorld(
-                0, position[0], position[1], position[2])
+            node.SetNthControlPointPositionWorld(0, *position)
 
     def set_crosshair_visibility_in_views(self, views: list[str], visibility: bool) -> None:
         """
