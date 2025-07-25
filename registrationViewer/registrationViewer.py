@@ -28,7 +28,7 @@ from slicer.parameterNodeWrapper import (
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
 import registrationViewerLib
-from registrationViewerLib import custom_logging, log_utils, utils, sectra, crosshairs, view_logic, drop_data_loading, study, tasks, texts
+from registrationViewerLib import utils, sectra, crosshairs, view_logic, drop_data_loading, study, tasks, texts
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -89,7 +89,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         modules = [
             "utils", "sectra", "crosshairs",
             "view_logic", "drop_data_loading",
-            "study", "tasks", "texts", "custom_logging", "log_utils"
+            "study", "tasks", "texts"
         ]
 
         for name in modules:
@@ -112,38 +112,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.views_all = self.views_first_row + \
             self.views_second_row + self.views_third_row  # + \
-        # self.views_double_red + self.views_double_green + self.views_double_yellow
-
-        def toggle_simple_ui_button_visibility(self):
-            self.ui_sub_1.simple_ui_button.setVisible(
-                not self.ui_sub_1.simple_ui_button.isVisible())
-
-            if self.ui_sub_1.simple_ui_button.isVisible():
-                text = "Organiser showed advanced button"
-            else:
-                text = "Organiser hid advanced button"
-            custom_logging.log(
-                logging.INFO, custom_logging.LogType.INTERNAL, text)
-
-        self.console_visible = True
-
-        def toggle_console_visibility(self):
-
-            if self.console_visible:
-                text = "Organiser opened console"
-            else:
-                text = "Organiser closed console"
-            custom_logging.log(
-                logging.INFO, custom_logging.LogType.INTERNAL, text)
-
-            slicer.util.setPythonConsoleVisible(self.console_visible)
-            self.console_visible = not self.console_visible
 
         utils.create_shortcuts(
-            ('s', self.on_synchronise_views_wth_trasform_outside_of_study),
-            # ('m', self.on_synchronise_views_manually),
-            ('Ctrl+k', lambda: toggle_simple_ui_button_visibility(self)),
-            ('Ctrl+p', lambda: toggle_console_visibility(self)),
+            ('s', self.on_synchronise_views),
         )
 
         self.study_current_transform_type: 'utils.TransformType' = utils.TransformType.NONE
@@ -283,7 +254,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Buttons
         self.ui.synchronise_views_with_transform.connect(
-            "clicked(bool)", self.on_synchronise_views_wth_trasform_outside_of_study)
+            "clicked(bool)", self.on_synchronise_views)
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -291,11 +262,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
 
-        utils.collapse_all_segmentations()
-
         view_logic.link_views(self.views_first_row)
         view_logic.link_views(self.views_second_row)
-        view_logic.link_views(self.views_third_row)
 
         view_logic.set_2x3_layout()
 
@@ -398,132 +366,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.views_second_row, self.node_moving)
         self._update_crosshair_transformation()
 
-        # set window, level and threshold for fixed and moving
-        for node in [self.node_fixed, self.node_moving]:
-            if node is None:
-                continue
-
-            range_of_volume = utils.get_range_of_values(node)
-
-            if not (range_of_volume[0] >= -1 and range_of_volume[1] <= 2):
-                utils.set_window_level_and_threshold(node,
-                                                     window=1036,
-                                                     level=329,
-                                                     threshold=(-1024, 3071))
-
         # reset field of view for view 0, 3 and 6
-        for view in [self.views_first_row[0], self.views_second_row[0], self.views_third_row[0]]:
+        for view in [self.views_first_row[0], self.views_second_row[0]]:
             slicer.app.layoutManager().sliceWidget(
                 view).sliceController().fitSliceToBackground()
 
-        utils.collapse_all_segmentations()
-        utils.set_all_segmentation_visibility(True)
-
         view_logic.link_views(self.views_first_row)
         view_logic.link_views(self.views_second_row)
-        view_logic.link_views(self.views_third_row)
 
     def update_current_layout(self, layout: view_logic.Layout) -> None:
         self.current_layout = layout
-
-    def update_views_third_row_with_volume_diff(self) -> None:
-
-        try:
-
-            if self.node_fixed is not None and \
-                    self.node_moving is not None and \
-                    self.node_transform_nonlinear is not None:
-
-                title = "Creating difference view..."
-                slicer.progressWindow = slicer.util.createProgressDialog()
-                slicer.progressWindow.show()
-                slicer.progressWindow.activateWindow()
-                slicer.progressWindow.setValue(0)
-                slicer.progressWindow.setLabelText(title)
-                slicer.app.processEvents()
-
-                offset_red1 = view_logic.get_view_offset("Red1")
-                offset_green1 = view_logic.get_view_offset("Green1")
-                offset_yellow1 = view_logic.get_view_offset("Yellow1")
-
-                node_fixed_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_fixed,
-                                                                                                "Fixed with affine")
-                utils.apply_and_harden_transform_to_node(node_fixed_transformed_with_affine,
-                                                         self.node_transform_fixed)
-
-                node_moving_transformed_with_affine = slicer.modules.volumes.logic().CloneVolume(self.node_moving,
-                                                                                                 "Moving with affine")
-                utils.apply_and_harden_transform_to_node(node_moving_transformed_with_affine,
-                                                         self.node_transform_moving)
-
-                if not utils.update_progress_window(20, title):
-                    return
-
-                if self.node_diff is None:
-                    self.node_diff = slicer.modules.volumes.logic().CloneVolume(node_fixed_transformed_with_affine,
-                                                                                "Difference")
-
-                if self.node_moving_warped is not None:
-                    slicer.mrmlScene.RemoveNode(self.node_moving_warped)
-
-                self.node_moving_warped = slicer.modules.volumes.logic().CloneVolume(node_moving_transformed_with_affine,
-                                                                                     "Warped")
-                if not utils.update_progress_window(40, title):
-                    return
-
-                utils.apply_and_harden_transform_to_node(
-                    self.node_moving_warped, self.node_transform_nonlinear)
-                self.node_moving_warped = utils.normalize_node(
-                    self.node_moving_warped)
-                node_fixed_transformed_with_affine = utils.normalize_node(
-                    node_fixed_transformed_with_affine)
-                utils.resample_node_to_reference_node(
-                    self.node_moving_warped, node_fixed_transformed_with_affine)
-
-                if not utils.update_progress_window(60, title):
-                    return
-
-                array_fixed = slicer.util.arrayFromVolume(
-                    node_fixed_transformed_with_affine)
-                array_warped = slicer.util.arrayFromVolume(
-                    self.node_moving_warped)
-
-                array_diff = np.abs(array_fixed - array_warped)
-
-                slicer.util.updateVolumeFromArray(self.node_diff, array_diff)
-
-                if not utils.update_progress_window(80, title):
-                    return
-
-                utils.apply_and_harden_transform_to_node(self.node_diff,
-                                                         self.node_transform_fixed,
-                                                         invert=True)
-
-                view_logic.update_views_with_volume(
-                    self.views_third_row, self.node_diff)
-
-                slicer.mrmlScene.RemoveNode(
-                    node_fixed_transformed_with_affine)
-                slicer.mrmlScene.RemoveNode(
-                    node_moving_transformed_with_affine)
-
-                slicer.util.resetSliceViews()
-
-                view_logic.set_view_offset("Red3", offset_red1)
-                view_logic.set_view_offset("Green3", offset_green1)
-                view_logic.set_view_offset("Yellow3", offset_yellow1)
-
-                utils.set_window_level_and_threshold(self.node_diff,
-                                                     window=0.43,
-                                                     level=0.16,
-                                                     threshold=(0, 1))
-
-                slicer.progressWindow.close()
-
-        except Exception as e:
-            slicer.progressWindow.close()
-            logging.error(f"Error loading data: {str(e)}")
-            slicer.util.errorDisplay(f"Error loading data: {str(e)}")
 
     def synchronisation_checks(self) -> bool:
         """
@@ -545,42 +397,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         return True
 
-    def on_synchronise_views_wth_trasform(self) -> None:
-        if not self.synchronisation_checks():
-            return
-
-        if self.current_patient_transform_type == utils.TransformType.NONE:
-            print('not synchronising because we have None transform')
-            return
-
-        self.synchronise_with_displacement_pressed = not self.synchronise_with_displacement_pressed
-
-        if self.synchronise_with_displacement_pressed is True:
-            self._set_up_crosshair(self.synchronise_with_displacement_pressed)
-            print("pressed to synchronise")
-            self.ui_sub_4.synchronise_views_with_transform.setText(
-                "Unsynchronise views with transform (t)")
-            self.ui_sub_6.synchronise_views_general.setText(
-                texts.Buttons.TURN_TRANSFORMATION_OFF)
-
-            self.use_transform = self.crosshair.use_transform = True
-            self.crosshair.use_only_linear_transform = self.use_only_linear_transform
-            print(f"{self.use_only_linear_transform=}")
-
-            self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
-            self.crosshair.apply_offsets = False
-            self.ui_sub_4.synchronise_views_manually.setText(
-                "Synchronise views manually (m)")
-            self.synchronise_manually_pressed = False
-        else:
-            print("pressed to unsynchronise")
-            self.remove_custom_observers_from_crosshair()
-            self.ui_sub_4.synchronise_views_with_transform.setText(
-                "Synchronise views with transform (t)")
-            self.ui_sub_6.synchronise_views_general.setText(
-                texts.Buttons.TURN_TRANSFORMATION_ON)
-
-    def on_synchronise_views_wth_trasform_outside_of_study(self) -> None:
+    def on_synchronise_views(self) -> None:
 
         if not self.synchronisation_checks():
             return
@@ -605,118 +422,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.remove_custom_observers_from_crosshair()
             self.ui.synchronise_views_with_transform.setText(
                 "Synchronise views with transform (t)")
-
-    def on_couple_views_manually(self) -> None:
-
-        # get view offset differences between Red1 and Red2, Green1 and Green2, Yellow1 and Yellow2
-        offset_diff_red = view_logic.get_view_offset(
-            "Red1") - view_logic.get_view_offset("Red2")
-        offset_diff_green = view_logic.get_view_offset(
-            "Green1") - view_logic.get_view_offset("Green2")
-        offset_diff_yellow = view_logic.get_view_offset(
-            "Yellow1") - view_logic.get_view_offset("Yellow2")
-
-        self.current_offset = [
-            offset_diff_red, offset_diff_green, offset_diff_yellow]
-
-        self.offset_set = True
-
-        print(f"coupled views to {self.current_offset}")
-
-    def on_synchronise_views_manually(self) -> None:
-
-        if not self.synchronisation_checks():
-            return
-
-        self.synchronise_manually_pressed = not self.synchronise_manually_pressed
-
-        if self.synchronise_manually_pressed is True:
-            self._set_up_crosshair(self.synchronise_manually_pressed)
-            print("pressed to synchronise manually")
-            self.ui_sub_4.synchronise_views_manually.setText(
-                "Unsynchronise views manually (m)")
-            self.ui_sub_6.synchronise_views_general.setText(
-                texts.Buttons.TURN_MANUAL_TRANSFORMATION_OFF)
-
-            self.use_transform = self.crosshair.use_transform = False
-            self.ui_sub_4.synchronise_views_with_transform.setText(
-                "Synchronise views with transform (t)")
-            self.synchronise_with_displacement_pressed = False
-            utils.set_linear_checkbox_with_signal_block(self, False)
-
-        else:
-            print("pressed to unsynchronise manually")
-            self.remove_custom_observers_from_crosshair()
-            self.ui_sub_4.synchronise_views_manually.setText(
-                "Synchronise views manually (m)")
-
-        if self.offset_set is False:
-            self.on_couple_views_manually()
-
-        self.crosshair.offset_diffs = self.current_offset
-
-        self.crosshair.apply_offsets = self.synchronise_manually_pressed
-
-    def unsynchronise_views(self) -> None:
-        print('unsynchronised')
-        self.remove_custom_observers_from_crosshair()
-        self.ui_sub_4.synchronise_views_with_transform.setText(
-            "Synchronise views with transform (t)")
-
-        if self.current_patient_transform_type == utils.TransformType.NONE:
-            self.ui_sub_6.synchronise_views_general.setText(
-                texts.Buttons.TURN_MANUAL_TRANSFORMATION_ON)
-            self.ui_sub_6.couple_views.setText(
-                texts.Buttons.COUPLE_VIEWS)
-        else:
-            self.ui_sub_6.synchronise_views_general.setText(
-                texts.Buttons.TURN_TRANSFORMATION_ON)
-
-    def on_linear_only(self) -> None:
-        print("on linear only")
-        self.use_only_linear_transform = self.crosshair.use_only_linear_transform = not self.use_only_linear_transform
-
-    def on_remove_all_data(self) -> None:
-        if self.node_fixed is not None:
-            slicer.mrmlScene.RemoveNode(self.node_fixed)
-
-        if self.node_moving is not None:
-            slicer.mrmlScene.RemoveNode(self.node_moving)
-
-        if self.node_transform_nonlinear is not None:
-            slicer.mrmlScene.RemoveNode(self.node_transform_nonlinear)
-
-        if self.node_diff is not None:
-            slicer.mrmlScene.RemoveNode(self.node_diff)
-            self.node_diff = None
-
-        if self.node_moving_warped is not None:
-            slicer.mrmlScene.RemoveNode(self.node_moving_warped)
-            self.node_moving_warped = None
-
-        if self.node_transform_fixed is not None:
-            slicer.mrmlScene.RemoveNode(self.node_transform_fixed)
-            self.node_transform_fixed = None
-
-        if self.node_transform_moving is not None:
-            slicer.mrmlScene.RemoveNode(self.node_transform_moving)
-            self.node_transform_moving = None
-
-        if self.node_seg_fixed is not None:
-            slicer.mrmlScene.RemoveNode(self.node_seg_fixed)
-            self.node_seg_fixed = None
-
-        if self.node_seg_moving is not None:
-            slicer.mrmlScene.RemoveNode(self.node_seg_moving)
-            self.node_seg_moving = None
 
     def _remove_custom_nodes(self) -> None:
-        if self.node_diff is not None:
-            slicer.mrmlScene.RemoveNode(self.node_diff)
-            self.node_diff = None
-        if self.node_moving_warped is not None:
-            slicer.mrmlScene.RemoveNode(self.node_moving_warped)
-            self.node_moving_warped = None
         if self.crosshair is not None:
             self.crosshair.delete_crosshairs_and_folder()
             self.crosshair = None
