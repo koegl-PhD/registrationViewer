@@ -74,7 +74,11 @@ def configure_logger(widget: "registrationViewerWidget",
                      log_file_path: str,
                      name: str) -> None:
     global _logger
-    _logger = MyLogger(widget, log_file_path, name)
+    try:
+        _logger = MyLogger(widget, log_file_path, name)
+    except Exception as e:
+        default_path = Path.home() / "registrationViewer.log"
+        _logger = MyLogger(widget, default_path, name)
 
 
 def log(log_level: int, log_type: LogType, message: str) -> None:

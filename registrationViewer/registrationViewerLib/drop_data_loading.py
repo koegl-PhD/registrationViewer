@@ -112,11 +112,13 @@ class DropWidget(qt.QFrame):
 
             path_registrations = "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans_registrations"
 
-            path_volume_fixed, path_volume_moving, \
-                path_seg_fixed, path_seg_moving, \
-                path_transform_fixed, path_transform_moving, \
-                path_deformation = utils.get_paths_to_load(
-                    dropped_folder_path, path_registrations)
+            path_volume_fixed = "/home/fryderyk/Documents/code/data/example_ct/b.nii.gz"
+            path_volume_moving = "/home/fryderyk/Documents/code/data/example_ct/a.nii.gz"
+            path_deformation = "/home/fryderyk/Documents/code/data/example_ct/hmJfXqxVMk0~a_to_b.nii.gz"
+            path_seg_fixed = None
+            path_seg_moving = None
+            path_transform_fixed = None
+            path_transform_moving = None
 
             if utils.update_progress_window(0, f"Loading fixed volume..."):
                 node_volume_fixed = slicer.util.loadVolume(path_volume_fixed)
@@ -214,6 +216,15 @@ class DropWidget(qt.QFrame):
 
             utils.set_orthogonal_views(
                 self.moduleWidget.views_first_row + self.moduleWidget.views_second_row)
+
+            utils.set_window_level_and_threshold(node_volume_fixed,
+                                                 window=0.35,
+                                                 level=0.59,
+                                                 threshold=(-0.28, 1.12))
+            utils.set_window_level_and_threshold(node_volume_moving,
+                                                 window=0.35,
+                                                 level=0.59,
+                                                 threshold=(-0.28, 1.12))
 
             slicer.progressWindow.close()
 
