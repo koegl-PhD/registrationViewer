@@ -233,55 +233,27 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.all_uis = [self.ui]
 
-        num_sub_components = len([f for f in os.listdir(self.resourcePath(
-            "UI")) if "subComponent" in f and not 'TEMPLATE' in f]) + 1
-
-        for i in range(1, num_sub_components + 1):  # 1-based index
-            if i == 5:
-                continue  # Skip subComponent5 as it is not used
-            setattr(self,
-                    f"sub_widget_{i}",
-                    slicer.util.loadUI(self.resourcePath(f"UI/subComponent{i}.ui")))
-
-            placeholder = getattr(self.ui, f"subWidgetPlaceholder_{i}")
-            sub_widget = getattr(self, f"sub_widget_{i}")
-            placeholder.layout().addWidget(sub_widget)
-
-            setattr(self,
-                    f"ui_sub_{i}",
-                    slicer.util.childWidgetVariables(sub_widget))
-
-            self.all_uis.append(getattr(self, f"ui_sub_{i}"))
-
-        self.ui_sub_2.data_master_path_edit.filters = ctk.ctkPathLineEdit.Files
-        self.ui_sub_2.data_master_path_edit.nameFilters = [
-            "JSON files (*.json)"]
-
-        default_path = "/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
-        if os.path.exists(default_path):
-            self.ui_sub_2.data_master_path_edit.currentPath = default_path
-
         slicer.app.processEvents()  # Ensures all widgets are fully rendered
 
         # Set MRML scene for main UI (but not generic QWidgets)
         mainWidget.setMRMLScene(slicer.mrmlScene)
 
-        # If sub-widgets contain MRML-aware widgets, set the scene for them
-        for widget in [self.sub_widget_1, self.sub_widget_2, self.sub_widget_3, self.sub_widget_4]:
-            for child in widget.findChildren(slicer.qMRMLWidget):
-                child.setMRMLScene(slicer.mrmlScene)
+        # # If sub-widgets contain MRML-aware widgets, set the scene for them
+        # for widget in [self.sub_widget_3, self.sub_widget_4]:
+        #     for child in widget.findChildren(slicer.qMRMLWidget):
+        #         child.setMRMLScene(slicer.mrmlScene)
 
-        for selector in [self.ui_sub_3.inputSelector_fixed,
-                         self.ui_sub_3.inputSelector_moving,
-                         self.ui_sub_3.inputSelector_transformation]:
+        for selector in [self.ui.inputSelector_fixed,
+                         self.ui.inputSelector_moving,
+                         self.ui.inputSelector_transformation]:
             selector.setMRMLScene(slicer.mrmlScene)
 
         mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
-                           self.ui_sub_3.inputSelector_fixed.setMRMLScene)
+                           self.ui.inputSelector_fixed.setMRMLScene)
         mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
-                           self.ui_sub_3.inputSelector_moving.setMRMLScene)
+                           self.ui.inputSelector_moving.setMRMLScene)
         mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
-                           self.ui_sub_3.inputSelector_transformation.setMRMLScene)
+                           self.ui.inputSelector_transformation.setMRMLScene)
 
         # Connections
 
@@ -293,7 +265,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
-        self.ui_sub_4.synchronise_views_with_transform.setText(
+        self.ui.synchronise_views_with_transform.setText(
             "Synchronise views with transform (t)")
 
         self._remove_custom_nodes()
@@ -310,30 +282,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.app.layoutManager().sliceWidget(
                 self.views_third_row[i]).mrmlSliceNode().SetViewGroup(3)
 
-        # CONNECTIONS
-        # Study
-        study_connections.set_connections(self)
-
         # Buttons
-        self.ui_sub_1.simple_ui_button.connect(
-            "clicked(bool)", lambda: study_connections.btn_call_on_simple_ui(self))
-        self.ui_sub_4.button_2x3.connect(
-            "clicked(bool)", view_logic.set_2x3_layout)
-        self.ui_sub_4.button_3x3.connect("clicked(bool)", lambda: view_logic.set_3x3_layout(
-            self.update_views_third_row_with_volume_diff))
-        self.ui_sub_4.synchronise_views_with_transform.connect(
+        self.ui.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views_wth_trasform)
-        self.ui_sub_4.synchronise_views_manually.connect(
-            "clicked(bool)", self.on_synchronise_views_manually)
-        self.ui_sub_4.linearTransformationCheckBox.toggled.connect(
-            self.on_linear_only)
-        self.ui_sub_4.remove_all_data.connect(
-            "clicked(bool)", self.on_remove_all_data)
-
-        self.study_progress_bar_patients = utils.ProgressBar(
-            self.ui_sub_6, 1, 1, 3)
-        self.study_progress_bar_tasks = utils.ProgressBar(
-            self.ui_sub_6, 2, 1, 3)
 
         # loading code
         drop_data_loading.create_loading_ui(self)
@@ -792,9 +743,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair = None
 
     def _are_nodes_selected(self) -> bool:
-        return self.ui_sub_3.inputSelector_fixed.currentNode() is not None and \
-            self.ui_sub_3.inputSelector_moving.currentNode() is not None and \
-            self.ui_sub_3.inputSelector_transformation.currentNode() is not None
+        return self.ui.inputSelector_fixed.currentNode() is not None and \
+            self.ui.inputSelector_moving.currentNode() is not None and \
+            self.ui.inputSelector_transformation.currentNode() is not None
 
     def _set_up_crosshair(self, turn_synchronisation_on: bool) -> None:
         if self.crosshair:
@@ -839,11 +790,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_fixed(self) -> Any:
-        return self.ui_sub_3.inputSelector_fixed.currentNode()
+        return self.ui.inputSelector_fixed.currentNode()
 
     @property
     def node_moving(self) -> Any:
-        return self.ui_sub_3.inputSelector_moving.currentNode()
+        return self.ui.inputSelector_moving.currentNode()
 
     @property
     def node_crosshair(self) -> Any:
@@ -851,7 +802,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_transform_nonlinear(self) -> Any:
-        return self.ui_sub_3.inputSelector_transformation.currentNode()
+        return self.ui.inputSelector_transformation.currentNode()
 
     @property
     def current_task(self) -> tasks.Task:

@@ -19,53 +19,141 @@
   <layout class="QVBoxLayout" name="verticalLayout">
 
 
-     <!-- START subWidgetPlaceholder_1 -->
    <item>
-    <widget class="QWidget" name="subWidgetPlaceholder_1">
-     <layout class="QVBoxLayout" name="verticalLayout_sub1"/>
-    </widget>
-   </item>
-     <!-- END subWidgetPlaceholder_1 -->
+    <!-- START formLayout_2 -->
+     <layout class="QFormLayout" name="formLayout_2">
+     
+      <!-- START label_2 -->
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Fixed volume:</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END label_2 -->
 
-   <!-- START subWidgetPlaceholder_2 -->
-   <item>
-    <widget class="QWidget" name="subWidgetPlaceholder_2">
-     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
-    </widget>
-   </item>
-   <!-- END subWidgetPlaceholder_2 -->
+      <!-- START inputSelector_fixed -->
+      <item row="0" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_fixed">
+        <property name="toolTip">
+         <string>Pick the fixed volume.</string>
+        </property>
+        <property name="nodeTypes">
+         <stringlist notr="true">
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="hideChildNodeTypes">
+         <stringlist notr="true"/>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="interactionNodeSingletonTag">
+         <string notr="true"/>
+        </property>
+        <property name="SlicerParameterName" stdset="0">
+         <string>volume_fixed</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END inputSelector_fixed -->
 
-   <!-- START subWidgetPlaceholder_3 -->
-   <item>
-    <widget class="QWidget" name="subWidgetPlaceholder_3">
-     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
-    </widget>
-   </item>
-   <!-- END subWidgetPlaceholder_3 -->
+      <!-- START label -->
+      <item row="1" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Moving volume:</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END label -->
 
-   <!-- START subWidgetPlaceholder_4 -->
-   <item>
-    <widget class="QWidget" name="subWidgetPlaceholder_4">
-     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
-    </widget>
-   </item>
-   <!-- END subWidgetPlaceholder_4 -->
+      <!-- START inputSelector_moving -->
+      <item row="1" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_moving">
+        <property name="toolTip">
+         <string>Pick the moving volume.</string>
+        </property>
+        <property name="nodeTypes">
+         <stringlist notr="true">
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="SlicerParameterName" stdset="0">
+         <string>volume_moving</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END inputSelector_moving -->
 
-   <!-- START subWidgetPlaceholder_5 -->
-   <item>
-    <widget class="QWidget" name="subWidgetPlaceholder_5">
-     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
-    </widget>
-   </item>
-   <!-- END subWidgetPlaceholder_5 -->
+      <!-- START label_3 -->
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Transformation:</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END label_3 -->
 
-   <!-- START subWidgetPlaceholder_6 -->
-   <item>
-    <widget class="QWidget" name="subWidgetPlaceholder_6">
-     <layout class="QVBoxLayout" name="verticalLayout_sub2"/>
+      <!-- START inputSelector_transformation -->
+      <item row="2" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_transformation">
+        <property name="toolTip">
+         <string>Pick the transformation between moving and fixed.</string>
+        </property>
+        <property name="nodeTypes">
+         <stringlist notr="true">
+          <string>vtkMRMLTransformNode</string>
+         </stringlist>
+        </property>
+        <property name="hideChildNodeTypes">
+         <stringlist notr="true"/>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="interactionNodeSingletonTag">
+         <string notr="true"/>
+        </property>
+        <property name="SlicerParameterName" stdset="0">
+         <string>transformation</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END inputSelector_transformation -->
+      
+     </layout>
+    <!-- END formLayout_2 -->
+   </item>
+
+   
+    <!-- START synchronise_views_with_transform -->
+      <item row="20" column="0" colspan="2">
+    <widget class="QPushButton" name="synchronise_views_with_transform">
+     <property name="text">
+      <string>Synchronise views with transform (s)</string>
+     </property>
     </widget>
    </item>
-   <!-- END subWidgetPlaceholder_6 -->
+    <!-- END synchronise_views_with_transform -->
 
    <item>
     <spacer name="verticalSpacer">
