@@ -28,7 +28,7 @@ from slicer.parameterNodeWrapper import (
 from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
 import registrationViewerLib
-from registrationViewerLib import utils, sectra, crosshairs, view_logic, drop_data_loading, study, tasks, texts
+from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -87,9 +87,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNodeGuiTags = []
 
         modules = [
-            "utils", "sectra", "crosshairs",
-            "view_logic", "drop_data_loading",
-            "study", "tasks", "texts"
+            "utils", "crosshairs",
+            "view_logic", "drop_data_loading"
         ]
 
         for name in modules:
@@ -117,8 +116,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             ('s', self.on_synchronise_views),
         )
 
-        self.study_current_transform_type: 'utils.TransformType' = utils.TransformType.NONE
-
         self.use_transform = True
         self.use_only_linear_transform = False
         self.reverse_transformation_direction = True
@@ -130,67 +127,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.logic = registrationViewerLogic()
 
         self.synchronise_with_displacement_pressed = False
-        self.synchronise_manually_pressed = False
-
-        self.node_moving_warped = None
-        self.node_diff = None
 
         self.current_layout: 'view_logic.Layout'
 
-        self.ui_is_simple = False
-
-        self.node_transform_fixed = None
-        self.node_transform_moving = None
-
-        self.node_seg_fixed = None
-        self.node_seg_moving = None
-
         self.crosshair_custom_observer_tags = []
-
-        self.current_loaded_case_path = ""
-
-        # STUDY
-        self.study_data: 'study.StudyData' = None
-
-        self.full_screen_block: utils.FullScreenBlock = utils.FullScreenBlock()
-
-        self.current_radiologist_id: str = ""
-        self.chunk_idx = 0
-        self.current_combination_idx: int = 0
-        self.combination_starting_offset: int = 0
-        self.current_training_combination_idx: int = 0
-        self.applied_starting_offset: bool = False
-
-        self.study_loaded_data: dict[str,
-                                     dict[str, vtkMRMLScalarVolumeNode]] = {}
-
-        self.study_node_annotation = None
-
-        self.study_node_groundtruth_points = {}
-
-        self.arrow_key_filter = utils.ArrowKeyFilter()
-
-        self.slider_observers: Dict[str, Callable[[float], None]] = {}
-
-        self.first_time_description_show: bool = True
-        self.first_time_training_description_show: bool = True
-        self.first_time_info_show: bool = True
-
-        self.checkbox_training_cases: bool = True
-
-        # task specific
-        self.study_gt_lymphnode_description: dict[str, str] = {}
-        self.study_gt_recurrence_description: dict[str, str] = {}
-        self.study_lymphnode_size: Literal["Size same",
-                                           "Size increased",
-                                           "Size decreased"] = "Size same"
-
-        self.study_recurrence_present: bool = False
-
-        self.study_progress_bar_patients: utils.ProgressBar
-        self.study_progress_bar_tasks: utils.ProgressBar
-
-        self.temp_enabled = False
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -249,8 +189,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.views_first_row[i]).mrmlSliceNode().SetViewGroup(1)
             slicer.app.layoutManager().sliceWidget(
                 self.views_second_row[i]).mrmlSliceNode().SetViewGroup(2)
-            slicer.app.layoutManager().sliceWidget(
-                self.views_third_row[i]).mrmlSliceNode().SetViewGroup(3)
 
         # Buttons
         self.ui.synchronise_views_with_transform.connect(
@@ -444,7 +382,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                                                use_transform=self.use_transform,
                                                use_only_linear_transform=self.use_only_linear_transform,
                                                offset_diffs=self.current_offset,
-                                               apply_offsets=self.synchronise_manually_pressed)
+                                               apply_offsets=False)
 
         if turn_synchronisation_on:
             observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
