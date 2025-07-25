@@ -192,6 +192,12 @@ class Crosshairs():
                          else self.node_transform_nonlinear.GetTransformToParent())
             node.ApplyTransform(transform)
 
+    def _set_node_visibility(self, node: slicer.vtkMRMLMarkupsFiducialNode, visibility: bool) -> None:
+        """Helper method to set visibility of a crosshair node."""
+        display_node = node.GetDisplayNode()
+        if display_node is not None:
+            display_node.SetVisibility(visibility)
+
     @staticmethod
     def set_crosshair_nodes_to_position(crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
                                         position: list[float]) -> None:
@@ -210,9 +216,8 @@ class Crosshairs():
 
         for view in views:
             if view in self.crosshair_nodes:
-                display_node = self.crosshair_nodes[view].GetDisplayNode()
-                if display_node is not None:
-                    display_node.SetVisibility(visibility)
+                self._set_node_visibility(
+                    self.crosshair_nodes[view], visibility)
 
     def set_crosshair_visibility(self) -> None:
         """
@@ -220,15 +225,12 @@ class Crosshairs():
         """
 
         for node in self.crosshair_nodes.values():
-            display_node = node.GetDisplayNode()
-            if display_node is not None:
-                display_node.SetVisibility(True)
+            self._set_node_visibility(node, True)
 
-        if utils.get_cursor_view_name() in self.crosshair_nodes:
-            display_node = self.crosshair_nodes[utils.get_cursor_view_name()].GetDisplayNode(
-            )
-            if display_node is not None:
-                display_node.SetVisibility(False)
+        current_view = utils.get_cursor_view_name()
+        if current_view in self.crosshair_nodes:
+            self._set_node_visibility(
+                self.crosshair_nodes[current_view], False)
 
     @property
     def crosshairs_1(self) -> list[slicer.vtkMRMLMarkupsFiducialNode]:
