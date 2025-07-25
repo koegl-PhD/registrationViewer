@@ -190,13 +190,11 @@ class Crosshairs():
         for node in crosshair_nodes:
             if self.node_transform_nonlinear:
                 if invert:
-                    if not self.use_only_linear_transform:
-                        node.ApplyTransform(
-                            self.node_transform_nonlinear.GetTransformFromParent())
+                    node.ApplyTransform(
+                        self.node_transform_nonlinear.GetTransformFromParent())
                 else:
-                    if not self.use_only_linear_transform:
-                        node.ApplyTransform(
-                            self.node_transform_nonlinear.GetTransformToParent())
+                    node.ApplyTransform(
+                        self.node_transform_nonlinear.GetTransformToParent())
 
             else:
                 print("No transformation available")

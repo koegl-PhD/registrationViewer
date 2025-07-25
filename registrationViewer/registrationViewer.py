@@ -111,7 +111,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         )
 
         self.use_transform = True
-        self.use_only_linear_transform = False
         self.reverse_transformation_direction = True
         self.current_offset = [0.0, 0.0, 0.0]
         self.offset_set = False
@@ -193,8 +192,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         slicer.util.resetSliceViews()
 
-        # self.dropWidget.load_data_from_dropped_folder(
-        #     "/home/fryderyk/Documents/code/data/example_ct")
+        self.dropWidget.load_data_from_dropped_folder(
+            "/home/fryderyk/Documents/code/data/example_ct")
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -321,8 +320,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 "Unsynchronise views with transform (t)")
 
             self.use_transform = self.crosshair.use_transform = True
-            self.crosshair.use_only_linear_transform = self.use_only_linear_transform
-            print(f"{self.use_only_linear_transform=}")
 
             self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
             self.crosshair.apply_offsets = False
