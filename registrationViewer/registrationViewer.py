@@ -128,8 +128,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.synchronise_with_displacement_pressed = False
 
-        self.current_layout: 'view_logic.Layout'
-
         self.crosshair_custom_observer_tags = []
 
     def setup(self) -> None:
@@ -180,8 +178,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._remove_custom_nodes()
 
-        view_logic.register_layout_callback(self.update_current_layout)
-        view_logic.set_3x3_layout()
+        view_logic.set_2x3_layout()
 
         # set groups
         for i in range(3):
@@ -287,9 +284,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
 
-        if self.current_layout == view_logic.Layout.L_3X3:
-            self.update_views_third_row_with_volume_diff()
-
         view_logic.update_views_with_volume(
             self.views_first_row, self.node_fixed)
         view_logic.update_views_with_volume(
@@ -303,9 +297,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         view_logic.link_views(self.views_first_row)
         view_logic.link_views(self.views_second_row)
-
-    def update_current_layout(self, layout: view_logic.Layout) -> None:
-        self.current_layout = layout
 
     def synchronisation_checks(self) -> bool:
         """

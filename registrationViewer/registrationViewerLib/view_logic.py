@@ -15,14 +15,6 @@ class Layout(Enum):
     L_3X3 = 601
 
 
-layout_callback = None
-
-
-def register_layout_callback(callback):
-    global layout_callback
-    layout_callback = callback
-
-
 def update_views_with_volume(views: List[str], volume: vtkMRMLScalarVolumeNode) -> None:
     for view in views:
         slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
@@ -144,12 +136,6 @@ def set_1x2_layout(color: Literal["Red", "Green", "Yellow"]) -> None:
     # Keep a reference to the event filter - needs to be global so it won't be deleted
     global _event_filter
     _event_filter = event_filter
-
-    global layout_callback
-    if layout_callback:
-        layout_callback(Layout.L_1X2_RED if color == "Red" else
-                        Layout.L_1X2_GREEN if color == "Green" else
-                        Layout.L_1X2_YELLOW)
 
 
 def set_2x3_layout() -> None:
@@ -355,13 +341,6 @@ def set_3x3_layout(callback=None) -> None:
     # Keep a reference to the event filter
     global _event_filter
     _event_filter = event_filter
-
-    global layout_callback
-    if layout_callback:
-        layout_callback(Layout.L_3X3)
-
-    if callback:
-        callback()
 
 
 def get_view_offset(view: str) -> float:
