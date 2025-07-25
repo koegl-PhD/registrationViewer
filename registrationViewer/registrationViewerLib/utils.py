@@ -1,39 +1,10 @@
-from collections import defaultdict
-from enum import Enum
-import glob
-import json
 import logging
-import os
-import random
-import tempfile
 import traceback
-from typing import TYPE_CHECKING
 
-from typing import Dict, Tuple, Callable, List, Optional
+from typing import Tuple, Callable, List, Optional
 
 import qt
 import slicer
-from slicer import qMRMLSliceWidget
-import vtk
-
-from registrationViewerLib import texts
-
-
-if TYPE_CHECKING:
-    from ..registrationViewer import registrationViewerWidget
-
-
-class TransformType(Enum):
-    NONE = "none"
-    LINEAR = "linear"
-    NONLINEAR = "nonlinear"
-
-
-class Colors(Enum):
-    BLUE = (111/255, 184/255, 210/255)
-    GREEN = (47/255, 202/255, 36/255)
-    YELLOW = (244/255, 214/255, 49/255)
-    RED = (1.0, 0, 0)
 
 
 def update_progress_window(progress: Optional[int] = None, message: Optional[str] = None) -> bool:
