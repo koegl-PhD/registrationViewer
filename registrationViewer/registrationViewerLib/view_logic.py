@@ -1,18 +1,8 @@
-from enum import Enum
-
 from typing import List, Literal
 
 from qt import QEvent, QObject
 import slicer
-from slicer import vtkMRMLScalarVolumeNode
-
-
-class Layout(Enum):
-    L_1X2_RED = 801
-    L_1X2_GREEN = 802
-    L_1X2_YELLOW = 803
-    L_2X3 = 701
-    L_3X3 = 601
+from slicer import vtkMRMLScalarVolumeNode, vtkMRMLLayoutNode
 
 
 def update_views_with_volume(views: List[str], volume: vtkMRMLScalarVolumeNode) -> None:
@@ -42,7 +32,7 @@ def link_views(views: List[str]) -> None:
 
 
 class ViewClickFilter(QObject):
-    def __init__(self, to_layout: Literal["set_1x2_layout", "set_2x3_layout"], parent=None):
+    def __init__(self, to_layout: Literal["set_custom_compare_layout", "set_three_over_three_layout"], parent=None):
         super().__init__(parent)
         self.view_widgets = {}
         self.to_layout = to_layout
@@ -55,17 +45,20 @@ class ViewClickFilter(QObject):
             if watched in self.view_widgets:
                 view_name = self.view_widgets[watched]
 
-                if self.to_layout == "set_1x2_layout":
-                    set_1x2_layout(view_name[:-1])
+                view_name = view_name[:-
+                                      1] if view_name.endswith('+') else view_name
 
-                elif self.to_layout == "set_2x3_layout":
-                    set_2x3_layout()
+                if self.to_layout == "set_custom_compare_layout":
+                    set_custom_compare_layout(view_name)
+
+                elif self.to_layout == "set_three_over_three_layout":
+                    set_three_over_three_layout()
 
                 return True  # Event has been handled
         return QObject.eventFilter(self, watched, event)
 
 
-def set_1x2_layout(color: Literal["Red", "Green", "Yellow"]) -> None:
+def set_custom_compare_layout(view_name: Literal["Red", "Green", "Yellow"]) -> None:
     """
     Create a custom 1x2 layout for the given color.
     The two views (e.g., Red1 and Red2) are shown side by side.
@@ -74,35 +67,19 @@ def set_1x2_layout(color: Literal["Red", "Green", "Yellow"]) -> None:
     - color (str): The color of the slice view to use ("Red", "Green", or "Yellow").
     """
 
-    if color not in ["Red", "Green", "Yellow"]:
+    if view_name not in ["Red", "Green", "Yellow"]:
         raise ValueError("Invalid color. Must be 'Red', 'Green', or 'Yellow'.")
-
-    if color == "Red":
-        orientation = "Axial"
-        hexColor = "#F34A33"
-    elif color == "Green":
-        orientation = "Coronal"
-        hexColor = "#6EB04B"
-    else:
-        orientation = "Sagittal"
-        hexColor = "#EDD54C"
 
     customLayout = f"""
     <layout type="vertical" split="true">
         <item>
             <layout type="horizontal">
                 <item>
-                    <view class="vtkMRMLSliceNode" singletontag="{color}1">
-                    <property name="orientation" action="default">{orientation}</property>
-                    <property name="viewlabel" action="default">Fixed - {orientation.lower()}</property>
-                    <property name="viewcolor" action="default">{hexColor}</property>
+                    <view class="vtkMRMLSliceNode" singletontag="{view_name}">
                     </view>
                 </item>
                 <item>
-                    <view class="vtkMRMLSliceNode" singletontag="{color}2">
-                    <property name="orientation" action="default">{orientation}</property>
-                    <property name="viewlabel" action="default">Moving - {orientation.lower()}</property>
-                    <property name="viewcolor" action="default">{hexColor}</property>
+                    <view class="vtkMRMLSliceNode" singletontag="{view_name}+">
                     </view>
                 </item>
             </layout>
@@ -112,7 +89,7 @@ def set_1x2_layout(color: Literal["Red", "Green", "Yellow"]) -> None:
 
     # Create a unique layout ID based on the color
     layoutIdMap = {"Red": 801, "Green": 802, "Yellow": 803}
-    customLayoutId = layoutIdMap[color]
+    customLayoutId = layoutIdMap[view_name]
 
     layoutManager = slicer.app.layoutManager()
     layoutManager.layoutLogic().GetLayoutNode(
@@ -122,10 +99,10 @@ def set_1x2_layout(color: Literal["Red", "Green", "Yellow"]) -> None:
     layoutManager.setLayout(customLayoutId)
 
     # Create event filter
-    event_filter = ViewClickFilter(to_layout="set_2x3_layout")
+    event_filter = ViewClickFilter(to_layout="set_three_over_three_layout")
 
     # Install filter on all views
-    view_names = [f"{color}1", f"{color}2"]
+    view_names = [f"{view_name}", f"{view_name}+"]
     for view_name in view_names:
         slice_widget = layoutManager.sliceWidget(view_name)
         if slice_widget:
@@ -138,199 +115,18 @@ def set_1x2_layout(color: Literal["Red", "Green", "Yellow"]) -> None:
     _event_filter = event_filter
 
 
-def set_2x3_layout() -> None:
-    customLayout = """
-    <layout type="vertical" split="true">
-    <item>
-        <layout type="horizontal">
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Red1">
-            <property name="orientation" action="default">Axial</property>
-            <property name="viewlabel" action="default">Fixed - axial</property>
-            <property name="viewcolor" action="default">#F34A33</property>
-            </view>
-        </item>
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Green1">
-            <property name="orientation" action="default">Coronal</property>
-            <property name="viewlabel" action="default">Fixed - coronal</property>
-            <property name="viewcolor" action="default">#6EB04B</property>
-            </view>
-        </item>
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Yellow1">
-            <property name="orientation" action="default">Sagittal</property>
-            <property name="viewlabel" action="default">Fixed - saggital</property>
-            <property name="viewcolor" action="default">#EDD54C</property>
-            </view>
-        </item>
-        </layout>
-    </item>
-
-    <item>
-        <layout type="horizontal">
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Red2">
-            <property name="orientation" action="default">Axial</property>
-            <property name="viewlabel" action="default">Moving - axial</property>
-            <property name="viewcolor" action="default">#F34A33</property>
-            </view>
-        </item>
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Green2">
-            <property name="orientation" action="default">Coronal</property>
-            <property name="viewlabel" action="default">Moving - coronal</property>
-            <property name="viewcolor" action="default">#6EB04B</property>
-            </view>
-        </item>
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Yellow2">
-            <property name="orientation" action="default">Sagittal</property>
-            <property name="viewlabel" action="default">Moving - sagittal</property>
-            <property name="viewcolor" action="default">#EDD54C</property>
-            </view>
-        </item>
-        </layout>
-    </item>
-    </layout>
-    """
-
-    # Built-in layout IDs are all below 100, so you can choose any large random number
-    # for your custom layout ID.
-    customLayoutId = 701
+def set_three_over_three_layout() -> None:
 
     layoutManager = slicer.app.layoutManager()
-    layoutManager.layoutLogic().GetLayoutNode(
-    ).AddLayoutDescription(customLayoutId, customLayout)
 
     # Switch to the new custom layout
-    layoutManager.setLayout(customLayoutId)
+    layoutManager.setLayout(vtkMRMLLayoutNode.SlicerLayoutThreeOverThreeView)
 
     # Create event filter
-    event_filter = ViewClickFilter(to_layout="set_1x2_layout")
+    event_filter = ViewClickFilter(to_layout="set_custom_compare_layout")
 
     # Install filter on all views
-    view_names = ['Red1', 'Green1', 'Yellow1', 'Red2', 'Green2', 'Yellow2']
-    for view_name in view_names:
-        slice_widget = layoutManager.sliceWidget(view_name)
-        if slice_widget:
-            view_widget = slice_widget.sliceView()
-            event_filter.add_view(view_name, view_widget)
-            view_widget.installEventFilter(event_filter)
-
-    # Keep a reference to the event filter
-    global _event_filter
-    _event_filter = event_filter
-
-    global layout_callback
-    if layout_callback:
-        layout_callback(Layout.L_2X3)
-
-
-def set_3x3_layout(callback=None) -> None:
-
-    customLayout = """
-    <layout type="vertical" split="true">
-    <item>
-        <layout type="horizontal">
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Red1">
-            <property name="orientation" action="default">Axial</property>
-            <property name="viewlabel" action="default">Fixed - axial</property>
-            <property name="viewcolor" action="default">#F34A33</property>
-            </view>
-        </item>
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Green1">
-            <property name="orientation" action="default">Coronal</property>
-            <property name="viewlabel" action="default">Fixed - coronal</property>
-            <property name="viewcolor" action="default">#6EB04B</property>
-            </view>
-        </item>
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Yellow1">
-            <property name="orientation" action="default">Sagittal</property>
-            <property name="viewlabel" action="default">Fixed - sagittal</property>
-            <property name="viewcolor" action="default">#EDD54C</property>
-            </view>
-        </item>
-        </layout>
-    </item>
-
-    <item>
-        <layout type="horizontal">
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Red2">
-            <property name="orientation" action="default">Axial</property>
-            <property name="viewlabel" action="default">Moving - axial</property>
-            <property name="viewcolor" action="default">#F34A33</property>
-            </view>
-        </item>
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Green2">
-            <property name="orientation" action="default">Coronal</property>
-            <property name="viewlabel" action="default">Moving - coronal</property>
-            <property name="viewcolor" action="default">#6EB04B</property>
-            </view>
-        </item>
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Yellow2">
-            <property name="orientation" action="default">Sagittal</property>
-            <property name="viewlabel" action="default">Moving - sagittal</property>
-            <property name="viewcolor" action="default">#EDD54C</property>
-            </view>
-        </item>
-        </layout>
-    </item>
-
-    <item>
-        <layout type="horizontal">
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Red3">
-            <property name="orientation" action="default">Axial</property>
-            <property name="viewlabel" action="default">Diff - axial</property>
-            <property name="viewcolor" action="default">#F34A33</property>
-            </view>
-        </item>
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Green3">
-            <property name="orientation" action="default">Coronal</property>
-            <property name="viewlabel" action="default">Diff - coronal</property>
-            <property name="viewcolor" action="default">#6EB04B</property>
-            </view>
-        </item>
-        <item>
-            <view class="vtkMRMLSliceNode" singletontag="Yellow3">
-            <property name="orientation" action="default">Sagittal</property>
-            <property name="viewlabel" action="default">Diff - sagittal</property>
-            <property name="viewcolor" action="default">#EDD54C</property>
-            </view>
-        </item>
-        </layout>
-    </item>
-    </layout>
-    """
-
-    # Built-in layout IDs are all below 100, so you can choose any large random number
-    # for your custom layout ID.
-    customLayoutId = 601
-
-    layoutManager = slicer.app.layoutManager()
-    layoutManager.layoutLogic().GetLayoutNode(
-    ).AddLayoutDescription(customLayoutId, customLayout)
-
-    # Switch to the new custom layout
-    layoutManager.setLayout(customLayoutId)
-
-    # Create event filter
-    event_filter = ViewClickFilter(to_layout="set_1x2_layout")
-
-    view_names = [
-        "Red1", "Green1", "Yellow1",
-        "Red2", "Green2", "Yellow2",
-        "Red3", "Green3", "Yellow3"]
-
-    # Install filter on all views
+    view_names = ['Red', 'Green', 'Yellow', 'Red+', 'Green+', 'Yellow+']
     for view_name in view_names:
         slice_widget = layoutManager.sliceWidget(view_name)
         if slice_widget:

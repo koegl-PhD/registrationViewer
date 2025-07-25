@@ -28,10 +28,9 @@ class Crosshairs():
 
         self.reverse_transf_direction: bool = False
 
-        self.views_1 = ["Red1", "Green1", "Yellow1"]
-        self.views_2 = ["Red2", "Green2", "Yellow2"]
-        self.views_3 = ["Red3", "Green3", "Yellow3"]
-        self.views = self.views_1 + self.views_2 + self.views_3
+        self.views_1 = ["Red", "Green", "Yellow"]
+        self.views_2 = ["Red+", "Green+", "Yellow+"]
+        self.views = self.views_1 + self.views_2
 
         self.create_crosshairs_and_folder()
 
@@ -249,8 +248,3 @@ class Crosshairs():
     def crosshairs_2(self) -> list[slicer.vtkMRMLMarkupsFiducialNode]:
 
         return [self.crosshair_nodes[view] for view in self.views_2]
-
-    @property
-    def crosshairs_3(self) -> list[slicer.vtkMRMLMarkupsFiducialNode]:
-
-        return [self.crosshair_nodes[view] for view in self.views_3]

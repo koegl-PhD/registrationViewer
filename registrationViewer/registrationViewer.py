@@ -100,17 +100,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.group_first_row = 1
         self.group_second_row = 2
-        self.group_third_row = 3
 
-        self.views_first_row = ["Red1", "Green1", "Yellow1"]
-        self.views_second_row = ["Red2", "Green2", "Yellow2"]
-        self.views_third_row = ["Red3", "Green3", "Yellow3"]
-        # self.views_double_red = ["Red4", "Red5"]
-        # self.views_double_green = ["Green4", "Green5"]
-        # self.views_double_yellow = ["Yellow4", "Yellow5"]
+        self.views_first_row = ["Red", "Green", "Yellow"]
+        self.views_second_row = ["Red+", "Green+", "Yellow+"]
 
-        self.views_all = self.views_first_row + \
-            self.views_second_row + self.views_third_row  # + \
+        self.views_all = self.views_first_row + self.views_second_row
 
         utils.create_shortcuts(
             ('s', self.on_synchronise_views),
@@ -146,11 +140,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Set MRML scene for main UI (but not generic QWidgets)
         mainWidget.setMRMLScene(slicer.mrmlScene)
 
-        # # If sub-widgets contain MRML-aware widgets, set the scene for them
-        # for widget in [self.sub_widget_3, self.sub_widget_4]:
-        #     for child in widget.findChildren(slicer.qMRMLWidget):
-        #         child.setMRMLScene(slicer.mrmlScene)
-
         for selector in [self.ui.inputSelector_fixed,
                          self.ui.inputSelector_moving,
                          self.ui.inputSelector_transformation]:
@@ -178,7 +167,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._remove_custom_nodes()
 
-        view_logic.set_2x3_layout()
+        view_logic.set_three_over_three_layout()
 
         # set groups
         for i in range(3):
@@ -200,12 +189,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_logic.link_views(self.views_first_row)
         view_logic.link_views(self.views_second_row)
 
-        view_logic.set_2x3_layout()
+        # view_logic.set_three_over_three_layout()
 
         slicer.util.resetSliceViews()
 
-        self.dropWidget.load_data_from_dropped_folder(
-            "/home/fryderyk/Documents/code/data/example_ct")
+        # self.dropWidget.load_data_from_dropped_folder(
+        #     "/home/fryderyk/Documents/code/data/example_ct")
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
