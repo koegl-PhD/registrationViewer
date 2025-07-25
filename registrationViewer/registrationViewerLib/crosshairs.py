@@ -158,8 +158,9 @@ class Crosshairs():
         When the mouse moves in a view, the crosshair should follow the cursor.
 
         """
+        current_view = utils.get_cursor_view_name()
 
-        if utils.get_cursor_view_name() in self.VIEWS_1:
+        if current_view in self.VIEWS_1:
             self.place_crosshair_without_transformation(views=self.VIEWS_1,
                                                         crosshair_nodes=self.crosshairs_1)
             self.place_crosshair_with_transformation(views=self.VIEWS_2,
@@ -167,7 +168,7 @@ class Crosshairs():
                                                      reverse_transf_direction=self.reverse_transf_direction,
                                                      offset_direction='neg')
 
-        elif utils.get_cursor_view_name() in self.VIEWS_2:
+        elif current_view in self.VIEWS_2:
             self.place_crosshair_with_transformation(views=self.VIEWS_1,
                                                      crosshair_nodes=self.crosshairs_1,
                                                      reverse_transf_direction=not self.reverse_transf_direction,
