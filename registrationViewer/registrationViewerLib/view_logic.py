@@ -1,22 +1,10 @@
 from enum import Enum
-import functools
-import logging
-import random
 
+from typing import List, Literal
 
-from typing import List, Literal, Tuple, TYPE_CHECKING
-
-import qt
 from qt import QEvent, QObject
 import slicer
 from slicer import vtkMRMLScalarVolumeNode
-import vtk
-
-import registrationViewerLib.utils as utils
-from registrationViewerLib.custom_logging import log, LogType
-
-if TYPE_CHECKING:
-    from ..registrationViewer import registrationViewerWidget
 
 
 class Layout(Enum):
@@ -61,16 +49,8 @@ def link_views(views: List[str]) -> None:
         compositeNode.SetLinkedControl(True)
 
 
-def unlink_views(views: List[str]) -> None:
-
-    for view in views:
-        sliceLogic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
-        compositeNode = sliceLogic.GetSliceCompositeNode()
-        compositeNode.SetLinkedControl(False)
-
-
 class ViewClickFilter(QObject):
-    def __init__(self, to_layout: Literal["set_1x2_layout", "set_2x3_layout", "set_3x3_layout"], parent=None):
+    def __init__(self, to_layout: Literal["set_1x2_layout", "set_2x3_layout"], parent=None):
         super().__init__(parent)
         self.view_widgets = {}
         self.to_layout = to_layout
@@ -86,15 +66,8 @@ class ViewClickFilter(QObject):
                 if self.to_layout == "set_1x2_layout":
                     set_1x2_layout(view_name[:-1])
 
-                    log(logging.INFO, LogType.U_MOUSE,
-                        f"Double click ~ {view_name}")
                 elif self.to_layout == "set_2x3_layout":
                     set_2x3_layout()
-                    log(logging.INFO, LogType.U_MOUSE,
-                        f"Double click ~ {view_name}")
-
-                elif self.to_layout == "set_3x3_layout":
-                    set_3x3_layout()
 
                 return True  # Event has been handled
         return QObject.eventFilter(self, watched, event)
@@ -436,120 +409,3 @@ def set_offset_to_ras(position_ras, view):
 
     # Set the computed offset for this view.
     set_view_offset(view, offset)
-
-
-def randomise_offsets(views: List[str], min_v: int = 10, max_v: int = 15) -> None:
-    """
-    Randomly change the offset of the given views.
-    """
-
-    if max_v <= min_v:
-        raise ValueError("max_v must be greater than min_v")
-
-    offsets = [get_view_offset(view) for view in views]
-
-    for view, offset in zip(views, offsets):
-
-        change = random.randint(min_v, max_v)
-        sign = random.choice([-1, 1])
-
-        set_view_offset(view, offset + change * sign)
-
-
-def attach_continuous_slice_offset_observers(self: "registrationViewerWidget") -> None:
-    """Attach a slice-offset observer for each view."""
-
-    for view in self.views_all:
-
-        controller = slicer.app.layoutManager().sliceWidget(view).sliceController()
-
-        slider = controller.sliceOffsetSlider()
-        if not slider:
-            continue
-
-        def _on_slice_scroll(position: float, view: str = view) -> None:
-            """Log slice scroll for a specific view."""
-            log(logging.INFO, LogType.U_MOUSE,
-                f"Slider_Scroll ~ {view} ~ pos={position:.1f}")
-
-        slider.valueIsChanging.connect(_on_slice_scroll)
-        self.slider_observers[view] = _on_slice_scroll
-
-
-def detach_continuous_slice_offset_observers(self: "registrationViewerWidget") -> None:
-    """Detach the slice‐offset observer for the given view."""
-
-    for view in self.views_all:
-        handler = self.slider_observers.pop(view, None)
-        if not handler:
-            return
-
-        controller = slicer.app.layoutManager().sliceWidget(view).sliceController()
-        slider = controller.sliceOffsetSlider()
-
-        if not slider:
-            return
-
-        slider.valueIsChanging.disconnect(handler)
-
-
-def attach_key_arrow_observers(self: "registrationViewerWidget") -> None:
-    """
-    Add left/right arrow key observers
-    """
-    qt.QApplication.instance().installEventFilter(self.arrow_key_filter)
-
-
-def dettach_key_arrow_observers(self: "registrationViewerWidget") -> None:
-    """
-    Remove and delete left/right arrow key observers.
-    """
-    app = qt.QApplication.instance()
-    app.removeEventFilter(self.arrow_key_filter)
-
-
-def configure_roi(node_roi: slicer.vtkMRMLMarkupsROINode,
-                  views: List[str],
-                  size: Tuple[int, int, int] = (20, 20, 20)) -> None:
-
-    if not views:
-        return
-    if not node_roi:
-        return
-
-    # geometry
-    offsets = [get_view_offset(view) for view in views]
-    node_roi.SetCenter(-offsets[2],
-                       offsets[1],
-                       offsets[0])
-    node_roi.SetSize(size)
-
-    # display
-    node_display = node_roi.GetDisplayNode()
-    if not node_display:
-        return
-
-    node_display.SetOpacity(0.5)
-    node_display.SetFillOpacity(0)
-
-    node_display.SetTextScale(2.0)
-    node_display.SetUseGlyphScale(True)
-    node_display.SetGlyphScale(1)
-    node_display.SetInteractionHandleScale(1.5)
-
-    node_display.RotationHandleVisibilityOn()
-    node_display.TranslationHandleVisibilityOn()
-    node_display.ScaleHandleVisibilityOn()
-
-    layout_manager = slicer.app.layoutManager()
-
-    if not layout_manager:
-        return
-
-    for view in views:
-        view_widget = layout_manager.sliceWidget(view)
-
-        if not view_widget:
-            continue
-
-        node_display.AddViewNodeID(view_widget.mrmlSliceNode().GetID())

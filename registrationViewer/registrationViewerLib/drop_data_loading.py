@@ -201,18 +201,12 @@ class DropWidget(qt.QFrame):
                 slicer.progressWindow.close()
                 return
 
-            self.moduleWidget.ui_sub_3.inputSelector_fixed.setCurrentNode(
+            self.moduleWidget.ui.inputSelector_fixed.setCurrentNode(
                 node_volume_fixed)
-            self.moduleWidget.ui_sub_3.inputSelector_moving.setCurrentNode(
+            self.moduleWidget.ui.inputSelector_moving.setCurrentNode(
                 node_volume_moving)
-            self.moduleWidget.ui_sub_3.inputSelector_transformation.setCurrentNode(
+            self.moduleWidget.ui.inputSelector_transformation.setCurrentNode(
                 node_deformation)
-
-            # set visibility of segmentation nodes
-            utils.show_node_only_in_views(self.moduleWidget.node_seg_fixed,
-                                          ['Red1', 'Green1', 'Yellow1'])
-            utils.show_node_only_in_views(self.moduleWidget.node_seg_moving,
-                                          ['Red2', 'Green2', 'Yellow2'])
 
             utils.set_orthogonal_views(
                 self.moduleWidget.views_first_row + self.moduleWidget.views_second_row)
