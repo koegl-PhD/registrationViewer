@@ -209,17 +209,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.dropWidget.load_data_from_dropped_folder(
             "/home/fryderyk/Documents/code/data/example_ct")
-        # # utils.temp_load_data(self)
-
-        # slicer.util.setDataProbeVisible(False)
-
-        a = r"/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans/training/training_4_yIt7Z7VHXU0"
-        # self.dropWidget.load_data_from_dropped_folder(a)
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
-        sectra.disable_sectra_movements()
-
         self.removeObservers()
 
     def enter(self) -> None:
