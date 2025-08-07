@@ -19,13 +19,11 @@ class Crosshairs():
                  node_cursor: slicer.vtkMRMLCrosshairNode,
                  node_transform_nonlinear: slicer.vtkMRMLGridTransformNode,
                  use_transform: bool,
-                 offset_diffs: List[float]
                  ) -> None:
 
         self.node_cursor = node_cursor
         self.node_transform_nonlinear = node_transform_nonlinear
         self.use_transform = use_transform
-        self.offset_diffs = offset_diffs
 
         self.reverse_transf_direction = False
 
@@ -81,24 +79,11 @@ class Crosshairs():
 
         return crosshair_node
 
-    def _calculate_offset(self, offset_direction: Literal['pos', 'neg', 'nan']) -> List[float]:
-        """Return coordinate offsets for given direction."""
-        dx, dy, dz = self.offset_diffs
-
-        if offset_direction == 'nan':
-            return [0.0, 0.0, 0.0]
-        if offset_direction == 'pos':
-            return [-dz, dy, dx]
-        if offset_direction == 'neg':
-            return [dz, -dy, -dx]
-        return [0.0, 0.0, 0.0]
-
     def place_crosshair_with_transformation(
         self,
         views: List[str],
         crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
-        reverse_transf_direction: bool,
-        offset_direction: Literal['pos', 'neg', 'nan']
+        reverse_transf_direction: bool
     ) -> None:
         """
         Places the crosshair in the current view and transforms it to the new position.
@@ -119,11 +104,6 @@ class Crosshairs():
         new_position: list[float] = [0., 0., 0.]
         crosshair_nodes[0].GetNthControlPointPositionWorld(0,
                                                            new_position)
-
-        # Apply offset
-        offset = self._calculate_offset(offset_direction)
-        new_position = [coord + off for coord,
-                        off in zip(new_position, offset)]
 
         for view in views:
             view_logic.set_offset_to_ras(new_position, view)
@@ -166,14 +146,12 @@ class Crosshairs():
                                                         crosshair_nodes=self.crosshairs_1)
             self.place_crosshair_with_transformation(views=self.VIEWS_2,
                                                      crosshair_nodes=self.crosshairs_2,
-                                                     reverse_transf_direction=self.reverse_transf_direction,
-                                                     offset_direction='neg')
+                                                     reverse_transf_direction=self.reverse_transf_direction)
 
         elif current_view in self.VIEWS_2:
             self.place_crosshair_with_transformation(views=self.VIEWS_1,
                                                      crosshair_nodes=self.crosshairs_1,
-                                                     reverse_transf_direction=not self.reverse_transf_direction,
-                                                     offset_direction='pos')
+                                                     reverse_transf_direction=not self.reverse_transf_direction)
             self.place_crosshair_without_transformation(views=self.VIEWS_2,
                                                         crosshair_nodes=self.crosshairs_2)
 

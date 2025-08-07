@@ -346,8 +346,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_crosshair,
                                                node_transform_nonlinear=self.node_transform_nonlinear,
-                                               use_transform=self.use_transform,
-                                               offset_diffs=self.current_offset)
+                                               use_transform=self.use_transform)
 
         if turn_synchronisation_on:
             observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
