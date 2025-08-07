@@ -162,7 +162,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
         self.ui.synchronise_views_with_transform.setText(
-            "Synchronise views with transform (t)")
+            "Synchronise views (s)")
 
         self._remove_custom_nodes()
 
@@ -180,7 +180,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views)
 
         # loading code
-        drop_data_loading.create_loading_ui(self)
+        # drop_data_loading.create_loading_ui(self)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -192,8 +192,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         slicer.util.resetSliceViews()
 
-        self.dropWidget.load_data_from_dropped_folder(
-            "/home/fryderyk/Documents/code/data/example_ct")
+        # self.dropWidget.load_data_from_dropped_folder(
+        #     "/home/fryderyk/Documents/code/data/example_ct")
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -219,8 +219,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.remove_custom_observers_from_crosshair()
         self.synchronise_with_displacement_pressed = False
-        self.ui_sub_4.synchronise_views_with_transform.setText(
-            "Synchronise views with transform (t)")
+        self.ui.synchronise_views_with_transform.setText(
+            "Synchronise views (s)")
 
         self._remove_custom_nodes()
 
@@ -317,7 +317,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._set_up_crosshair(self.synchronise_with_displacement_pressed)
             print("pressed to synchronise")
             self.ui.synchronise_views_with_transform.setText(
-                "Unsynchronise views with transform (t)")
+                "Unsynchronise views (s)")
 
             self.use_transform = self.crosshair.use_transform = True
 
@@ -328,7 +328,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             print("pressed to unsynchronise")
             self.remove_custom_observers_from_crosshair()
             self.ui.synchronise_views_with_transform.setText(
-                "Synchronise views with transform (t)")
+                "Synchronise views (s)")
 
     def _remove_custom_nodes(self) -> None:
         if self.crosshair is not None:
