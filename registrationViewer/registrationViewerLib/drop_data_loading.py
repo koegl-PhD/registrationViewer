@@ -110,15 +110,9 @@ class DropWidget(qt.QFrame):
                 f"Loading data...")
             slicer.app.processEvents()
 
-            path_registrations = "/home/koeglf/data/registrationStudy/SerielleCTs_nii_forHumans_registrations"
-
             path_volume_fixed = "/home/fryderyk/Documents/code/data/example_ct/b.nii.gz"
             path_volume_moving = "/home/fryderyk/Documents/code/data/example_ct/a.nii.gz"
             path_deformation = "/home/fryderyk/Documents/code/data/example_ct/hmJfXqxVMk0~a_to_b.nii.gz"
-            path_seg_fixed = None
-            path_seg_moving = None
-            path_transform_fixed = None
-            path_transform_moving = None
 
             if utils.update_progress_window(0, f"Loading fixed volume..."):
                 node_volume_fixed = slicer.util.loadVolume(path_volume_fixed)
@@ -133,56 +127,6 @@ class DropWidget(qt.QFrame):
                 name_volume_moving = os.path.basename(
                     path_volume_moving).replace(".nii.gz", "")
                 node_volume_moving.SetName(name_volume_moving)
-            else:
-                return
-
-            if utils.update_progress_window(20, f"Loading fixed segmentation..."):
-                if path_seg_fixed:
-                    self.moduleWidget.node_seg_fixed = slicer.util.loadSegmentation(
-                        path_seg_fixed)
-                    name_seg_fixed = os.path.basename(
-                        path_seg_fixed).replace(".nii.gz", "")
-                    self.moduleWidget.node_seg_fixed.SetName(name_seg_fixed)
-            else:
-                return
-
-            if utils.update_progress_window(30, f"Loading moving segmentation..."):
-                if path_seg_moving:
-                    self.moduleWidget.node_seg_moving = slicer.util.loadSegmentation(
-                        path_seg_moving)
-                    name_seg_moving = os.path.basename(
-                        path_seg_moving).replace(".nii.gz", "")
-                    self.moduleWidget.node_seg_moving.SetName(name_seg_moving)
-            else:
-                return
-
-            if utils.update_progress_window(40, f"Loading fixed transform..."):
-                if path_transform_fixed is None:
-                    self.moduleWidget.node_transform_fixed = slicer.mrmlScene.AddNewNodeByClass(
-                        "vtkMRMLLinearTransformNode")
-                    print(f"No fixed transform found")
-                else:
-                    self.moduleWidget.node_transform_fixed = slicer.util.loadTransform(
-                        path_transform_fixed)
-                    name_transform_fixed = os.path.basename(
-                        path_transform_fixed).replace(".nii.gz", "")
-                    self.moduleWidget.node_transform_fixed.SetName(
-                        name_transform_fixed)
-            else:
-                return
-
-            if utils.update_progress_window(50, f"Loading moving transform..."):
-                if path_transform_moving is None:
-                    self.moduleWidget.node_transform_moving = slicer.mrmlScene.AddNewNodeByClass(
-                        "vtkMRMLLinearTransformNode")
-                    print(f"No moving transform found")
-                else:
-                    self.moduleWidget.node_transform_moving = slicer.util.loadTransform(
-                        path_transform_moving)
-                    name_transform_moving = os.path.basename(
-                        path_transform_moving).replace(".h5", "")
-                    self.moduleWidget.node_transform_moving.SetName(
-                        name_transform_moving)
             else:
                 return
 
