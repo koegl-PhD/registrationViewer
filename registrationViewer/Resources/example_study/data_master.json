@@ -77,6 +77,10 @@
         "rad_2": {
             "name": "Eva Haneder",
             "group": "1"
+        },
+        "rad_3": {
+            "name": "Lilly Wingberg",
+            "group": "2"
         }
     }
 }
