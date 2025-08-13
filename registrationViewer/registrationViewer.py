@@ -73,8 +73,6 @@ class registrationViewerParameterNode:
     volume_moving: vtkMRMLScalarVolumeNode
     transformation: vtkMRMLTransformNode
 
-    volume_common_background: vtkMRMLScalarVolumeNode
-
 
 #
 # registrationViewerWidget
@@ -130,8 +128,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         for selector in [self.ui.inputSelector_fixed,
                          self.ui.inputSelector_moving,
-                         self.ui.inputSelector_transformation,
-                         self.ui.inputSelector_common_background]:
+                         self.ui.inputSelector_transformation]:
             selector.setMRMLScene(slicer.mrmlScene)
 
         # Create logic classes. Logic implements all computations that should be possible to run
@@ -278,14 +275,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.selected_orientation == 'AxiSagCor':
             self.viewers = self.CompareVolumes_logic.viewersPerVolume(
                 volumeNodes=nodes,
-                background=self.node_background_volume,
+                background=None,
                 label=None,
                 opacity=self.visualization.fadeSlider.value
             )
         else:
             self.viewers = self.CompareVolumes_logic.viewerPerVolume(
                 volumeNodes=nodes,
-                background=self.node_background_volume,
+                background=None,
                 label=None,
                 orientation=self.selected_orientation,
                 opacity=self.visualization.fadeSlider.value
@@ -296,10 +293,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.views_moving = self.get_views_of_volume(
             self.node_moving)
         self.views_all = self.views_fixed + self.views_moving
-
-        # for view in self.views_all:
-        #     slicer.app.layoutManager().sliceWidget(
-        #         view).sliceController().fitSliceToBackground()
 
         for viewName in self.viewers.keys():
             sliceWidget = slicer.app.layoutManager().sliceWidget(viewName)
@@ -398,12 +391,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slice_logic = app_logic.GetSliceLogic(slice_node)
             comp = slice_logic.GetSliceCompositeNode()
 
-            if self.node_background_volume:
-                volume_id = comp.GetForegroundVolumeID()
-            else:
-                volume_id = comp.GetBackgroundVolumeID()
-
-            if volume_id == volume_node.GetID():
+            if comp.GetBackgroundVolumeID() == volume_node.GetID():
                 volume_views.add(view)
 
         return list(volume_views)
@@ -419,10 +407,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     @property
     def node_transform(self) -> Any:
         return self.ui.inputSelector_transformation.currentNode()
-
-    @property
-    def node_background_volume(self) -> Any:
-        return self.ui.inputSelector_common_background.currentNode()
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
