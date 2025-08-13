@@ -157,6 +157,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views)
 
+        self.ui.hotLinkWithCursor_checkbox.connect(
+            "stateChanged(int)", self._update_from_gui)
+
         self.orientations = ("Axial", "Sagittal", "Coronal", "AxiSagCor")
 
         for orientation in self.orientations:
@@ -195,6 +198,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if self.synchronise_pressed:
             self._set_up_crosshair()
+
+        for view in self.views_all:
+            slicer.app.layoutManager().sliceWidget(
+                view).sliceController().fitSliceToBackground()
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -292,9 +299,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_moving)
         self.views_all = self.views_fixed + self.views_moving
 
-        for view in self.views_all:
-            slicer.app.layoutManager().sliceWidget(
-                view).sliceController().fitSliceToBackground()
+        # for view in self.views_all:
+        #     slicer.app.layoutManager().sliceWidget(
+        #         view).sliceController().fitSliceToBackground()
 
         for viewName in self.viewers.keys():
             sliceWidget = slicer.app.layoutManager().sliceWidget(viewName)
