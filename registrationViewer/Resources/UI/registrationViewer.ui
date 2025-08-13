@@ -18,9 +18,12 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
 
-
-   <item>
-    <!-- START formLayout_2 -->
+     <item>
+    <widget class="qMRMLCollapsibleButton" name="ParametersCollapsibleButton">
+     <property name="text">
+      <string>Parameters</string>
+     </property>
+     <!-- START formLayout_2 -->
      <layout class="QFormLayout" name="formLayout_2">
      
       <!-- START label_2 -->
@@ -139,10 +142,62 @@
        </widget>
       </item>
       <!-- END inputSelector_transformation -->
+
+      <!-- START label_4 -->
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Orientation:</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END label_4 -->
+    <!-- START orientationGroupBox -->
+      <item row="3" column="1" colspan="2">
+       <widget class="QGroupBox" name="orientationGroupBox">
+        <layout class="QVBoxLayout" name="orientationLayout">
+         <item>
+          <widget class="QRadioButton" name="radioAxial">
+           <property name="text">
+            <string>Axial</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="radioSagittal">
+           <property name="text">
+            <string>Sagittal</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="radioCoronal">
+           <property name="text">
+            <string>Coronal</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="radioAxiSagCor">
+           <property name="text">
+            <string>AxiSagCor</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <!-- END orientationGroupBox -->
+
       
      </layout>
     <!-- END formLayout_2 -->
+    </widget>
    </item>
+
 
    
     <!-- START synchronise_views_with_transform -->
