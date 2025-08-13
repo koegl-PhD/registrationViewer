@@ -5,7 +5,7 @@ import logging
 import os
 import time
 
-from typing import Optional, Any, Literal, Tuple, Dict, Callable
+from typing import Optional, Any, List, Literal, Tuple, Dict, Callable
 
 import numpy as np
 import glob
@@ -25,7 +25,9 @@ from slicer.util import VTKObservationMixin
 from slicer.parameterNodeWrapper import (
     parameterNodeWrapper,
 )
-from slicer import vtkMRMLScalarVolumeNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
+from slicer import vtkMRMLScalarVolumeNode, vtkMRMLSliceNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
+
+import CompareVolumes
 
 import registrationViewerLib
 from registrationViewerLib import utils, crosshairs, view_logic, drop_data_loading
@@ -118,6 +120,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.crosshair = None
 
         self.logic = registrationViewerLogic()
+        self.CompareVolumes_logic = CompareVolumes.CompareVolumesLogic()
+        self.viewers: Dict[str, vtkMRMLSliceNode]
 
         self.synchronise_with_displacement_pressed = False
 
@@ -308,6 +312,19 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_synchronise_views(self) -> None:
 
+        self.viewers = self.CompareVolumes_logic.viewersPerVolume(
+            volumeNodes=[self.node_fixed, self.node_moving],
+            background=None,
+            label=None,
+            opacity=0.5,
+        )
+
+        self.views_first_row = self.get_views_of_volume(
+            self.node_fixed)
+        self.views_second_row = self.get_views_of_volume(
+            self.node_moving)
+        self.views_all = self.views_first_row + self.views_second_row
+
         if not self.synchronisation_checks():
             return
 
@@ -346,8 +363,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_crosshair,
                                                node_transform_nonlinear=self.node_transform_nonlinear,
-                                               use_transform=self.use_transform)
-
+                                               use_transform=self.use_transform,
+                                               views_1=self.views_first_row,
+                                               views_2=self.views_second_row)
         if turn_synchronisation_on:
             observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                                                            self.crosshair.on_mouse_moved_place_crosshair)
@@ -363,6 +381,25 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.node_crosshair.RemoveObserver(observer_tag)
 
         self.crosshair_custom_observer_tags.clear()
+
+    def get_views_of_volume(
+        self,
+        volume_node: vtkMRMLScalarVolumeNode,
+    ) -> List[str]:
+
+        volume_views = set()
+
+        for view, slice_node in self.viewers.items():
+
+            app_logic = slicer.app.applicationLogic()
+            slice_logic = app_logic.GetSliceLogic(slice_node)
+            comp = slice_logic.GetSliceCompositeNode()
+            bg_id = comp.GetBackgroundVolumeID()
+
+            if bg_id == volume_node.GetID():
+                volume_views.add(view)
+
+        return list(volume_views)
 
     @property
     def node_fixed(self) -> Any:
