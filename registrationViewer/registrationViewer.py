@@ -193,6 +193,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._update_from_gui()
 
+        if self.synchronise_pressed:
+            self._set_up_crosshair()
+
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
         self.removeObservers()
@@ -293,12 +296,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.app.layoutManager().sliceWidget(
                 view).sliceController().fitSliceToBackground()
 
-        if self.crosshair:
-            self.crosshair.node_transform = self.node_transform
-            self.crosshair.views_fixed = self.views_fixed
-            self.crosshair.views_moving = self.views_moving
-            self.crosshair.views_all = self.views_all
-
         for viewName in self.viewers.keys():
             sliceWidget = slicer.app.layoutManager().sliceWidget(viewName)
             compositeNode = sliceWidget.sliceLogic().GetSliceCompositeNode()
@@ -358,10 +355,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui.inputSelector_transformation.currentNode() is not None
 
     def _set_up_crosshair(self) -> None:
-        if not self.crosshair:
-            self.crosshair = Crosshairs(node_transform=self.node_transform,
-                                        views_fixed=self.views_fixed,
-                                        views_moving=self.views_moving)
+        if self.crosshair:
+            self.remove_custom_observers_from_crosshair()
+            self.crosshair.delete_crosshairs_and_folder()
+            self.crosshair = None
+
+        self.crosshair = Crosshairs(node_transform=self.node_transform,
+                                    views_fixed=self.views_fixed,
+                                    views_moving=self.views_moving)
 
         observer_tag = slicer.util.getNode("Crosshair").AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                                                                     self.crosshair.on_mouse_moved_place_crosshair)
