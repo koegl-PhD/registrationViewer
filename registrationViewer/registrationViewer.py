@@ -326,6 +326,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.util.errorDisplay("No nonlinear transform found")
             return False
 
+        if self.node_fixed.GetID() == self.node_moving.GetID():
+            slicer.util.errorDisplay(
+                "Fixed and moving nodes must be different")
+            return False
+
         return True
 
     def on_synchronise_views(self) -> None:
