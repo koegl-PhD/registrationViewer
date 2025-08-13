@@ -25,7 +25,7 @@ from slicer.util import VTKObservationMixin
 from slicer.parameterNodeWrapper import (
     parameterNodeWrapper,
 )
-from slicer import vtkMRMLScalarVolumeNode, vtkMRMLSliceNode, vtkMRMLTransformNode, vtkMRMLLabelMapVolumeNode  # pylint: disable=no-name-in-module
+from slicer import vtkMRMLScalarVolumeNode, vtkMRMLSliceNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
 
 import CompareVolumes
 
@@ -74,7 +74,6 @@ class registrationViewerParameterNode:
     transformation: vtkMRMLTransformNode
 
     volume_common_background: vtkMRMLScalarVolumeNode
-    label_common: vtkMRMLLabelMapVolumeNode
 
 
 #
@@ -132,8 +131,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         for selector in [self.ui.inputSelector_fixed,
                          self.ui.inputSelector_moving,
                          self.ui.inputSelector_transformation,
-                         self.ui.inputSelector_common_background,
-                         self.ui.inputSelector_common_label]:
+                         self.ui.inputSelector_common_background]:
             selector.setMRMLScene(slicer.mrmlScene)
 
         # Create logic classes. Logic implements all computations that should be possible to run
@@ -281,14 +279,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.viewers = self.CompareVolumes_logic.viewersPerVolume(
                 volumeNodes=nodes,
                 background=self.node_background_volume,
-                label=self.node_common_label,
+                label=None,
                 opacity=self.visualization.fadeSlider.value
             )
         else:
             self.viewers = self.CompareVolumes_logic.viewerPerVolume(
                 volumeNodes=nodes,
                 background=self.node_background_volume,
-                label=self.node_common_label,
+                label=None,
                 orientation=self.selected_orientation,
                 opacity=self.visualization.fadeSlider.value
             )
@@ -425,10 +423,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     @property
     def node_background_volume(self) -> Any:
         return self.ui.inputSelector_common_background.currentNode()
-
-    @property
-    def node_common_label(self) -> Any:
-        return self.ui.inputSelector_common_label.currentNode()
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):

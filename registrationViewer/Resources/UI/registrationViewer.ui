@@ -244,54 +244,10 @@
        </widget>
       </item>
       <!-- END inputSelector_common_background -->
-      
-    
-    <!-- START label_6 -->
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Common Label:</string>
-        </property>
-       </widget>
-      </item>
-      <!-- END label_6 -->
 
-      <!-- START inputSelector_common_background -->
-      <item row="5" column="1" colspan="2">
-       <widget class="qMRMLNodeComboBox" name="inputSelector_common_label">
-        <property name="toolTip">
-         <string>Pick the common label.</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist notr="true">
-          <string>vtkMRMLLabelMapVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="hideChildNodeTypes">
-         <stringlist notr="true"/>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="noneEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="interactionNodeSingletonTag">
-         <string notr="true"/>
-        </property>
-        <property name="SlicerParameterName" stdset="0">
-         <string>label_common</string>
-        </property>
-       </widget>
-      </item>
-      <!-- END inputSelector_common_background -->
-      
           
     <!-- START label_7 -->
-      <item row="6" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Hot Link with Cursor</string>
@@ -301,7 +257,7 @@
       <!-- END label_7 -->
 
     <!-- START hotLinkWithCursor_checkbox -->
-    <item row="6" column="1" colspan="2">
+    <item row="5" column="1" colspan="2">
         <widget class="QCheckBox" name="hotLinkWithCursor_checkbox">
         <property name="toolTip">
         <string>Enable hot linking with cursor.</string>
