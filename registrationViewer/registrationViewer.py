@@ -130,8 +130,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.addObserver(slicer.mrmlScene,
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
-        self._add_landmark_registration_widget()
-
         self.synchronise_pressed = False
         self.ui.synchronise_views_with_transform.setText(
             "Synchronise views (s)")
@@ -157,19 +155,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
-
-    def _add_landmark_registration_widget(self) -> None:
-        import LandmarkRegistration
-        self.visualization = LandmarkRegistration.RegistrationLib.VisualizationWidget(
-            None)
-        self.visualization.groupBoxLayout.itemAt(3).widget().hide()
-        self.visualization.groupBoxLayout.itemAt(2).widget().hide()
-        self.visualization.groupBoxLayout.itemAt(1).widget().hide()
-        self.visualization.groupBoxLayout.itemAt(0).widget().hide()
-
-        row: int = self.ui.formLayout_2.rowCount()
-        self.ui.formLayout_2.addWidget(
-            self.visualization.widget, row, 0, 1, 3)  # spans columns 1–3
 
     def setOrientation(self, orientation):
         if orientation in self.orientations:
@@ -265,7 +250,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 volumeNodes=nodes,
                 background=None,
                 label=None,
-                opacity=self.visualization.fadeSlider.value
+                opacity=None
             )
         else:
             self.viewers = self.CompareVolumes_logic.viewerPerVolume(
@@ -273,7 +258,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 background=None,
                 label=None,
                 orientation=self.selected_orientation,
-                opacity=self.visualization.fadeSlider.value
+                opacity=None
             )
 
         self.views_fixed = self.get_views_of_volume(
