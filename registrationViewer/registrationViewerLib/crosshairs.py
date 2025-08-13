@@ -12,13 +12,11 @@ class Crosshairs():
     """
 
     def __init__(self,
-                 node_cursor: slicer.vtkMRMLCrosshairNode,
                  node_transform: slicer.vtkMRMLGridTransformNode,
                  views_1: List[str],
                  views_2: List[str]
                  ) -> None:
 
-        self.node_cursor = node_cursor
         self.node_transform = node_transform
 
         self.reverse_transf_direction = False
@@ -90,7 +88,7 @@ class Crosshairs():
         """
 
         initial_position: list[float] = [0., 0., 0.]
-        self.node_cursor.GetCursorPositionRAS(initial_position)
+        slicer.util.getNode("Crosshair").GetCursorPositionRAS(initial_position)
 
         # now we set the position of our crosshair and then transform it to the new position
         self.set_crosshair_nodes_to_position(crosshair_nodes,
@@ -119,7 +117,7 @@ class Crosshairs():
     ) -> None:
 
         initial_position: list[float] = [0., 0., 0.]
-        self.node_cursor.GetCursorPositionRAS(initial_position)
+        slicer.util.getNode("Crosshair").GetCursorPositionRAS(initial_position)
 
         self.set_crosshair_visibility()
 
