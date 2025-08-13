@@ -244,9 +244,8 @@ class StudyData:
 
         max_chunk_size = 6
 
-        patients: List[str] = []
-
         for group, split in self.split.items():
+            patients: List[str] = []
 
             for patient_name, (present, transform) in split.items():
 
