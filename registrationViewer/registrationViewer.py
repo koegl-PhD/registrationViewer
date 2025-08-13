@@ -86,7 +86,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # needed for parameter node observation
         VTKObservationMixin.__init__(self)
         self._parameterNode: Optional[registrationViewerParameterNode] = None
-        self._parameterNodeGuiTags = []
+        self._parameterNodeGuiTag = None
 
         modules = [
             "utils", "crosshairs",
@@ -98,27 +98,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             setattr(registrationViewerLib, name, m)  # type: ignore
             globals()[name] = m  # type: ignore
 
-        self.logger = None
-
-        self.group_first_row = 1
-        self.group_second_row = 2
-
         utils.create_shortcuts(
             ('s', self.on_synchronise_views),
         )
 
-        self.use_transform = True
-        self.reverse_transformation_direction = True
-        self.current_offset = [0.0, 0.0, 0.0]
-        self.offset_set = False
-
         self.crosshair = None
 
-        self.logic = registrationViewerLogic()
-        self.CompareVolumes_logic = CompareVolumes.CompareVolumesLogic()
         self.viewers: Dict[str, vtkMRMLSliceNode]
 
-        self.synchronise_with_displacement_pressed = False
+        self.synchronise_pressed = False
 
         self.crosshair_custom_observer_tags = []
 
@@ -126,31 +114,27 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
 
-        mainWidget = slicer.util.loadUI(
+        uiWidget = slicer.util.loadUI(
             self.resourcePath("UI/registrationViewer.ui"))
-        self.layout.addWidget(mainWidget)
-        self.ui = slicer.util.childWidgetVariables(mainWidget)
-
-        self.all_uis = [self.ui]
+        self.layout.addWidget(uiWidget)
+        self.ui = slicer.util.childWidgetVariables(uiWidget)
 
         slicer.app.processEvents()  # Ensures all widgets are fully rendered
 
-        # Set MRML scene for main UI (but not generic QWidgets)
-        mainWidget.setMRMLScene(slicer.mrmlScene)
+        # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
+        # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
+        # "setMRMLScene(vtkMRMLScene*)" slot.
+        uiWidget.setMRMLScene(slicer.mrmlScene)
 
         for selector in [self.ui.inputSelector_fixed,
                          self.ui.inputSelector_moving,
                          self.ui.inputSelector_transformation]:
             selector.setMRMLScene(slicer.mrmlScene)
 
-        mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
-                           self.ui.inputSelector_fixed.setMRMLScene)
-        mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
-                           self.ui.inputSelector_moving.setMRMLScene)
-        mainWidget.connect("mrmlSceneChanged(vtkMRMLScene*)",
-                           self.ui.inputSelector_transformation.setMRMLScene)
-
-        # Connections
+        # Create logic classes. Logic implements all computations that should be possible to run
+        # in batch mode, without a graphical user interface.
+        self.logic = registrationViewerLogic()
+        self.CompareVolumes_logic = CompareVolumes.CompareVolumesLogic()
 
         # These connections ensure that we update parameter node when scene is closed
         self.addObserver(
@@ -158,8 +142,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.addObserver(slicer.mrmlScene,
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
-        self.remove_custom_observers_from_crosshair()
-        self.synchronise_with_displacement_pressed = False
+        self.synchronise_pressed = False
         self.ui.synchronise_views_with_transform.setText(
             "Synchronise views (s)")
 
@@ -167,14 +150,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views)
 
-        # loading code
-        # drop_data_loading.create_loading_ui(self)
-
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
-
-        # self.dropWidget.load_data_from_dropped_folder(
-        #     "/home/fryderyk/Documents/code/data/example_ct")
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -189,8 +166,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called each time the user opens a different module."""
         # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
         if self._parameterNode:
-            self._disconnect_gui()
-            self._clear_parameter_node_gui_tags()
+            self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
+            self._parameterNodeGuiTag = None
 
             self.removeObserver(
                 self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
@@ -199,7 +176,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called just before the scene is closed."""
 
         self.remove_custom_observers_from_crosshair()
-        self.synchronise_with_displacement_pressed = False
+        self.synchronise_pressed = False
         self.ui.synchronise_views_with_transform.setText(
             "Synchronise views (s)")
 
@@ -228,44 +205,45 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """
 
         if self._parameterNode:
-            self._disconnect_gui()
+            self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
             self.removeObserver(
                 self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
             # ui element that needs connection.
-            self._connect_gui()
+            self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
             self.addObserver(self._parameterNode,
                              vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
-
-    def _connect_gui(self) -> None:
-        for ui in self.all_uis:
-            self._parameterNodeGuiTags.append(
-                self._parameterNode.connectGui(ui))
-
-    def _disconnect_gui(self) -> None:
-        for tag in self._parameterNodeGuiTags:
-            self._parameterNode.disconnectGui(tag)
-
-    def _clear_parameter_node_gui_tags(self) -> None:
-        self._parameterNodeGuiTags = []
+            self._update_from_gui()
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
 
-        view_logic.update_views_with_volume(
-            self.views_first_row, self.node_fixed)
-        view_logic.update_views_with_volume(
-            self.views_second_row, self.node_moving)
-        self._update_crosshair_transformation()
+        if not self._are_nodes_selected():
+            return
 
-        # reset field of view for view 0, 3 and 6
-        for view in [self.views_first_row[0], self.views_second_row[0]]:
+        self.viewers = self.CompareVolumes_logic.viewersPerVolume(
+            volumeNodes=[self.node_fixed, self.node_moving],
+            background=None,
+            label=None,
+            opacity=0.5,
+        )
+
+        self.views_first_row = self.get_views_of_volume(
+            self.node_fixed)
+        self.views_second_row = self.get_views_of_volume(
+            self.node_moving)
+        self.views_all = self.views_first_row + self.views_second_row
+
+        for view in self.views_all:
             slicer.app.layoutManager().sliceWidget(
                 view).sliceController().fitSliceToBackground()
 
-        view_logic.link_views(self.views_first_row)
-        view_logic.link_views(self.views_second_row)
+        if self.crosshair:
+            self.crosshair.node_transform = self.node_transform
+            self.crosshair.views_1 = self.views_first_row
+            self.crosshair.views_2 = self.views_second_row
+            self.crosshair.views_all = self.views_all
 
     def synchronisation_checks(self) -> bool:
         """
@@ -289,25 +267,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def on_synchronise_views(self) -> None:
 
-        self.viewers = self.CompareVolumes_logic.viewersPerVolume(
-            volumeNodes=[self.node_fixed, self.node_moving],
-            background=None,
-            label=None,
-            opacity=0.5,
-        )
-
-        self.views_first_row = self.get_views_of_volume(
-            self.node_fixed)
-        self.views_second_row = self.get_views_of_volume(
-            self.node_moving)
-        self.views_all = self.views_first_row + self.views_second_row
-
         if not self.synchronisation_checks():
             return
 
-        self.synchronise_with_displacement_pressed = not self.synchronise_with_displacement_pressed
+        self.synchronise_pressed = not self.synchronise_pressed
 
-        if self.synchronise_with_displacement_pressed is True:
+        if self.synchronise_pressed is True:
             self._set_up_crosshair()
             self.ui.synchronise_views_with_transform.setText(
                 "Unsynchronise views (s)")
@@ -336,10 +301,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                                                        self.crosshair.on_mouse_moved_place_crosshair)
         self.crosshair_custom_observer_tags.append(observer_tag)
-
-    def _update_crosshair_transformation(self) -> None:
-        if self.crosshair:
-            self.crosshair.node_transform = self.node_transform
 
     def remove_custom_observers_from_crosshair(self) -> None:
         for observer_tag in self.crosshair_custom_observer_tags:
