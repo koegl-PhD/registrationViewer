@@ -103,11 +103,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.group_first_row = 1
         self.group_second_row = 2
 
-        self.views_first_row = ["Red", "Green", "Yellow"]
-        self.views_second_row = ["Red+", "Green+", "Yellow+"]
-
-        self.views_all = self.views_first_row + self.views_second_row
-
         utils.create_shortcuts(
             ('s', self.on_synchronise_views),
         )
@@ -168,17 +163,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.synchronise_views_with_transform.setText(
             "Synchronise views (s)")
 
-        self._remove_custom_nodes()
-
-        view_logic.set_three_over_three_layout()
-
-        # set groups
-        for i in range(3):
-            slicer.app.layoutManager().sliceWidget(
-                self.views_first_row[i]).mrmlSliceNode().SetViewGroup(1)
-            slicer.app.layoutManager().sliceWidget(
-                self.views_second_row[i]).mrmlSliceNode().SetViewGroup(2)
-
         # Buttons
         self.ui.synchronise_views_with_transform.connect(
             "clicked(bool)", self.on_synchronise_views)
@@ -188,13 +172,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
-
-        view_logic.link_views(self.views_first_row)
-        view_logic.link_views(self.views_second_row)
-
-        # view_logic.set_three_over_three_layout()
-
-        slicer.util.resetSliceViews()
 
         # self.dropWidget.load_data_from_dropped_folder(
         #     "/home/fryderyk/Documents/code/data/example_ct")
@@ -304,7 +281,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.util.errorDisplay("No crosshair found")
             return False
 
-        if self.node_transform_nonlinear is None:
+        if self.node_transform is None:
             slicer.util.errorDisplay("No nonlinear transform found")
             return False
 
@@ -331,18 +308,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.synchronise_with_displacement_pressed = not self.synchronise_with_displacement_pressed
 
         if self.synchronise_with_displacement_pressed is True:
-            self._set_up_crosshair(self.synchronise_with_displacement_pressed)
-            print("pressed to synchronise")
+            self._set_up_crosshair()
             self.ui.synchronise_views_with_transform.setText(
                 "Unsynchronise views (s)")
-
-            self.use_transform = self.crosshair.use_transform = True
-
-            self.crosshair.offset_diffs = self.current_offset = [0, 0, 0]
-            self.crosshair.apply_offsets = False
-            self.synchronise_manually_pressed = False
         else:
-            print("pressed to unsynchronise")
             self.remove_custom_observers_from_crosshair()
             self.ui.synchronise_views_with_transform.setText(
                 "Synchronise views (s)")
@@ -357,23 +326,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.ui.inputSelector_moving.currentNode() is not None and \
             self.ui.inputSelector_transformation.currentNode() is not None
 
-    def _set_up_crosshair(self, turn_synchronisation_on: bool) -> None:
-        if self.crosshair:
-            self.crosshair.delete_crosshairs_and_folder()
+    def _set_up_crosshair(self) -> None:
+        if not self.crosshair:
+            self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_crosshair,
+                                                   node_transform=self.node_transform,
+                                                   views_1=self.views_first_row,
+                                                   views_2=self.views_second_row)
 
-        self.crosshair = crosshairs.Crosshairs(node_cursor=self.node_crosshair,
-                                               node_transform_nonlinear=self.node_transform_nonlinear,
-                                               use_transform=self.use_transform,
-                                               views_1=self.views_first_row,
-                                               views_2=self.views_second_row)
-        if turn_synchronisation_on:
-            observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                                           self.crosshair.on_mouse_moved_place_crosshair)
-            self.crosshair_custom_observer_tags.append(observer_tag)
+        observer_tag = self.node_crosshair.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
+                                                       self.crosshair.on_mouse_moved_place_crosshair)
+        self.crosshair_custom_observer_tags.append(observer_tag)
 
     def _update_crosshair_transformation(self) -> None:
         if self.crosshair:
-            self.crosshair.node_transform_nonlinear = self.node_transform_nonlinear
+            self.crosshair.node_transform = self.node_transform
 
     def remove_custom_observers_from_crosshair(self) -> None:
         for observer_tag in self.crosshair_custom_observer_tags:
@@ -414,7 +380,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return slicer.util.getNode("Crosshair")
 
     @property
-    def node_transform_nonlinear(self) -> Any:
+    def node_transform(self) -> Any:
         return self.ui.inputSelector_transformation.currentNode()
 
 

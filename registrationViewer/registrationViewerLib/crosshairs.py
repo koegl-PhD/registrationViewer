@@ -13,15 +13,13 @@ class Crosshairs():
 
     def __init__(self,
                  node_cursor: slicer.vtkMRMLCrosshairNode,
-                 node_transform_nonlinear: slicer.vtkMRMLGridTransformNode,
-                 use_transform: bool,
+                 node_transform: slicer.vtkMRMLGridTransformNode,
                  views_1: List[str],
                  views_2: List[str]
                  ) -> None:
 
         self.node_cursor = node_cursor
-        self.node_transform_nonlinear = node_transform_nonlinear
-        self.use_transform = use_transform
+        self.node_transform = node_transform
 
         self.reverse_transf_direction = False
 
@@ -99,9 +97,8 @@ class Crosshairs():
                                              initial_position)
 
         # now transform the crosshair to the new position
-        if self.use_transform:
-            self.transform_crosshair_nodes(crosshair_nodes,
-                                           not reverse_transf_direction)
+        self.transform_crosshair_nodes(crosshair_nodes,
+                                       not reverse_transf_direction)
 
         new_position: list[float] = [0., 0., 0.]
         crosshair_nodes[0].GetNthControlPointPositionWorld(0,
@@ -164,14 +161,14 @@ class Crosshairs():
         Transform every crosshair from the list of nodes with the current transformation.
         """
 
-        if not self.node_transform_nonlinear:
+        if not self.node_transform:
             print("No transformation available")
             return
 
         for node in crosshair_nodes:
-            transform = (self.node_transform_nonlinear.GetTransformFromParent()
+            transform = (self.node_transform.GetTransformFromParent()
                          if invert
-                         else self.node_transform_nonlinear.GetTransformToParent())
+                         else self.node_transform.GetTransformToParent())
             node.ApplyTransform(transform)
 
     def _set_node_visibility(self, node: slicer.vtkMRMLMarkupsFiducialNode, visibility: bool) -> None:
