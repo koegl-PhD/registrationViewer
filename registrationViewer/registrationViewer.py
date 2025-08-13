@@ -29,9 +29,6 @@ from slicer import vtkMRMLScalarVolumeNode, vtkMRMLSliceNode, vtkMRMLTransformNo
 
 import CompareVolumes
 
-import registrationViewerLib
-from registrationViewerLib import utils, view_logic, drop_data_loading
-
 
 class registrationViewer(ScriptedLoadableModule):
     """_summary_
@@ -88,18 +85,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTag = None
 
-        modules = [
-            "utils", "view_logic", "drop_data_loading"
-        ]
-
-        for name in modules:
-            m = importlib.reload(getattr(registrationViewerLib, name))
-            setattr(registrationViewerLib, name, m)  # type: ignore
-            globals()[name] = m  # type: ignore
-
-        utils.create_shortcuts(
-            ('s', self.on_synchronise_views),
-        )
+        shortcut = qt.QShortcut(slicer.util.mainWindow())
+        shortcut.setKey(qt.QKeySequence('s'))
+        shortcut.connect('activated()', self.on_synchronise_views)
 
         self.crosshair = None
 
@@ -539,12 +527,12 @@ class Crosshairs():
         self.transform_crosshair_nodes(crosshair_nodes,
                                        not reverse_transf_direction)
 
-        new_position: list[float] = [0., 0., 0.]
+        new_position: List[float] = [0., 0., 0.]
         crosshair_nodes[0].GetNthControlPointPositionWorld(0,
                                                            new_position)
 
         for view in views:
-            view_logic.set_offset_to_ras(new_position, view)
+            self.set_offset_to_ras(new_position, view)
 
         self.set_crosshair_visibility()
 
@@ -567,17 +555,17 @@ class Crosshairs():
 
         # only jump the *other* slice views in this group; leave the active view’s slice unchanged
         for view in views:
-            if view == utils.get_cursor_view_name():
+            if view == self.get_cursor_view_name():
                 continue
 
-            view_logic.set_offset_to_ras(initial_position, view)
+            self.set_offset_to_ras(initial_position, view)
 
     def on_mouse_moved_place_crosshair(self, observer, eventid) -> None:  # pylint: disable=unused-argument
         """
         When the mouse moves in a view, the crosshair should follow the cursor.
 
         """
-        current_view = utils.get_cursor_view_name()
+        current_view = self.get_cursor_view_name()
 
         if current_view in self.views_fixed:
             self.place_crosshair_without_transformation(views=self.views_fixed,
@@ -644,10 +632,45 @@ class Crosshairs():
         for node in self.crosshair_nodes.values():
             self._set_node_visibility(node, True)
 
-        current_view = utils.get_cursor_view_name()
+        current_view = self.get_cursor_view_name()
         if current_view in self.crosshair_nodes:
             self._set_node_visibility(
                 self.crosshair_nodes[current_view], False)
+
+    @staticmethod
+    def get_cursor_view_name() -> str:
+        """
+        Get the name of the view where the cursor is currently located.
+        """
+        node_crosshair = slicer.util.getNode("Crosshair")
+
+        if node_crosshair is None:
+            return ""
+
+        position = node_crosshair.GetCursorPositionXYZ([0]*3)
+
+        if position is not None:
+            return position.GetName()
+
+        return ""
+
+    @staticmethod
+    def set_offset_to_ras(position_ras: List[float], view: str) -> None:
+        """Set the view offset based on RAS position."""
+        slice_logic = slicer.app.layoutManager().sliceWidget(view).sliceLogic()
+        slice_node = slice_logic.GetSliceNode()
+
+        # Get the SliceToRAS matrix for the current slice view
+        slice_to_ras = slice_node.GetSliceToRAS()
+
+        # The third column of the SliceToRAS matrix is the slice normal
+        normal = [slice_to_ras.GetElement(i, 2) for i in range(3)]
+
+        # Compute the offset as the dot product of the slice normal with the target RAS position
+        offset = sum(normal[i] * position_ras[i] for i in range(3))
+
+        # Set the computed offset for this view
+        slice_logic.GetSliceNode().SetSliceOffset(offset)
 
     @property
     def crosshairs_1(self) -> list[slicer.vtkMRMLMarkupsFiducialNode]:
