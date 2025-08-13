@@ -283,11 +283,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 opacity=self.visualization.fadeSlider.value
             )
 
-        self.views_first_row = self.get_views_of_volume(
+        self.views_fixed = self.get_views_of_volume(
             self.node_fixed)
-        self.views_second_row = self.get_views_of_volume(
+        self.views_moving = self.get_views_of_volume(
             self.node_moving)
-        self.views_all = self.views_first_row + self.views_second_row
+        self.views_all = self.views_fixed + self.views_moving
 
         for view in self.views_all:
             slicer.app.layoutManager().sliceWidget(
@@ -295,8 +295,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if self.crosshair:
             self.crosshair.node_transform = self.node_transform
-            self.crosshair.views_1 = self.views_first_row
-            self.crosshair.views_2 = self.views_second_row
+            self.crosshair.views_fixed = self.views_fixed
+            self.crosshair.views_moving = self.views_moving
             self.crosshair.views_all = self.views_all
 
         for viewName in self.viewers.keys():
@@ -360,8 +360,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def _set_up_crosshair(self) -> None:
         if not self.crosshair:
             self.crosshair = Crosshairs(node_transform=self.node_transform,
-                                        views_1=self.views_first_row,
-                                        views_2=self.views_second_row)
+                                        views_fixed=self.views_fixed,
+                                        views_moving=self.views_moving)
 
         observer_tag = slicer.util.getNode("Crosshair").AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
                                                                     self.crosshair.on_mouse_moved_place_crosshair)
@@ -463,17 +463,17 @@ class Crosshairs():
 
     def __init__(self,
                  node_transform: slicer.vtkMRMLGridTransformNode,
-                 views_1: List[str],
-                 views_2: List[str]
+                 views_fixed: List[str],
+                 views_moving: List[str]
                  ) -> None:
 
         self.node_transform = node_transform
 
         self.reverse_transf_direction = False
 
-        self.views_1 = views_1
-        self.views_2 = views_2
-        self.views_all = views_1 + views_2
+        self.views_fixed = views_fixed
+        self.views_moving = views_moving
+        self.views_all = views_fixed + views_moving
 
         self.create_crosshairs_and_folder()
 
@@ -588,18 +588,18 @@ class Crosshairs():
         """
         current_view = utils.get_cursor_view_name()
 
-        if current_view in self.views_1:
-            self.place_crosshair_without_transformation(views=self.views_1,
+        if current_view in self.views_fixed:
+            self.place_crosshair_without_transformation(views=self.views_fixed,
                                                         crosshair_nodes=self.crosshairs_1)
-            self.place_crosshair_with_transformation(views=self.views_2,
+            self.place_crosshair_with_transformation(views=self.views_moving,
                                                      crosshair_nodes=self.crosshairs_2,
                                                      reverse_transf_direction=self.reverse_transf_direction)
 
-        elif current_view in self.views_2:
-            self.place_crosshair_with_transformation(views=self.views_1,
+        elif current_view in self.views_moving:
+            self.place_crosshair_with_transformation(views=self.views_fixed,
                                                      crosshair_nodes=self.crosshairs_1,
                                                      reverse_transf_direction=not self.reverse_transf_direction)
-            self.place_crosshair_without_transformation(views=self.views_2,
+            self.place_crosshair_without_transformation(views=self.views_moving,
                                                         crosshair_nodes=self.crosshairs_2)
 
     def transform_crosshair_nodes(self,
@@ -662,19 +662,19 @@ class Crosshairs():
     def crosshairs_1(self) -> list[slicer.vtkMRMLMarkupsFiducialNode]:
 
         try:
-            a = [self.crosshair_nodes[view] for view in self.views_1]
+            a = [self.crosshair_nodes[view] for view in self.views_fixed]
         except KeyError as e:
             print(
-                f"we only have {self.crosshair_nodes.keys()} crosshairs, but tried to access {self.views_1}")
+                f"we only have {self.crosshair_nodes.keys()} crosshairs, but tried to access {self.views_fixed}")
             a = []
         return a
 
     @property
     def crosshairs_2(self) -> list[slicer.vtkMRMLMarkupsFiducialNode]:
         try:
-            b = [self.crosshair_nodes[view] for view in self.views_2]
+            b = [self.crosshair_nodes[view] for view in self.views_moving]
         except KeyError as e:
             print(
-                f"we only have {self.crosshair_nodes.keys()} crosshairs, but tried to access {self.views_2}")
+                f"we only have {self.crosshair_nodes.keys()} crosshairs, but tried to access {self.views_moving}")
             b = []
         return b
