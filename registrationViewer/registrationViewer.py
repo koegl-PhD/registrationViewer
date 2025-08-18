@@ -94,8 +94,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.viewers: Dict[str, vtkMRMLSliceNode]
 
         self.synchronise_pressed = False
-        self.selected_orientation: Literal["Axial",
-                                           "Sagittal", "Coronal", "AxiSagCor"] = "Axial"
         self.crosshair_custom_observer_tags = []
 
     def setup(self) -> None:
@@ -141,35 +139,34 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui.hotLinkWithCursor_checkbox.connect(
             "stateChanged(int)", self._update_from_gui)
 
-        self.orientations = ("Axial", "Sagittal", "Coronal", "AxiSagCor")
-
-        for orientation in self.orientations:
-
-            button = self.ui.orientationGroupBox.findChild(
-                qt.QRadioButton, orientation)
-            if not button:
-                continue
-
-            button.connect(
-                "clicked()", lambda o=orientation: self.setOrientation(o))
+        self._add_visualization_widget()
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
 
-    def setOrientation(self, orientation):
-        if orientation in self.orientations:
-            self.selected_orientation = orientation
-            self.ui.orientationGroupBox.findChild(
-                qt.QRadioButton, orientation).setChecked(True)
+    def _add_visualization_widget(self) -> None:
+        import LandmarkRegistration
+        self.visualization = LandmarkRegistration.RegistrationLib.VisualizationWidget(
+            None)
+        self.visualization.groupBoxLayout.itemAt(5).widget().hide()
+        self.visualization.groupBoxLayout.itemAt(4).widget().hide()
+        self.visualization.groupBoxLayout.itemAt(3).widget().hide()
+        self.visualization.groupBoxLayout.itemAt(2).widget().hide()
+
+        row: int = self.ui.formLayout_2.rowCount()
+        self.ui.formLayout_2.addWidget(
+            self.visualization.widget, row, 0, 1, 3)  # spans columns 1–3
+
+        self.visualization.updateVisualization = self.updateVisualization
+
+    def updateVisualization(self):
 
         self._update_from_gui()
 
         if self.synchronise_pressed:
             self._set_up_crosshair()
 
-        for view in self.views_all:
-            slicer.app.layoutManager().sliceWidget(
-                view).sliceController().fitSliceToBackground()
+        self.visualization.onZoom("Fit")
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -236,16 +233,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._update_from_gui()
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
-        self._set_volumes_and_views()
-
-    def _set_volumes_and_views(self) -> None:
 
         if not self._are_nodes_selected():
             return
 
         nodes = [self.node_fixed, self.node_moving]
 
-        if self.selected_orientation == 'AxiSagCor':
+        if self.visualization.layoutOption == 'Axi/Sag/Cor':
             self.viewers = self.CompareVolumes_logic.viewersPerVolume(
                 volumeNodes=nodes,
                 background=None,
@@ -257,7 +251,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 volumeNodes=nodes,
                 background=None,
                 label=None,
-                orientation=self.selected_orientation,
+                orientation=self.visualization.layoutOption,
                 opacity=None
             )
 
