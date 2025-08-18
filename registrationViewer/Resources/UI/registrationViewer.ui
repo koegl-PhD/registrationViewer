@@ -152,59 +152,9 @@
        </widget>
       </item>
       <!-- END inputSelector_transformation -->
-
-      <!-- START label_4 -->
-      <item row="3" column="0" alignment="Qt::AlignTop">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Orientation</string>
-        </property>
-       </widget>
-      </item>
-      <!-- END label_4 -->
-    <!-- START orientationGroupBox -->
-      <item row="3" column="1" colspan="2">
-       <widget class="QGroupBox" name="orientationGroupBox">
-        <layout class="QVBoxLayout" name="orientationLayout">
-         <item>
-          <widget class="QRadioButton" name="Axial">
-           <property name="text">
-            <string>Axial</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="Sagittal">
-           <property name="text">
-            <string>Sagittal</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="Coronal">
-           <property name="text">
-            <string>Coronal</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="AxiSagCor">
-           <property name="text">
-            <string>AxiSagCor</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <!-- END orientationGroupBox -->
-
           
     <!-- START label_7 -->
-      <item row="4" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Hot Link with Cursor</string>
@@ -214,7 +164,7 @@
       <!-- END label_7 -->
 
     <!-- START hotLinkWithCursor_checkbox -->
-    <item row="4" column="1" colspan="2">
+    <item row="3" column="1" colspan="2">
         <widget class="QCheckBox" name="hotLinkWithCursor_checkbox">
         <property name="toolTip">
         <string>Enable hot linking with cursor.</string>
