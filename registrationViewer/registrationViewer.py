@@ -100,23 +100,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
 
-        uiWidget = slicer.util.loadUI(
-            self.resourcePath("UI/registrationViewer.ui"))
-        self.layout.addWidget(uiWidget)
-        self.ui = slicer.util.childWidgetVariables(uiWidget)
-
-        slicer.app.processEvents()  # Ensures all widgets are fully rendered
-
-        # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
-        # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
-        # "setMRMLScene(vtkMRMLScene*)" slot.
-        uiWidget.setMRMLScene(slicer.mrmlScene)
-
-        for selector in [self.ui.inputSelector_fixed,
-                         self.ui.inputSelector_moving,
-                         self.ui.inputSelector_transformation]:
-            selector.setMRMLScene(slicer.mrmlScene)
-
         # Create logic classes. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
         self.logic = registrationViewerLogic()
@@ -128,21 +111,93 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.addObserver(slicer.mrmlScene,
                          slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
-        self.synchronise_pressed = False
-        self.ui.synchronise_views_with_transform.setText(
-            "Synchronise views (s)")
+        # self.synchronise_pressed = False
+        # self.ui.synchronise_views_with_transform.setText(
+        #     "Synchronise views (s)")
 
-        # Buttons
-        self.ui.synchronise_views_with_transform.connect(
-            "clicked(bool)", self.on_synchronise_views)
+        # # Buttons
+        # self.ui.synchronise_views_with_transform.connect(
+        #     "clicked(bool)", self.on_synchronise_views)
 
-        self.ui.hotLinkWithCursor_checkbox.connect(
-            "stateChanged(int)", self._update_from_gui)
+        # add QGridLayout to the UI
+
+        collapsible_button_parameters = ctk.ctkCollapsibleButton()
+        collapsible_button_parameters.text = "Parameters"
+        self.layout.addWidget(collapsible_button_parameters, 1, qt.Qt.AlignTop)
+
+        self.parameters_grid_layout = qt.QGridLayout(
+            collapsible_button_parameters)
+
+        self._add_node_selectors()
 
         self._add_visualization_widget()
 
+        self._add_hot_link_checkbox()
+
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
+
+    def _add_node_selectors(self) -> None:
+
+        row: int = self.parameters_grid_layout.rowCount()
+
+        self.inputSelector_fixed = self._add_node_selector_with_label(
+            name="Fixed volume:",
+            tooltip="Fixed volume used for registration.",
+            node_type="vtkMRMLVolumeNode",
+            row=row)
+
+        self.inputSelector_moving = self._add_node_selector_with_label(
+            name="Moving volume:",
+            tooltip="Moving volume used for registration.",
+            node_type="vtkMRMLVolumeNode",
+            row=row + 1)
+
+        self.inputSelector_transformation = self._add_node_selector_with_label(
+            name="Transformation:",
+            tooltip="Transform used for registration.",
+            node_type="vtkMRMLTransformNode",
+            row=row + 2)
+
+    def _add_node_selector_with_label(
+            self,
+            name: str,
+            tooltip: str,
+            node_type: str,
+            row: int
+    ) -> slicer.qMRMLNodeComboBox:
+
+        self.parameters_grid_layout.addWidget(qt.QLabel(name), row, 0, 1, 1)
+
+        selector = slicer.qMRMLNodeComboBox()
+        selector.nodeTypes = ((node_type), "")
+        selector.selectNodeUponCreation = True
+        selector.addEnabled = False
+        selector.removeEnabled = False
+        selector.noneEnabled = False
+        selector.showHidden = False
+        selector.showChildNodeTypes = True
+        selector.setMRMLScene(slicer.mrmlScene)
+        selector.setToolTip(tooltip)
+        self.parameters_grid_layout.addWidget(
+            selector, row, 1, 1, 1)
+
+        selector.connect("currentNodeChanged(vtkMRMLNode*)",
+                         functools.partial(self._update_from_gui))
+
+        return selector
+
+    def _add_hot_link_checkbox(self) -> None:
+        """Add a checkbox to the GUI to enable/disable hot linking with cursor."""
+        self.checkbox_hot_link_with_cursor = qt.QCheckBox()
+        self.checkbox_hot_link_with_cursor.checked = True
+        self.parameters_grid_layout.addWidget(
+            qt.QLabel("Hot Link with Cursor"), self.parameters_grid_layout.rowCount(), 0, 1, 1)
+        self.parameters_grid_layout.addWidget(
+            self.checkbox_hot_link_with_cursor, self.parameters_grid_layout.rowCount() - 1, 1, 1, 2)
+
+        # self.checkbox_hot_link_with_cursor.connect(
+        #     "stateChanged(int)", self._update_from_gui)
 
     def _add_visualization_widget(self) -> None:
         import LandmarkRegistration
@@ -153,8 +208,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.visualization.groupBoxLayout.itemAt(3).widget().hide()
         self.visualization.groupBoxLayout.itemAt(2).widget().hide()
 
-        row: int = self.ui.formLayout_2.rowCount()
-        self.ui.formLayout_2.addWidget(
+        row: int = self.parameters_grid_layout.rowCount()
+        self.parameters_grid_layout.addWidget(
             self.visualization.widget, row, 0, 1, 3)  # spans columns 1–3
 
         self.visualization.updateVisualization = self.updateVisualization
@@ -265,12 +320,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             sliceWidget = slicer.app.layoutManager().sliceWidget(viewName)
             compositeNode = sliceWidget.sliceLogic().GetSliceCompositeNode()
             compositeNode.SetLinkedControl(
-                self.ui.hotLinkWithCursor_checkbox.checked)
+                self.checkbox_hot_link_with_cursor.checked)
             compositeNode.SetHotLinkedControl(
-                self.ui.hotLinkWithCursor_checkbox.checked)
+                self.checkbox_hot_link_with_cursor.checked)
         crosshairNode = slicer.mrmlScene.GetSingletonNode(
             "default", "vtkMRMLCrosshairNode")
-        crossharMode = crosshairNode.ShowSmallBasic if self.ui.hotLinkWithCursor_checkbox.checked else crosshairNode.NoCrosshair
+        crossharMode = crosshairNode.ShowSmallBasic if self.checkbox_hot_link_with_cursor.checked else crosshairNode.NoCrosshair
         crosshairNode.SetCrosshairMode(crossharMode)
 
     def synchronisation_checks(self) -> bool:
@@ -320,9 +375,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair = None
 
     def _are_nodes_selected(self) -> bool:
-        return self.ui.inputSelector_fixed.currentNode() is not None and \
-            self.ui.inputSelector_moving.currentNode() is not None and \
-            self.ui.inputSelector_transformation.currentNode() is not None
+        return self.inputSelector_fixed.currentNode() is not None and \
+            self.inputSelector_moving.currentNode() is not None and \
+            self.inputSelector_transformation.currentNode() is not None
 
     def _set_up_crosshair(self) -> None:
         if self.crosshair:
@@ -365,15 +420,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_fixed(self) -> Any:
-        return self.ui.inputSelector_fixed.currentNode()
+        return self.inputSelector_fixed.currentNode()
 
     @property
     def node_moving(self) -> Any:
-        return self.ui.inputSelector_moving.currentNode()
+        return self.inputSelector_moving.currentNode()
 
     @property
     def node_transform(self) -> Any:
-        return self.ui.inputSelector_transformation.currentNode()
+        return self.inputSelector_transformation.currentNode()
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
