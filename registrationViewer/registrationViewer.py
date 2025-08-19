@@ -85,13 +85,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._parameterNode: Optional[registrationViewerParameterNode] = None
         self._parameterNodeGuiTag = None
 
+        self._sceneObserverTag: Optional[int] = None
+
         shortcut = qt.QShortcut(slicer.util.mainWindow())
         shortcut.setKey(qt.QKeySequence('s'))
         shortcut.connect('activated()', self.on_synchronise_views)
 
         self.crosshair = None
-
-        self.viewers: Dict[str, vtkMRMLSliceNode]
 
         self.synchronise_pressed = False
         self.crosshair_custom_observer_tags = []
@@ -116,6 +116,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                          self.ui.inputSelector_moving,
                          self.ui.inputSelector_transformation]:
             selector.setMRMLScene(slicer.mrmlScene)
+        
+        if self._sceneObserverTag is None:
+            self._sceneObserverTag = slicer.mrmlScene.AddObserver(
+                slicer.mrmlScene.NodeAddedEvent, self._on_node_added
+            )
 
         # Create logic classes. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
@@ -166,8 +171,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self.synchronise_pressed:
             self._set_up_crosshair()
 
-        self.visualization.onZoom("Fit")
-
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
         self.removeObservers()
@@ -191,6 +194,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called just before the scene is closed."""
 
         self.remove_custom_observers_from_crosshair()
+
+        if self._sceneObserverTag is not None:
+            slicer.mrmlScene.RemoveObserver(self._sceneObserverTag)
+            self._sceneObserverTag = None
+
         self.synchronise_pressed = False
         self.ui.synchronise_views_with_transform.setText(
             "Synchronise views (s)")
@@ -205,6 +213,20 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # If this module is shown while the scene is closed then recreate a new parameter node immediately
         if self.parent.isEntered:
             self.initializeParameterNode()
+
+    @vtk.calldata_type(vtk.VTK_OBJECT)
+    def _on_node_added(self, caller, eventid, node) -> None:  # pylint: disable=unused-argument
+        """Auto-assign first two added scalar volumes: first->fixed, second->moving."""
+
+        if not isinstance(node, vtkMRMLScalarVolumeNode):
+            return
+        
+        if self.node_fixed is None:
+            self.ui.inputSelector_fixed.setCurrentNode(node)
+        
+        if self.node_moving is None or self.node_fixed.GetID() == self.node_moving.GetID():
+            if node.GetID() != self.node_fixed.GetID():
+                self.ui.inputSelector_moving.setCurrentNode(node)
 
     def initializeParameterNode(self) -> None:
         """Ensure parameter node exists and observed."""
@@ -236,42 +258,44 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if not self._are_nodes_selected():
             return
-
-        nodes = [self.node_fixed, self.node_moving]
+        
+        if self.node_fixed.GetID() == self.node_moving.GetID():
+            nodes = [self.node_fixed]
+        else:
+            nodes = [self.node_fixed, self.node_moving]
 
         if self.visualization.layoutOption == 'Axi/Sag/Cor':
-            self.viewers = self.CompareVolumes_logic.viewersPerVolume(
+            _, volume_mapping = self.CompareVolumes_logic.viewersPerVolume(
                 volumeNodes=nodes,
                 background=None,
                 label=None,
-                opacity=None
+                opacity=None,
+                returnVolumeViewMapping=True
             )
         else:
-            self.viewers = self.CompareVolumes_logic.viewerPerVolume(
+            _, volume_mapping = self.CompareVolumes_logic.viewerPerVolume(
                 volumeNodes=nodes,
                 background=None,
                 label=None,
                 orientation=self.visualization.layoutOption,
-                opacity=None
+                opacity=None,
+                returnVolumeViewMapping=True
             )
 
-        self.views_fixed = self.get_views_of_volume(
-            self.node_fixed)
-        self.views_moving = self.get_views_of_volume(
-            self.node_moving)
+        self.views_fixed = volume_mapping.get(self.node_fixed.GetID(), []).get("background", [])
+        self.views_moving = volume_mapping.get(self.node_moving.GetID(), []).get("background", [])
         self.views_all = self.views_fixed + self.views_moving
 
-        for viewName in self.viewers.keys():
+        for viewName in self.views_all:
             sliceWidget = slicer.app.layoutManager().sliceWidget(viewName)
             compositeNode = sliceWidget.sliceLogic().GetSliceCompositeNode()
             compositeNode.SetLinkedControl(
                 self.ui.hotLinkWithCursor_checkbox.checked)
             compositeNode.SetHotLinkedControl(
                 self.ui.hotLinkWithCursor_checkbox.checked)
-        crosshairNode = slicer.mrmlScene.GetSingletonNode(
-            "default", "vtkMRMLCrosshairNode")
-        crossharMode = crosshairNode.ShowSmallBasic if self.ui.hotLinkWithCursor_checkbox.checked else crosshairNode.NoCrosshair
-        crosshairNode.SetCrosshairMode(crossharMode)
+        
+        self.visualization.onZoom("Fit")
+
 
     def synchronisation_checks(self) -> bool:
         """
@@ -344,24 +368,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 slicer.util.getNode("Crosshair").RemoveObserver(observer_tag)
 
         self.crosshair_custom_observer_tags.clear()
-
-    def get_views_of_volume(
-        self,
-        volume_node: vtkMRMLScalarVolumeNode,
-    ) -> List[str]:
-
-        volume_views = set()
-
-        for view, slice_node in self.viewers.items():
-
-            app_logic = slicer.app.applicationLogic()
-            slice_logic = app_logic.GetSliceLogic(slice_node)
-            comp = slice_logic.GetSliceCompositeNode()
-
-            if comp.GetBackgroundVolumeID() == volume_node.GetID():
-                volume_views.add(view)
-
-        return list(volume_views)
 
     @property
     def node_fixed(self) -> Any:
