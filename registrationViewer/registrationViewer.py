@@ -96,6 +96,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.synchronise_pressed = False
         self.crosshair_custom_observer_tags = []
 
+        self.selected_jacobian_modes: Literal["Foldings", "Shrinkage", "Expansion", "Continuous"] = ["Foldings", "Shrinkage", "Expansion", "Continuous"]
+
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
@@ -143,12 +145,71 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui.hotLinkWithCursor_checkbox.connect(
             "stateChanged(int)", self._update_from_gui)
+        
+        self._add_jacobian_widget()
 
         self._add_visualization_widget()
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
 
+    def _add_jacobian_widget(self) -> None:
+        row: int = self.ui.formLayout_2.rowCount()
+        
+        # Create the "Show jacobian" checkbox
+        self.show_jacobian_checkbox = qt.QCheckBox()
+        self.show_jacobian_checkbox.text = "Show jacobian"
+        self.show_jacobian_checkbox.connect("clicked()", self._on_show_jacobian_toggled)
+        
+        # Create the jacobian mode selection box
+        self.jacobian_box = qt.QGroupBox()
+        self.jacobian_box.setLayout(qt.QFormLayout())
+        self.jacobian_buttons = {}
+        self.jacobian_modes = ("Foldings", "Shrinkage", "Expansion", "Continuous")
+
+        for mode in self.jacobian_modes:
+            self.jacobian_buttons[mode] = qt.QCheckBox()
+            self.jacobian_buttons[mode].text = mode
+            self.jacobian_buttons[mode].connect("clicked()",
+                lambda m=mode: self._set_jacobian_mode(m))
+            self.jacobian_box.layout().addWidget(
+                self.jacobian_buttons[mode])
+        
+        # Add slider at the bottom of the QGroupBox
+        self.jacobian_slider = qt.QSlider(qt.Qt.Horizontal)
+        self.jacobian_slider.setMinimum(0)
+        self.jacobian_slider.setMaximum(100)  # 0-100 for 0.0-1.0 range
+        self.jacobian_slider.setValue(50)     # Default to 0.5
+        self.jacobian_slider.connect("valueChanged(int)", self._on_jacobian_slider_changed)
+
+        # Optional: Add a label to show current value
+        self.jacobian_slider_label = qt.QLabel("0.50")
+
+        # Create a horizontal layout for threshold label and slider
+        threshold_layout = qt.QHBoxLayout()
+        threshold_layout.addWidget(qt.QLabel("Threshold:"))
+        threshold_layout.addWidget(self.jacobian_slider)
+        threshold_layout.addWidget(self.jacobian_slider_label)
+
+        # Create a widget to hold the horizontal layout
+        threshold_widget = qt.QWidget()
+        threshold_widget.setLayout(threshold_layout)
+
+        # Add the threshold widget to the main QGroupBox layout
+        self.jacobian_box.layout().addWidget(threshold_widget)
+        
+        # Initially disable the jacobian_box since checkbox is unchecked by default
+        self.jacobian_box.setEnabled(False)
+        
+        # Add widgets to the form layout
+        self.ui.formLayout_2.addWidget(
+            self.show_jacobian_checkbox, row, 0, 1, 1)  # Left side
+        self.ui.formLayout_2.addWidget(
+            self.jacobian_box, row, 1, 2, 2)  # Right side, spans 2 columns
+        
+    def _on_show_jacobian_toggled(self):
+        self.jacobian_box.setEnabled(self.show_jacobian_checkbox.checked)
+        
     def _add_visualization_widget(self) -> None:
         import LandmarkRegistration
         self.visualization = LandmarkRegistration.RegistrationLib.VisualizationWidget(
@@ -296,7 +357,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         
         self.visualization.onZoom("Fit")
 
-
     def synchronisation_checks(self) -> bool:
         """
         Internal helper method to validate synchronization prerequisites.
@@ -369,6 +429,31 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.crosshair_custom_observer_tags.clear()
 
+    def _set_jacobian_mode(self, mode: Literal["Foldings", "Shrinkage", "Expansion"]) -> None:
+        """
+        Set the jacobian mode for visualization.
+        """
+        if mode not in self.jacobian_modes:
+            raise ValueError(f"Invalid jacobian mode: {mode}")
+        
+        current_modes = []
+
+        for m in self.jacobian_modes:
+            if self.jacobian_buttons[m].checked:
+                current_modes.append(m)
+
+        self.selected_jacobian_modes = current_modes
+
+    def _on_jacobian_slider_changed(self, value):
+        # Convert slider value (0-100) to float (0.0-1.0)
+        float_value = value / 100.0
+        
+        # Update the label to show current value
+        self.jacobian_slider_label.setText(f"{float_value:.2f}")
+        
+        # Your callback logic here
+        print(f"Jacobian slider value changed to: {float_value}")
+        # Add your actual processing code here
     @property
     def node_fixed(self) -> Any:
         return self.ui.inputSelector_fixed.currentNode()
