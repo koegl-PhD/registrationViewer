@@ -99,12 +99,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.selected_jacobian_modes: Literal["Foldings", "Shrinkage", "Expansion", "Continuous"] = [
             "Foldings", "Shrinkage", "Expansion"]
 
-        self.jacobian_volume = None
-        self.jacobian_label_continuous = None
-        self.jacobian_label_discrete = None
-
-        # NEEDED
-        self.update_jacobian = True
         self.jacobian_was_calculated = False
         self.node_segmentation_discrete = None
         self.node_segmentation_continuous = None
@@ -229,7 +223,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def _on_show_jacobian_toggled(self) -> None:
         self.jacobian_box.setEnabled(self.show_jacobian_checkbox.checked)
 
-        self.calculate_jacobian()
+        if self.jacobian_was_calculated is False:
+            self.create_jacobian_determinant_map()
+
+        self.display_jacobian()
 
     def _on_inputs_changed(self, node: Optional[vtk.vtkObject] = None) -> None:
         """React to any input selector change."""
@@ -240,108 +237,53 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if not self._are_nodes_selected():
             return
 
-        # if node.GetID() == self.node_fixed.GetID():
-
-        self._update_from_gui()
-        if self.show_jacobian_checkbox.isChecked():
-            self.update_jacobian = True
-            self.calculate_jacobian()
-
-    def calculate_jacobian(self) -> None:
-
-        if self.update_jacobian is False:
+        if not self.show_jacobian_checkbox.isChecked():
             return
 
-        # todo add processing popup
-        # todo only calculate when it wasnt calculated or transform changed
-        ref = self.node_moving
-        new_transform = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLTransformNode")
-        tx = self.node_transform
-        slicer.modules.transforms.logic().ConvertToGridTransform(tx, ref, new_transform)
-        arr = slicer.util.arrayFromGridTransform(new_transform)
+        if self.jacobian_was_calculated is False:
+            self.create_jacobian_determinant_map()
+            self.display_jacobian()
 
-        sitk_displacement_field = sitk.GetImageFromArray(arr, isVector=True)
-        jacobian_det_volume = sitk.DisplacementFieldJacobianDeterminant(
-            sitk_displacement_field)
-        jacobian_det_arr = sitk.GetArrayFromImage(jacobian_det_volume)
-        self.jacobian_volume = slicer.mrmlScene.CopyNode(ref)
-        self.jacobian_volume.SetName("jacobian_node")
-        slicer.util.updateVolumeFromArray(
-            self.jacobian_volume, jacobian_det_arr)
-        self.jacobian_volume.GetDisplayNode().AutoThresholdOn()
+        if node.GetID() == self.node_fixed.GetID():
+            self.display_jacobian()
 
-        min_val = np.min(jacobian_det_arr)
-        max_val = np.max(jacobian_det_arr)
+        if self.show_jacobian_checkbox.isChecked():
+            self.create_jacobian_determinant_map()
+            self.display_jacobian()
 
-        zero_label = np.round(1 + (0 - min_val) * (255 - 1) /
-                              (max_val - min_val)).astype(np.uint8)
-        one_label = np.round(1 + (1 - min_val) * (255 - 1) /
-                             (max_val - min_val)).astype(np.uint8)
+    def create_jacobian_determinant_map(self) -> None:
 
-        jacobian_det_arr_label = np.round(
-            1 + (jacobian_det_arr - min_val) * (255 - 1) / (max_val - min_val)
-        ).astype(np.uint8)
-        self.jacobian_label_continuous = slicer.mrmlScene.CopyNode(ref)
-        self.jacobian_label_continuous.SetName("jacobian_node_label")
-        slicer.util.updateVolumeFromArray(
-            self.jacobian_label_continuous, jacobian_det_arr_label)
-        label_node = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLLabelMapVolumeNode")
-        label_node.SetName("label_node")
-        slicer.modules.volumes.logic().CreateLabelVolumeFromVolume(
-            slicer.mrmlScene, label_node, self.jacobian_label_continuous)
+        jacobian_det_arr = self.calculate_jacobian()
+        jacobian_det_arr, \
+            zero_label, \
+            one_label = self.rescale_jacobian_to_8_bit(jacobian_det_arr)
 
-        self.node_segmentation_continuous = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLSegmentationNode", "Jacobian Segmentation Continuous")
-        self.node_segmentation_continuous.CreateDefaultDisplayNodes()
-        self.node_segmentation_continuous.SetReferenceImageGeometryParameterFromVolumeNode(
-            self.node_moving)
-        slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(
-            label_node, self.node_segmentation_continuous)
+        self.node_segmentation_continuous = self.create_continuous_jacobian_segmentation(
+            jacobian_det_arr)
 
-        jacobian_det_arr_discrete = np.zeros_like(jacobian_det_arr)
-        jacobian_det_arr_discrete[jacobian_det_arr >= 1] = 3
-        jacobian_det_arr_discrete[(jacobian_det_arr >= 0) & (
-            jacobian_det_arr < 1)] = 2
-        jacobian_det_arr_discrete[jacobian_det_arr < 0] = 1
-        self.jacobian_label_discrete = slicer.mrmlScene.CopyNode(ref)
-        self.jacobian_label_discrete.SetName("jacobian_node_discrete")
-        slicer.util.updateVolumeFromArray(
-            self.jacobian_label_discrete, jacobian_det_arr_discrete)
-        discrete_label_node = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLLabelMapVolumeNode")
-        discrete_label_node.SetName("discrete_label_node")
-        slicer.modules.volumes.logic().CreateLabelVolumeFromVolume(
-            slicer.mrmlScene, discrete_label_node, self.jacobian_label_discrete)
-
-        self.node_segmentation_discrete = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLSegmentationNode", "Jacobian Segmentation")
-        self.node_segmentation_discrete.CreateDefaultDisplayNodes()
-        self.node_segmentation_discrete.SetReferenceImageGeometryParameterFromVolumeNode(
-            self.node_moving)
-        slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(
-            discrete_label_node, self.node_segmentation_discrete)
+        self.node_segmentation_discrete = self.create_discrete_jacobian_segmentation(
+            jacobian_det_arr, zero_label, one_label)
 
         self._set_ternary_jacobian_colors(self.node_segmentation_discrete)
-        # self._set_continuous_jacobian_colors(self.node_segmentation_continuous,
-        #                                      zero_label,
-        #                                      one_label)
+        self._set_continuous_jacobian_colors(self.node_segmentation_continuous,
+                                             zero_label,
+                                             one_label)
 
         self.node_segmentation_discrete.GetDisplayNode().SetVisibility2DOutline(False)
         self.node_segmentation_continuous.GetDisplayNode().SetVisibility2DOutline(False)
 
-        self.update_jacobian = False
         self.jacobian_was_calculated = True
 
-        self.display_jacobian_determinant()
-
-    def display_jacobian_determinant(self) -> None:
+    def display_jacobian(self) -> None:
 
         if "continuous" in self.selected_jacobian_modes:
             segmentation_to_display = self.node_segmentation_continuous
+            self.node_segmentation_continuous.GetDisplayNode().SetVisibility(True)
+            self.node_segmentation_discrete.GetDisplayNode().SetVisibility(False)
         else:
             segmentation_to_display = self.node_segmentation_discrete
+            self.node_segmentation_continuous.GetDisplayNode().SetVisibility(False)
+            self.node_segmentation_discrete.GetDisplayNode().SetVisibility(True)
 
         views = self.views_fixed
 
@@ -352,6 +294,94 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             compositeNode = sliceLogic.GetSliceCompositeNode()
             compositeNode.SetLabelVolumeID(
                 segmentation_to_display.GetID())
+
+    def calculate_jacobian(self) -> np.ndarray:
+
+        reference_node = self.node_moving
+        new_transform = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLTransformNode")
+        slicer.modules.transforms.logic().ConvertToGridTransform(
+            self.node_transform, reference_node, new_transform)
+        arr = slicer.util.arrayFromGridTransform(new_transform)
+
+        sitk_displacement_field = sitk.GetImageFromArray(arr, isVector=True)
+        jacobian_det_volume = sitk.DisplacementFieldJacobianDeterminant(
+            sitk_displacement_field)
+        jacobian_det_arr = sitk.GetArrayFromImage(jacobian_det_volume)
+
+        return jacobian_det_arr
+
+    def rescale_jacobian_to_8_bit(self, jacobian_det_arr: np.ndarray) -> Tuple[np.ndarray, int, int]:
+
+        min_val = np.min(jacobian_det_arr)
+        max_val = np.max(jacobian_det_arr)
+
+        zero_label = np.round(1 + (0 - min_val) * (255 - 1) /
+                              (max_val - min_val)).astype(np.uint8)
+        one_label = np.round(1 + (1 - min_val) * (255 - 1) /
+                             (max_val - min_val)).astype(np.uint8)
+
+        jacobian_det_arr = np.round(
+            1 + (jacobian_det_arr - min_val) * (255 - 1) / (max_val - min_val)
+        ).astype(np.uint8)
+
+        return jacobian_det_arr, zero_label, one_label
+
+    def create_continuous_jacobian_segmentation(self, jacobian_det_arr: np.ndarray) -> vtk.vtkMRMLSegmentationNode:
+
+        jacobian_label_continuous = slicer.mrmlScene.CopyNode(self.node_moving)
+        jacobian_label_continuous.SetName("jacobian_node_label")
+        slicer.util.updateVolumeFromArray(
+            jacobian_label_continuous, jacobian_det_arr)
+        label_node = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLLabelMapVolumeNode")
+        label_node.SetName("label_node")
+        slicer.modules.volumes.logic().CreateLabelVolumeFromVolume(
+            slicer.mrmlScene, label_node, jacobian_label_continuous)
+
+        node_segmentation_continuous = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLSegmentationNode", "Jacobian Segmentation Continuous")
+        node_segmentation_continuous.CreateDefaultDisplayNodes()
+        node_segmentation_continuous.SetReferenceImageGeometryParameterFromVolumeNode(
+            self.node_moving)
+        slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(
+            label_node, node_segmentation_continuous)
+
+        return node_segmentation_continuous
+
+    def create_discrete_jacobian_segmentation(
+        self,
+        jacobian_det_arr: np.ndarray,
+        zero_label: int,
+        one_label: int
+    ) -> vtk.vtkMRMLSegmentationNode:
+
+        jacobian_det_arr_discrete = np.zeros_like(jacobian_det_arr)
+
+        jacobian_det_arr_discrete[jacobian_det_arr >= one_label] = 3
+        jacobian_det_arr_discrete[(jacobian_det_arr >= zero_label) & (
+            jacobian_det_arr < one_label)] = 2
+        jacobian_det_arr_discrete[jacobian_det_arr < zero_label] = 1
+
+        jacobian_label_discrete = slicer.mrmlScene.CopyNode(self.node_moving)
+        jacobian_label_discrete.SetName("jacobian_node_discrete")
+        slicer.util.updateVolumeFromArray(
+            jacobian_label_discrete, jacobian_det_arr_discrete)
+        discrete_label_node = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLLabelMapVolumeNode")
+        discrete_label_node.SetName("discrete_label_node")
+        slicer.modules.volumes.logic().CreateLabelVolumeFromVolume(
+            slicer.mrmlScene, discrete_label_node, jacobian_label_discrete)
+
+        node_segmentation_discrete = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLSegmentationNode", "Jacobian Segmentation")
+        node_segmentation_discrete.CreateDefaultDisplayNodes()
+        node_segmentation_discrete.SetReferenceImageGeometryParameterFromVolumeNode(
+            self.node_moving)
+        slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(
+            discrete_label_node, node_segmentation_discrete)
+
+        return node_segmentation_discrete
 
     def _set_ternary_jacobian_colors(self, seg_node: vtk.vtkMRMLSegmentationNode) -> None:
 
@@ -375,6 +405,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         zero_label: int,
         one_label: int
     ) -> None:
+        return
 
         for i in range(256):
             if i == 0:
