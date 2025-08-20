@@ -285,15 +285,22 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_segmentation_continuous.GetDisplayNode().SetVisibility(False)
             self.node_segmentation_discrete.GetDisplayNode().SetVisibility(True)
 
-        views = self.views_fixed
+        self.show_node_only_in_views(segmentation_to_display, self.views_fixed)
 
-        # set it as the label volume in the views
-        for viewName in views:
-            sliceWidget = slicer.app.layoutManager().sliceWidget(viewName)
-            sliceLogic = sliceWidget.sliceLogic()
-            compositeNode = sliceLogic.GetSliceCompositeNode()
-            compositeNode.SetLabelVolumeID(
-                segmentation_to_display.GetID())
+    def show_node_only_in_views(self, node, views: List[str]) -> None:
+
+        if node is None:
+            return
+
+        disp_node = node.GetDisplayNode()
+        if not disp_node:
+            return
+
+        disp_node.RemoveAllViewNodeIDs()
+
+        for view in views:
+            slice_node = slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode()
+            disp_node.AddViewNodeID(slice_node.GetID())
 
     def calculate_jacobian(self) -> np.ndarray:
 
@@ -308,6 +315,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         jacobian_det_volume = sitk.DisplacementFieldJacobianDeterminant(
             sitk_displacement_field)
         jacobian_det_arr = sitk.GetArrayFromImage(jacobian_det_volume)
+
+        slicer.mrmlScene.RemoveNode(new_transform)
 
         return jacobian_det_arr
 
@@ -347,6 +356,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(
             label_node, node_segmentation_continuous)
 
+        # remove nodes
+        slicer.mrmlScene.RemoveNode(jacobian_label_continuous)
+        slicer.mrmlScene.RemoveNode(label_node)
+
         return node_segmentation_continuous
 
     def create_discrete_jacobian_segmentation(
@@ -374,12 +387,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             slicer.mrmlScene, discrete_label_node, jacobian_label_discrete)
 
         node_segmentation_discrete = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLSegmentationNode", "Jacobian Segmentation")
+            "vtkMRMLSegmentationNode", "Jacobian Segmentation Discrete")
         node_segmentation_discrete.CreateDefaultDisplayNodes()
         node_segmentation_discrete.SetReferenceImageGeometryParameterFromVolumeNode(
             self.node_moving)
         slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(
             discrete_label_node, node_segmentation_discrete)
+
+        # remove nodes
+        slicer.mrmlScene.RemoveNode(jacobian_label_discrete)
+        slicer.mrmlScene.RemoveNode(discrete_label_node)
 
         return node_segmentation_discrete
 
@@ -389,7 +406,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         names_colors = [
             ("Foldings (<0)", (1.0, 0.0, 0.0)),       # label 1
-            ("Shrinkage (0–1)", (1.0, 0.5, 0.0)),     # label 2
+            ("Shrinkage (0-1)", (1.0, 0.5, 0.0)),     # label 2
             ("Expansion (≥1)", (134/255, 134/255, 255/255)),      # label 3
         ]
 
@@ -449,7 +466,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
                 color = (r, g, b)
 
-            segment = self._get_segment_by_name(seg_node, str(i))
+            segment, _ = self._get_segment_by_name(seg_node, str(i))
 
             if not segment:
                 continue
@@ -457,7 +474,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             segment.SetName(f"{name} [{i}]")
             segment.SetColor(color)
 
-    def _get_segment_by_name(self, seg_node: vtk.vtkMRMLSegmentationNode, name: str) -> Optional[vtk.vtkSegment]:
+    def _get_segment_by_name(self, seg_node: vtk.vtkMRMLSegmentationNode, name: str) -> Optional[Tuple[vtk.vtkSegment, str]]:
         """
         Get a segment by its name from the segmentation node.
         Returns None if the segment is not found.
@@ -467,7 +484,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             seg_id = seg.GetNthSegmentID(i)
             segment = seg.GetSegment(seg_id)
             if segment.GetName() == name:
-                return segment
+                return segment, seg_id
         return None
 
     def _add_visualization_widget(self) -> None:
@@ -705,6 +722,29 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 current_modes.append(m)
 
         self.selected_jacobian_modes = current_modes
+
+        if not "Continuous" in self.selected_jacobian_modes:
+            d = self.node_segmentation_discrete.GetDisplayNode()
+
+            _, node_id_foldings = self._get_segment_by_name(
+                self.node_segmentation_discrete, "Foldings (<0)")
+            _, node_id_shrinkage = self._get_segment_by_name(
+                self.node_segmentation_discrete, "Shrinkage (0-1)")
+            _, node_id_expansion = self._get_segment_by_name(
+                self.node_segmentation_discrete, "Expansion (≥1)")
+
+            if "Foldings" in self.selected_jacobian_modes:
+                d.SetSegmentVisibility(node_id_foldings, True)
+            else:
+                d.SetSegmentVisibility(node_id_foldings, False)
+            if "Shrinkage" in self.selected_jacobian_modes:
+                d.SetSegmentVisibility(node_id_shrinkage, True)
+            else:
+                d.SetSegmentVisibility(node_id_shrinkage, False)
+            if "Expansion" in self.selected_jacobian_modes:
+                d.SetSegmentVisibility(node_id_expansion, True)
+            else:
+                d.SetSegmentVisibility(node_id_expansion, False)
 
     def _on_jacobian_slider_changed(self, value):
         # Convert slider value (0-100) to float (0.0-1.0)
