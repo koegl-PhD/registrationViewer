@@ -8,7 +8,7 @@ import time
 from typing import Optional, Any, List, Literal, Tuple, Dict, Callable
 
 import numpy as np
-import glob
+import SimpleITK as sitk
 
 import ctk
 import vtk
@@ -96,7 +96,18 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.synchronise_pressed = False
         self.crosshair_custom_observer_tags = []
 
-        self.selected_jacobian_modes: Literal["Foldings", "Shrinkage", "Expansion", "Continuous"] = ["Foldings", "Shrinkage", "Expansion", "Continuous"]
+        self.selected_jacobian_modes: Literal["Foldings", "Shrinkage", "Expansion", "Continuous"] = [
+            "Foldings", "Shrinkage", "Expansion"]
+
+        self.jacobian_volume = None
+        self.jacobian_label_continuous = None
+        self.jacobian_label_discrete = None
+
+        # NEEDED
+        self.update_jacobian = True
+        self.jacobian_was_calculated = False
+        self.node_segmentation_discrete = None
+        self.node_segmentation_continuous = None
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -118,7 +129,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                          self.ui.inputSelector_moving,
                          self.ui.inputSelector_transformation]:
             selector.setMRMLScene(slicer.mrmlScene)
-        
+            selector.connect("currentNodeChanged(vtkMRMLNode*)",
+                             self._on_inputs_changed)
+
         if self._sceneObserverTag is None:
             self._sceneObserverTag = slicer.mrmlScene.AddObserver(
                 slicer.mrmlScene.NodeAddedEvent, self._on_node_added
@@ -145,7 +158,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.ui.hotLinkWithCursor_checkbox.connect(
             "stateChanged(int)", self._update_from_gui)
-        
+
         self._add_jacobian_widget()
 
         self._add_visualization_widget()
@@ -155,32 +168,38 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _add_jacobian_widget(self) -> None:
         row: int = self.ui.formLayout_2.rowCount()
-        
+
         # Create the "Show jacobian" checkbox
         self.show_jacobian_checkbox = qt.QCheckBox()
         self.show_jacobian_checkbox.text = "Show jacobian"
-        self.show_jacobian_checkbox.connect("clicked()", self._on_show_jacobian_toggled)
-        
+        self.show_jacobian_checkbox.connect(
+            "clicked()", self._on_show_jacobian_toggled)
+
         # Create the jacobian mode selection box
         self.jacobian_box = qt.QGroupBox()
         self.jacobian_box.setLayout(qt.QFormLayout())
         self.jacobian_buttons = {}
-        self.jacobian_modes = ("Foldings", "Shrinkage", "Expansion", "Continuous")
+        self.jacobian_modes = ("Foldings", "Shrinkage",
+                               "Expansion", "Continuous")
 
         for mode in self.jacobian_modes:
             self.jacobian_buttons[mode] = qt.QCheckBox()
             self.jacobian_buttons[mode].text = mode
             self.jacobian_buttons[mode].connect("clicked()",
-                lambda m=mode: self._set_jacobian_mode(m))
+                                                lambda m=mode: self._set_jacobian_mode(m))
             self.jacobian_box.layout().addWidget(
                 self.jacobian_buttons[mode])
-        
+
+            if mode != "Continuous":
+                self.jacobian_buttons[mode].setChecked(True)
+
         # Add slider at the bottom of the QGroupBox
         self.jacobian_slider = qt.QSlider(qt.Qt.Horizontal)
         self.jacobian_slider.setMinimum(0)
         self.jacobian_slider.setMaximum(100)  # 0-100 for 0.0-1.0 range
         self.jacobian_slider.setValue(50)     # Default to 0.5
-        self.jacobian_slider.connect("valueChanged(int)", self._on_jacobian_slider_changed)
+        self.jacobian_slider.connect(
+            "valueChanged(int)", self._on_jacobian_slider_changed)
 
         # Optional: Add a label to show current value
         self.jacobian_slider_label = qt.QLabel("0.50")
@@ -197,19 +216,229 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Add the threshold widget to the main QGroupBox layout
         self.jacobian_box.layout().addWidget(threshold_widget)
-        
+
         # Initially disable the jacobian_box since checkbox is unchecked by default
         self.jacobian_box.setEnabled(False)
-        
+
         # Add widgets to the form layout
         self.ui.formLayout_2.addWidget(
             self.show_jacobian_checkbox, row, 0, 1, 1)  # Left side
         self.ui.formLayout_2.addWidget(
             self.jacobian_box, row, 1, 2, 2)  # Right side, spans 2 columns
-        
-    def _on_show_jacobian_toggled(self):
+
+    def _on_show_jacobian_toggled(self) -> None:
         self.jacobian_box.setEnabled(self.show_jacobian_checkbox.checked)
-        
+
+        self.calculate_jacobian()
+
+    def _on_inputs_changed(self, node: Optional[vtk.vtkObject] = None) -> None:
+        """React to any input selector change."""
+
+        if not node:
+            return
+
+        if not self._are_nodes_selected():
+            return
+
+        # if node.GetID() == self.node_fixed.GetID():
+
+        self._update_from_gui()
+        if self.show_jacobian_checkbox.isChecked():
+            self.update_jacobian = True
+            self.calculate_jacobian()
+
+    def calculate_jacobian(self) -> None:
+
+        if self.update_jacobian is False:
+            return
+
+        # todo add processing popup
+        # todo only calculate when it wasnt calculated or transform changed
+        ref = self.node_moving
+        new_transform = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLTransformNode")
+        tx = self.node_transform
+        slicer.modules.transforms.logic().ConvertToGridTransform(tx, ref, new_transform)
+        arr = slicer.util.arrayFromGridTransform(new_transform)
+
+        sitk_displacement_field = sitk.GetImageFromArray(arr, isVector=True)
+        jacobian_det_volume = sitk.DisplacementFieldJacobianDeterminant(
+            sitk_displacement_field)
+        jacobian_det_arr = sitk.GetArrayFromImage(jacobian_det_volume)
+        self.jacobian_volume = slicer.mrmlScene.CopyNode(ref)
+        self.jacobian_volume.SetName("jacobian_node")
+        slicer.util.updateVolumeFromArray(
+            self.jacobian_volume, jacobian_det_arr)
+        self.jacobian_volume.GetDisplayNode().AutoThresholdOn()
+
+        min_val = np.min(jacobian_det_arr)
+        max_val = np.max(jacobian_det_arr)
+
+        zero_label = np.round(1 + (0 - min_val) * (255 - 1) /
+                              (max_val - min_val)).astype(np.uint8)
+        one_label = np.round(1 + (1 - min_val) * (255 - 1) /
+                             (max_val - min_val)).astype(np.uint8)
+
+        jacobian_det_arr_label = np.round(
+            1 + (jacobian_det_arr - min_val) * (255 - 1) / (max_val - min_val)
+        ).astype(np.uint8)
+        self.jacobian_label_continuous = slicer.mrmlScene.CopyNode(ref)
+        self.jacobian_label_continuous.SetName("jacobian_node_label")
+        slicer.util.updateVolumeFromArray(
+            self.jacobian_label_continuous, jacobian_det_arr_label)
+        label_node = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLLabelMapVolumeNode")
+        label_node.SetName("label_node")
+        slicer.modules.volumes.logic().CreateLabelVolumeFromVolume(
+            slicer.mrmlScene, label_node, self.jacobian_label_continuous)
+
+        self.node_segmentation_continuous = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLSegmentationNode", "Jacobian Segmentation Continuous")
+        self.node_segmentation_continuous.CreateDefaultDisplayNodes()
+        self.node_segmentation_continuous.SetReferenceImageGeometryParameterFromVolumeNode(
+            self.node_moving)
+        slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(
+            label_node, self.node_segmentation_continuous)
+
+        jacobian_det_arr_discrete = np.zeros_like(jacobian_det_arr)
+        jacobian_det_arr_discrete[jacobian_det_arr >= 1] = 3
+        jacobian_det_arr_discrete[(jacobian_det_arr >= 0) & (
+            jacobian_det_arr < 1)] = 2
+        jacobian_det_arr_discrete[jacobian_det_arr < 0] = 1
+        self.jacobian_label_discrete = slicer.mrmlScene.CopyNode(ref)
+        self.jacobian_label_discrete.SetName("jacobian_node_discrete")
+        slicer.util.updateVolumeFromArray(
+            self.jacobian_label_discrete, jacobian_det_arr_discrete)
+        discrete_label_node = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLLabelMapVolumeNode")
+        discrete_label_node.SetName("discrete_label_node")
+        slicer.modules.volumes.logic().CreateLabelVolumeFromVolume(
+            slicer.mrmlScene, discrete_label_node, self.jacobian_label_discrete)
+
+        self.node_segmentation_discrete = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLSegmentationNode", "Jacobian Segmentation")
+        self.node_segmentation_discrete.CreateDefaultDisplayNodes()
+        self.node_segmentation_discrete.SetReferenceImageGeometryParameterFromVolumeNode(
+            self.node_moving)
+        slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(
+            discrete_label_node, self.node_segmentation_discrete)
+
+        self._set_ternary_jacobian_colors(self.node_segmentation_discrete)
+        # self._set_continuous_jacobian_colors(self.node_segmentation_continuous,
+        #                                      zero_label,
+        #                                      one_label)
+
+        self.node_segmentation_discrete.GetDisplayNode().SetVisibility2DOutline(False)
+        self.node_segmentation_continuous.GetDisplayNode().SetVisibility2DOutline(False)
+
+        self.update_jacobian = False
+        self.jacobian_was_calculated = True
+
+        self.display_jacobian_determinant()
+
+    def display_jacobian_determinant(self) -> None:
+
+        if "continuous" in self.selected_jacobian_modes:
+            segmentation_to_display = self.node_segmentation_continuous
+        else:
+            segmentation_to_display = self.node_segmentation_discrete
+
+        views = self.views_fixed
+
+        # set it as the label volume in the views
+        for viewName in views:
+            sliceWidget = slicer.app.layoutManager().sliceWidget(viewName)
+            sliceLogic = sliceWidget.sliceLogic()
+            compositeNode = sliceLogic.GetSliceCompositeNode()
+            compositeNode.SetLabelVolumeID(
+                segmentation_to_display.GetID())
+
+    def _set_ternary_jacobian_colors(self, seg_node: vtk.vtkMRMLSegmentationNode) -> None:
+
+        seg = seg_node.GetSegmentation()
+
+        names_colors = [
+            ("Foldings (<0)", (1.0, 0.0, 0.0)),       # label 1
+            ("Shrinkage (0–1)", (1.0, 0.5, 0.0)),     # label 2
+            ("Expansion (≥1)", (134/255, 134/255, 255/255)),      # label 3
+        ]
+
+        for i, (name, color) in enumerate(names_colors):
+
+            seg_id = seg.GetNthSegmentID(i)
+            seg.GetSegment(seg_id).SetName(name)
+            seg.GetSegment(seg_id).SetColor(color)
+
+    def _set_continuous_jacobian_colors(
+        self,
+        seg_node: vtk.vtkMRMLSegmentationNode,
+        zero_label: int,
+        one_label: int
+    ) -> None:
+
+        for i in range(256):
+            if i == 0:
+                # Background - black or transparent
+                color = (0.0, 0.0, 0.0)
+                name = "Background (0)"
+            elif i == 1:
+                # Value 1 = Red
+                color = (1.0, 0.0, 0.0)
+                name = "Folding (<0)"
+            elif i == zero_label:
+                # Value zero_label = White
+                color = (1.0, 1.0, 1.0)
+                name = "Shrinkage (0-1)"
+            elif i == 255:
+                # Value 255 = Blue
+                color = (0.0, 0.0, 1.0)
+                name = "Expansion (≥1)"
+            else:
+                # Interpolate between the key points
+                if i < 31:
+                    # Interpolate between red (1) and white (31)
+                    # Normalized position between 1 and 31
+                    t = (i - 1) / (31 - 1)
+                    r = 1.0
+                    g = t
+                    b = t
+                    name = "Folding (<0)"
+                else:
+                    # Interpolate between white (31) and blue (255)
+                    # Normalized position between 31 and 255
+                    t = (i - 31) / (255 - 31)
+                    r = 1.0 - t
+                    g = 1.0 - t
+                    b = 1.0
+
+                    if i < one_label:
+                        name = "Shrinkage (0-1)"
+                    else:
+                        name = "Expansion (≥1)"
+
+                color = (r, g, b)
+
+            segment = self._get_segment_by_name(seg_node, str(i))
+
+            if not segment:
+                continue
+
+            segment.SetName(f"{name} [{i}]")
+            segment.SetColor(color)
+
+    def _get_segment_by_name(self, seg_node: vtk.vtkMRMLSegmentationNode, name: str) -> Optional[vtk.vtkSegment]:
+        """
+        Get a segment by its name from the segmentation node.
+        Returns None if the segment is not found.
+        """
+        seg = seg_node.GetSegmentation()
+        for i in range(seg.GetNumberOfSegments()):
+            seg_id = seg.GetNthSegmentID(i)
+            segment = seg.GetSegment(seg_id)
+            if segment.GetName() == name:
+                return segment
+        return None
+
     def _add_visualization_widget(self) -> None:
         import LandmarkRegistration
         self.visualization = LandmarkRegistration.RegistrationLib.VisualizationWidget(
@@ -281,10 +510,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if not isinstance(node, vtkMRMLScalarVolumeNode):
             return
-        
+
         if self.node_fixed is None:
             self.ui.inputSelector_fixed.setCurrentNode(node)
-        
+
         if self.node_moving is None or self.node_fixed.GetID() == self.node_moving.GetID():
             if node.GetID() != self.node_fixed.GetID():
                 self.ui.inputSelector_moving.setCurrentNode(node)
@@ -319,7 +548,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if not self._are_nodes_selected():
             return
-        
+
         if self.node_fixed.GetID() == self.node_moving.GetID():
             nodes = [self.node_fixed]
         else:
@@ -343,8 +572,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 returnVolumeViewMapping=True
             )
 
-        self.views_fixed = volume_mapping.get(self.node_fixed.GetID(), []).get("background", [])
-        self.views_moving = volume_mapping.get(self.node_moving.GetID(), []).get("background", [])
+        self.views_fixed = volume_mapping.get(
+            self.node_fixed.GetID(), []).get("background", [])
+        self.views_moving = volume_mapping.get(
+            self.node_moving.GetID(), []).get("background", [])
         self.views_all = self.views_fixed + self.views_moving
 
         for viewName in self.views_all:
@@ -354,7 +585,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 self.ui.hotLinkWithCursor_checkbox.checked)
             compositeNode.SetHotLinkedControl(
                 self.ui.hotLinkWithCursor_checkbox.checked)
-        
+
         self.visualization.onZoom("Fit")
 
     def synchronisation_checks(self) -> bool:
@@ -429,13 +660,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.crosshair_custom_observer_tags.clear()
 
-    def _set_jacobian_mode(self, mode: Literal["Foldings", "Shrinkage", "Expansion"]) -> None:
+    def _set_jacobian_mode(self, mode: Literal["Foldings", "Shrinkage", "Expansion", "Continuous"]) -> None:
         """
         Set the jacobian mode for visualization.
         """
         if mode not in self.jacobian_modes:
             raise ValueError(f"Invalid jacobian mode: {mode}")
-        
+
         current_modes = []
 
         for m in self.jacobian_modes:
@@ -447,13 +678,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def _on_jacobian_slider_changed(self, value):
         # Convert slider value (0-100) to float (0.0-1.0)
         float_value = value / 100.0
-        
+
         # Update the label to show current value
         self.jacobian_slider_label.setText(f"{float_value:.2f}")
-        
+
         # Your callback logic here
         print(f"Jacobian slider value changed to: {float_value}")
         # Add your actual processing code here
+
     @property
     def node_fixed(self) -> Any:
         return self.ui.inputSelector_fixed.currentNode()
@@ -465,6 +697,106 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     @property
     def node_transform(self) -> Any:
         return self.ui.inputSelector_transformation.currentNode()
+
+    @staticmethod
+    def apply_red_white_blue_lookup_table(volume_node, zero_label: int) -> None:
+        import vtk
+        import numpy as np
+
+        # Create a vtkLookupTable for custom colors
+        lookup_table = vtk.vtkLookupTable()
+        lookup_table.SetNumberOfTableValues(256)  # 256 colors
+        lookup_table.SetRange(0, 255)  # Changed to match your discrete range
+        lookup_table.Build()
+
+        # Populate the lookup table with custom color mapping
+        for i in range(256):
+            if i == 0:
+                # Background - black or transparent
+                lookup_table.SetTableValue(i, 0.0, 0.0, 0.0, 1.0)
+            elif i == 1:
+                # Value 1 = Red
+                lookup_table.SetTableValue(i, 1.0, 0.0, 0.0, 1.0)
+            elif i == zero_label:
+                # Value 31 = White
+                lookup_table.SetTableValue(i, 1.0, 1.0, 1.0, 1.0)
+            elif i == 255:
+                # Value 255 = Blue
+                lookup_table.SetTableValue(i, 0.0, 0.0, 1.0, 1.0)
+            else:
+                # Interpolate between the key points
+                if i < 31:
+                    # Interpolate between red (1) and white (31)
+                    # Normalized position between 1 and 31
+                    t = (i - 1) / (31 - 1)
+                    r = 1.0
+                    g = t
+                    b = t
+                else:
+                    # Interpolate between white (31) and blue (255)
+                    # Normalized position between 31 and 255
+                    t = (i - 31) / (255 - 31)
+                    r = 1.0 - t
+                    g = 1.0 - t
+                    b = 1.0
+
+                lookup_table.SetTableValue(i, r, g, b, 1.0)
+
+        # Create a vtkMRMLColorTableNode and set the lookup table
+        color_table_node = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLColorTableNode", "RedWhiteBlueColorTable")
+        color_table_node.SetAndObserveLookupTable(lookup_table)
+
+        # Get the display node for the volume
+        display_node = volume_node.GetDisplayNode()
+        if not display_node:
+            display_node = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLScalarVolumeDisplayNode")
+            volume_node.SetAndObserveDisplayNodeID(display_node.GetID())
+
+        # Assign the color table to the display node
+        display_node.SetAndObserveColorNodeID(color_table_node.GetID())
+
+    @staticmethod
+    def apply_three_color_labelmap(volume_node) -> None:
+        import vtk
+
+        # Create a vtkLookupTable for the labelmap
+        lookup_table = vtk.vtkLookupTable()
+        lookup_table.SetNumberOfTableValues(3)  # Only 3 colors needed
+        lookup_table.SetRange(0, 2)  # Range from 0 to 2
+        lookup_table.Build()
+
+        # Set the three specific colors
+        lookup_table.SetTableValue(0, 1.0, 0.0, 0.0, 1.0)  # Value 0 = Red
+        lookup_table.SetTableValue(1, 1.0, 0.5, 0.0, 1.0)  # Value 1 = Orange
+        lookup_table.SetTableValue(2, 0.0, 0.0, 1.0, 1.0)  # Value 2 = Blue
+
+        # Create a vtkMRMLColorTableNode and set the lookup table
+        color_table_node = slicer.mrmlScene.AddNewNodeByClass(
+            "vtkMRMLColorTableNode", "ThreeColorLabelMap")
+        color_table_node.SetAndObserveLookupTable(lookup_table)
+
+        # Convert volume to labelmap if it isn't already
+        if not volume_node.GetClassName() == "vtkMRMLLabelMapVolumeNode":
+            # Create new labelmap node
+            labelmap_node = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLLabelMapVolumeNode")
+            labelmap_node.SetName(volume_node.GetName() + "_LabelMap")
+            labelmap_node.Copy(volume_node)
+            labelmap_node.SetLabelMap(True)
+        else:
+            labelmap_node = volume_node
+
+        # Get or create display node for the labelmap
+        display_node = labelmap_node.GetDisplayNode()
+        if not display_node:
+            display_node = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLLabelMapVolumeDisplayNode")
+            labelmap_node.SetAndObserveDisplayNodeID(display_node.GetID())
+
+        # Assign the color table to the display node
+        display_node.SetAndObserveColorNodeID(color_table_node.GetID())
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
