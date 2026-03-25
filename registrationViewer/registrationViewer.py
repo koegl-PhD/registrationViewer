@@ -225,11 +225,46 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @vtk.calldata_type(vtk.VTK_OBJECT)
     def _on_node_added(self, caller, eventid, node) -> None:  # pylint: disable=unused-argument
-        """Auto-assign first three added scalar volumes: first->sag, second->cor, third->ax."""
+        """Auto-assign volume/transform selectors based on node names, with fallback fill order."""
+        self._try_auto_select_node(node)
 
-        if not isinstance(node, vtkMRMLScalarVolumeNode):
-            return
+    def _name_contains_any(self, name: str, tokens: tuple[str, ...]) -> bool:
+        return any(token in name for token in tokens)
 
+    def _try_auto_select_volume_by_name(self, node: vtkMRMLScalarVolumeNode) -> bool:
+        node_name = (node.GetName() or "").lower()
+
+        if self._name_contains_any(node_name, ("sagittal", "sag")):
+            self.ui.inputSelector_sag.setCurrentNode(node)
+            return True
+
+        if self._name_contains_any(node_name, ("coronal", "cor")):
+            self.ui.inputSelector_cor.setCurrentNode(node)
+            return True
+
+        if self._name_contains_any(
+            node_name, ("axial", "transversal", "transverse", "axi", "ax")
+        ):
+            self.ui.inputSelector_ax.setCurrentNode(node)
+            return True
+
+        return False
+
+    def _try_auto_select_transform_by_name(self, node: vtkMRMLTransformNode) -> bool:
+        node_name = (node.GetName() or "").lower()
+        normalized_name = node_name.replace("-", "_").replace(" ", "_")
+
+        if "cor" in normalized_name:
+            self.ui.inputSelector_cor_to_sag.setCurrentNode(node)
+            return True
+
+        if "ax" in normalized_name:
+            self.ui.inputSelector_ax_to_sag.setCurrentNode(node)
+            return True
+
+        return False
+
+    def _fallback_assign_volume(self, node: vtkMRMLScalarVolumeNode) -> None:
         if self.node_sag is None:
             self.ui.inputSelector_sag.setCurrentNode(node)
             return
@@ -246,12 +281,40 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             if node.GetID() not in [self.node_sag.GetID(), self.node_cor.GetID()]:
                 self.ui.inputSelector_ax.setCurrentNode(node)
 
+    def _fallback_assign_transform(self, node: vtkMRMLTransformNode) -> None:
+        if self.node_cor_to_sag is None:
+            self.ui.inputSelector_cor_to_sag.setCurrentNode(node)
+            return
+
+        if (
+            self.node_ax_to_sag is None
+            or self.node_ax_to_sag.GetID() == self.node_cor_to_sag.GetID()
+        ):
+            if node.GetID() != self.node_cor_to_sag.GetID():
+                self.ui.inputSelector_ax_to_sag.setCurrentNode(node)
+
+    def _try_auto_select_node(self, node: vtk.vtkObject) -> None:
+        if isinstance(node, vtkMRMLScalarVolumeNode):
+            if not self._try_auto_select_volume_by_name(node):
+                self._fallback_assign_volume(node)
+            return
+
+        if isinstance(node, vtkMRMLTransformNode):
+            if not self._try_auto_select_transform_by_name(node):
+                self._fallback_assign_transform(node)
+
+    def _auto_select_existing_scene_nodes(self) -> None:
+        for i in range(slicer.mrmlScene.GetNumberOfNodes()):
+            node = slicer.mrmlScene.GetNthNode(i)
+            self._try_auto_select_node(node)
+
     def initializeParameterNode(self) -> None:
         """Ensure parameter node exists and observed."""
         # Parameter node stores all user choices in parameter values, node selections, etc.
         # so that when the scene is saved and reloaded, these settings are restored.
 
         self.setParameterNode(self.logic.getParameterNode())
+        self._auto_select_existing_scene_nodes()
 
     def setParameterNode(
         self, inputParameterNode: Optional[registrationViewerParameterNode]
@@ -286,23 +349,23 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         else:
             nodes = [self.node_fixed, self.node_moving]
 
-        if self.visualization.layoutOption == "Axi/Sag/Cor":
-            _, volume_mapping = self.CompareVolumes_logic.viewersPerVolume(
-                volumeNodes=nodes,
-                background=None,
-                label=None,
-                opacity=None,
-                returnVolumeViewMapping=True,
-            )
-        else:
-            _, volume_mapping = self.CompareVolumes_logic.viewerPerVolume(
-                volumeNodes=nodes,
-                background=None,
-                label=None,
-                orientation=self.visualization.layoutOption,
-                opacity=None,
-                returnVolumeViewMapping=True,
-            )
+        # if self.visualization.layoutOption == "Axi/Sag/Cor":
+        #     _, volume_mapping = self.CompareVolumes_logic.viewersPerVolume(
+        #         volumeNodes=nodes,
+        #         background=None,
+        #         label=None,
+        #         opacity=None,
+        #         returnVolumeViewMapping=True,
+        #     )
+        # else:
+        _, volume_mapping = self.CompareVolumes_logic.viewerPerVolume(
+            volumeNodes=nodes,
+            background=None,
+            label=None,
+            orientation=self.visualization.layoutOption,
+            opacity=None,
+            returnVolumeViewMapping=True,
+        )
 
         self.views_fixed = volume_mapping.get(self.node_fixed.GetID(), []).get(
             "background", []
