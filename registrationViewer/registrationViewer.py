@@ -397,32 +397,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._set_four_up_layout()
         self._assign_volumes_to_standard_four_up_views()
 
-        self.views_sag: list[str] = []
-        self.views_cor: list[str] = []
-        self.views_ax: list[str] = []
-
-        for viewName in self._four_up_slice_views():
-            sliceWidget = slicer.app.layoutManager().sliceWidget(viewName)
-            if sliceWidget is None:
-                continue
-
-            compositeNode = sliceWidget.sliceLogic().GetSliceCompositeNode()
-            background_volume_id = compositeNode.GetBackgroundVolumeID()
-
-            if self.node_sag and background_volume_id == self.node_sag.GetID():
-                self.views_sag.append(viewName)
-            if self.node_cor and background_volume_id == self.node_cor.GetID():
-                self.views_cor.append(viewName)
-            if self.node_ax and background_volume_id == self.node_ax.GetID():
-                self.views_ax.append(viewName)
-
-        # Keep synchronization usable even before slice backgrounds are assigned.
-        if not self.views_sag:
-            self.views_sag = ["Yellow"]
-        if not self.views_cor:
-            self.views_cor = ["Green"]
-        if not self.views_ax:
-            self.views_ax = ["Red"]
+        # Four-up is fixed in this module, so each role maps to one known slice view.
+        self.views_sag = ["Yellow"]
+        self.views_cor = ["Green"]
+        self.views_ax = ["Red"]
 
         self.views_all = self.views_sag + self.views_cor + self.views_ax
 
