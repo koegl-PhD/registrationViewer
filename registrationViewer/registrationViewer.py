@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
+import traceback
 from typing import Any, List, Optional
 
 import qt
@@ -585,7 +586,57 @@ class Crosshairs:
         self.views_ax = views_ax
         self.views_all = views_sag + views_cor + views_ax
 
+        self.debug_enabled = True
+        self._warned_messages: set[str] = set()
+        self._last_logged_view: str = ""
+
         self.create_crosshairs_and_folder()
+
+    def _warn_once(self, message: str) -> None:
+        if message not in self._warned_messages:
+            logging.warning(message)
+            self._warned_messages.add(message)
+
+    def _log_transform_state(self, current_view: str) -> None:
+        if not self.debug_enabled:
+            return
+
+        # Log only when entering a different source view to avoid excessive log spam.
+        if current_view == self._last_logged_view:
+            return
+        self._last_logged_view = current_view
+
+        cor_to_sag_to = (
+            self.node_cor_to_sag.GetTransformToParent()
+            if self.node_cor_to_sag is not None
+            else None
+        )
+        cor_to_sag_from = (
+            self.node_cor_to_sag.GetTransformFromParent()
+            if self.node_cor_to_sag is not None
+            else None
+        )
+        ax_to_sag_to = (
+            self.node_ax_to_sag.GetTransformToParent()
+            if self.node_ax_to_sag is not None
+            else None
+        )
+        ax_to_sag_from = (
+            self.node_ax_to_sag.GetTransformFromParent()
+            if self.node_ax_to_sag is not None
+            else None
+        )
+
+        logging.info(
+            "Crosshair sync source view=%s | cor_to_sag=%s (to=%s, from=%s) | ax_to_sag=%s (to=%s, from=%s)",
+            current_view,
+            self.node_cor_to_sag.GetName() if self.node_cor_to_sag else "None",
+            type(cor_to_sag_to).__name__ if cor_to_sag_to is not None else "None",
+            type(cor_to_sag_from).__name__ if cor_to_sag_from is not None else "None",
+            self.node_ax_to_sag.GetName() if self.node_ax_to_sag else "None",
+            type(ax_to_sag_to).__name__ if ax_to_sag_to is not None else "None",
+            type(ax_to_sag_from).__name__ if ax_to_sag_from is not None else "None",
+        )
 
     def create_crosshairs_and_folder(self) -> None:
 
@@ -646,10 +697,22 @@ class Crosshairs:
         slicer.util.getNode("Crosshair").GetCursorPositionRAS(initial_position)
         return initial_position
 
-    @staticmethod
     def _transform_for_direction(
-        transform_node: vtkMRMLTransformNode, invert: bool
-    ) -> vtk.vtkAbstractTransform:
+        self, transform_node: vtkMRMLTransformNode, invert: bool
+    ) -> Optional[vtk.vtkAbstractTransform]:
+        if transform_node is None:
+            return None
+
+        if transform_node.GetTransformToParent() is None:
+            # Newly created transform nodes may have no internal transform yet.
+            # Initialize them as identity so synchronization can proceed safely.
+            identity_transform = vtk.vtkTransform()
+            identity_transform.Identity()
+            transform_node.SetAndObserveTransformToParent(identity_transform)
+            self._warn_once(
+                f"Initialized empty transform node '{transform_node.GetName()}' to identity."
+            )
+
         return (
             transform_node.GetTransformFromParent()
             if invert
@@ -660,12 +723,22 @@ class Crosshairs:
         self,
         crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
         transform_chain: list[tuple[vtkMRMLTransformNode, bool]],
-    ) -> None:
+    ) -> bool:
         for node in crosshair_nodes:
             for transform_node, invert in transform_chain:
-                node.ApplyTransform(
-                    self._transform_for_direction(transform_node, invert)
-                )
+                transform = self._transform_for_direction(transform_node, invert)
+                if transform is None:
+                    transform_name = (
+                        transform_node.GetName() if transform_node else "None"
+                    )
+                    self._warn_once(
+                        f"Skipping transform chain: transform object is None for node '{transform_name}', invert={invert}."
+                    )
+                    return False
+
+                node.ApplyTransform(transform)
+
+        return True
 
     def _place_source_crosshair(
         self,
@@ -691,7 +764,8 @@ class Crosshairs:
 
         initial_position = self._cursor_ras_position()
         self.set_crosshair_nodes_to_position(crosshair_nodes, initial_position)
-        self._apply_transform_chain(crosshair_nodes, transform_chain)
+        if not self._apply_transform_chain(crosshair_nodes, transform_chain):
+            return
 
         new_position: List[float] = [0.0, 0.0, 0.0]
         crosshair_nodes[0].GetNthControlPointPositionWorld(0, new_position)
@@ -706,47 +780,52 @@ class Crosshairs:
         When the mouse moves in a view, the crosshair should follow the cursor.
 
         """
-        current_view = self.get_cursor_view_name()
-        self.set_crosshair_visibility()
+        try:
+            current_view = self.get_cursor_view_name()
+            self._log_transform_state(current_view)
+            self.set_crosshair_visibility()
 
-        if current_view in self.views_sag:
-            self._place_source_crosshair(self.views_sag, self.crosshairs_sag)
-            self._place_transformed_crosshair(
-                self.views_cor,
-                self.crosshairs_cor,
-                [(self.node_cor_to_sag, True)],
-            )
-            self._place_transformed_crosshair(
-                self.views_ax,
-                self.crosshairs_ax,
-                [(self.node_ax_to_sag, True)],
-            )
+            if current_view in self.views_sag:
+                self._place_source_crosshair(self.views_sag, self.crosshairs_sag)
+                self._place_transformed_crosshair(
+                    self.views_cor,
+                    self.crosshairs_cor,
+                    [(self.node_cor_to_sag, True)],
+                )
+                self._place_transformed_crosshair(
+                    self.views_ax,
+                    self.crosshairs_ax,
+                    [(self.node_ax_to_sag, True)],
+                )
 
-        elif current_view in self.views_cor:
-            self._place_source_crosshair(self.views_cor, self.crosshairs_cor)
-            self._place_transformed_crosshair(
-                self.views_sag,
-                self.crosshairs_sag,
-                [(self.node_cor_to_sag, False)],
-            )
-            self._place_transformed_crosshair(
-                self.views_ax,
-                self.crosshairs_ax,
-                [(self.node_cor_to_sag, False), (self.node_ax_to_sag, True)],
-            )
+            elif current_view in self.views_cor:
+                self._place_source_crosshair(self.views_cor, self.crosshairs_cor)
+                self._place_transformed_crosshair(
+                    self.views_sag,
+                    self.crosshairs_sag,
+                    [(self.node_cor_to_sag, False)],
+                )
+                self._place_transformed_crosshair(
+                    self.views_ax,
+                    self.crosshairs_ax,
+                    [(self.node_cor_to_sag, False), (self.node_ax_to_sag, True)],
+                )
 
-        elif current_view in self.views_ax:
-            self._place_source_crosshair(self.views_ax, self.crosshairs_ax)
-            self._place_transformed_crosshair(
-                self.views_sag,
-                self.crosshairs_sag,
-                [(self.node_ax_to_sag, False)],
-            )
-            self._place_transformed_crosshair(
-                self.views_cor,
-                self.crosshairs_cor,
-                [(self.node_ax_to_sag, False), (self.node_cor_to_sag, True)],
-            )
+            elif current_view in self.views_ax:
+                self._place_source_crosshair(self.views_ax, self.crosshairs_ax)
+                self._place_transformed_crosshair(
+                    self.views_sag,
+                    self.crosshairs_sag,
+                    [(self.node_ax_to_sag, False)],
+                )
+                self._place_transformed_crosshair(
+                    self.views_cor,
+                    self.crosshairs_cor,
+                    [(self.node_ax_to_sag, False), (self.node_cor_to_sag, True)],
+                )
+        except Exception:
+            logging.exception("Exception in on_mouse_moved_place_crosshair")
+            traceback.print_exc()
 
     def _set_node_visibility(
         self, node: slicer.vtkMRMLMarkupsFiducialNode, visibility: bool
