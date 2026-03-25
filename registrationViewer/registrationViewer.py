@@ -4,7 +4,6 @@ import logging
 import time
 from typing import Any, List, Optional
 
-import CompareVolumes
 import qt
 import slicer
 import slicer.util
@@ -126,7 +125,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Create logic classes. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
         self.logic = registrationViewerLogic()
-        self.CompareVolumes_logic = CompareVolumes.CompareVolumesLogic()
 
         # These connections ensure that we update parameter node when scene is closed
         self.addObserver(
@@ -144,21 +142,30 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "clicked(bool)", self.on_synchronise_views
         )
 
-        self.ui.hotLinkWithCursor_checkbox.connect(
-            "stateChanged(int)", self._update_from_gui
-        )
-
-        self._add_visualization_widget()
+        self._add_zoom_fit_controls()
+        self._set_four_up_layout()
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
 
-    def _add_visualization_widget(self) -> None:
+    @staticmethod
+    def _set_four_up_layout() -> None:
+        slicer.app.layoutManager().setLayout(
+            slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView
+        )
+
+    @staticmethod
+    def _four_up_slice_views() -> list[str]:
+        return ["Red", "Yellow", "Green"]
+
+    def _add_zoom_fit_controls(self) -> None:
         import LandmarkRegistration
 
         self.visualization = LandmarkRegistration.RegistrationLib.VisualizationWidget(
             None
         )
+
+        # Keep only zoom/fit controls from the visualization widget.
         self.visualization.groupBoxLayout.itemAt(5).widget().hide()
         self.visualization.groupBoxLayout.itemAt(4).widget().hide()
         self.visualization.groupBoxLayout.itemAt(3).widget().hide()
@@ -167,18 +174,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.visualization.groupBoxLayout.itemAt(0).widget().hide()
 
         row: int = self.ui.formLayout_2.rowCount()
-        self.ui.formLayout_2.addWidget(
-            self.visualization.widget, row, 0, 1, 3
-        )  # spans columns 1–3
+        self.ui.formLayout_2.addWidget(self.visualization.widget, row, 0, 1, 3)
 
-        self.visualization.updateVisualization = self.updateVisualization
+        # Prevent visualization widget from changing layout away from Four-up.
+        self.visualization.updateVisualization = self._on_visualization_widget_updated
 
-    def updateVisualization(self):
-
+    def _on_visualization_widget_updated(self) -> None:
+        self._set_four_up_layout()
         self._update_from_gui()
-
-        if self.synchronise_pressed:
-            self._set_up_crosshair()
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
@@ -344,46 +347,31 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if not self._are_nodes_selected():
             return
 
-        if self.node_fixed.GetID() == self.node_moving.GetID():
-            nodes = [self.node_fixed]
-        else:
-            nodes = [self.node_fixed, self.node_moving]
+        self._set_four_up_layout()
 
-        # if self.visualization.layoutOption == "Axi/Sag/Cor":
-        #     _, volume_mapping = self.CompareVolumes_logic.viewersPerVolume(
-        #         volumeNodes=nodes,
-        #         background=None,
-        #         label=None,
-        #         opacity=None,
-        #         returnVolumeViewMapping=True,
-        #     )
-        # else:
-        _, volume_mapping = self.CompareVolumes_logic.viewerPerVolume(
-            volumeNodes=nodes,
-            background=None,
-            label=None,
-            orientation=self.visualization.layoutOption,
-            opacity=None,
-            returnVolumeViewMapping=True,
-        )
+        self.views_fixed: list[str] = []
+        self.views_moving: list[str] = []
 
-        self.views_fixed = volume_mapping.get(self.node_fixed.GetID(), []).get(
-            "background", []
-        )
-        self.views_moving = volume_mapping.get(self.node_moving.GetID(), []).get(
-            "background", []
-        )
-        self.views_all = self.views_fixed + self.views_moving
-
-        for viewName in self.views_all:
+        for viewName in self._four_up_slice_views():
             sliceWidget = slicer.app.layoutManager().sliceWidget(viewName)
-            compositeNode = sliceWidget.sliceLogic().GetSliceCompositeNode()
-            compositeNode.SetLinkedControl(self.ui.hotLinkWithCursor_checkbox.checked)
-            compositeNode.SetHotLinkedControl(
-                self.ui.hotLinkWithCursor_checkbox.checked
-            )
+            if sliceWidget is None:
+                continue
 
-        self.visualization.onZoom("Fit")
+            compositeNode = sliceWidget.sliceLogic().GetSliceCompositeNode()
+            background_volume_id = compositeNode.GetBackgroundVolumeID()
+
+            if self.node_fixed and background_volume_id == self.node_fixed.GetID():
+                self.views_fixed.append(viewName)
+            if self.node_moving and background_volume_id == self.node_moving.GetID():
+                self.views_moving.append(viewName)
+
+        # Keep synchronization usable even before slice backgrounds are assigned.
+        if not self.views_fixed:
+            self.views_fixed = ["Yellow"]
+        if not self.views_moving:
+            self.views_moving = ["Green"]
+
+        self.views_all = self.views_fixed + self.views_moving
 
     def synchronisation_checks(self) -> bool:
         """
