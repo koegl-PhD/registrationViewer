@@ -163,6 +163,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.visualization.groupBoxLayout.itemAt(4).widget().hide()
         self.visualization.groupBoxLayout.itemAt(3).widget().hide()
         self.visualization.groupBoxLayout.itemAt(2).widget().hide()
+        self.visualization.groupBoxLayout.itemAt(1).widget().hide()
+        self.visualization.groupBoxLayout.itemAt(0).widget().hide()
 
         row: int = self.ui.formLayout_2.rowCount()
         self.ui.formLayout_2.addWidget(
