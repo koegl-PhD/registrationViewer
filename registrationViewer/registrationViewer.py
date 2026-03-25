@@ -166,6 +166,24 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         Green: coronal volume
         Yellow: sagittal volume
         """
+        view_orientation_pairs = [
+            ("Red", "Axial"),
+            ("Green", "Coronal"),
+            ("Yellow", "Sagittal"),
+        ]
+
+        for view_name, orientation in view_orientation_pairs:
+            slice_widget = slicer.app.layoutManager().sliceWidget(view_name)
+            if slice_widget is None:
+                continue
+
+            slice_node = slice_widget.sliceLogic().GetSliceNode()
+            if slice_node is None:
+                continue
+
+            if slice_node.GetOrientationString() != orientation:
+                slice_node.SetOrientation(orientation)
+
         view_volume_pairs = [
             ("Red", self.node_ax),
             ("Green", self.node_cor),
