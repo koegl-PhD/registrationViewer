@@ -1,33 +1,29 @@
 from __future__ import annotations
-import functools
-import importlib
+
 import logging
-import os
 import time
+from typing import Any, List, Optional
 
-from typing import Optional, Any, List, Literal, Tuple, Dict, Callable
-
-import numpy as np
-import glob
-
-import ctk
-import vtk
+import CompareVolumes
 import qt
 import slicer
 import slicer.util
+import vtk
+from slicer import (  # pylint: disable=no-name-in-module
+    vtkMRMLScalarVolumeNode,
+    vtkMRMLTransformNode,
+)
 from slicer.i18n import tr as _
 from slicer.i18n import translate
-from slicer.ScriptedLoadableModule import (
-    ScriptedLoadableModule,
-    ScriptedLoadableModuleWidget,
-    ScriptedLoadableModuleLogic)
-from slicer.util import VTKObservationMixin
 from slicer.parameterNodeWrapper import (
     parameterNodeWrapper,
 )
-from slicer import vtkMRMLScalarVolumeNode, vtkMRMLSliceNode, vtkMRMLTransformNode  # pylint: disable=no-name-in-module
-
-import CompareVolumes
+from slicer.ScriptedLoadableModule import (
+    ScriptedLoadableModule,
+    ScriptedLoadableModuleLogic,
+    ScriptedLoadableModuleWidget,
+)
+from slicer.util import VTKObservationMixin
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -41,8 +37,7 @@ class registrationViewer(ScriptedLoadableModule):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = _("registrationViewer")
         # folders where the module shows up in the module selector
-        self.parent.categories = [
-            translate("qSlicerAbstractCoreModule", "Examples")]
+        self.parent.categories = [translate("qSlicerAbstractCoreModule", "Examples")]
         self.parent.dependencies = []  # list of module names that this module requires
         self.parent.contributors = ["Fryderyk Kögl (TUM)"]
         # _() function marks text as translatable to other languages
@@ -52,6 +47,7 @@ class registrationViewer(ScriptedLoadableModule):
 This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc., Andras Lasso, PerkLab,
 and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
 """)
+
 
 #
 # registrationViewerParameterNode
@@ -66,9 +62,11 @@ class registrationViewerParameterNode:
     inputVolume - Input volume to print the name
     """
 
-    volume_fixed: vtkMRMLScalarVolumeNode
-    volume_moving: vtkMRMLScalarVolumeNode
-    transformation: vtkMRMLTransformNode
+    volume_sag: vtkMRMLScalarVolumeNode
+    volume_cor: vtkMRMLScalarVolumeNode
+    volume_ax: vtkMRMLScalarVolumeNode
+    transform_cor_to_sag: vtkMRMLTransformNode
+    transform_ax_to_sag: vtkMRMLTransformNode
 
 
 #
@@ -88,8 +86,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._sceneObserverTag: Optional[int] = None
 
         shortcut = qt.QShortcut(slicer.util.mainWindow())
-        shortcut.setKey(qt.QKeySequence('s'))
-        shortcut.connect('activated()', self.on_synchronise_views)
+        shortcut.setKey(qt.QKeySequence("s"))
+        shortcut.connect("activated()", self.on_synchronise_views)
 
         self.crosshair = None
 
@@ -100,8 +98,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
 
-        uiWidget = slicer.util.loadUI(
-            self.resourcePath("UI/registrationViewer.ui"))
+        uiWidget = slicer.util.loadUI(self.resourcePath("UI/registrationViewer.ui"))
         self.layout.addWidget(uiWidget)
         self.ui = slicer.util.childWidgetVariables(uiWidget)
 
@@ -112,11 +109,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # "setMRMLScene(vtkMRMLScene*)" slot.
         uiWidget.setMRMLScene(slicer.mrmlScene)
 
-        for selector in [self.ui.inputSelector_fixed,
-                         self.ui.inputSelector_moving,
-                         self.ui.inputSelector_transformation]:
+        for selector in [
+            self.ui.inputSelector_sag,
+            self.ui.inputSelector_cor,
+            self.ui.inputSelector_ax,
+            self.ui.inputSelector_cor_to_sag,
+            self.ui.inputSelector_ax_to_sag,
+        ]:
             selector.setMRMLScene(slicer.mrmlScene)
-        
+
         if self._sceneObserverTag is None:
             self._sceneObserverTag = slicer.mrmlScene.AddObserver(
                 slicer.mrmlScene.NodeAddedEvent, self._on_node_added
@@ -129,20 +130,23 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # These connections ensure that we update parameter node when scene is closed
         self.addObserver(
-            slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
-        self.addObserver(slicer.mrmlScene,
-                         slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
+            slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose
+        )
+        self.addObserver(
+            slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose
+        )
 
         self.synchronise_pressed = False
-        self.ui.synchronise_views_with_transform.setText(
-            "Synchronise views (s)")
+        self.ui.synchronise_views_with_transform.setText("Synchronise views (s)")
 
         # Buttons
         self.ui.synchronise_views_with_transform.connect(
-            "clicked(bool)", self.on_synchronise_views)
+            "clicked(bool)", self.on_synchronise_views
+        )
 
         self.ui.hotLinkWithCursor_checkbox.connect(
-            "stateChanged(int)", self._update_from_gui)
+            "stateChanged(int)", self._update_from_gui
+        )
 
         self._add_visualization_widget()
 
@@ -151,8 +155,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _add_visualization_widget(self) -> None:
         import LandmarkRegistration
+
         self.visualization = LandmarkRegistration.RegistrationLib.VisualizationWidget(
-            None)
+            None
+        )
         self.visualization.groupBoxLayout.itemAt(5).widget().hide()
         self.visualization.groupBoxLayout.itemAt(4).widget().hide()
         self.visualization.groupBoxLayout.itemAt(3).widget().hide()
@@ -160,7 +166,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         row: int = self.ui.formLayout_2.rowCount()
         self.ui.formLayout_2.addWidget(
-            self.visualization.widget, row, 0, 1, 3)  # spans columns 1–3
+            self.visualization.widget, row, 0, 1, 3
+        )  # spans columns 1–3
 
         self.visualization.updateVisualization = self.updateVisualization
 
@@ -188,7 +195,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._parameterNodeGuiTag = None
 
             self.removeObserver(
-                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui
+            )
 
     def onSceneStartClose(self, caller, event) -> None:  # pylint: disable=unused-argument
         """Called just before the scene is closed."""
@@ -200,8 +208,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._sceneObserverTag = None
 
         self.synchronise_pressed = False
-        self.ui.synchronise_views_with_transform.setText(
-            "Synchronise views (s)")
+        self.ui.synchronise_views_with_transform.setText("Synchronise views (s)")
 
         self._remove_custom_nodes()
 
@@ -216,17 +223,26 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @vtk.calldata_type(vtk.VTK_OBJECT)
     def _on_node_added(self, caller, eventid, node) -> None:  # pylint: disable=unused-argument
-        """Auto-assign first two added scalar volumes: first->fixed, second->moving."""
+        """Auto-assign first three added scalar volumes: first->sag, second->cor, third->ax."""
 
         if not isinstance(node, vtkMRMLScalarVolumeNode):
             return
-        
-        if self.node_fixed is None:
-            self.ui.inputSelector_fixed.setCurrentNode(node)
-        
-        if self.node_moving is None or self.node_fixed.GetID() == self.node_moving.GetID():
-            if node.GetID() != self.node_fixed.GetID():
-                self.ui.inputSelector_moving.setCurrentNode(node)
+
+        if self.node_sag is None:
+            self.ui.inputSelector_sag.setCurrentNode(node)
+            return
+
+        if self.node_cor is None or self.node_sag.GetID() == self.node_cor.GetID():
+            if node.GetID() != self.node_sag.GetID():
+                self.ui.inputSelector_cor.setCurrentNode(node)
+            return
+
+        if self.node_ax is None or self.node_ax.GetID() in [
+            self.node_sag.GetID(),
+            self.node_cor.GetID(),
+        ]:
+            if node.GetID() not in [self.node_sag.GetID(), self.node_cor.GetID()]:
+                self.ui.inputSelector_ax.setCurrentNode(node)
 
     def initializeParameterNode(self) -> None:
         """Ensure parameter node exists and observed."""
@@ -235,7 +251,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self.setParameterNode(self.logic.getParameterNode())
 
-    def setParameterNode(self, inputParameterNode: Optional[registrationViewerParameterNode]) -> None:
+    def setParameterNode(
+        self, inputParameterNode: Optional[registrationViewerParameterNode]
+    ) -> None:
         """
         Set and observe parameter node.
         Observation is needed because when the parameter node is changed then the GUI must be updated immediately.
@@ -244,33 +262,35 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self._parameterNode:
             self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
             self.removeObserver(
-                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui
+            )
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
             # ui element that needs connection.
             self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
-            self.addObserver(self._parameterNode,
-                             vtk.vtkCommand.ModifiedEvent, self._update_from_gui)
+            self.addObserver(
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._update_from_gui
+            )
             self._update_from_gui()
 
     def _update_from_gui(self, caller=None, event=None) -> None:  # pylint: disable=unused-argument
 
         if not self._are_nodes_selected():
             return
-        
+
         if self.node_fixed.GetID() == self.node_moving.GetID():
             nodes = [self.node_fixed]
         else:
             nodes = [self.node_fixed, self.node_moving]
 
-        if self.visualization.layoutOption == 'Axi/Sag/Cor':
+        if self.visualization.layoutOption == "Axi/Sag/Cor":
             _, volume_mapping = self.CompareVolumes_logic.viewersPerVolume(
                 volumeNodes=nodes,
                 background=None,
                 label=None,
                 opacity=None,
-                returnVolumeViewMapping=True
+                returnVolumeViewMapping=True,
             )
         else:
             _, volume_mapping = self.CompareVolumes_logic.viewerPerVolume(
@@ -279,23 +299,26 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 label=None,
                 orientation=self.visualization.layoutOption,
                 opacity=None,
-                returnVolumeViewMapping=True
+                returnVolumeViewMapping=True,
             )
 
-        self.views_fixed = volume_mapping.get(self.node_fixed.GetID(), []).get("background", [])
-        self.views_moving = volume_mapping.get(self.node_moving.GetID(), []).get("background", [])
+        self.views_fixed = volume_mapping.get(self.node_fixed.GetID(), []).get(
+            "background", []
+        )
+        self.views_moving = volume_mapping.get(self.node_moving.GetID(), []).get(
+            "background", []
+        )
         self.views_all = self.views_fixed + self.views_moving
 
         for viewName in self.views_all:
             sliceWidget = slicer.app.layoutManager().sliceWidget(viewName)
             compositeNode = sliceWidget.sliceLogic().GetSliceCompositeNode()
-            compositeNode.SetLinkedControl(
-                self.ui.hotLinkWithCursor_checkbox.checked)
+            compositeNode.SetLinkedControl(self.ui.hotLinkWithCursor_checkbox.checked)
             compositeNode.SetHotLinkedControl(
-                self.ui.hotLinkWithCursor_checkbox.checked)
-        
-        self.visualization.onZoom("Fit")
+                self.ui.hotLinkWithCursor_checkbox.checked
+            )
 
+        self.visualization.onZoom("Fit")
 
     def synchronisation_checks(self) -> bool:
         """
@@ -304,7 +327,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """
         if not self._are_nodes_selected():
             slicer.util.errorDisplay(
-                "Please select fixed, moving and transformation nodes")
+                "Please select fixed, moving and transformation nodes"
+            )
             return False
 
         if slicer.util.getNode("Crosshair") is None:
@@ -316,8 +340,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             return False
 
         if self.node_fixed.GetID() == self.node_moving.GetID():
-            slicer.util.errorDisplay(
-                "Fixed and moving nodes must be different")
+            slicer.util.errorDisplay("Fixed and moving nodes must be different")
             return False
 
         return True
@@ -331,12 +354,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if self.synchronise_pressed is True:
             self._set_up_crosshair()
-            self.ui.synchronise_views_with_transform.setText(
-                "Unsynchronise views (s)")
+            self.ui.synchronise_views_with_transform.setText("Unsynchronise views (s)")
         else:
             self.remove_custom_observers_from_crosshair()
-            self.ui.synchronise_views_with_transform.setText(
-                "Synchronise views (s)")
+            self.ui.synchronise_views_with_transform.setText("Synchronise views (s)")
 
     def _remove_custom_nodes(self) -> None:
         if self.crosshair is not None:
@@ -344,9 +365,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair = None
 
     def _are_nodes_selected(self) -> bool:
-        return self.ui.inputSelector_fixed.currentNode() is not None and \
-            self.ui.inputSelector_moving.currentNode() is not None and \
-            self.ui.inputSelector_transformation.currentNode() is not None
+        return (
+            self.ui.inputSelector_sag.currentNode() is not None
+            and self.ui.inputSelector_cor.currentNode() is not None
+            and self.ui.inputSelector_ax.currentNode() is not None
+            and self.ui.inputSelector_cor_to_sag.currentNode() is not None
+            and self.ui.inputSelector_ax_to_sag.currentNode() is not None
+        )
 
     def _set_up_crosshair(self) -> None:
         if self.crosshair:
@@ -354,12 +379,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.crosshair.delete_crosshairs_and_folder()
             self.crosshair = None
 
-        self.crosshair = Crosshairs(node_transform=self.node_transform,
-                                    views_fixed=self.views_fixed,
-                                    views_moving=self.views_moving)
+        self.crosshair = Crosshairs(
+            node_transform=self.node_transform,
+            views_fixed=self.views_fixed,
+            views_moving=self.views_moving,
+        )
 
-        observer_tag = slicer.util.getNode("Crosshair").AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
-                                                                    self.crosshair.on_mouse_moved_place_crosshair)
+        observer_tag = slicer.util.getNode("Crosshair").AddObserver(
+            slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent,
+            self.crosshair.on_mouse_moved_place_crosshair,
+        )
         self.crosshair_custom_observer_tags.append(observer_tag)
 
     def remove_custom_observers_from_crosshair(self) -> None:
@@ -370,16 +399,36 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.crosshair_custom_observer_tags.clear()
 
     @property
+    def node_sag(self) -> Any:
+        return self.ui.inputSelector_sag.currentNode()
+
+    @property
+    def node_cor(self) -> Any:
+        return self.ui.inputSelector_cor.currentNode()
+
+    @property
+    def node_ax(self) -> Any:
+        return self.ui.inputSelector_ax.currentNode()
+
+    @property
+    def node_cor_to_sag(self) -> Any:
+        return self.ui.inputSelector_cor_to_sag.currentNode()
+
+    @property
+    def node_ax_to_sag(self) -> Any:
+        return self.ui.inputSelector_ax_to_sag.currentNode()
+
+    @property
     def node_fixed(self) -> Any:
-        return self.ui.inputSelector_fixed.currentNode()
+        return self.node_sag
 
     @property
     def node_moving(self) -> Any:
-        return self.ui.inputSelector_moving.currentNode()
+        return self.node_cor
 
     @property
     def node_transform(self) -> Any:
-        return self.ui.inputSelector_transformation.currentNode()
+        return self.node_cor_to_sag
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
@@ -415,21 +464,20 @@ class registrationViewerLogic(ScriptedLoadableModuleLogic):
         # print(f"Volume name: {inputVolume.GetName()}")
 
         stop_time = time.time()
-        logging.info(
-            "Processing completed in %.2f seconds", stop_time-start_time)
+        logging.info("Processing completed in %.2f seconds", stop_time - start_time)
 
 
-class Crosshairs():
-
+class Crosshairs:
     """
     Class to handle crosshairs for each view
     """
 
-    def __init__(self,
-                 node_transform: slicer.vtkMRMLGridTransformNode,
-                 views_fixed: List[str],
-                 views_moving: List[str]
-                 ) -> None:
+    def __init__(
+        self,
+        node_transform: slicer.vtkMRMLGridTransformNode,
+        views_fixed: List[str],
+        views_moving: List[str],
+    ) -> None:
 
         self.node_transform = node_transform
 
@@ -450,11 +498,13 @@ class Crosshairs():
         # create a folder to put the crosshairs in
         self.sh_node = slicer.mrmlScene.GetSubjectHierarchyNode()
         self.crosshair_folder_id = self.sh_node.CreateFolderItem(
-            self.sh_node.GetSceneItemID(), "crosshairs")
+            self.sh_node.GetSceneItemID(), "crosshairs"
+        )
 
         for crosshair_node in self.crosshair_nodes.values():
-            self.sh_node.SetItemParent(self.sh_node.GetItemByDataNode(
-                crosshair_node), self.crosshair_folder_id)
+            self.sh_node.SetItemParent(
+                self.sh_node.GetItemByDataNode(crosshair_node), self.crosshair_folder_id
+            )
 
         # collapse folder
         self.sh_node.SetItemExpanded(self.crosshair_folder_id, False)
@@ -476,7 +526,8 @@ class Crosshairs():
         """
 
         crosshair_node = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsFiducialNode")
+            "vtkMRMLMarkupsFiducialNode"
+        )
         crosshair_node.SetName("")
 
         crosshair_node.AddControlPoint(0, 0, 0, "")
@@ -485,9 +536,9 @@ class Crosshairs():
 
         crosshair_node.LockedOn()
 
-        crosshair_node.GetDisplayNode().SetViewNodeIDs([
-            slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode().GetID()
-        ])
+        crosshair_node.GetDisplayNode().SetViewNodeIDs(
+            [slicer.app.layoutManager().sliceWidget(view).mrmlSliceNode().GetID()]
+        )
 
         return crosshair_node
 
@@ -495,34 +546,30 @@ class Crosshairs():
         self,
         views: List[str],
         crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
-        reverse_transf_direction: bool
+        reverse_transf_direction: bool,
     ) -> None:
         """
         Places the crosshair in the current view and transforms it to the new position.
         """
 
-        initial_position: list[float] = [0., 0., 0.]
+        initial_position: list[float] = [0.0, 0.0, 0.0]
         slicer.util.getNode("Crosshair").GetCursorPositionRAS(initial_position)
 
         # now we set the position of our crosshair and then transform it to the new position
-        self.set_crosshair_nodes_to_position(crosshair_nodes,
-                                             initial_position)
+        self.set_crosshair_nodes_to_position(crosshair_nodes, initial_position)
 
         # now transform the crosshair to the new position
-        self.transform_crosshair_nodes(crosshair_nodes,
-                                       not reverse_transf_direction)
+        self.transform_crosshair_nodes(crosshair_nodes, not reverse_transf_direction)
 
-        new_position: List[float] = [0., 0., 0.]
-        crosshair_nodes[0].GetNthControlPointPositionWorld(0,
-                                                           new_position)
+        new_position: List[float] = [0.0, 0.0, 0.0]
+        crosshair_nodes[0].GetNthControlPointPositionWorld(0, new_position)
 
         for view in views:
             self.set_offset_to_ras(new_position, view)
 
         self.set_crosshair_visibility()
 
-        self.set_crosshair_nodes_to_position(crosshair_nodes,
-                                             new_position)
+        self.set_crosshair_nodes_to_position(crosshair_nodes, new_position)
 
     def place_crosshair_without_transformation(
         self,
@@ -530,13 +577,12 @@ class Crosshairs():
         crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
     ) -> None:
 
-        initial_position: list[float] = [0., 0., 0.]
+        initial_position: list[float] = [0.0, 0.0, 0.0]
         slicer.util.getNode("Crosshair").GetCursorPositionRAS(initial_position)
 
         self.set_crosshair_visibility()
 
-        self.set_crosshair_nodes_to_position(crosshair_nodes,
-                                             initial_position)
+        self.set_crosshair_nodes_to_position(crosshair_nodes, initial_position)
 
         # only jump the *other* slice views in this group; leave the active view’s slice unchanged
         for view in views:
@@ -553,22 +599,28 @@ class Crosshairs():
         current_view = self.get_cursor_view_name()
 
         if current_view in self.views_fixed:
-            self.place_crosshair_without_transformation(views=self.views_fixed,
-                                                        crosshair_nodes=self.crosshairs_1)
-            self.place_crosshair_with_transformation(views=self.views_moving,
-                                                     crosshair_nodes=self.crosshairs_2,
-                                                     reverse_transf_direction=self.reverse_transf_direction)
+            self.place_crosshair_without_transformation(
+                views=self.views_fixed, crosshair_nodes=self.crosshairs_1
+            )
+            self.place_crosshair_with_transformation(
+                views=self.views_moving,
+                crosshair_nodes=self.crosshairs_2,
+                reverse_transf_direction=self.reverse_transf_direction,
+            )
 
         elif current_view in self.views_moving:
-            self.place_crosshair_with_transformation(views=self.views_fixed,
-                                                     crosshair_nodes=self.crosshairs_1,
-                                                     reverse_transf_direction=not self.reverse_transf_direction)
-            self.place_crosshair_without_transformation(views=self.views_moving,
-                                                        crosshair_nodes=self.crosshairs_2)
+            self.place_crosshair_with_transformation(
+                views=self.views_fixed,
+                crosshair_nodes=self.crosshairs_1,
+                reverse_transf_direction=not self.reverse_transf_direction,
+            )
+            self.place_crosshair_without_transformation(
+                views=self.views_moving, crosshair_nodes=self.crosshairs_2
+            )
 
-    def transform_crosshair_nodes(self,
-                                  crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
-                                  invert: bool) -> None:
+    def transform_crosshair_nodes(
+        self, crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode], invert: bool
+    ) -> None:
         """
         Transform every crosshair from the list of nodes with the current transformation.
         """
@@ -578,20 +630,25 @@ class Crosshairs():
             return
 
         for node in crosshair_nodes:
-            transform = (self.node_transform.GetTransformFromParent()
-                         if invert
-                         else self.node_transform.GetTransformToParent())
+            transform = (
+                self.node_transform.GetTransformFromParent()
+                if invert
+                else self.node_transform.GetTransformToParent()
+            )
             node.ApplyTransform(transform)
 
-    def _set_node_visibility(self, node: slicer.vtkMRMLMarkupsFiducialNode, visibility: bool) -> None:
+    def _set_node_visibility(
+        self, node: slicer.vtkMRMLMarkupsFiducialNode, visibility: bool
+    ) -> None:
         """Helper method to set visibility of a crosshair node."""
         display_node = node.GetDisplayNode()
         if display_node is not None:
             display_node.SetVisibility(visibility)
 
     @staticmethod
-    def set_crosshair_nodes_to_position(crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode],
-                                        position: list[float]) -> None:
+    def set_crosshair_nodes_to_position(
+        crosshair_nodes: list[slicer.vtkMRMLMarkupsFiducialNode], position: list[float]
+    ) -> None:
         """
         Set every crosshair from the list of nodes to the given position.
         """
@@ -599,15 +656,16 @@ class Crosshairs():
         for node in crosshair_nodes:
             node.SetNthControlPointPositionWorld(0, *position)
 
-    def set_crosshair_visibility_in_views(self, views: list[str], visibility: bool) -> None:
+    def set_crosshair_visibility_in_views(
+        self, views: list[str], visibility: bool
+    ) -> None:
         """
         Hide the crosshair in the given views.
         """
 
         for view in views:
             if view in self.crosshair_nodes:
-                self._set_node_visibility(
-                    self.crosshair_nodes[view], visibility)
+                self._set_node_visibility(self.crosshair_nodes[view], visibility)
 
     def set_crosshair_visibility(self) -> None:
         """
@@ -619,8 +677,7 @@ class Crosshairs():
 
         current_view = self.get_cursor_view_name()
         if current_view in self.crosshair_nodes:
-            self._set_node_visibility(
-                self.crosshair_nodes[current_view], False)
+            self._set_node_visibility(self.crosshair_nodes[current_view], False)
 
     @staticmethod
     def get_cursor_view_name() -> str:
@@ -632,7 +689,7 @@ class Crosshairs():
         if node_crosshair is None:
             return ""
 
-        position = node_crosshair.GetCursorPositionXYZ([0]*3)
+        position = node_crosshair.GetCursorPositionXYZ([0] * 3)
 
         if position is not None:
             return position.GetName()
@@ -662,9 +719,10 @@ class Crosshairs():
 
         try:
             a = [self.crosshair_nodes[view] for view in self.views_fixed]
-        except KeyError as e:
+        except KeyError:
             print(
-                f"we only have {self.crosshair_nodes.keys()} crosshairs, but tried to access {self.views_fixed}")
+                f"we only have {self.crosshair_nodes.keys()} crosshairs, but tried to access {self.views_fixed}"
+            )
             a = []
         return a
 
@@ -672,8 +730,9 @@ class Crosshairs():
     def crosshairs_2(self) -> list[slicer.vtkMRMLMarkupsFiducialNode]:
         try:
             b = [self.crosshair_nodes[view] for view in self.views_moving]
-        except KeyError as e:
+        except KeyError:
             print(
-                f"we only have {self.crosshair_nodes.keys()} crosshairs, but tried to access {self.views_moving}")
+                f"we only have {self.crosshair_nodes.keys()} crosshairs, but tried to access {self.views_moving}"
+            )
             b = []
         return b

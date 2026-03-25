@@ -40,7 +40,7 @@
       <item row="0" column="1">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Fixed volume:</string>
+        <string>Sag volume (fixed):</string>
         </property>
        </widget>
       </item>
@@ -48,9 +48,9 @@
 
       <!-- START inputSelector_fixed -->
       <item row="0" column="2">
-       <widget class="qMRMLNodeComboBox" name="inputSelector_fixed">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_sag">
         <property name="toolTip">
-         <string>Pick the fixed volume.</string>
+         <string>Pick the sagittal (fixed) volume.</string>
         </property>
         <property name="nodeTypes">
          <stringlist notr="true">
@@ -70,17 +70,17 @@
          <string notr="true"/>
         </property>
         <property name="SlicerParameterName" stdset="0">
-         <string>volume_fixed</string>
+         <string>volume_sag</string>
         </property>
        </widget>
       </item>
-      <!-- END inputSelector_fixed -->
+      <!-- END inputSelector_sag -->
 
       <!-- START label -->
       <item row="1" column="1">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Moving volume:</string>
+        <string>Cor volume:</string>
         </property>
        </widget>
       </item>
@@ -88,9 +88,9 @@
 
       <!-- START inputSelector_moving -->
       <item row="1" column="2">
-       <widget class="qMRMLNodeComboBox" name="inputSelector_moving">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_cor">
         <property name="toolTip">
-         <string>Pick the moving volume.</string>
+         <string>Pick the coronal volume.</string>
         </property>
         <property name="nodeTypes">
          <stringlist notr="true">
@@ -107,27 +107,64 @@
          <bool>false</bool>
         </property>
         <property name="SlicerParameterName" stdset="0">
-         <string>volume_moving</string>
+         <string>volume_cor</string>
         </property>
        </widget>
       </item>
-      <!-- END inputSelector_moving -->
+      <!-- END inputSelector_cor -->
+
+      <!-- START label_8 -->
+      <item row="2" column="1">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Ax volume:</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END label_8 -->
+
+      <!-- START inputSelector_ax -->
+      <item row="2" column="2">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_ax">
+        <property name="toolTip">
+         <string>Pick the axial volume.</string>
+        </property>
+        <property name="nodeTypes">
+         <stringlist notr="true">
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="SlicerParameterName" stdset="0">
+         <string>volume_ax</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END inputSelector_ax -->
 
       <!-- START label_3 -->
-      <item row="2" column="1">
+      <item row="3" column="1">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Transformation:</string>
+        <string>Transform cor_to_sag:</string>
         </property>
        </widget>
       </item>
       <!-- END label_3 -->
 
       <!-- START inputSelector_transformation -->
-      <item row="2" column="2">
-       <widget class="qMRMLNodeComboBox" name="inputSelector_transformation">
+      <item row="3" column="2">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_cor_to_sag">
         <property name="toolTip">
-         <string>Pick the transformation between moving and fixed.</string>
+         <string>Pick the transform from cor to sag.</string>
         </property>
         <property name="nodeTypes">
          <stringlist notr="true">
@@ -147,14 +184,54 @@
          <string notr="true"/>
         </property>
         <property name="SlicerParameterName" stdset="0">
-         <string>transformation</string>
+         <string>transform_cor_to_sag</string>
         </property>
        </widget>
       </item>
-      <!-- END inputSelector_transformation -->
+      <!-- END inputSelector_cor_to_sag -->
+
+      <!-- START label_9 -->
+      <item row="4" column="1">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Transform ax_to_sag:</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END label_9 -->
+
+      <!-- START inputSelector_ax_to_sag -->
+      <item row="4" column="2">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_ax_to_sag">
+        <property name="toolTip">
+         <string>Pick the transform from ax to sag.</string>
+        </property>
+        <property name="nodeTypes">
+         <stringlist notr="true">
+          <string>vtkMRMLTransformNode</string>
+         </stringlist>
+        </property>
+        <property name="hideChildNodeTypes">
+         <stringlist notr="true"/>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="interactionNodeSingletonTag">
+         <string notr="true"/>
+        </property>
+        <property name="SlicerParameterName" stdset="0">
+         <string>transform_ax_to_sag</string>
+        </property>
+       </widget>
+      </item>
+      <!-- END inputSelector_ax_to_sag -->
           
     <!-- START label_7 -->
-      <item row="3" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Hot Link with Cursor</string>
@@ -164,7 +241,7 @@
       <!-- END label_7 -->
 
     <!-- START hotLinkWithCursor_checkbox -->
-    <item row="3" column="1" colspan="2">
+    <item row="5" column="1" colspan="2">
         <widget class="QCheckBox" name="hotLinkWithCursor_checkbox">
         <property name="toolTip">
         <string>Enable hot linking with cursor.</string>
