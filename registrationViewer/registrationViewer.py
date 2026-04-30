@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import os
+import tempfile
+
 import qt
+import SimpleITK as sitk
+import sitkUtils
 import slicer
 import slicer.util
 from slicer.i18n import tr as _
@@ -133,7 +138,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # Transforms for displacement fields
         self._add_node_selector(
             parametersFormLayout,
-            "displacement_ax",
+            "displacement_axi",
             "Displacement (Axial)",
             ["vtkMRMLTransformNode"],
         )
@@ -195,7 +200,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "warped_cor": "warped_cor",
             "jacob_axi": "jacobian_ax",
             "jacob_cor": "jacobian_cor",
-            "disp_ax": "displacement_ax",
+            "disp_axi": "displacement_axi",
             "disp_cor": "displacement_cor",
         }
 
@@ -209,6 +214,64 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self._sceneObserverTag is not None:
             slicer.mrmlScene.RemoveObserver(self._sceneObserverTag)
             self._sceneObserverTag = None
+
+    def _generate_warped_grid(
+        self,
+        displacement_node: slicer.vtkMRMLTransformNode,
+        result_node_name: str,
+        through_plane_axis: int = 0,
+        grid_spacing_vox: int = 10,
+    ) -> slicer.vtkMRMLScalarVolumeNode:
+        if displacement_node is None:
+            return None
+
+        # Export the grid transform to a displacement field NIfTI
+        with tempfile.NamedTemporaryFile(suffix=".nii.gz", delete=False) as tmp:
+            tmp_path = tmp.name
+        try:
+            slicer.util.saveNode(displacement_node, tmp_path)
+            disp_sitk = sitk.ReadImage(tmp_path)
+        finally:
+            os.unlink(tmp_path)
+
+        # Build a scalar image with the same physical geometry as the displacement field
+        size = disp_sitk.GetSize()
+        grid_sitk = sitk.Image(size[0], size[1], size[2], sitk.sitkFloat32)
+        grid_sitk.SetSpacing(disp_sitk.GetSpacing())
+        grid_sitk.SetOrigin(disp_sitk.GetOrigin())
+        grid_sitk.SetDirection(disp_sitk.GetDirection())
+
+        # Paint regular grid lines (value=1) at fixed voxel intervals
+        grid_array = sitk.GetArrayFromImage(grid_sitk)  # shape: (z, y, x)
+
+        axes = [0, 1, 2]
+        axes.remove(through_plane_axis)
+        for ax in axes:
+            idx = [slice(None), slice(None), slice(None)]
+            idx[ax] = slice(None, None, grid_spacing_vox)
+            grid_array[tuple(idx)] = 1.0
+
+        grid_sitk = sitk.GetImageFromArray(grid_array)
+        grid_sitk.SetSpacing(disp_sitk.GetSpacing())
+        grid_sitk.SetOrigin(disp_sitk.GetOrigin())
+        grid_sitk.SetDirection(disp_sitk.GetDirection())
+
+        # Warp the grid with the displacement field
+        disp_transform = sitk.DisplacementFieldTransform(
+            sitk.Cast(disp_sitk, sitk.sitkVectorFloat64)
+        )
+        warped_sitk = sitk.Resample(
+            grid_sitk, grid_sitk, disp_transform, sitk.sitkLinear, 0.0
+        )
+
+        # Push into an existing or new scalar volume node
+        result_node = slicer.mrmlScene.GetFirstNodeByName(result_node_name)
+        if result_node is None:
+            result_node = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLScalarVolumeNode", result_node_name
+            )
+        sitkUtils.PushVolumeToSlicer(warped_sitk, result_node)
+        return result_node
 
     def onApplyButton(self) -> None:
         slicer.app.layoutManager().setLayout(CUSTOM_LAYOUT_ID)
@@ -267,28 +330,25 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             if fg_node:
                 composite_node.SetForegroundOpacity(0.5)
 
-        # To show transform grids (displacement fields) in slice views, we can use the Transform display nodes
-        for axis, transform_key, view_name in [
-            ("Axial", "displacement_ax", "Axial_Displacement"),
-            ("Coronal", "displacement_cor", "Coronal_Displacement"),
+        # Generate warped grid volumes and assign as plain background volumes
+        # to the displacement panels — fully per-view controllable like every other column
+        for transform_key, view_name, node_name, through_plane_axis in [
+            ("displacement_axi", "Axial_Displacement", "warped_grid_ax", 0),
+            ("displacement_cor", "Coronal_Displacement", "warped_grid_cor", 1),
         ]:
-            transform_node = self.selectors[transform_key].currentNode()
-            if transform_node:
-                display_node = transform_node.GetDisplayNode()
-                if not display_node:
-                    slicer.mrmlScene.AddNode(slicer.vtkMRMLTransformDisplayNode())
-                    transform_node.CreateDefaultDisplayNodes()
-                    display_node = transform_node.GetDisplayNode()
-
-                if display_node:
-                    # Enable grid or contour visualization on slice viewers
-                    display_node.SetVisibility(True)
-                    display_node.SetVisibility2D(True)
-                    slice_widget = layoutManager.sliceWidget(view_name)
-                    if slice_widget is not None:
-                        slice_node = slice_widget.mrmlSliceNode()
-                        if slice_node:
-                            display_node.AddViewNodeID(slice_node.GetID())
+            warped_grid = self._generate_warped_grid(
+                self.selectors[transform_key].currentNode(),
+                node_name,
+                through_plane_axis=through_plane_axis,
+            )
+            slice_widget = layoutManager.sliceWidget(view_name)
+            if slice_widget is None:
+                continue
+            composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
+            if composite_node:
+                composite_node.SetBackgroundVolumeID(
+                    warped_grid.GetID() if warped_grid else ""
+                )
 
         # Reset field of view to fit the loaded/assigned volumes
         slicer.util.resetSliceViews()
