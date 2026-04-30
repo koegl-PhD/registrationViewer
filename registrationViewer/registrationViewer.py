@@ -154,6 +154,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.applyButton.clicked.connect(self.onApplyButton)
         parametersFormLayout.addRow(self.applyButton)
 
+        self.linkButton = qt.QPushButton("Hot Link Views")
+        self.linkButton.toolTip = "Link all views so scrolling and zooming are synchronized."
+        self.linkButton.setCheckable(True)
+        self.linkButton.clicked.connect(self.onLinkButton)
+        parametersFormLayout.addRow(self.linkButton)
+
         self.layout.addStretch(1)
 
         if self._sceneObserverTag is None:
@@ -221,7 +227,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         result_node_name: str,
         through_plane_axis: int = 0,
         grid_spacing_vox: int = 10,
-        upsample_factor: int = 4,
+        upsample_factor: int = 2,
     ) -> slicer.vtkMRMLScalarVolumeNode:
         if displacement_node is None:
             return None
@@ -268,6 +274,21 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         result_node.SetAndObserveTransformNodeID(displacement_node.GetID())
 
         return result_node
+
+    def onLinkButton(self, checked: bool) -> None:
+        layoutManager = slicer.app.layoutManager()
+        view_names = [
+            "Axial_Moving", "Axial_Warped", "Axial_Jacobian", "Axial_Displacement",
+            "Coronal_Moving", "Coronal_Warped", "Coronal_Jacobian", "Coronal_Displacement"
+        ]
+        for view_name in view_names:
+            slice_widget = layoutManager.sliceWidget(view_name)
+            if slice_widget is not None:
+                composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
+                if composite_node:
+                    composite_node.SetLinkedControl(checked)
+                    if hasattr(composite_node, "SetHotLinkedControl"):
+                        composite_node.SetHotLinkedControl(checked)
 
     def onApplyButton(self) -> None:
         slicer.app.layoutManager().setLayout(CUSTOM_LAYOUT_ID)
