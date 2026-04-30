@@ -58,6 +58,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._sceneObserverTag = None
         self.selectors = {}
 
+    def enter(self) -> None:
+        self.onApplyButton()
+
     def setup(self) -> None:
         ScriptedLoadableModuleWidget.setup(self)
 
