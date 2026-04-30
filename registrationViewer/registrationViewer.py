@@ -39,6 +39,8 @@ CUSTOM_LAYOUT_XML = """
 </layout>
 """
 
+ORIENTATION_THROUGH_PLANE = {"Axial": 0, "Coronal": 1, "Sagittal": 2}
+
 
 class registrationViewer(ScriptedLoadableModule):
     def __init__(self, parent):
@@ -62,6 +64,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.logic = None
         self._sceneObserverTag = None
         self.selectors = {}
+        self._grid_nodes = {}
 
     def enter(self) -> None:
         pass
@@ -203,6 +206,23 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         # QFormLayout requires insertRow to inject custom horizontal layouts
         self.visualization.groupBoxLayout.insertRow(1, btnLayout)
 
+    def _update_displacement_views(self, orientation: str) -> None:
+        layoutManager = slicer.app.layoutManager()
+        for transform_key, view_name in [
+            ("displacement_axi", "Axial_Displacement"),
+            ("displacement_cor", "Coronal_Displacement"),
+        ]:
+            grid_key = f"{transform_key}_{orientation}"
+            grid_node = self._grid_nodes.get(grid_key)
+            slice_widget = layoutManager.sliceWidget(view_name)
+            if slice_widget is None:
+                continue
+            composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
+            if composite_node:
+                composite_node.SetBackgroundVolumeID(
+                    grid_node.GetID() if grid_node else ""
+                )
+
     def set_all_views_orientation(self, orientation: str) -> None:
         layoutManager = slicer.app.layoutManager()
         view_names = [
@@ -221,6 +241,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 slice_node = slice_widget.mrmlSliceNode()
                 if slice_node:
                     slice_node.SetOrientation(orientation)
+
+        self._update_displacement_views(orientation)  # swap to matching grid
 
     def _add_node_selector(self, layout, name, label, nodeTypes):
         selector = slicer.qMRMLNodeComboBox()
@@ -409,25 +431,29 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             if fg_node:
                 composite_node.SetForegroundOpacity(0.5)
 
-        # Generate warped grid volumes and assign as plain background volumes
-        # to the displacement panels — fully per-view controllable like every other column
-        for transform_key, view_name, node_name, through_plane_axis in [
-            ("displacement_axi", "Axial_Displacement", "warped_grid_ax", 0),
-            ("displacement_cor", "Coronal_Displacement", "warped_grid_cor", 1),
-        ]:
-            warped_grid = self._generate_warped_grid(
-                self.selectors[transform_key].currentNode(),
-                node_name,
-                through_plane_axis=through_plane_axis,
-            )
-            slice_widget = layoutManager.sliceWidget(view_name)
-            if slice_widget is None:
-                continue
-            composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
-            if composite_node:
-                composite_node.SetBackgroundVolumeID(
-                    warped_grid.GetID() if warped_grid else ""
+        # Pre-generate one grid per displacement field per orientation
+        for transform_key in ["displacement_axi", "displacement_cor"]:
+            for orientation, through_plane_axis in [
+                ("Axial", 0),
+                ("Coronal", 1),
+                ("Sagittal", 2),
+            ]:
+                grid_key = f"{transform_key}_{orientation}"
+                node_name = f"warped_grid_{transform_key}_{orientation}"
+                self._grid_nodes[grid_key] = self._generate_warped_grid(
+                    self.selectors[transform_key].currentNode(),
+                    node_name,
+                    through_plane_axis=through_plane_axis,
                 )
+
+        # Assign the grids matching the current orientation
+        current_orientation = (
+            slicer.app.layoutManager()
+            .sliceWidget("Axial_Moving")
+            .mrmlSliceNode()
+            .GetOrientationString()
+        )
+        self._update_displacement_views(current_orientation)
 
         # Reset field of view to fit the loaded/assigned volumes
         slicer.util.resetSliceViews()
