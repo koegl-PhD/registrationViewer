@@ -183,7 +183,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         name = node.GetName()
         if not name:
             return
-        
+
         mapping = {
             "sag": "fixed_sag",
             "axi": "moving_ax",
@@ -193,9 +193,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "jacob_axi": "jacobian_ax",
             "jacob_cor": "jacobian_cor",
             "disp_ax": "displacement_ax",
-            "disp_cor": "displacement_cor"
+            "disp_cor": "displacement_cor",
         }
-        
+
         # Check if exact name match exists in our predefined list map
         if name in mapping:
             selector = self.selectors.get(mapping[name])
@@ -289,6 +289,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         # Reset field of view to fit the loaded/assigned volumes
         slicer.util.resetSliceViews()
+
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
     def __init__(self) -> None:
