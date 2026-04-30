@@ -217,15 +217,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _generate_warped_grid(
         self,
-        displacement_node: slicer.vtkMRMLTransformNode,
+        displacement_node: slicer.vtkMRMLScalarVolumeNode,
         result_node_name: str,
         through_plane_axis: int = 0,
         grid_spacing_vox: int = 10,
+        upsample_factor: int = 4,
     ) -> slicer.vtkMRMLScalarVolumeNode:
         if displacement_node is None:
             return None
 
-        # Export the grid transform to a displacement field NIfTI
         with tempfile.NamedTemporaryFile(suffix=".nii.gz", delete=False) as tmp:
             tmp_path = tmp.name
         try:
@@ -234,43 +234,39 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         finally:
             os.unlink(tmp_path)
 
-        # Build a scalar image with the same physical geometry as the displacement field
-        size = disp_sitk.GetSize()
-        grid_sitk = sitk.Image(size[0], size[1], size[2], sitk.sitkFloat32)
-        grid_sitk.SetSpacing(disp_sitk.GetSpacing())
+        orig_spacing = disp_sitk.GetSpacing()
+        orig_size = disp_sitk.GetSize()
+        new_spacing = tuple(s / upsample_factor for s in orig_spacing)
+        new_size = tuple(int(sz * upsample_factor) for sz in orig_size)
+
+        grid_sitk = sitk.Image(new_size[0], new_size[1], new_size[2], sitk.sitkFloat32)
+        grid_sitk.SetSpacing(new_spacing)
         grid_sitk.SetOrigin(disp_sitk.GetOrigin())
         grid_sitk.SetDirection(disp_sitk.GetDirection())
 
-        # Paint regular grid lines (value=1) at fixed voxel intervals
-        grid_array = sitk.GetArrayFromImage(grid_sitk)  # shape: (z, y, x)
-
+        grid_array = sitk.GetArrayFromImage(grid_sitk)
+        hr_step = grid_spacing_vox * upsample_factor
         axes = [0, 1, 2]
         axes.remove(through_plane_axis)
         for ax in axes:
             idx = [slice(None), slice(None), slice(None)]
-            idx[ax] = slice(None, None, grid_spacing_vox)
+            idx[ax] = slice(None, None, hr_step)
             grid_array[tuple(idx)] = 1.0
-
         grid_sitk = sitk.GetImageFromArray(grid_array)
-        grid_sitk.SetSpacing(disp_sitk.GetSpacing())
+        grid_sitk.SetSpacing(new_spacing)
         grid_sitk.SetOrigin(disp_sitk.GetOrigin())
         grid_sitk.SetDirection(disp_sitk.GetDirection())
 
-        # Warp the grid with the displacement field
-        disp_transform = sitk.DisplacementFieldTransform(
-            sitk.Cast(disp_sitk, sitk.sitkVectorFloat64)
-        )
-        warped_sitk = sitk.Resample(
-            grid_sitk, grid_sitk, disp_transform, sitk.sitkLinear, 0.0
-        )
-
-        # Push into an existing or new scalar volume node
         result_node = slicer.mrmlScene.GetFirstNodeByName(result_node_name)
         if result_node is None:
             result_node = slicer.mrmlScene.AddNewNodeByClass(
                 "vtkMRMLScalarVolumeNode", result_node_name
             )
-        sitkUtils.PushVolumeToSlicer(warped_sitk, result_node)
+        sitkUtils.PushVolumeToSlicer(grid_sitk, result_node)
+
+        # Let Slicer apply the deformation at render time — no manual warping needed
+        result_node.SetAndObserveTransformNodeID(displacement_node.GetID())
+
         return result_node
 
     def onApplyButton(self) -> None:
