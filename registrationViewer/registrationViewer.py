@@ -155,7 +155,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         parametersFormLayout.addRow(self.applyButton)
 
         self.linkButton = qt.QPushButton("Hot Link Views")
-        self.linkButton.toolTip = "Link all views so scrolling and zooming are synchronized."
+        self.linkButton.toolTip = (
+            "Link all views so scrolling and zooming are synchronized."
+        )
         self.linkButton.setCheckable(True)
         self.linkButton.clicked.connect(self.onLinkButton)
         parametersFormLayout.addRow(self.linkButton)
@@ -278,8 +280,14 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def onLinkButton(self, checked: bool) -> None:
         layoutManager = slicer.app.layoutManager()
         view_names = [
-            "Axial_Moving", "Axial_Warped", "Axial_Jacobian", "Axial_Displacement",
-            "Coronal_Moving", "Coronal_Warped", "Coronal_Jacobian", "Coronal_Displacement"
+            "Axial_Moving",
+            "Axial_Warped",
+            "Axial_Jacobian",
+            "Axial_Displacement",
+            "Coronal_Moving",
+            "Coronal_Warped",
+            "Coronal_Jacobian",
+            "Coronal_Displacement",
         ]
         for view_name in view_names:
             slice_widget = layoutManager.sliceWidget(view_name)
@@ -303,7 +311,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         #           it as background. I will set the slice composite nodes first.)
 
         view_assignments = {
-            "Axial_Moving": {"Background": self.selectors["moving_ax"].currentNode()},
+            "Axial_Moving": {
+                "Background": self.selectors["moving_ax"].currentNode(),
+                "Foreground": self.selectors["warped_ax"].currentNode(),
+            },
             "Axial_Warped": {
                 "Background": self.selectors["fixed_sag"].currentNode(),
                 "Foreground": self.selectors["warped_ax"].currentNode(),
@@ -313,7 +324,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             },
             "Axial_Displacement": {},  # Volume assignment not needed if using transforms, handled via Slicer Transforms
             "Coronal_Moving": {
-                "Background": self.selectors["moving_cor"].currentNode()
+                "Background": self.selectors["moving_cor"].currentNode(),
+                "Foreground": self.selectors["warped_cor"].currentNode(),
             },
             "Coronal_Warped": {
                 "Background": self.selectors["fixed_sag"].currentNode(),
