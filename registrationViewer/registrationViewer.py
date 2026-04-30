@@ -64,7 +64,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.selectors = {}
 
     def enter(self) -> None:
-        self.onApplyButton()
+        pass
 
     def setup(self) -> None:
         ScriptedLoadableModuleWidget.setup(self)
@@ -162,6 +162,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.linkButton.clicked.connect(self.onLinkButton)
         parametersFormLayout.addRow(self.linkButton)
 
+        self._add_vis_widget(self.layout)
+
         self.layout.addStretch(1)
 
         if self._sceneObserverTag is None:
@@ -171,6 +173,54 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._auto_select_existing_scene_nodes()
         self.onApplyButton()
+
+    def _add_vis_widget(self, layout):
+        import LandmarkRegistration
+
+        self.visualization = LandmarkRegistration.RegistrationLib.VisualizationWidget(
+            None
+        )
+        layout.addWidget(self.visualization.widget)
+
+        self.visualization.groupBoxLayout.itemAt(0).widget().hide()
+        self.visualization.groupBoxLayout.itemAt(1).widget().hide()
+        self.visualization.groupBoxLayout.itemAt(2).widget().hide()
+        self.visualization.groupBoxLayout.itemAt(3).widget().hide()
+
+        btnLayout = qt.QHBoxLayout()
+        btnAxi = qt.QPushButton("Axi")
+        btnCor = qt.QPushButton("Cor")
+        btnSag = qt.QPushButton("Sag")
+
+        btnAxi.clicked.connect(lambda: self.set_all_views_orientation("Axial"))
+        btnCor.clicked.connect(lambda: self.set_all_views_orientation("Coronal"))
+        btnSag.clicked.connect(lambda: self.set_all_views_orientation("Sagittal"))
+
+        btnLayout.addWidget(btnAxi)
+        btnLayout.addWidget(btnCor)
+        btnLayout.addWidget(btnSag)
+
+        # QFormLayout requires insertRow to inject custom horizontal layouts
+        self.visualization.groupBoxLayout.insertRow(1, btnLayout)
+
+    def set_all_views_orientation(self, orientation: str) -> None:
+        layoutManager = slicer.app.layoutManager()
+        view_names = [
+            "Axial_Moving",
+            "Axial_Warped",
+            "Axial_Jacobian",
+            "Axial_Displacement",
+            "Coronal_Moving",
+            "Coronal_Warped",
+            "Coronal_Jacobian",
+            "Coronal_Displacement",
+        ]
+        for view_name in view_names:
+            slice_widget = layoutManager.sliceWidget(view_name)
+            if slice_widget is not None:
+                slice_node = slice_widget.mrmlSliceNode()
+                if slice_node:
+                    slice_node.SetOrientation(orientation)
 
     def _add_node_selector(self, layout, name, label, nodeTypes):
         selector = slicer.qMRMLNodeComboBox()
