@@ -171,10 +171,36 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.selectors[name] = selector
 
     def _on_node_added(self, caller, eventid, node) -> None:
-        pass  # we can skip auto selection for simplicity, or implement later
+        self._try_auto_select_node(node)
 
     def _auto_select_existing_scene_nodes(self) -> None:
-        pass  # Optional auto-selection could go here
+        for i in range(slicer.mrmlScene.GetNumberOfNodes()):
+            self._try_auto_select_node(slicer.mrmlScene.GetNthNode(i))
+
+    def _try_auto_select_node(self, node) -> None:
+        if not node:
+            return
+        name = node.GetName()
+        if not name:
+            return
+        
+        mapping = {
+            "sag": "fixed_sag",
+            "axi": "moving_ax",
+            "cor": "moving_cor",
+            "warped_axi": "warped_ax",
+            "warped_cor": "warped_cor",
+            "jacob_axi": "jacobian_ax",
+            "jacob_cor": "jacobian_cor",
+            "disp_ax": "displacement_ax",
+            "disp_cor": "displacement_cor"
+        }
+        
+        # Check if exact name match exists in our predefined list map
+        if name in mapping:
+            selector = self.selectors.get(mapping[name])
+            if selector and not selector.currentNode():
+                selector.setCurrentNode(node)
 
     def cleanup(self) -> None:
         if self._sceneObserverTag is not None:
@@ -253,6 +279,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
                 if display_node:
                     # Enable grid or contour visualization on slice viewers
+                    display_node.SetVisibility(True)
                     display_node.SetVisibility2D(True)
                     slice_widget = layoutManager.sliceWidget(view_name)
                     if slice_widget is not None:
@@ -260,6 +287,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                         if slice_node:
                             display_node.AddViewNodeID(slice_node.GetID())
 
+        # Reset field of view to fit the loaded/assigned volumes
+        slicer.util.resetSliceViews()
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
     def __init__(self) -> None:
