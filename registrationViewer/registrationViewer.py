@@ -370,9 +370,37 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     if hasattr(composite_node, "SetHotLinkedControl"):
                         composite_node.SetHotLinkedControl(checked)
 
+    def _setup_jacobian_colormap(self) -> str:
+        color_node_name = "JacobianColorMap"
+        color_node = slicer.mrmlScene.GetFirstNodeByName(color_node_name)
+        if not color_node:
+            color_node = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLColorTableNode", color_node_name
+            )
+            color_node.SetTypeToUser()
+            color_node.SetNumberOfColors(5)
+            color_node.SetColor(0, "Background", 0.0, 0.0, 0.0, 1.0)
+            color_node.SetColor(1, "Red", 1.0, 0.0, 0.0, 1.0)
+            color_node.SetColor(2, "Yellow", 1.0, 1.0, 0.0, 1.0)
+            color_node.SetColor(3, "White", 1.0, 1.0, 1.0, 1.0)
+            color_node.SetColor(4, "Blue", 0.0, 0.0, 1.0, 1.0)
+        return color_node.GetID()
+
     def onApplyButton(self) -> None:
         slicer.app.layoutManager().setLayout(CUSTOM_LAYOUT_ID)
         slicer.app.processEvents()
+
+        # Apply custom colormap to jacobian nodes if present
+        jacobian_color_id = self._setup_jacobian_colormap()
+        for key in ["jacobian_ax", "jacobian_cor"]:
+            jac_node = self.selectors[key].currentNode()
+            if jac_node:
+                display_node = jac_node.GetDisplayNode()
+                if display_node:
+                    display_node.SetAndObserveColorNodeID(jacobian_color_id)
+                    display_node.SetInterpolate(False)
+                    display_node.SetAutoWindowLevel(False)
+                    display_node.SetWindowLevelMinMax(0, 4)
 
         # Dictionary of view tag to foreground, background, labelmap volumes, etc.
         # Column 1: moving (Background)
