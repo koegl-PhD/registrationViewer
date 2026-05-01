@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-import os
-import tempfile
+from typing import List
 
 import qt
-import SimpleITK as sitk
-import sitkUtils
 import slicer
 import slicer.util
 from slicer.i18n import tr as _
@@ -39,7 +36,25 @@ CUSTOM_LAYOUT_XML = """
 </layout>
 """
 
-ORIENTATION_THROUGH_PLANE = {"Axial": 0, "Coronal": 1, "Sagittal": 2}
+CUSTOM_LAYOUT_ID_NO_DISP = 502
+CUSTOM_LAYOUT_XML_NO_DISP = """
+<layout type="vertical" split="true">
+  <item>
+    <layout type="horizontal" split="true">
+      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Moving"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">1</property><property name="viewcolor" action="default">#e86a58</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Warped"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">2</property><property name="viewcolor" action="default">#e8a558</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Jacobian"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">3</property><property name="viewcolor" action="default">#e8e858</property></view></item>
+    </layout>
+  </item>
+  <item>
+    <layout type="horizontal" split="true">
+      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Moving"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">5</property><property name="viewcolor" action="default">#58e8e8</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Warped"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">6</property><property name="viewcolor" action="default">#5858e8</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Jacobian"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">7</property><property name="viewcolor" action="default">#a558e8</property></view></item>
+    </layout>
+  </item>
+</layout>
+"""
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -64,10 +79,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.logic = None
         self._sceneObserverTag = None
         self.selectors = {}
-        self._grid_nodes = {}
+        self._disp_checkboxes = {}
 
     def enter(self) -> None:
-        pass
+        self.onApplyButton()
 
     def setup(self) -> None:
         ScriptedLoadableModuleWidget.setup(self)
@@ -86,16 +101,27 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 CUSTOM_LAYOUT_ID, CUSTOM_LAYOUT_XML
             )
 
+        if (
+            not layoutManager.layoutLogic()
+            .GetLayoutNode()
+            .IsLayoutDescription(CUSTOM_LAYOUT_ID_NO_DISP)
+        ):
+            layoutManager.layoutLogic().GetLayoutNode().AddLayoutDescription(
+                CUSTOM_LAYOUT_ID_NO_DISP, CUSTOM_LAYOUT_XML_NO_DISP
+            )
+        else:
+            layoutManager.layoutLogic().GetLayoutNode().SetLayoutDescription(
+                CUSTOM_LAYOUT_ID_NO_DISP, CUSTOM_LAYOUT_XML_NO_DISP
+            )
+
         self.logic = registrationViewerLogic()
 
-        # Create UI from Python
         parametersCollapsibleButton = slicer.qMRMLCollapsibleButton()
         parametersCollapsibleButton.text = "Nodes"
         self.layout.addWidget(parametersCollapsibleButton)
 
         parametersFormLayout = qt.QFormLayout(parametersCollapsibleButton)
 
-        # Configure Dropdowns
         self._add_node_selector(
             parametersFormLayout,
             "fixed_sag",
@@ -138,7 +164,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "Jacobian (Coronal)",
             ["vtkMRMLScalarVolumeNode"],
         )
-        # Transforms for displacement fields
         self._add_node_selector(
             parametersFormLayout,
             "displacement_axi",
@@ -190,38 +215,33 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.visualization.groupBoxLayout.itemAt(2).widget().hide()
         self.visualization.groupBoxLayout.itemAt(3).widget().hide()
 
+        # Orientation buttons
         btnLayout = qt.QHBoxLayout()
         btnAxi = qt.QPushButton("Axi")
         btnCor = qt.QPushButton("Cor")
         btnSag = qt.QPushButton("Sag")
-
         btnAxi.clicked.connect(lambda: self.set_all_views_orientation("Axial"))
         btnCor.clicked.connect(lambda: self.set_all_views_orientation("Coronal"))
         btnSag.clicked.connect(lambda: self.set_all_views_orientation("Sagittal"))
-
         btnLayout.addWidget(btnAxi)
         btnLayout.addWidget(btnCor)
         btnLayout.addWidget(btnSag)
-
-        # QFormLayout requires insertRow to inject custom horizontal layouts
         self.visualization.groupBoxLayout.insertRow(1, btnLayout)
 
-    def _update_displacement_views(self, orientation: str) -> None:
-        layoutManager = slicer.app.layoutManager()
-        for transform_key, view_name in [
-            ("displacement_axi", "Axial_Displacement"),
-            ("displacement_cor", "Coronal_Displacement"),
+        # Displacement visibility checkboxes
+        dispLayout = qt.QHBoxLayout()
+        for name, checked in [
+            ("Fixed", False),
+            ("Warped", False),
+            ("Jacobian", False),
+            ("Transform", True),
         ]:
-            grid_key = f"{transform_key}_{orientation}"
-            grid_node = self._grid_nodes.get(grid_key)
-            slice_widget = layoutManager.sliceWidget(view_name)
-            if slice_widget is None:
-                continue
-            composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
-            if composite_node:
-                composite_node.SetBackgroundVolumeID(
-                    grid_node.GetID() if grid_node else ""
-                )
+            cb = qt.QCheckBox(name)
+            cb.setChecked(checked)
+            cb.toggled.connect(self._on_displacement_visibility_changed)
+            dispLayout.addWidget(cb)
+            self._disp_checkboxes[name] = cb
+        self.visualization.groupBoxLayout.insertRow(2, "Displacement:", dispLayout)
 
     def set_all_views_orientation(self, orientation: str) -> None:
         layoutManager = slicer.app.layoutManager()
@@ -241,8 +261,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 slice_node = slice_widget.mrmlSliceNode()
                 if slice_node:
                     slice_node.SetOrientation(orientation)
-
-        self._update_displacement_views(orientation)  # swap to matching grid
 
     def _add_node_selector(self, layout, name, label, nodeTypes):
         selector = slicer.qMRMLNodeComboBox()
@@ -284,7 +302,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "disp_cor": "displacement_cor",
         }
 
-        # Check if exact name match exists in our predefined list map
         if name in mapping:
             selector = self.selectors.get(mapping[name])
             if selector and not selector.currentNode():
@@ -294,60 +311,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self._sceneObserverTag is not None:
             slicer.mrmlScene.RemoveObserver(self._sceneObserverTag)
             self._sceneObserverTag = None
-
-    def _generate_warped_grid(
-        self,
-        displacement_node: slicer.vtkMRMLScalarVolumeNode,
-        result_node_name: str,
-        through_plane_axis: int = 0,
-        grid_spacing_vox: int = 10,
-        upsample_factor: int = 2,
-    ) -> slicer.vtkMRMLScalarVolumeNode:
-        if displacement_node is None:
-            return None
-
-        with tempfile.NamedTemporaryFile(suffix=".nii.gz", delete=False) as tmp:
-            tmp_path = tmp.name
-        try:
-            slicer.util.saveNode(displacement_node, tmp_path)
-            disp_sitk = sitk.ReadImage(tmp_path)
-        finally:
-            os.unlink(tmp_path)
-
-        orig_spacing = disp_sitk.GetSpacing()
-        orig_size = disp_sitk.GetSize()
-        new_spacing = tuple(s / upsample_factor for s in orig_spacing)
-        new_size = tuple(int(sz * upsample_factor) for sz in orig_size)
-
-        grid_sitk = sitk.Image(new_size[0], new_size[1], new_size[2], sitk.sitkFloat32)
-        grid_sitk.SetSpacing(new_spacing)
-        grid_sitk.SetOrigin(disp_sitk.GetOrigin())
-        grid_sitk.SetDirection(disp_sitk.GetDirection())
-
-        grid_array = sitk.GetArrayFromImage(grid_sitk)
-        hr_step = grid_spacing_vox * upsample_factor
-        axes = [0, 1, 2]
-        axes.remove(through_plane_axis)
-        for ax in axes:
-            idx = [slice(None), slice(None), slice(None)]
-            idx[ax] = slice(None, None, hr_step)
-            grid_array[tuple(idx)] = 1.0
-        grid_sitk = sitk.GetImageFromArray(grid_array)
-        grid_sitk.SetSpacing(new_spacing)
-        grid_sitk.SetOrigin(disp_sitk.GetOrigin())
-        grid_sitk.SetDirection(disp_sitk.GetDirection())
-
-        result_node = slicer.mrmlScene.GetFirstNodeByName(result_node_name)
-        if result_node is None:
-            result_node = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLScalarVolumeNode", result_node_name
-            )
-        sitkUtils.PushVolumeToSlicer(grid_sitk, result_node)
-
-        # Let Slicer apply the deformation at render time — no manual warping needed
-        result_node.SetAndObserveTransformNodeID(displacement_node.GetID())
-
-        return result_node
 
     def onLinkButton(self, checked: bool) -> None:
         layoutManager = slicer.app.layoutManager()
@@ -386,11 +349,51 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             color_node.SetColor(4, "Blue", 0.0, 0.0, 1.0, 1.0)
         return color_node.GetID()
 
+    def _on_displacement_visibility_changed(self) -> None:
+        # Map checkbox name -> view name pairs (axial row, coronal row)
+        checkbox_to_views = {
+            "Fixed": ("Axial_Moving", "Coronal_Moving"),
+            "Warped": ("Axial_Warped", "Coronal_Warped"),
+            "Jacobian": ("Axial_Jacobian", "Coronal_Jacobian"),
+            "Transform": ("Axial_Displacement", "Coronal_Displacement"),
+        }
+
+        # Show/hide the 4th column by switching layout
+        transform_checked = self._disp_checkboxes["Transform"].isChecked()
+        layout_id = CUSTOM_LAYOUT_ID if transform_checked else CUSTOM_LAYOUT_ID_NO_DISP
+        slicer.app.layoutManager().setLayout(layout_id)
+        slicer.app.processEvents()
+
+        # Collect checked view IDs for each row
+        layoutManager = slicer.app.layoutManager()
+        ax_view_ids = []
+        cor_view_ids = []
+        for name, (ax_view, cor_view) in checkbox_to_views.items():
+            if not self._disp_checkboxes[name].isChecked():
+                continue
+            for view_name, id_list in [
+                (ax_view, ax_view_ids),
+                (cor_view, cor_view_ids),
+            ]:
+                slice_widget = layoutManager.sliceWidget(view_name)
+                if slice_widget is not None:
+                    slice_node = slice_widget.mrmlSliceNode()
+                    if slice_node:
+                        id_list.append(slice_node.GetID())
+
+        # Apply to each transform node
+        for transform_key, view_ids in [
+            ("displacement_axi", ax_view_ids),
+            ("displacement_cor", cor_view_ids),
+        ]:
+            transform_node = self.selectors[transform_key].currentNode()
+            if transform_node and view_ids:
+                self.logic.set_transform_node_visibility(transform_node, view_ids)
+
     def onApplyButton(self) -> None:
         slicer.app.layoutManager().setLayout(CUSTOM_LAYOUT_ID)
         slicer.app.processEvents()
 
-        # Apply custom colormap to jacobian nodes if present
         jacobian_color_id = self._setup_jacobian_colormap()
         for key in ["jacobian_ax", "jacobian_cor"]:
             jac_node = self.selectors[key].currentNode()
@@ -401,14 +404,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     display_node.SetInterpolate(False)
                     display_node.SetAutoWindowLevel(False)
                     display_node.SetWindowLevelMinMax(0, 4)
-
-        # Dictionary of view tag to foreground, background, labelmap volumes, etc.
-        # Column 1: moving (Background)
-        # Column 2: fixed (Background), warped moving (Foreground)
-        # Column 3: jacobian (Background)
-        # Column 4: displacement (We can set the transform to the slice logic but actually slice views just show it if
-        #           it's enabled in Transforms module. Alternatively, if displacement is loaded as volume, we would set
-        #           it as background. I will set the slice composite nodes first.)
 
         view_assignments = {
             "Axial_Moving": {
@@ -422,7 +417,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "Axial_Jacobian": {
                 "Background": self.selectors["jacobian_ax"].currentNode()
             },
-            "Axial_Displacement": {},  # Volume assignment not needed if using transforms, handled via Slicer Transforms
+            "Axial_Displacement": {},
             "Coronal_Moving": {
                 "Background": self.selectors["moving_cor"].currentNode(),
                 "Foreground": self.selectors["warped_cor"].currentNode(),
@@ -437,56 +432,46 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "Coronal_Displacement": {},
         }
 
-        # We need to manually add the slice nodes if they are missing (usually layout manager does it)
         layoutManager = slicer.app.layoutManager()
         for view_name, assignment in view_assignments.items():
             slice_widget = layoutManager.sliceWidget(view_name)
             if slice_widget is None:
                 continue
-
-            slice_logic = slice_widget.sliceLogic()
-            composite_node = slice_logic.GetSliceCompositeNode()
+            composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
             if not composite_node:
                 continue
-
             bg_node = assignment.get("Background")
             fg_node = assignment.get("Foreground")
-
             composite_node.SetBackgroundVolumeID(bg_node.GetID() if bg_node else "")
             composite_node.SetForegroundVolumeID(fg_node.GetID() if fg_node else "")
-
-            # Set 50% opacity for foreground to see both
             if fg_node:
                 composite_node.SetForegroundOpacity(0.5)
 
-        # Pre-generate one grid per displacement field per orientation
-        for transform_key in ["displacement_axi", "displacement_cor"]:
-            for orientation, through_plane_axis in [
-                ("Axial", 0),
-                ("Coronal", 1),
-                ("Sagittal", 2),
-            ]:
-                grid_key = f"{transform_key}_{orientation}"
-                node_name = f"warped_grid_{transform_key}_{orientation}"
-                self._grid_nodes[grid_key] = self._generate_warped_grid(
-                    self.selectors[transform_key].currentNode(),
-                    node_name,
-                    through_plane_axis=through_plane_axis,
-                )
+        self._on_displacement_visibility_changed()
 
-        # Assign the grids matching the current orientation
-        current_orientation = (
-            slicer.app.layoutManager()
-            .sliceWidget("Axial_Moving")
-            .mrmlSliceNode()
-            .GetOrientationString()
-        )
-        self._update_displacement_views(current_orientation)
-
-        # Reset field of view to fit the loaded/assigned volumes
         slicer.util.resetSliceViews()
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
     def __init__(self) -> None:
         ScriptedLoadableModuleLogic.__init__(self)
+
+    def create_transform_display_node_for_views(
+        self, views: List[str]
+    ) -> "vtkMRMLTransformDisplayNode":
+        dn = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTransformDisplayNode")
+        dn.SetViewNodeIDs(views)
+        dn.SetVisibility(True)
+        dn.SetVisibility2D(True)
+        dn.SetVisibility3D(False)
+        dn.SetVisualizationMode(slicer.vtkMRMLTransformDisplayNode.VIS_MODE_GRID)
+        return dn
+
+    def set_transform_node_visibility(
+        self, transform_node: "vtkMRMLTransformNode", views: List[str]
+    ) -> None:
+        old_dn = transform_node.GetDisplayNode()
+        if old_dn:
+            slicer.mrmlScene.RemoveNode(old_dn)
+        new_dn = self.create_transform_display_node_for_views(views)
+        transform_node.SetAndObserveDisplayNodeID(new_dn.GetID())
