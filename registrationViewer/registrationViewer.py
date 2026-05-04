@@ -287,10 +287,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._checkerboard_slider.value = 5
         self._checkerboard_slider.setEnabled(False)
         self._checkerboard_slider.setToolTip("Checkerboard tile size in voxels.")
+
         self._checkerboard_slider.connect(
-            "sliderReleased()", self._on_checkerboard_regenerate
+            "valueChanged(double)", self._on_checkerboard_slider_changed
         )
+
         checkerboardFormLayout.addRow("Tile Size:", self._checkerboard_slider)
+
+    def _on_checkerboard_slider_changed(self, value: float) -> None:
+        if self._checkerboard_checkbox.isChecked():
+            self._on_checkerboard_regenerate()
 
     def _on_checkerboard_changed(self, checked: bool) -> None:
         self._checkerboard_slider.setEnabled(checked)
