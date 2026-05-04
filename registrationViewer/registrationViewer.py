@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import tempfile
 from typing import List
 
 import qt
@@ -193,6 +195,11 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.linkButton.clicked.connect(self.onLinkButton)
         parametersFormLayout.addRow(self.linkButton)
 
+        self._folding_label_ax = qt.QLabel("Folding (Axial): N/A")
+        self._folding_label_cor = qt.QLabel("Folding (Coronal): N/A")
+        self.layout.addWidget(self._folding_label_ax)
+        self.layout.addWidget(self._folding_label_cor)
+
         self._add_vis_widget(self.layout)
         self._add_checkerboard_widget(self.layout)
         self._add_disp_widget(self.layout)
@@ -293,6 +300,47 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "valueChanged(double)", self._on_curtain_slider_changed
         )
         curtainFormLayout.addRow("Position:", self._curtain_slider)
+
+    def _get_or_create_blank_volume(
+        self, transform_node: "vtkMRMLTransformNode", node_name
+    ) -> slicer.vtkMRMLScalarVolumeNode:
+        if transform_node is None:
+            return None
+        with tempfile.NamedTemporaryFile(suffix=".nii.gz", delete=False) as tmp:
+            tmp_path = tmp.name
+        try:
+            slicer.util.saveNode(transform_node, tmp_path)
+            disp_sitk = sitk.ReadImage(tmp_path)
+        finally:
+            os.unlink(tmp_path)
+        blank = sitk.Image(disp_sitk.GetSize(), sitk.sitkFloat32)
+        blank.SetSpacing(disp_sitk.GetSpacing())
+        blank.SetOrigin(disp_sitk.GetOrigin())
+        blank.SetDirection(disp_sitk.GetDirection())
+        result_node = slicer.mrmlScene.GetFirstNodeByName(node_name)
+        if result_node is None:
+            result_node = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLScalarVolumeNode", node_name
+            )
+        sitkUtils.PushVolumeToSlicer(blank, result_node)
+
+        result_node.SetName("")
+        return result_node
+
+    def _update_folding_labels(self) -> None:
+        for key, label in [
+            ("jacobian_ax", self._folding_label_ax),
+            ("jacobian_cor", self._folding_label_cor),
+        ]:
+            jac_node = self.selectors[key].currentNode()
+            if jac_node is None:
+                label.setText(f"Folding ({key}): N/A")
+                continue
+            jac_sitk = sitkUtils.PullVolumeFromSlicer(jac_node)
+            arr = sitk.GetArrayFromImage(jac_sitk)
+            folding = float((arr == 1).sum()) / float(arr.size) * 100.0
+            tag = "Axial" if "ax" in key else "Coronal"
+            label.setText(f"Folding ({tag}): {folding:.2f}%")
 
     def _on_curtain_changed(self, checked: bool) -> None:
         self._curtain_slider.setEnabled(checked)
@@ -777,9 +825,29 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             if fg_node:
                 composite_node.SetForegroundOpacity(0.5)
 
+        for transform_key, view_names in [
+            ("displacement_axi", ["Axial_Displacement"]),
+            ("displacement_cor", ["Coronal_Displacement"]),
+        ]:
+            transform_node = self.selectors[transform_key].currentNode()
+            blank_node = self._get_or_create_blank_volume(
+                transform_node, f"blank_{transform_key}"
+            )
+            if blank_node is None:
+                continue
+            for view_name in view_names:
+                slice_widget = layoutManager.sliceWidget(view_name)
+                if slice_widget is None:
+                    continue
+                composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
+                if composite_node:
+                    composite_node.SetBackgroundVolumeID(blank_node.GetID())
+
         self._on_displacement_visibility_changed()
 
         slicer.util.resetSliceViews()
+
+        self._update_folding_labels()
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
