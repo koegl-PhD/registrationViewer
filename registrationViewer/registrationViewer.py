@@ -191,6 +191,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         parametersFormLayout.addRow(self.linkButton)
 
         self._add_vis_widget(self.layout)
+        self._add_disp_widget(self.layout)
 
         self.layout.addStretch(1)
 
@@ -228,6 +229,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         btnLayout.addWidget(btnSag)
         self.visualization.groupBoxLayout.insertRow(1, btnLayout)
 
+    def _add_disp_widget(self, layout):
+        self.dispCollapsibleButton = slicer.qMRMLCollapsibleButton()
+        self.dispCollapsibleButton.text = "Displacement"
+        layout.addWidget(self.dispCollapsibleButton)
+        dispFormLayout = qt.QFormLayout(self.dispCollapsibleButton)
+
         # Displacement visibility checkboxes
         dispLayout = qt.QHBoxLayout()
         for name, checked in [
@@ -241,7 +248,30 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             cb.toggled.connect(self._on_displacement_visibility_changed)
             dispLayout.addWidget(cb)
             self._disp_checkboxes[name] = cb
-        self.visualization.groupBoxLayout.insertRow(2, "Displacement:", dispLayout)
+        dispFormLayout.addRow("Visibility:", dispLayout)
+
+        # Grid size slider
+        self.gridSizeSlider = slicer.qMRMLSliderWidget()
+        self.gridSizeSlider.decimals = 1
+        self.gridSizeSlider.singleStep = 0.5
+        self.gridSizeSlider.minimum = 0.5
+        self.gridSizeSlider.maximum = 20
+        self.gridSizeSlider.value = 5
+        self.gridSizeSlider.setToolTip(
+            "Set the grid spacing (mm) for the displacement field."
+        )
+        self.gridSizeSlider.valueChanged.connect(self._on_grid_size_changed)
+        dispFormLayout.addRow("Grid Spacing:", self.gridSizeSlider)
+
+    def _on_grid_size_changed(self, value: float) -> None:
+        for transform_key in ["displacement_axi", "displacement_cor"]:
+            transform_node = self.selectors.get(transform_key)
+            if transform_node:
+                node = transform_node.currentNode()
+                if node:
+                    display_node = node.GetDisplayNode()
+                    if display_node:
+                        display_node.SetGridSpacingMm(value)
 
     def set_all_views_orientation(self, orientation: str) -> None:
         layoutManager = slicer.app.layoutManager()
@@ -389,6 +419,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             transform_node = self.selectors[transform_key].currentNode()
             if transform_node and view_ids:
                 self.logic.set_transform_node_visibility(transform_node, view_ids)
+
+        self._on_grid_size_changed(self.gridSizeSlider.value)
 
     def onApplyButton(self) -> None:
         slicer.app.layoutManager().setLayout(CUSTOM_LAYOUT_ID)
