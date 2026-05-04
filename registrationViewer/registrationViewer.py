@@ -297,8 +297,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def _on_curtain_changed(self, checked: bool) -> None:
         self._curtain_slider.setEnabled(checked)
         if checked:
-            # Uncheck checkerboard
-            self._checkerboard_checkbox.setChecked(False)
             self._on_curtain_regenerate()
         else:
             # Restore normal alpha blending
@@ -347,8 +345,24 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             if slice_widget is None:
                 continue
 
-            fg_sitk = sitkUtils.PullVolumeFromSlicer(fg_node)
-            fg_float = sitk.Cast(fg_sitk, sitk.sitkFloat32)
+            # Instead of always pulling from fg_node, use checkerboard result if active
+            cb_node_names = {
+                "Axial_Warped": "checkerboard_ax",
+                "Coronal_Warped": "checkerboard_cor",
+                "Axial_Moving": "checkerboard_moving_ax",
+                "Coronal_Moving": "checkerboard_moving_cor",
+            }
+            if self._checkerboard_checkbox.isChecked():
+                cb_node = slicer.mrmlScene.GetFirstNodeByName(cb_node_names[view_name])
+                source_sitk = (
+                    sitkUtils.PullVolumeFromSlicer(cb_node)
+                    if cb_node
+                    else sitkUtils.PullVolumeFromSlicer(fg_node)
+                )
+            else:
+                source_sitk = sitkUtils.PullVolumeFromSlicer(fg_node)
+
+            fg_float = sitk.Cast(source_sitk, sitk.sitkFloat32)
 
             fg_display = fg_node.GetDisplayNode()
             min_val = (
@@ -456,9 +470,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     def _on_checkerboard_changed(self, checked: bool) -> None:
 
-        if checked and self._curtain_checkbox is not None:
-            self._curtain_checkbox.setChecked(False)
-
         self._checkerboard_slider.setEnabled(checked)
         if checked:
             self._on_checkerboard_regenerate()
@@ -546,6 +557,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 composite_node.SetForegroundVolumeID(result_node.GetID())
                 composite_node.SetForegroundOpacity(1.0)
                 composite_node.SetCompositing(0)
+
+        if self._curtain_checkbox is not None and self._curtain_checkbox.isChecked():
+            self._on_curtain_regenerate()
 
     def _on_grid_size_changed(self, value: float) -> None:
         for transform_key in ["displacement_axi", "displacement_cor"]:
