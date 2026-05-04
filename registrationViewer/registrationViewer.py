@@ -399,7 +399,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             if composite_node:
                 composite_node.SetBackgroundVolumeID(bg_node.GetID())
                 composite_node.SetForegroundVolumeID(result_node.GetID())
-                composite_node.SetForegroundOpacity(1.0)
+                composite_node.SetForegroundOpacity(self.visualization.fadeSlider.value)
                 composite_node.SetCompositing(0)
 
     def _get_horizontal_array_axis(
