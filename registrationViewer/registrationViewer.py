@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import List
 
 import qt
+import SimpleITK as sitk
+import sitkUtils
 import slicer
 import slicer.util
 from slicer.i18n import tr as _
@@ -262,6 +264,116 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         )
         self.gridSizeSlider.valueChanged.connect(self._on_grid_size_changed)
         dispFormLayout.addRow("Grid Spacing:", self.gridSizeSlider)
+
+        cbLayout = qt.QHBoxLayout()
+        self._checkerboard_checkbox = qt.QCheckBox("Checkerboard")
+        self._checkerboard_checkbox.setChecked(False)
+        self._checkerboard_checkbox.toggled.connect(self._on_checkerboard_changed)
+        cbLayout.addWidget(self._checkerboard_checkbox)
+        dispFormLayout.addRow("Comparison:", cbLayout)
+
+        self._checkerboard_slider = slicer.qMRMLSliderWidget()
+        self._checkerboard_slider.decimals = 0
+        self._checkerboard_slider.singleStep = 1
+        self._checkerboard_slider.minimum = 1
+        self._checkerboard_slider.maximum = 30
+        self._checkerboard_slider.value = 5
+        self._checkerboard_slider.setEnabled(False)
+        self._checkerboard_slider.setToolTip("Checkerboard tile size in voxels.")
+        self._checkerboard_slider.connect(
+            "sliderReleased()", self._on_checkerboard_regenerate
+        )
+        dispFormLayout.addRow("Tile Size:", self._checkerboard_slider)
+
+    def _on_checkerboard_changed(self, checked: bool) -> None:
+        self._checkerboard_slider.setEnabled(checked)
+        if checked:
+            self._on_checkerboard_regenerate()
+        else:
+            # Restore normal alpha blending with fixed/warped
+            layoutManager = slicer.app.layoutManager()
+            for view_name, bg_key, fg_key in [
+                ("Axial_Warped", "fixed_sag", "warped_ax"),
+                ("Coronal_Warped", "fixed_sag", "warped_cor"),
+                ("Axial_Moving", "moving_ax", "warped_ax"),
+                ("Coronal_Moving", "moving_cor", "warped_cor"),
+            ]:
+                slice_widget = layoutManager.sliceWidget(view_name)
+                if slice_widget is None:
+                    continue
+                composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
+                if composite_node:
+                    bg_node = self.selectors[bg_key].currentNode()
+                    fg_node = self.selectors[fg_key].currentNode()
+                    composite_node.SetBackgroundVolumeID(
+                        bg_node.GetID() if bg_node else ""
+                    )
+                    composite_node.SetForegroundVolumeID(
+                        fg_node.GetID() if fg_node else ""
+                    )
+                    composite_node.SetForegroundOpacity(0.5)
+                    composite_node.SetCompositing(0)
+
+    def _on_checkerboard_regenerate(self) -> None:
+        tile = int(self._checkerboard_slider.value)
+        layoutManager = slicer.app.layoutManager()
+        for bg_key, fg_key, view_name, node_name in [
+            ("fixed_sag", "warped_ax", "Axial_Warped", "checkerboard_ax"),
+            ("fixed_sag", "warped_cor", "Coronal_Warped", "checkerboard_cor"),
+            ("moving_ax", "warped_ax", "Axial_Moving", "checkerboard_moving_ax"),
+            ("moving_cor", "warped_cor", "Coronal_Moving", "checkerboard_moving_cor"),
+        ]:
+            bg_node = self.selectors[bg_key].currentNode()
+            fg_node = self.selectors[fg_key].currentNode()
+            if bg_node is None or fg_node is None:
+                continue
+            bg_sitk = sitkUtils.PullVolumeFromSlicer(bg_node)
+            fg_sitk = sitkUtils.PullVolumeFromSlicer(fg_node)
+
+            fg_float = sitk.Cast(fg_sitk, sitk.sitkFloat32)
+            fg_display = fg_node.GetDisplayNode()
+            min_val = (
+                float(fg_display.GetWindowLevelMin())
+                if fg_display
+                else float(sitk.GetArrayFromImage(fg_float).min())
+            )
+            max_val = (
+                float(fg_display.GetWindowLevelMax())
+                if fg_display
+                else float(sitk.GetArrayFromImage(fg_float).max())
+            )
+            sentinel = min_val - 1.0
+
+            zeros = sitk.Image(fg_float.GetSize(), sitk.sitkFloat32)
+            zeros.CopyInformation(fg_float)
+            ones = zeros + 1.0
+            mask_sitk = sitk.CheckerBoard(zeros, ones, [tile, tile, tile])
+            mask_binary = sitk.Cast(mask_sitk > 0.5, sitk.sitkUInt8)
+            masked_fg = sitk.Mask(fg_float, mask_binary, outsideValue=sentinel)
+
+            result_node = slicer.mrmlScene.GetFirstNodeByName(node_name)
+            if result_node is None:
+                result_node = slicer.mrmlScene.AddNewNodeByClass(
+                    "vtkMRMLScalarVolumeNode", node_name
+                )
+            sitkUtils.PushVolumeToSlicer(masked_fg, result_node)
+
+            display_node = result_node.GetDisplayNode()
+            if display_node:
+                display_node.SetApplyThreshold(True)
+                display_node.SetLowerThreshold(sentinel + 0.5)
+                display_node.SetAutoWindowLevel(False)
+                display_node.SetWindowLevelMinMax(min_val, max_val)
+                display_node.SetInterpolate(False)  # prevents blended edge pixels
+            slice_widget = layoutManager.sliceWidget(view_name)
+            if slice_widget is None:
+                continue
+            composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
+            if composite_node:
+                composite_node.SetBackgroundVolumeID(bg_node.GetID())
+                composite_node.SetForegroundVolumeID(result_node.GetID())
+                composite_node.SetForegroundOpacity(1.0)
+                composite_node.SetCompositing(0)
 
     def _on_grid_size_changed(self, value: float) -> None:
         for transform_key in ["displacement_axi", "displacement_cor"]:
