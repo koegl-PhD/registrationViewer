@@ -193,6 +193,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         parametersFormLayout.addRow(self.linkButton)
 
         self._add_vis_widget(self.layout)
+        self._add_checkerboard_widget(self.layout)
         self._add_disp_widget(self.layout)
 
         self.layout.addStretch(1)
@@ -265,12 +266,18 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.gridSizeSlider.valueChanged.connect(self._on_grid_size_changed)
         dispFormLayout.addRow("Grid Spacing:", self.gridSizeSlider)
 
+    def _add_checkerboard_widget(self, layout):
+        self.checkerboardCollapsibleButton = slicer.qMRMLCollapsibleButton()
+        self.checkerboardCollapsibleButton.text = "Checkerboard"
+        layout.addWidget(self.checkerboardCollapsibleButton)
+        checkerboardFormLayout = qt.QFormLayout(self.checkerboardCollapsibleButton)
+
         cbLayout = qt.QHBoxLayout()
         self._checkerboard_checkbox = qt.QCheckBox("Checkerboard")
         self._checkerboard_checkbox.setChecked(False)
         self._checkerboard_checkbox.toggled.connect(self._on_checkerboard_changed)
         cbLayout.addWidget(self._checkerboard_checkbox)
-        dispFormLayout.addRow("Comparison:", cbLayout)
+        checkerboardFormLayout.addRow("Comparison:", cbLayout)
 
         self._checkerboard_slider = slicer.qMRMLSliderWidget()
         self._checkerboard_slider.decimals = 0
@@ -283,7 +290,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._checkerboard_slider.connect(
             "sliderReleased()", self._on_checkerboard_regenerate
         )
-        dispFormLayout.addRow("Tile Size:", self._checkerboard_slider)
+        checkerboardFormLayout.addRow("Tile Size:", self._checkerboard_slider)
 
     def _on_checkerboard_changed(self, checked: bool) -> None:
         self._checkerboard_slider.setEnabled(checked)
@@ -327,7 +334,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             fg_node = self.selectors[fg_key].currentNode()
             if bg_node is None or fg_node is None:
                 continue
-            bg_sitk = sitkUtils.PullVolumeFromSlicer(bg_node)
             fg_sitk = sitkUtils.PullVolumeFromSlicer(fg_node)
 
             fg_float = sitk.Cast(fg_sitk, sitk.sitkFloat32)
