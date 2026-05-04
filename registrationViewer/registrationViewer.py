@@ -82,6 +82,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._sceneObserverTag = None
         self.selectors = {}
         self._disp_checkboxes = {}
+        self._curtain_checkbox = None
 
     def enter(self) -> None:
         self.onApplyButton()
@@ -195,6 +196,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._add_vis_widget(self.layout)
         self._add_checkerboard_widget(self.layout)
         self._add_disp_widget(self.layout)
+        self._add_curtain_widget(self.layout)
 
         self.layout.addStretch(1)
 
@@ -266,6 +268,160 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.gridSizeSlider.valueChanged.connect(self._on_grid_size_changed)
         dispFormLayout.addRow("Grid Spacing:", self.gridSizeSlider)
 
+    def _add_curtain_widget(self, layout):
+        self.curtainCollapsibleButton = slicer.qMRMLCollapsibleButton()
+        self.curtainCollapsibleButton.text = "Curtain"
+        layout.addWidget(self.curtainCollapsibleButton)
+        curtainFormLayout = qt.QFormLayout(self.curtainCollapsibleButton)
+
+        self._curtain_checkbox = qt.QCheckBox("Curtain")
+        self._curtain_checkbox.setChecked(False)
+        self._curtain_checkbox.toggled.connect(self._on_curtain_changed)
+        curtainFormLayout.addRow("Enable:", self._curtain_checkbox)
+
+        self._curtain_slider = slicer.qMRMLSliderWidget()
+        self._curtain_slider.decimals = 0
+        self._curtain_slider.singleStep = 1
+        self._curtain_slider.minimum = 0
+        self._curtain_slider.maximum = 100
+        self._curtain_slider.value = 50
+        self._curtain_slider.setEnabled(False)
+        self._curtain_slider.setToolTip(
+            "Curtain position (0=fully closed, 100=fully open)."
+        )
+        self._curtain_slider.connect(
+            "valueChanged(double)", self._on_curtain_slider_changed
+        )
+        curtainFormLayout.addRow("Position:", self._curtain_slider)
+
+    def _on_curtain_changed(self, checked: bool) -> None:
+        self._curtain_slider.setEnabled(checked)
+        if checked:
+            # Uncheck checkerboard
+            self._checkerboard_checkbox.setChecked(False)
+            self._on_curtain_regenerate()
+        else:
+            # Restore normal alpha blending
+            layoutManager = slicer.app.layoutManager()
+            for view_name, bg_key, fg_key in [
+                ("Axial_Warped", "fixed_sag", "warped_ax"),
+                ("Coronal_Warped", "fixed_sag", "warped_cor"),
+                ("Axial_Moving", "moving_ax", "warped_ax"),
+                ("Coronal_Moving", "moving_cor", "warped_cor"),
+            ]:
+                slice_widget = layoutManager.sliceWidget(view_name)
+                if slice_widget is None:
+                    continue
+                composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
+                if composite_node:
+                    bg_node = self.selectors[bg_key].currentNode()
+                    fg_node = self.selectors[fg_key].currentNode()
+                    composite_node.SetBackgroundVolumeID(
+                        bg_node.GetID() if bg_node else ""
+                    )
+                    composite_node.SetForegroundVolumeID(
+                        fg_node.GetID() if fg_node else ""
+                    )
+                    composite_node.SetForegroundOpacity(0.5)
+                    composite_node.SetCompositing(0)
+
+    def _on_curtain_slider_changed(self, value: float) -> None:
+        if self._curtain_checkbox.isChecked():
+            self._on_curtain_regenerate()
+
+    def _on_curtain_regenerate(self) -> None:
+        position = self._curtain_slider.value / 100.0
+        layoutManager = slicer.app.layoutManager()
+        for bg_key, fg_key, view_name, node_name in [
+            ("fixed_sag", "warped_ax", "Axial_Warped", "curtain_ax"),
+            ("fixed_sag", "warped_cor", "Coronal_Warped", "curtain_cor"),
+            ("moving_ax", "warped_ax", "Axial_Moving", "curtain_moving_ax"),
+            ("moving_cor", "warped_cor", "Coronal_Moving", "curtain_moving_cor"),
+        ]:
+            fg_node = self.selectors[fg_key].currentNode()
+            bg_node = self.selectors[bg_key].currentNode()
+            if fg_node is None or bg_node is None:
+                continue
+
+            slice_widget = layoutManager.sliceWidget(view_name)
+            if slice_widget is None:
+                continue
+
+            fg_sitk = sitkUtils.PullVolumeFromSlicer(fg_node)
+            fg_float = sitk.Cast(fg_sitk, sitk.sitkFloat32)
+
+            fg_display = fg_node.GetDisplayNode()
+            min_val = (
+                float(fg_display.GetWindowLevelMin())
+                if fg_display
+                else float(sitk.GetArrayFromImage(fg_float).min())
+            )
+            max_val = (
+                float(fg_display.GetWindowLevelMax())
+                if fg_display
+                else float(sitk.GetArrayFromImage(fg_float).max())
+            )
+            sentinel = -1.0
+
+            slice_node = slice_widget.mrmlSliceNode()
+            axis = self._get_horizontal_array_axis(slice_node, fg_float)
+
+            arr = sitk.GetArrayFromImage(fg_float).copy()
+            cutoff = int(position * arr.shape[axis])
+            idx = [slice(None), slice(None), slice(None)]
+            idx[axis] = slice(cutoff, None)
+            arr[tuple(idx)] = sentinel
+
+            # Draw a bright line at the curtain edge
+            line_idx = [slice(None), slice(None), slice(None)]
+            line_idx[axis] = cutoff  # slice(max(0, cutoff - 1), cutoff + 1)
+            arr[tuple(line_idx)] = max_val * 10
+
+            masked_fg = sitk.GetImageFromArray(arr)
+            masked_fg.CopyInformation(fg_float)
+
+            result_node = slicer.mrmlScene.GetFirstNodeByName(node_name)
+            if result_node is None:
+                result_node = slicer.mrmlScene.AddNewNodeByClass(
+                    "vtkMRMLScalarVolumeNode", node_name
+                )
+            sitkUtils.PushVolumeToSlicer(masked_fg, result_node)
+
+            display_node = result_node.GetDisplayNode()
+            if display_node:
+                display_node.SetApplyThreshold(True)
+                display_node.SetLowerThreshold(0.0)
+                display_node.SetAutoWindowLevel(False)
+                display_node.SetWindowLevelMinMax(min_val, max_val)
+                display_node.SetInterpolate(False)
+
+            composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
+            if composite_node:
+                composite_node.SetBackgroundVolumeID(bg_node.GetID())
+                composite_node.SetForegroundVolumeID(result_node.GetID())
+                composite_node.SetForegroundOpacity(1.0)
+                composite_node.SetCompositing(0)
+
+    def _get_horizontal_array_axis(
+        self, slice_node: "vtkMRMLSliceNode", fg_sitk: "sitk.Image"
+    ) -> int:
+        slice_to_ras = slice_node.GetSliceToRAS()
+        # Column 0 = right direction in RAS space
+        h_ras = [slice_to_ras.GetElement(i, 0) for i in range(3)]
+        # Find which sitk voxel axis is most aligned with screen-horizontal
+        direction = (
+            fg_sitk.GetDirection()
+        )  # 3x3 as flat list, column i = RAS dir of voxel axis i
+        best_axis, best_dot = 0, -1.0
+        for vox_axis in range(3):
+            col = [direction[r * 3 + vox_axis] for r in range(3)]
+            dot = abs(sum(h_ras[r] * col[r] for r in range(3)))
+            if dot > best_dot:
+                best_dot = dot
+                best_axis = vox_axis
+        # sitk voxel axis → numpy axis: numpy = 2 - sitk
+        return 2 - best_axis
+
     def _add_checkerboard_widget(self, layout):
         self.checkerboardCollapsibleButton = slicer.qMRMLCollapsibleButton()
         self.checkerboardCollapsibleButton.text = "Checkerboard"
@@ -299,6 +455,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._on_checkerboard_regenerate()
 
     def _on_checkerboard_changed(self, checked: bool) -> None:
+
+        if checked and self._curtain_checkbox is not None:
+            self._curtain_checkbox.setChecked(False)
+
         self._checkerboard_slider.setEnabled(checked)
         if checked:
             self._on_checkerboard_regenerate()
