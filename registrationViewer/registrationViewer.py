@@ -352,8 +352,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             for view_name, bg_key, fg_key in [
                 ("Axial_Warped", "fixed_sag", "warped_ax"),
                 ("Coronal_Warped", "fixed_sag", "warped_cor"),
-                ("Axial_Moving", "moving_ax", "warped_ax"),
-                ("Coronal_Moving", "moving_cor", "warped_cor"),
+                ("Axial_Moving", "fixed_sag", "moving_ax"),
+                ("Coronal_Moving", "fixed_sag", "moving_cor"),
             ]:
                 slice_widget = layoutManager.sliceWidget(view_name)
                 if slice_widget is None:
@@ -381,8 +381,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         for bg_key, fg_key, view_name, node_name in [
             ("fixed_sag", "warped_ax", "Axial_Warped", "curtain_ax"),
             ("fixed_sag", "warped_cor", "Coronal_Warped", "curtain_cor"),
-            ("moving_ax", "warped_ax", "Axial_Moving", "curtain_moving_ax"),
-            ("moving_cor", "warped_cor", "Coronal_Moving", "curtain_moving_cor"),
+            ("fixed_sag", "moving_ax", "Axial_Moving", "curtain_moving_ax"),
+            ("fixed_sag", "moving_cor", "Coronal_Moving", "curtain_moving_cor"),
         ]:
             fg_node = self.selectors[fg_key].currentNode()
             bg_node = self.selectors[bg_key].currentNode()
@@ -527,8 +527,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             for view_name, bg_key, fg_key in [
                 ("Axial_Warped", "fixed_sag", "warped_ax"),
                 ("Coronal_Warped", "fixed_sag", "warped_cor"),
-                ("Axial_Moving", "moving_ax", "warped_ax"),
-                ("Coronal_Moving", "moving_cor", "warped_cor"),
+                ("Axial_Moving", "fixed_sag", "moving_ax"),
+                ("Coronal_Moving", "fixed_sag", "moving_cor"),
             ]:
                 slice_widget = layoutManager.sliceWidget(view_name)
                 if slice_widget is None:
@@ -552,8 +552,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         for bg_key, fg_key, view_name, node_name in [
             ("fixed_sag", "warped_ax", "Axial_Warped", "checkerboard_ax"),
             ("fixed_sag", "warped_cor", "Coronal_Warped", "checkerboard_cor"),
-            ("moving_ax", "warped_ax", "Axial_Moving", "checkerboard_moving_ax"),
-            ("moving_cor", "warped_cor", "Coronal_Moving", "checkerboard_moving_cor"),
+            ("fixed_sag", "moving_ax", "Axial_Moving", "checkerboard_moving_ax"),
+            ("fixed_sag", "moving_cor", "Coronal_Moving", "checkerboard_moving_cor"),
         ]:
             bg_node = self.selectors[bg_key].currentNode()
             fg_node = self.selectors[fg_key].currentNode()
@@ -785,8 +785,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         view_assignments = {
             "Axial_Moving": {
-                "Background": self.selectors["moving_ax"].currentNode(),
-                "Foreground": self.selectors["warped_ax"].currentNode(),
+                "Background": self.selectors["fixed_sag"].currentNode(),
+                "Foreground": self.selectors["moving_ax"].currentNode(),
             },
             "Axial_Warped": {
                 "Background": self.selectors["fixed_sag"].currentNode(),
@@ -797,8 +797,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             },
             "Axial_Displacement": {},
             "Coronal_Moving": {
-                "Background": self.selectors["moving_cor"].currentNode(),
-                "Foreground": self.selectors["warped_cor"].currentNode(),
+                "Background": self.selectors["fixed_sag"].currentNode(),
+                "Foreground": self.selectors["moving_cor"].currentNode(),
             },
             "Coronal_Warped": {
                 "Background": self.selectors["fixed_sag"].currentNode(),
