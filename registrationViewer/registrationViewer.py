@@ -112,9 +112,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         for selector in [
             self.ui.inputSelector_sag,
             self.ui.inputSelector_cor,
-            self.ui.inputSelector_ax,
+            self.ui.inputSelector_axi,
             self.ui.inputSelector_cor_to_sag,
-            self.ui.inputSelector_ax_to_sag,
+            self.ui.inputSelector_axi_to_sag,
         ]:
             selector.setMRMLScene(slicer.mrmlScene)
 
@@ -295,7 +295,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self._name_contains_any(
             node_name, ("axial", "transversal", "transverse", "axi", "ax")
         ):
-            self.ui.inputSelector_ax.setCurrentNode(node)
+            self.ui.inputSelector_axi.setCurrentNode(node)
             return True
 
         return False
@@ -309,7 +309,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             return True
 
         if "ax" in normalized_name:
-            self.ui.inputSelector_ax_to_sag.setCurrentNode(node)
+            self.ui.inputSelector_axi_to_sag.setCurrentNode(node)
             return True
 
         return False
@@ -329,7 +329,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self.node_cor.GetID(),
         ]:
             if node.GetID() not in [self.node_sag.GetID(), self.node_cor.GetID()]:
-                self.ui.inputSelector_ax.setCurrentNode(node)
+                self.ui.inputSelector_axi.setCurrentNode(node)
 
     def _fallback_assign_transform(self, node: vtkMRMLTransformNode) -> None:
         if self.node_cor_to_sag is None:
@@ -341,7 +341,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             or self.node_ax_to_sag.GetID() == self.node_cor_to_sag.GetID()
         ):
             if node.GetID() != self.node_cor_to_sag.GetID():
-                self.ui.inputSelector_ax_to_sag.setCurrentNode(node)
+                self.ui.inputSelector_axi_to_sag.setCurrentNode(node)
 
     def _try_auto_select_node(self, node: vtk.vtkObject) -> None:
         if isinstance(node, vtkMRMLScalarVolumeNode):
@@ -459,9 +459,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         return (
             self.ui.inputSelector_sag.currentNode() is not None
             and self.ui.inputSelector_cor.currentNode() is not None
-            and self.ui.inputSelector_ax.currentNode() is not None
+            and self.ui.inputSelector_axi.currentNode() is not None
             and self.ui.inputSelector_cor_to_sag.currentNode() is not None
-            and self.ui.inputSelector_ax_to_sag.currentNode() is not None
+            and self.ui.inputSelector_axi_to_sag.currentNode() is not None
         )
 
     def _set_up_crosshair(self) -> None:
@@ -501,7 +501,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_ax(self) -> Any:
-        return self.ui.inputSelector_ax.currentNode()
+        return self.ui.inputSelector_axi.currentNode()
 
     @property
     def node_cor_to_sag(self) -> Any:
@@ -509,7 +509,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
     @property
     def node_ax_to_sag(self) -> Any:
-        return self.ui.inputSelector_ax_to_sag.currentNode()
+        return self.ui.inputSelector_axi_to_sag.currentNode()
 
     @property
     def node_fixed(self) -> Any:

@@ -123,9 +123,9 @@
       </item>
       <!-- END label_8 -->
 
-      <!-- START inputSelector_ax -->
+      <!-- START inputSelector_axi -->
       <item row="2" column="2">
-       <widget class="qMRMLNodeComboBox" name="inputSelector_ax">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_axi">
         <property name="toolTip">
          <string>Pick the axial volume.</string>
         </property>
@@ -148,7 +148,7 @@
         </property>
        </widget>
       </item>
-      <!-- END inputSelector_ax -->
+      <!-- END inputSelector_axi -->
 
       <!-- START label_3 -->
       <item row="3" column="1">
@@ -200,9 +200,9 @@
       </item>
       <!-- END label_9 -->
 
-      <!-- START inputSelector_ax_to_sag -->
+      <!-- START inputSelector_axi_to_sag -->
       <item row="4" column="2">
-       <widget class="qMRMLNodeComboBox" name="inputSelector_ax_to_sag">
+       <widget class="qMRMLNodeComboBox" name="inputSelector_axi_to_sag">
         <property name="toolTip">
          <string>Pick the transform from ax to sag.</string>
         </property>
@@ -228,7 +228,7 @@
         </property>
        </widget>
       </item>
-      <!-- END inputSelector_ax_to_sag -->
+      <!-- END inputSelector_axi_to_sag -->
           
      </layout>
     <!-- END formLayout_2 -->
