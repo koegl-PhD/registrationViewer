@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import os
 import tempfile
 from typing import List
@@ -25,16 +26,18 @@ CUSTOM_LAYOUT_XML = """
     <layout type="horizontal" split="true">
       <item><view class="vtkMRMLSliceNode" singletontag="Axial_Moving"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">1</property><property name="viewcolor" action="default">#e86a58</property></view></item>
       <item><view class="vtkMRMLSliceNode" singletontag="Axial_Warped"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">2</property><property name="viewcolor" action="default">#e8a558</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Jacobian"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">3</property><property name="viewcolor" action="default">#e8e858</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Displacement"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">4</property><property name="viewcolor" action="default">#58e86a</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Diff"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">3</property><property name="viewcolor" action="default">#e8e858</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Jacobian"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">4</property><property name="viewcolor" action="default">#58e86a</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Displacement"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">5</property><property name="viewcolor" action="default">#58e8e8</property></view></item>
     </layout>
   </item>
   <item>
     <layout type="horizontal" split="true">
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Moving"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">5</property><property name="viewcolor" action="default">#58e8e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Warped"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">6</property><property name="viewcolor" action="default">#5858e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Jacobian"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">7</property><property name="viewcolor" action="default">#a558e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Displacement"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">8</property><property name="viewcolor" action="default">#e858e8</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Moving"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">6</property><property name="viewcolor" action="default">#58e8e8</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Warped"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">7</property><property name="viewcolor" action="default">#5858e8</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Diff"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">8</property><property name="viewcolor" action="default">#a558e8</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Jacobian"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">9</property><property name="viewcolor" action="default">#e858e8</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Displacement"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">10</property><property name="viewcolor" action="default">#e858a5</property></view></item>
     </layout>
   </item>
 </layout>
@@ -47,14 +50,16 @@ CUSTOM_LAYOUT_XML_NO_DISP = """
     <layout type="horizontal" split="true">
       <item><view class="vtkMRMLSliceNode" singletontag="Axial_Moving"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">1</property><property name="viewcolor" action="default">#e86a58</property></view></item>
       <item><view class="vtkMRMLSliceNode" singletontag="Axial_Warped"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">2</property><property name="viewcolor" action="default">#e8a558</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Jacobian"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">3</property><property name="viewcolor" action="default">#e8e858</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Diff"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">3</property><property name="viewcolor" action="default">#e8e858</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Jacobian"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">4</property><property name="viewcolor" action="default">#58e86a</property></view></item>
     </layout>
   </item>
   <item>
     <layout type="horizontal" split="true">
       <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Moving"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">5</property><property name="viewcolor" action="default">#58e8e8</property></view></item>
       <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Warped"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">6</property><property name="viewcolor" action="default">#5858e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Jacobian"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">7</property><property name="viewcolor" action="default">#a558e8</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Diff"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">7</property><property name="viewcolor" action="default">#a558e8</property></view></item>
+      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Jacobian"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">8</property><property name="viewcolor" action="default">#e858e8</property></view></item>
     </layout>
   </item>
 </layout>
@@ -252,6 +257,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         for name, checked in [
             ("Fixed", False),
             ("Warped", False),
+            ("Diff", False),
             ("Jacobian", False),
             ("Transform", True),
         ]:
@@ -327,6 +333,87 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         result_node.SetName("")
         return result_node
 
+    def _get_volume_node(self, key: str):
+        selector = self.selectors.get(key)
+        if selector:
+            return selector.currentNode()
+        return slicer.mrmlScene.GetFirstNodeByName(key)
+
+    def _get_or_create_diff_volume(
+        self,
+        minuend_node: "slicer.vtkMRMLScalarVolumeNode",
+        subtrahend_node: "slicer.vtkMRMLScalarVolumeNode",
+        node_name: str,
+    ):
+        if minuend_node is None or subtrahend_node is None:
+            return None
+
+        minuend = sitk.Cast(
+            sitkUtils.PullVolumeFromSlicer(minuend_node), sitk.sitkFloat32
+        )
+        subtrahend = sitk.Cast(
+            sitkUtils.PullVolumeFromSlicer(subtrahend_node), sitk.sitkFloat32
+        )
+        minuend_arr = sitk.GetArrayFromImage(minuend)
+        subtrahend_arr = sitk.GetArrayFromImage(subtrahend)
+        aligned_subtrahend_arr = self._match_array_shape(
+            subtrahend_arr, minuend_arr.shape
+        )
+        if aligned_subtrahend_arr is None:
+            subtrahend = sitk.Resample(
+                subtrahend,
+                minuend,
+                sitk.Transform(),
+                sitk.sitkLinear,
+                0.0,
+                subtrahend.GetPixelID(),
+            )
+            aligned_subtrahend_arr = sitk.GetArrayFromImage(subtrahend)
+
+        diff_arr = minuend_arr - aligned_subtrahend_arr
+        diff = sitk.GetImageFromArray(diff_arr)
+        diff.CopyInformation(minuend)
+        result_node = slicer.mrmlScene.GetFirstNodeByName(node_name)
+        if result_node is None:
+            result_node = slicer.mrmlScene.AddNewNodeByClass(
+                "vtkMRMLScalarVolumeNode", node_name
+            )
+        sitkUtils.PushVolumeToSlicer(diff, result_node)
+
+        arr = sitk.GetArrayFromImage(diff)
+        max_abs = float(max(abs(arr.min()), abs(arr.max())))
+        if max_abs <= 0.0:
+            max_abs = 1.0
+        display_node = result_node.GetDisplayNode()
+        if display_node:
+            display_node.SetAutoWindowLevel(False)
+            display_node.SetWindowLevelMinMax(-max_abs, max_abs)
+            display_node.SetInterpolate(False)
+        return result_node
+
+    def _match_array_shape(self, arr, target_shape):
+        if arr.shape == target_shape:
+            return arr
+        for axes in itertools.permutations(range(arr.ndim)):
+            candidate = arr.transpose(axes)
+            if candidate.shape == target_shape:
+                return candidate
+        return None
+
+    def _update_diff_volumes(self) -> None:
+        fixed_node = self.selectors["fixed_sag"].currentNode()
+        for image_key, diff_name in [
+            ("moving_ax", "diff_moving_ax"),
+            ("warped_ax", "diff_warped_ax"),
+            ("moving_cor", "diff_moving_cor"),
+            ("warped_cor", "diff_warped_cor"),
+        ]:
+            self._get_or_create_diff_volume(
+                self.selectors[image_key].currentNode(),
+                fixed_node,
+                diff_name,
+            )
+
     def _update_folding_labels(self) -> None:
         for key, label in [
             ("jacobian_ax", self._folding_label_ax),
@@ -352,6 +439,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             for view_name, bg_key, fg_key in [
                 ("Axial_Warped", "fixed_sag", "warped_ax"),
                 ("Coronal_Warped", "fixed_sag", "warped_cor"),
+                ("Axial_Diff", "diff_moving_ax", "diff_warped_ax"),
+                ("Coronal_Diff", "diff_moving_cor", "diff_warped_cor"),
                 ("Axial_Moving", "fixed_sag", "moving_ax"),
                 ("Coronal_Moving", "fixed_sag", "moving_cor"),
             ]:
@@ -360,8 +449,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     continue
                 composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
                 if composite_node:
-                    bg_node = self.selectors[bg_key].currentNode()
-                    fg_node = self.selectors[fg_key].currentNode()
+                    bg_node = self._get_volume_node(bg_key)
+                    fg_node = self._get_volume_node(fg_key)
                     composite_node.SetBackgroundVolumeID(
                         bg_node.GetID() if bg_node else ""
                     )
@@ -376,16 +465,24 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             self._on_curtain_regenerate()
 
     def _on_curtain_regenerate(self) -> None:
+        self._update_diff_volumes()
         position = self._curtain_slider.value / 100.0
         layoutManager = slicer.app.layoutManager()
         for bg_key, fg_key, view_name, node_name in [
             ("fixed_sag", "warped_ax", "Axial_Warped", "curtain_ax"),
             ("fixed_sag", "warped_cor", "Coronal_Warped", "curtain_cor"),
+            ("diff_moving_ax", "diff_warped_ax", "Axial_Diff", "curtain_diff_ax"),
+            (
+                "diff_moving_cor",
+                "diff_warped_cor",
+                "Coronal_Diff",
+                "curtain_diff_cor",
+            ),
             ("fixed_sag", "moving_ax", "Axial_Moving", "curtain_moving_ax"),
             ("fixed_sag", "moving_cor", "Coronal_Moving", "curtain_moving_cor"),
         ]:
-            fg_node = self.selectors[fg_key].currentNode()
-            bg_node = self.selectors[bg_key].currentNode()
+            fg_node = self._get_volume_node(fg_key)
+            bg_node = self._get_volume_node(bg_key)
             if fg_node is None or bg_node is None:
                 continue
 
@@ -397,6 +494,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             cb_node_names = {
                 "Axial_Warped": "checkerboard_ax",
                 "Coronal_Warped": "checkerboard_cor",
+                "Axial_Diff": "checkerboard_diff_ax",
+                "Coronal_Diff": "checkerboard_diff_cor",
                 "Axial_Moving": "checkerboard_moving_ax",
                 "Coronal_Moving": "checkerboard_moving_cor",
             }
@@ -423,7 +522,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                 if fg_display
                 else float(sitk.GetArrayFromImage(fg_float).max())
             )
-            sentinel = -1.0
+            sentinel = min_val - abs(max_val - min_val) - 1.0
 
             slice_node = slice_widget.mrmlSliceNode()
             axis = self._get_horizontal_array_axis(slice_node, fg_float)
@@ -436,8 +535,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             # Draw a bright line at the curtain edge
             line_idx = [slice(None), slice(None), slice(None)]
-            line_idx[axis] = cutoff  # slice(max(0, cutoff - 1), cutoff + 1)
-            arr[tuple(line_idx)] = max_val * 10
+            line_idx[axis] = min(max(cutoff, 0), arr.shape[axis] - 1)
+            arr[tuple(line_idx)] = max(abs(min_val), abs(max_val), 1.0) * 10.0
 
             masked_fg = sitk.GetImageFromArray(arr)
             masked_fg.CopyInformation(fg_float)
@@ -452,7 +551,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             display_node = result_node.GetDisplayNode()
             if display_node:
                 display_node.SetApplyThreshold(True)
-                display_node.SetLowerThreshold(0.0)
+                display_node.SetLowerThreshold(sentinel + 0.5)
                 display_node.SetAutoWindowLevel(False)
                 display_node.SetWindowLevelMinMax(min_val, max_val)
                 display_node.SetInterpolate(False)
@@ -527,6 +626,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             for view_name, bg_key, fg_key in [
                 ("Axial_Warped", "fixed_sag", "warped_ax"),
                 ("Coronal_Warped", "fixed_sag", "warped_cor"),
+                ("Axial_Diff", "diff_moving_ax", "diff_warped_ax"),
+                ("Coronal_Diff", "diff_moving_cor", "diff_warped_cor"),
                 ("Axial_Moving", "fixed_sag", "moving_ax"),
                 ("Coronal_Moving", "fixed_sag", "moving_cor"),
             ]:
@@ -535,8 +636,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     continue
                 composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
                 if composite_node:
-                    bg_node = self.selectors[bg_key].currentNode()
-                    fg_node = self.selectors[fg_key].currentNode()
+                    bg_node = self._get_volume_node(bg_key)
+                    fg_node = self._get_volume_node(fg_key)
                     composite_node.SetBackgroundVolumeID(
                         bg_node.GetID() if bg_node else ""
                     )
@@ -547,16 +648,29 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     composite_node.SetCompositing(0)
 
     def _on_checkerboard_regenerate(self) -> None:
+        self._update_diff_volumes()
         tile = int(self._checkerboard_slider.value)
         layoutManager = slicer.app.layoutManager()
         for bg_key, fg_key, view_name, node_name in [
             ("fixed_sag", "warped_ax", "Axial_Warped", "checkerboard_ax"),
             ("fixed_sag", "warped_cor", "Coronal_Warped", "checkerboard_cor"),
+            (
+                "diff_moving_ax",
+                "diff_warped_ax",
+                "Axial_Diff",
+                "checkerboard_diff_ax",
+            ),
+            (
+                "diff_moving_cor",
+                "diff_warped_cor",
+                "Coronal_Diff",
+                "checkerboard_diff_cor",
+            ),
             ("fixed_sag", "moving_ax", "Axial_Moving", "checkerboard_moving_ax"),
             ("fixed_sag", "moving_cor", "Coronal_Moving", "checkerboard_moving_cor"),
         ]:
-            bg_node = self.selectors[bg_key].currentNode()
-            fg_node = self.selectors[fg_key].currentNode()
+            bg_node = self._get_volume_node(bg_key)
+            fg_node = self._get_volume_node(fg_key)
             if bg_node is None or fg_node is None:
                 continue
             fg_sitk = sitkUtils.PullVolumeFromSlicer(fg_node)
@@ -624,10 +738,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_names = [
             "Axial_Moving",
             "Axial_Warped",
+            "Axial_Diff",
             "Axial_Jacobian",
             "Axial_Displacement",
             "Coronal_Moving",
             "Coronal_Warped",
+            "Coronal_Diff",
             "Coronal_Jacobian",
             "Coronal_Displacement",
         ]
@@ -693,10 +809,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         view_names = [
             "Axial_Moving",
             "Axial_Warped",
+            "Axial_Diff",
             "Axial_Jacobian",
             "Axial_Displacement",
             "Coronal_Moving",
             "Coronal_Warped",
+            "Coronal_Diff",
             "Coronal_Jacobian",
             "Coronal_Displacement",
         ]
@@ -730,6 +848,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         checkbox_to_views = {
             "Fixed": ("Axial_Moving", "Coronal_Moving"),
             "Warped": ("Axial_Warped", "Coronal_Warped"),
+            "Diff": ("Axial_Diff", "Coronal_Diff"),
             "Jacobian": ("Axial_Jacobian", "Coronal_Jacobian"),
             "Transform": ("Axial_Displacement", "Coronal_Displacement"),
         }
@@ -783,6 +902,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     display_node.SetAutoWindowLevel(False)
                     display_node.SetWindowLevelMinMax(0, 4)
 
+        self._update_diff_volumes()
+
         view_assignments = {
             "Axial_Moving": {
                 "Background": self.selectors["fixed_sag"].currentNode(),
@@ -791,6 +912,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "Axial_Warped": {
                 "Background": self.selectors["fixed_sag"].currentNode(),
                 "Foreground": self.selectors["warped_ax"].currentNode(),
+            },
+            "Axial_Diff": {
+                "Background": self._get_volume_node("diff_moving_ax"),
+                "Foreground": self._get_volume_node("diff_warped_ax"),
             },
             "Axial_Jacobian": {
                 "Background": self.selectors["jacobian_ax"].currentNode()
@@ -803,6 +928,10 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             "Coronal_Warped": {
                 "Background": self.selectors["fixed_sag"].currentNode(),
                 "Foreground": self.selectors["warped_cor"].currentNode(),
+            },
+            "Coronal_Diff": {
+                "Background": self._get_volume_node("diff_moving_cor"),
+                "Foreground": self._get_volume_node("diff_warped_cor"),
             },
             "Coronal_Jacobian": {
                 "Background": self.selectors["jacobian_cor"].currentNode()
