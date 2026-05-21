@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import itertools
-import os
-import tempfile
-from typing import List
+import time
 
 import qt
 import SimpleITK as sitk
@@ -19,51 +16,15 @@ from slicer.ScriptedLoadableModule import (
 )
 from slicer.util import VTKObservationMixin
 
-CUSTOM_LAYOUT_ID = 501
-CUSTOM_LAYOUT_XML = """
-<layout type="vertical" split="true">
-  <item>
-    <layout type="horizontal" split="true">
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Moving"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">1</property><property name="viewcolor" action="default">#e86a58</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Warped"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">2</property><property name="viewcolor" action="default">#e8a558</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Diff"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">3</property><property name="viewcolor" action="default">#e8e858</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Jacobian"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">4</property><property name="viewcolor" action="default">#58e86a</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Displacement"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">5</property><property name="viewcolor" action="default">#58e8e8</property></view></item>
-    </layout>
-  </item>
-  <item>
-    <layout type="horizontal" split="true">
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Moving"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">6</property><property name="viewcolor" action="default">#58e8e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Warped"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">7</property><property name="viewcolor" action="default">#5858e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Diff"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">8</property><property name="viewcolor" action="default">#a558e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Jacobian"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">9</property><property name="viewcolor" action="default">#e858e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Displacement"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">10</property><property name="viewcolor" action="default">#e858a5</property></view></item>
-    </layout>
-  </item>
-</layout>
-"""
+SLICE_VIEW_ASSIGNMENTS = [
+    ("Red", "axial", "Axial"),
+    ("Yellow", "sagittal", "Sagittal"),
+    ("Green", "coronal", "Coronal"),
+]
 
-CUSTOM_LAYOUT_ID_NO_DISP = 502
-CUSTOM_LAYOUT_XML_NO_DISP = """
-<layout type="vertical" split="true">
-  <item>
-    <layout type="horizontal" split="true">
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Moving"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">1</property><property name="viewcolor" action="default">#e86a58</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Warped"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">2</property><property name="viewcolor" action="default">#e8a558</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Diff"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">3</property><property name="viewcolor" action="default">#e8e858</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Axial_Jacobian"><property name="orientation" action="default">Axial</property><property name="viewlabel" action="default">4</property><property name="viewcolor" action="default">#58e86a</property></view></item>
-    </layout>
-  </item>
-  <item>
-    <layout type="horizontal" split="true">
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Moving"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">5</property><property name="viewcolor" action="default">#58e8e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Warped"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">6</property><property name="viewcolor" action="default">#5858e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Diff"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">7</property><property name="viewcolor" action="default">#a558e8</property></view></item>
-      <item><view class="vtkMRMLSliceNode" singletontag="Coronal_Jacobian"><property name="orientation" action="default">Coronal</property><property name="viewlabel" action="default">8</property><property name="viewcolor" action="default">#e858e8</property></view></item>
-    </layout>
-  </item>
-</layout>
-"""
+CURTAIN_ROCK_INTERVAL_MS = 16
+# Tune this value to change how fast the curtain rocks from 0 to 100 and back.
+CURTAIN_ROCK_SPEED_PERCENT_PER_SECOND = 7.0
 
 
 class registrationViewer(ScriptedLoadableModule):
@@ -88,41 +49,17 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.logic = None
         self._sceneObserverTag = None
         self.selectors = {}
-        self._disp_checkboxes = {}
         self._curtain_checkbox = None
+        self._curtain_rock_checkbox = None
+        self._curtain_rock_timer = None
+        self._curtain_rock_direction = 1.0
+        self._curtain_rock_last_time = None
 
     def enter(self) -> None:
         self.onApplyButton()
 
     def setup(self) -> None:
         ScriptedLoadableModuleWidget.setup(self)
-
-        layoutManager = slicer.app.layoutManager()
-        if (
-            not layoutManager.layoutLogic()
-            .GetLayoutNode()
-            .IsLayoutDescription(CUSTOM_LAYOUT_ID)
-        ):
-            layoutManager.layoutLogic().GetLayoutNode().AddLayoutDescription(
-                CUSTOM_LAYOUT_ID, CUSTOM_LAYOUT_XML
-            )
-        else:
-            layoutManager.layoutLogic().GetLayoutNode().SetLayoutDescription(
-                CUSTOM_LAYOUT_ID, CUSTOM_LAYOUT_XML
-            )
-
-        if (
-            not layoutManager.layoutLogic()
-            .GetLayoutNode()
-            .IsLayoutDescription(CUSTOM_LAYOUT_ID_NO_DISP)
-        ):
-            layoutManager.layoutLogic().GetLayoutNode().AddLayoutDescription(
-                CUSTOM_LAYOUT_ID_NO_DISP, CUSTOM_LAYOUT_XML_NO_DISP
-            )
-        else:
-            layoutManager.layoutLogic().GetLayoutNode().SetLayoutDescription(
-                CUSTOM_LAYOUT_ID_NO_DISP, CUSTOM_LAYOUT_XML_NO_DISP
-            )
 
         self.logic = registrationViewerLogic()
 
@@ -134,61 +71,31 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         self._add_node_selector(
             parametersFormLayout,
-            "fixed_sag",
-            "Fixed (Sagittal)",
+            "axial",
+            "Axial",
             ["vtkMRMLScalarVolumeNode"],
         )
         self._add_node_selector(
             parametersFormLayout,
-            "moving_ax",
-            "Moving (Axial)",
+            "sagittal",
+            "Sagittal",
             ["vtkMRMLScalarVolumeNode"],
         )
         self._add_node_selector(
             parametersFormLayout,
-            "moving_cor",
-            "Moving (Coronal)",
+            "coronal",
+            "Coronal",
             ["vtkMRMLScalarVolumeNode"],
         )
         self._add_node_selector(
             parametersFormLayout,
-            "warped_ax",
-            "Warped (Axial)",
+            "superres",
+            "Superres",
             ["vtkMRMLScalarVolumeNode"],
-        )
-        self._add_node_selector(
-            parametersFormLayout,
-            "warped_cor",
-            "Warped (Coronal)",
-            ["vtkMRMLScalarVolumeNode"],
-        )
-        self._add_node_selector(
-            parametersFormLayout,
-            "jacobian_ax",
-            "Jacobian (Axial)",
-            ["vtkMRMLScalarVolumeNode"],
-        )
-        self._add_node_selector(
-            parametersFormLayout,
-            "jacobian_cor",
-            "Jacobian (Coronal)",
-            ["vtkMRMLScalarVolumeNode"],
-        )
-        self._add_node_selector(
-            parametersFormLayout,
-            "displacement_axi",
-            "Displacement (Axial)",
-            ["vtkMRMLTransformNode"],
-        )
-        self._add_node_selector(
-            parametersFormLayout,
-            "displacement_cor",
-            "Displacement (Coronal)",
-            ["vtkMRMLTransformNode"],
         )
 
         self.applyButton = qt.QPushButton("Update Views")
-        self.applyButton.toolTip = "Assign selected nodes to views in the 8-up layout."
+        self.applyButton.toolTip = "Assign selected nodes to the four-up layout."
         self.applyButton.clicked.connect(self.onApplyButton)
         parametersFormLayout.addRow(self.applyButton)
 
@@ -200,14 +107,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.linkButton.clicked.connect(self.onLinkButton)
         parametersFormLayout.addRow(self.linkButton)
 
-        self._folding_label_ax = qt.QLabel("Folding (Axial): N/A")
-        self._folding_label_cor = qt.QLabel("Folding (Coronal): N/A")
-        self.layout.addWidget(self._folding_label_ax)
-        self.layout.addWidget(self._folding_label_cor)
-
         self._add_vis_widget(self.layout)
         self._add_checkerboard_widget(self.layout)
-        self._add_disp_widget(self.layout)
         self._add_curtain_widget(self.layout)
 
         self.layout.addStretch(1)
@@ -246,41 +147,6 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         btnLayout.addWidget(btnSag)
         self.visualization.groupBoxLayout.insertRow(1, btnLayout)
 
-    def _add_disp_widget(self, layout):
-        self.dispCollapsibleButton = slicer.qMRMLCollapsibleButton()
-        self.dispCollapsibleButton.text = "Displacement"
-        layout.addWidget(self.dispCollapsibleButton)
-        dispFormLayout = qt.QFormLayout(self.dispCollapsibleButton)
-
-        # Displacement visibility checkboxes
-        dispLayout = qt.QHBoxLayout()
-        for name, checked in [
-            ("Fixed", False),
-            ("Warped", False),
-            ("Diff", False),
-            ("Jacobian", False),
-            ("Transform", True),
-        ]:
-            cb = qt.QCheckBox(name)
-            cb.setChecked(checked)
-            cb.toggled.connect(self._on_displacement_visibility_changed)
-            dispLayout.addWidget(cb)
-            self._disp_checkboxes[name] = cb
-        dispFormLayout.addRow("Visibility:", dispLayout)
-
-        # Grid size slider
-        self.gridSizeSlider = slicer.qMRMLSliderWidget()
-        self.gridSizeSlider.decimals = 1
-        self.gridSizeSlider.singleStep = 0.5
-        self.gridSizeSlider.minimum = 0.5
-        self.gridSizeSlider.maximum = 20
-        self.gridSizeSlider.value = 5
-        self.gridSizeSlider.setToolTip(
-            "Set the grid spacing (mm) for the displacement field."
-        )
-        self.gridSizeSlider.valueChanged.connect(self._on_grid_size_changed)
-        dispFormLayout.addRow("Grid Spacing:", self.gridSizeSlider)
-
     def _add_curtain_widget(self, layout):
         self.curtainCollapsibleButton = slicer.qMRMLCollapsibleButton()
         self.curtainCollapsibleButton.text = "Curtain"
@@ -291,6 +157,16 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self._curtain_checkbox.setChecked(False)
         self._curtain_checkbox.toggled.connect(self._on_curtain_changed)
         curtainFormLayout.addRow("Enable:", self._curtain_checkbox)
+
+        self._curtain_rock_checkbox = qt.QCheckBox("Rock")
+        self._curtain_rock_checkbox.setChecked(False)
+        self._curtain_rock_checkbox.setEnabled(False)
+        self._curtain_rock_checkbox.toggled.connect(self._on_curtain_rock_changed)
+        curtainFormLayout.addRow("Rock:", self._curtain_rock_checkbox)
+
+        self._curtain_rock_timer = qt.QTimer()
+        self._curtain_rock_timer.setInterval(CURTAIN_ROCK_INTERVAL_MS)
+        self._curtain_rock_timer.timeout.connect(self._on_curtain_rock_tick)
 
         self._curtain_slider = slicer.qMRMLSliderWidget()
         self._curtain_slider.decimals = 0
@@ -307,142 +183,27 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         )
         curtainFormLayout.addRow("Position:", self._curtain_slider)
 
-    def _get_or_create_blank_volume(
-        self, transform_node: "vtkMRMLTransformNode", node_name
-    ) -> slicer.vtkMRMLScalarVolumeNode:
-        if transform_node is None:
-            return None
-        with tempfile.NamedTemporaryFile(suffix=".nii.gz", delete=False) as tmp:
-            tmp_path = tmp.name
-        try:
-            slicer.util.saveNode(transform_node, tmp_path)
-            disp_sitk = sitk.ReadImage(tmp_path)
-        finally:
-            os.unlink(tmp_path)
-        blank = sitk.Image(disp_sitk.GetSize(), sitk.sitkFloat32)
-        blank.SetSpacing(disp_sitk.GetSpacing())
-        blank.SetOrigin(disp_sitk.GetOrigin())
-        blank.SetDirection(disp_sitk.GetDirection())
-        result_node = slicer.mrmlScene.GetFirstNodeByName(node_name)
-        if result_node is None:
-            result_node = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLScalarVolumeNode", node_name
-            )
-        sitkUtils.PushVolumeToSlicer(blank, result_node)
-
-        result_node.SetName("")
-        return result_node
-
     def _get_volume_node(self, key: str):
         selector = self.selectors.get(key)
         if selector:
             return selector.currentNode()
         return slicer.mrmlScene.GetFirstNodeByName(key)
 
-    def _get_or_create_diff_volume(
-        self,
-        minuend_node: "slicer.vtkMRMLScalarVolumeNode",
-        subtrahend_node: "slicer.vtkMRMLScalarVolumeNode",
-        node_name: str,
-    ):
-        if minuend_node is None or subtrahend_node is None:
-            return None
-
-        minuend = sitk.Cast(
-            sitkUtils.PullVolumeFromSlicer(minuend_node), sitk.sitkFloat32
-        )
-        subtrahend = sitk.Cast(
-            sitkUtils.PullVolumeFromSlicer(subtrahend_node), sitk.sitkFloat32
-        )
-        minuend_arr = sitk.GetArrayFromImage(minuend)
-        subtrahend_arr = sitk.GetArrayFromImage(subtrahend)
-        aligned_subtrahend_arr = self._match_array_shape(
-            subtrahend_arr, minuend_arr.shape
-        )
-        if aligned_subtrahend_arr is None:
-            subtrahend = sitk.Resample(
-                subtrahend,
-                minuend,
-                sitk.Transform(),
-                sitk.sitkLinear,
-                0.0,
-                subtrahend.GetPixelID(),
-            )
-            aligned_subtrahend_arr = sitk.GetArrayFromImage(subtrahend)
-
-        diff_arr = minuend_arr - aligned_subtrahend_arr
-        diff = sitk.GetImageFromArray(diff_arr)
-        diff.CopyInformation(minuend)
-        result_node = slicer.mrmlScene.GetFirstNodeByName(node_name)
-        if result_node is None:
-            result_node = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLScalarVolumeNode", node_name
-            )
-        sitkUtils.PushVolumeToSlicer(diff, result_node)
-
-        arr = sitk.GetArrayFromImage(diff)
-        max_abs = float(max(abs(arr.min()), abs(arr.max())))
-        if max_abs <= 0.0:
-            max_abs = 1.0
-        display_node = result_node.GetDisplayNode()
-        if display_node:
-            display_node.SetAutoWindowLevel(False)
-            display_node.SetWindowLevelMinMax(-max_abs, max_abs)
-            display_node.SetInterpolate(False)
-        return result_node
-
-    def _match_array_shape(self, arr, target_shape):
-        if arr.shape == target_shape:
-            return arr
-        for axes in itertools.permutations(range(arr.ndim)):
-            candidate = arr.transpose(axes)
-            if candidate.shape == target_shape:
-                return candidate
-        return None
-
-    def _update_diff_volumes(self) -> None:
-        fixed_node = self.selectors["fixed_sag"].currentNode()
-        for image_key, diff_name in [
-            ("moving_ax", "diff_moving_ax"),
-            ("warped_ax", "diff_warped_ax"),
-            ("moving_cor", "diff_moving_cor"),
-            ("warped_cor", "diff_warped_cor"),
-        ]:
-            self._get_or_create_diff_volume(
-                self.selectors[image_key].currentNode(),
-                fixed_node,
-                diff_name,
-            )
-
-    def _update_folding_labels(self) -> None:
-        for key, label in [
-            ("jacobian_ax", self._folding_label_ax),
-            ("jacobian_cor", self._folding_label_cor),
-        ]:
-            jac_node = self.selectors[key].currentNode()
-            if jac_node is None:
-                label.setText(f"Folding ({key}): N/A")
-                continue
-            jac_sitk = sitkUtils.PullVolumeFromSlicer(jac_node)
-            arr = sitk.GetArrayFromImage(jac_sitk)
-            folding = float((arr == 1).sum()) / float(arr.size) * 100.0
-            tag = "Axial" if "ax" in key else "Coronal"
-            label.setText(f"Folding ({tag}): {folding:.2f}%")
-
     def _on_curtain_changed(self, checked: bool) -> None:
         self._curtain_slider.setEnabled(checked)
+        self._curtain_rock_checkbox.setEnabled(checked)
         if checked:
+            if self._curtain_rock_checkbox.isChecked():
+                self._start_curtain_rock()
             self._on_curtain_regenerate()
         else:
+            self._stop_curtain_rock()
             # Restore normal alpha blending
             layoutManager = slicer.app.layoutManager()
             for view_name, bg_key, fg_key in [
-                ("Axial_Warped", "fixed_sag", "warped_ax"),
-                ("Coronal_Warped", "fixed_sag", "warped_cor"),
-                ("Axial_Diff", "diff_moving_ax", "diff_warped_ax"),
-                ("Coronal_Diff", "diff_moving_cor", "diff_warped_cor"),
-                ("Axial_Moving", "fixed_sag", "moving_ax"),
-                ("Coronal_Moving", "fixed_sag", "moving_cor"),
+                ("Red", "axial", "superres"),
+                ("Yellow", "sagittal", "superres"),
+                ("Green", "coronal", "superres"),
             ]:
                 slice_widget = layoutManager.sliceWidget(view_name)
                 if slice_widget is None:
@@ -464,22 +225,65 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self._curtain_checkbox.isChecked():
             self._on_curtain_regenerate()
 
+    def _on_curtain_rock_changed(self, checked: bool) -> None:
+        if checked and self._curtain_checkbox.isChecked():
+            self._start_curtain_rock()
+        else:
+            self._stop_curtain_rock()
+
+    def _start_curtain_rock(self) -> None:
+        if (
+            self._curtain_rock_timer is not None
+            and not self._curtain_rock_timer.isActive()
+        ):
+            self._curtain_rock_last_time = time.monotonic()
+            self._curtain_rock_timer.start()
+
+    def _stop_curtain_rock(self) -> None:
+        if self._curtain_rock_timer is not None and self._curtain_rock_timer.isActive():
+            self._curtain_rock_timer.stop()
+        self._curtain_rock_last_time = None
+
+    def _on_curtain_rock_tick(self) -> None:
+        now = time.monotonic()
+        if self._curtain_rock_last_time is None:
+            self._curtain_rock_last_time = now
+            return
+
+        elapsed_seconds = now - self._curtain_rock_last_time
+        self._curtain_rock_last_time = now
+
+        step = CURTAIN_ROCK_SPEED_PERCENT_PER_SECOND * elapsed_seconds
+        next_value = self._curtain_slider.value + step * self._curtain_rock_direction
+
+        while next_value > 100.0 or next_value < 0.0:
+            if next_value > 100.0:
+                next_value = 100.0 - (next_value - 100.0)
+                self._curtain_rock_direction = -1.0
+            elif next_value < 0.0:
+                next_value = -next_value
+                self._curtain_rock_direction = 1.0
+
+        was_blocked = self._curtain_slider.blockSignals(True)
+        self._curtain_slider.value = next_value
+        self._curtain_slider.blockSignals(was_blocked)
+        self._on_curtain_regenerate()
+
     def _on_curtain_regenerate(self) -> None:
-        self._update_diff_volumes()
+        render_blocker = getattr(slicer.util, "RenderBlocker", None)
+        if render_blocker is None:
+            self._apply_curtain_regenerate()
+        else:
+            with render_blocker():
+                self._apply_curtain_regenerate()
+
+    def _apply_curtain_regenerate(self) -> None:
         position = self._curtain_slider.value / 100.0
         layoutManager = slicer.app.layoutManager()
         for bg_key, fg_key, view_name, node_name in [
-            ("fixed_sag", "warped_ax", "Axial_Warped", "curtain_ax"),
-            ("fixed_sag", "warped_cor", "Coronal_Warped", "curtain_cor"),
-            ("diff_moving_ax", "diff_warped_ax", "Axial_Diff", "curtain_diff_ax"),
-            (
-                "diff_moving_cor",
-                "diff_warped_cor",
-                "Coronal_Diff",
-                "curtain_diff_cor",
-            ),
-            ("fixed_sag", "moving_ax", "Axial_Moving", "curtain_moving_ax"),
-            ("fixed_sag", "moving_cor", "Coronal_Moving", "curtain_moving_cor"),
+            ("axial", "superres", "Red", "curtain_axial"),
+            ("sagittal", "superres", "Yellow", "curtain_sagittal"),
+            ("coronal", "superres", "Green", "curtain_coronal"),
         ]:
             fg_node = self._get_volume_node(fg_key)
             bg_node = self._get_volume_node(bg_key)
@@ -492,12 +296,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
             # Instead of always pulling from fg_node, use checkerboard result if active
             cb_node_names = {
-                "Axial_Warped": "checkerboard_ax",
-                "Coronal_Warped": "checkerboard_cor",
-                "Axial_Diff": "checkerboard_diff_ax",
-                "Coronal_Diff": "checkerboard_diff_cor",
-                "Axial_Moving": "checkerboard_moving_ax",
-                "Coronal_Moving": "checkerboard_moving_cor",
+                "Red": "checkerboard_axial",
+                "Yellow": "checkerboard_sagittal",
+                "Green": "checkerboard_coronal",
             }
             if self._checkerboard_checkbox.isChecked():
                 cb_node = slicer.mrmlScene.GetFirstNodeByName(cb_node_names[view_name])
@@ -621,15 +422,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if checked:
             self._on_checkerboard_regenerate()
         else:
-            # Restore normal alpha blending with fixed/warped
+            # Restore normal alpha blending.
             layoutManager = slicer.app.layoutManager()
             for view_name, bg_key, fg_key in [
-                ("Axial_Warped", "fixed_sag", "warped_ax"),
-                ("Coronal_Warped", "fixed_sag", "warped_cor"),
-                ("Axial_Diff", "diff_moving_ax", "diff_warped_ax"),
-                ("Coronal_Diff", "diff_moving_cor", "diff_warped_cor"),
-                ("Axial_Moving", "fixed_sag", "moving_ax"),
-                ("Coronal_Moving", "fixed_sag", "moving_cor"),
+                ("Red", "axial", "superres"),
+                ("Yellow", "sagittal", "superres"),
+                ("Green", "coronal", "superres"),
             ]:
                 slice_widget = layoutManager.sliceWidget(view_name)
                 if slice_widget is None:
@@ -648,26 +446,12 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     composite_node.SetCompositing(0)
 
     def _on_checkerboard_regenerate(self) -> None:
-        self._update_diff_volumes()
         tile = int(self._checkerboard_slider.value)
         layoutManager = slicer.app.layoutManager()
         for bg_key, fg_key, view_name, node_name in [
-            ("fixed_sag", "warped_ax", "Axial_Warped", "checkerboard_ax"),
-            ("fixed_sag", "warped_cor", "Coronal_Warped", "checkerboard_cor"),
-            (
-                "diff_moving_ax",
-                "diff_warped_ax",
-                "Axial_Diff",
-                "checkerboard_diff_ax",
-            ),
-            (
-                "diff_moving_cor",
-                "diff_warped_cor",
-                "Coronal_Diff",
-                "checkerboard_diff_cor",
-            ),
-            ("fixed_sag", "moving_ax", "Axial_Moving", "checkerboard_moving_ax"),
-            ("fixed_sag", "moving_cor", "Coronal_Moving", "checkerboard_moving_cor"),
+            ("axial", "superres", "Red", "checkerboard_axial"),
+            ("sagittal", "superres", "Yellow", "checkerboard_sagittal"),
+            ("coronal", "superres", "Green", "checkerboard_coronal"),
         ]:
             bg_node = self._get_volume_node(bg_key)
             fg_node = self._get_volume_node(fg_key)
@@ -723,31 +507,9 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         if self._curtain_checkbox is not None and self._curtain_checkbox.isChecked():
             self._on_curtain_regenerate()
 
-    def _on_grid_size_changed(self, value: float) -> None:
-        for transform_key in ["displacement_axi", "displacement_cor"]:
-            transform_node = self.selectors.get(transform_key)
-            if transform_node:
-                node = transform_node.currentNode()
-                if node:
-                    display_node = node.GetDisplayNode()
-                    if display_node:
-                        display_node.SetGridSpacingMm(value)
-
     def set_all_views_orientation(self, orientation: str) -> None:
         layoutManager = slicer.app.layoutManager()
-        view_names = [
-            "Axial_Moving",
-            "Axial_Warped",
-            "Axial_Diff",
-            "Axial_Jacobian",
-            "Axial_Displacement",
-            "Coronal_Moving",
-            "Coronal_Warped",
-            "Coronal_Diff",
-            "Coronal_Jacobian",
-            "Coronal_Displacement",
-        ]
-        for view_name in view_names:
+        for view_name, _, _ in SLICE_VIEW_ASSIGNMENTS:
             slice_widget = layoutManager.sliceWidget(view_name)
             if slice_widget is not None:
                 slice_node = slice_widget.mrmlSliceNode()
@@ -781,44 +543,33 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         name = node.GetName()
         if not name:
             return
+        name_key = name.lower()
 
-        mapping = {
-            "sag": "fixed_sag",
-            "axi": "moving_ax",
-            "cor": "moving_cor",
-            "warped_axi": "warped_ax",
-            "warped_cor": "warped_cor",
-            "jacob_axi": "jacobian_ax",
-            "jacob_cor": "jacobian_cor",
-            "disp_axi": "displacement_axi",
-            "disp_cor": "displacement_cor",
-        }
+        matches = [
+            ("sr", "superres"),
+            ("cor", "coronal"),
+            ("sag", "sagittal"),
+            ("axi", "axial"),
+            ("tre", "axial"),
+        ]
 
-        if name in mapping:
-            selector = self.selectors.get(mapping[name])
+        for token, selector_key in matches:
+            if token not in name_key:
+                continue
+            selector = self.selectors.get(selector_key)
             if selector and not selector.currentNode():
                 selector.setCurrentNode(node)
+            return
 
     def cleanup(self) -> None:
+        self._stop_curtain_rock()
         if self._sceneObserverTag is not None:
             slicer.mrmlScene.RemoveObserver(self._sceneObserverTag)
             self._sceneObserverTag = None
 
     def onLinkButton(self, checked: bool) -> None:
         layoutManager = slicer.app.layoutManager()
-        view_names = [
-            "Axial_Moving",
-            "Axial_Warped",
-            "Axial_Diff",
-            "Axial_Jacobian",
-            "Axial_Displacement",
-            "Coronal_Moving",
-            "Coronal_Warped",
-            "Coronal_Diff",
-            "Coronal_Jacobian",
-            "Coronal_Displacement",
-        ]
-        for view_name in view_names:
+        for view_name, _, _ in SLICE_VIEW_ASSIGNMENTS:
             slice_widget = layoutManager.sliceWidget(view_name)
             if slice_widget is not None:
                 composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
@@ -827,178 +578,34 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
                     if hasattr(composite_node, "SetHotLinkedControl"):
                         composite_node.SetHotLinkedControl(checked)
 
-    def _setup_jacobian_colormap(self) -> str:
-        color_node_name = "JacobianColorMap"
-        color_node = slicer.mrmlScene.GetFirstNodeByName(color_node_name)
-        if not color_node:
-            color_node = slicer.mrmlScene.AddNewNodeByClass(
-                "vtkMRMLColorTableNode", color_node_name
-            )
-            color_node.SetTypeToUser()
-            color_node.SetNumberOfColors(5)
-            color_node.SetColor(0, "Background", 0.0, 0.0, 0.0, 1.0)
-            color_node.SetColor(1, "Red", 1.0, 0.0, 0.0, 1.0)
-            color_node.SetColor(2, "Yellow", 1.0, 1.0, 0.0, 1.0)
-            color_node.SetColor(3, "White", 1.0, 1.0, 1.0, 1.0)
-            color_node.SetColor(4, "Blue", 0.0, 0.0, 1.0, 1.0)
-        return color_node.GetID()
-
-    def _on_displacement_visibility_changed(self) -> None:
-        # Map checkbox name -> view name pairs (axial row, coronal row)
-        checkbox_to_views = {
-            "Fixed": ("Axial_Moving", "Coronal_Moving"),
-            "Warped": ("Axial_Warped", "Coronal_Warped"),
-            "Diff": ("Axial_Diff", "Coronal_Diff"),
-            "Jacobian": ("Axial_Jacobian", "Coronal_Jacobian"),
-            "Transform": ("Axial_Displacement", "Coronal_Displacement"),
-        }
-
-        # Show/hide the 4th column by switching layout
-        transform_checked = self._disp_checkboxes["Transform"].isChecked()
-        layout_id = CUSTOM_LAYOUT_ID if transform_checked else CUSTOM_LAYOUT_ID_NO_DISP
-        slicer.app.layoutManager().setLayout(layout_id)
-        slicer.app.processEvents()
-
-        # Collect checked view IDs for each row
-        layoutManager = slicer.app.layoutManager()
-        ax_view_ids = []
-        cor_view_ids = []
-        for name, (ax_view, cor_view) in checkbox_to_views.items():
-            if not self._disp_checkboxes[name].isChecked():
-                continue
-            for view_name, id_list in [
-                (ax_view, ax_view_ids),
-                (cor_view, cor_view_ids),
-            ]:
-                slice_widget = layoutManager.sliceWidget(view_name)
-                if slice_widget is not None:
-                    slice_node = slice_widget.mrmlSliceNode()
-                    if slice_node:
-                        id_list.append(slice_node.GetID())
-
-        # Apply to each transform node
-        for transform_key, view_ids in [
-            ("displacement_axi", ax_view_ids),
-            ("displacement_cor", cor_view_ids),
-        ]:
-            transform_node = self.selectors[transform_key].currentNode()
-            if transform_node and view_ids:
-                self.logic.set_transform_node_visibility(transform_node, view_ids)
-
-        self._on_grid_size_changed(self.gridSizeSlider.value)
-
     def onApplyButton(self) -> None:
-        slicer.app.layoutManager().setLayout(CUSTOM_LAYOUT_ID)
+        slicer.app.layoutManager().setLayout(
+            slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView
+        )
         slicer.app.processEvents()
 
-        jacobian_color_id = self._setup_jacobian_colormap()
-        for key in ["jacobian_ax", "jacobian_cor"]:
-            jac_node = self.selectors[key].currentNode()
-            if jac_node:
-                display_node = jac_node.GetDisplayNode()
-                if display_node:
-                    display_node.SetAndObserveColorNodeID(jacobian_color_id)
-                    display_node.SetInterpolate(False)
-                    display_node.SetAutoWindowLevel(False)
-                    display_node.SetWindowLevelMinMax(0, 4)
-
-        self._update_diff_volumes()
-
-        view_assignments = {
-            "Axial_Moving": {
-                "Background": self.selectors["fixed_sag"].currentNode(),
-                "Foreground": self.selectors["moving_ax"].currentNode(),
-            },
-            "Axial_Warped": {
-                "Background": self.selectors["fixed_sag"].currentNode(),
-                "Foreground": self.selectors["warped_ax"].currentNode(),
-            },
-            "Axial_Diff": {
-                "Background": self._get_volume_node("diff_moving_ax"),
-                "Foreground": self._get_volume_node("diff_warped_ax"),
-            },
-            "Axial_Jacobian": {
-                "Background": self.selectors["jacobian_ax"].currentNode()
-            },
-            "Axial_Displacement": {},
-            "Coronal_Moving": {
-                "Background": self.selectors["fixed_sag"].currentNode(),
-                "Foreground": self.selectors["moving_cor"].currentNode(),
-            },
-            "Coronal_Warped": {
-                "Background": self.selectors["fixed_sag"].currentNode(),
-                "Foreground": self.selectors["warped_cor"].currentNode(),
-            },
-            "Coronal_Diff": {
-                "Background": self._get_volume_node("diff_moving_cor"),
-                "Foreground": self._get_volume_node("diff_warped_cor"),
-            },
-            "Coronal_Jacobian": {
-                "Background": self.selectors["jacobian_cor"].currentNode()
-            },
-            "Coronal_Displacement": {},
-        }
-
         layoutManager = slicer.app.layoutManager()
-        for view_name, assignment in view_assignments.items():
+        superres_node = self.selectors["superres"].currentNode()
+        for view_name, volume_key, orientation in SLICE_VIEW_ASSIGNMENTS:
             slice_widget = layoutManager.sliceWidget(view_name)
             if slice_widget is None:
                 continue
+            slice_node = slice_widget.mrmlSliceNode()
+            if slice_node:
+                slice_node.SetOrientation(orientation)
             composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
             if not composite_node:
                 continue
-            bg_node = assignment.get("Background")
-            fg_node = assignment.get("Foreground")
+            bg_node = self.selectors[volume_key].currentNode()
+            fg_node = superres_node
             composite_node.SetBackgroundVolumeID(bg_node.GetID() if bg_node else "")
             composite_node.SetForegroundVolumeID(fg_node.GetID() if fg_node else "")
             if fg_node:
                 composite_node.SetForegroundOpacity(0.5)
 
-        for transform_key, view_names in [
-            ("displacement_axi", ["Axial_Displacement"]),
-            ("displacement_cor", ["Coronal_Displacement"]),
-        ]:
-            transform_node = self.selectors[transform_key].currentNode()
-            blank_node = self._get_or_create_blank_volume(
-                transform_node, f"blank_{transform_key}"
-            )
-            if blank_node is None:
-                continue
-            for view_name in view_names:
-                slice_widget = layoutManager.sliceWidget(view_name)
-                if slice_widget is None:
-                    continue
-                composite_node = slice_widget.sliceLogic().GetSliceCompositeNode()
-                if composite_node:
-                    composite_node.SetBackgroundVolumeID(blank_node.GetID())
-
-        self._on_displacement_visibility_changed()
-
         slicer.util.resetSliceViews()
-
-        self._update_folding_labels()
 
 
 class registrationViewerLogic(ScriptedLoadableModuleLogic):
     def __init__(self) -> None:
         ScriptedLoadableModuleLogic.__init__(self)
-
-    def create_transform_display_node_for_views(
-        self, views: List[str]
-    ) -> "vtkMRMLTransformDisplayNode":
-        dn = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTransformDisplayNode")
-        dn.SetViewNodeIDs(views)
-        dn.SetVisibility(True)
-        dn.SetVisibility2D(True)
-        dn.SetVisibility3D(False)
-        dn.SetVisualizationMode(slicer.vtkMRMLTransformDisplayNode.VIS_MODE_GRID)
-        return dn
-
-    def set_transform_node_visibility(
-        self, transform_node: "vtkMRMLTransformNode", views: List[str]
-    ) -> None:
-        old_dn = transform_node.GetDisplayNode()
-        if old_dn:
-            slicer.mrmlScene.RemoveNode(old_dn)
-        new_dn = self.create_transform_display_node_for_views(views)
-        transform_node.SetAndObserveDisplayNodeID(new_dn.GetID())
