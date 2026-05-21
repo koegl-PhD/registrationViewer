@@ -139,12 +139,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         btnAxi = qt.QPushButton("Axi")
         btnCor = qt.QPushButton("Cor")
         btnSag = qt.QPushButton("Sag")
+        btnAll = qt.QPushButton("All")
         btnAxi.clicked.connect(lambda: self.set_all_views_orientation("Axial"))
         btnCor.clicked.connect(lambda: self.set_all_views_orientation("Coronal"))
         btnSag.clicked.connect(lambda: self.set_all_views_orientation("Sagittal"))
+        btnAll.clicked.connect(self.set_default_view_orientations)
         btnLayout.addWidget(btnAxi)
         btnLayout.addWidget(btnCor)
         btnLayout.addWidget(btnSag)
+        btnLayout.addWidget(btnAll)
         self.visualization.groupBoxLayout.insertRow(1, btnLayout)
 
     def _add_curtain_widget(self, layout):
@@ -510,6 +513,15 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
     def set_all_views_orientation(self, orientation: str) -> None:
         layoutManager = slicer.app.layoutManager()
         for view_name, _, _ in SLICE_VIEW_ASSIGNMENTS:
+            slice_widget = layoutManager.sliceWidget(view_name)
+            if slice_widget is not None:
+                slice_node = slice_widget.mrmlSliceNode()
+                if slice_node:
+                    slice_node.SetOrientation(orientation)
+
+    def set_default_view_orientations(self) -> None:
+        layoutManager = slicer.app.layoutManager()
+        for view_name, _, orientation in SLICE_VIEW_ASSIGNMENTS:
             slice_widget = layoutManager.sliceWidget(view_name)
             if slice_widget is not None:
                 slice_node = slice_widget.mrmlSliceNode()
