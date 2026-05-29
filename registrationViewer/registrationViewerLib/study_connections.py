@@ -90,7 +90,7 @@ def on_info_button() -> None:
 
     log(logging.INFO, LogType.U_BUTTON, "User clicked on info button")
 
-    utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+    utils.show_fullscreen_popup_with_image(image_path='/Users/fryderyk.koegl/Documents/registrationViewer/registrationViewer/Resources/Icons/legend.png',
                                            title=texts.Titles.STUDY_INSTRUCTIONS,
                                            on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User resumed study"))
 
@@ -281,7 +281,7 @@ def organiser_start_study(self: "registrationViewerWidget") -> None:
 
     self.ui_sub_6.start_study_by_user_button.setVisible(True)
     self.ui_sub_6.current_rad_name.setVisible(True)
-    self.ui_sub_1.simple_ui_button.setVisible(False)
+    self.ui_sub_1.simple_ui_button.setVisible(True)
 
     utils.set_button_texts(self)
 
@@ -354,24 +354,24 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
     if self.first_time_description_show:
         self.full_screen_block.open()
 
-        utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
-                                                  content=texts.Contents.STUDY_DESCRIPTION,
-                                                  text_size=14,
-                                                  on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
+        # utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+        #                                           content=texts.Contents.STUDY_DESCRIPTION,
+        #                                           text_size=14,
+        #                                           on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study description"))
 
         self.first_time_description_show = False
 
     if self.show_training_cases:
         if self.first_time_training_description_show and self.is_current_task_training:
 
-            utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
-                                                      content=texts.Contents.TRAINING_STUDY_DESCRIPTION,
-                                                      text_size=14,
-                                                      on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed training study description"))
+            # utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+            #                                           content=texts.Contents.TRAINING_STUDY_DESCRIPTION,
+            #                                           text_size=14,
+            #                                           on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed training study description"))
 
-            utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
-                                                   title=texts.Titles.USER_ICONS,
-                                                   on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
+            # utils.show_fullscreen_popup_with_image(image_path='/Users/fryderyk.koegl/Documents/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+            #                                        title=texts.Titles.USER_ICONS,
+            #                                        on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
 
             self.first_time_training_description_show = False
 
@@ -383,15 +383,15 @@ def next_task(self: "registrationViewerWidget", initial: bool) -> None:
 
         self.full_screen_block.open()
 
-        if self.show_training_cases:
-            utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
-                                                      content=texts.Contents.STUDY_BEGINS,
-                                                      text_size=40,
-                                                      center_text=True,
-                                                      on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study begins"))
+        # if self.show_training_cases:
+            # utils.show_fullscreen_popup_with_callback(title=texts.Titles.STUDY_DESCRIPTION,
+            #                                           content=texts.Contents.STUDY_BEGINS,
+            #                                           text_size=40,
+            #                                           center_text=True,
+            #                                           on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed study begins"))
 
         if not self.show_training_cases:
-            utils.show_fullscreen_popup_with_image(image_path='/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/Icons/legend.png',
+            utils.show_fullscreen_popup_with_image(image_path='/Users/fryderyk.koegl/Documents/registrationViewer/registrationViewer/Resources/Icons/legend.png',
                                                    title=texts.Titles.USER_ICONS,
                                                    on_ok=lambda: log(logging.INFO, LogType.U_BUTTON, "User closed info popup"))
 

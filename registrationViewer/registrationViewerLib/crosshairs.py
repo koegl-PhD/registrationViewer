@@ -195,7 +195,7 @@ class Crosshairs():
         Transform every crosshair from the list of nodes with the current transformation.
         """
         # first move to fixed space, then deform then move back to moving space
-
+        invert = not invert
         for node in crosshair_nodes:
             if self.node_transform_nonlinear:
                 if invert:

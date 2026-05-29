@@ -58,6 +58,9 @@ class StudyData:
 
         self._create_case_task_transformation_map()
 
+        self.number_of_training_tasks = 0
+        self.number_of_full_training_tasks = 0
+
     def save(self, json_path=None):
         if json_path is None:
             json_path = self.path
@@ -70,44 +73,44 @@ class StudyData:
         patients_positive = self.data["patients"]["positive"]
         patients_negative = self.data["patients"]["negative"]
 
-        split_g1 = {patients_positive[i]: ("positive", utils.TransformType.NONE)
-                    for i in range(0, 6)}
-        split_g1.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
-                        for i in range(0, 6)})
-        split_g1.update({patients_positive[i]: ("positive", utils.TransformType.LINEAR)
-                        for i in range(6, 12)})
-        split_g1.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
-                        for i in range(6, 12)})
-        split_g1.update({patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
-                        for i in range(12, 18)})
-        split_g1.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
-                        for i in range(12, 18)})
+        split_g1 = {patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
+                    for i in range(1)}
+        # split_g1.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
+        #                 for i in range(0, 6)})
+        # split_g1.update({patients_positive[i]: ("positive", utils.TransformType.LINEAR)
+        #                 for i in range(6, 12)})
+        # split_g1.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
+        #                 for i in range(6, 12)})
+        # split_g1.update({patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
+        #                 for i in range(12, 18)})
+        # split_g1.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
+        #                 for i in range(12, 18)})
 
         split_g2 = {patients_positive[i]: ("positive", utils.TransformType.LINEAR)
-                    for i in range(0, 6)}
-        split_g2.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
-                        for i in range(0, 6)})
-        split_g2.update({patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
-                        for i in range(6, 12)})
-        split_g2.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
-                        for i in range(6, 12)})
-        split_g2.update({patients_positive[i]: ("positive", utils.TransformType.NONE)
-                        for i in range(12, 18)})
-        split_g2.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
-                        for i in range(12, 18)})
+                    for i in range(1)}
+        # split_g2.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
+        #                 for i in range(0, 6)})
+        # split_g2.update({patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
+        #                 for i in range(6, 12)})
+        # split_g2.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
+        #                 for i in range(6, 12)})
+        # split_g2.update({patients_positive[i]: ("positive", utils.TransformType.NONE)
+        #                 for i in range(12, 18)})
+        # split_g2.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
+        #                 for i in range(12, 18)})
 
         split_g3 = {patients_positive[i]: ("positive", utils.TransformType.NONLINEAR)
-                    for i in range(0, 6)}
-        split_g3.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
-                        for i in range(0, 6)})
-        split_g3.update({patients_positive[i]: ("positive", utils.TransformType.NONE)
-                        for i in range(6, 12)})
-        split_g3.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
-                        for i in range(6, 12)})
-        split_g3.update({patients_positive[i]: ("positive", utils.TransformType.LINEAR)
-                        for i in range(12, 18)})
-        split_g3.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
-                        for i in range(12, 18)})
+                    for i in range(1)}
+        # split_g3.update({patients_negative[i]: ("negative", utils.TransformType.NONLINEAR)
+        #                 for i in range(0, 6)})
+        # split_g3.update({patients_positive[i]: ("positive", utils.TransformType.NONE)
+        #                 for i in range(6, 12)})
+        # split_g3.update({patients_negative[i]: ("negative", utils.TransformType.NONE)
+        #                 for i in range(6, 12)})
+        # split_g3.update({patients_positive[i]: ("positive", utils.TransformType.LINEAR)
+        #                 for i in range(12, 18)})
+        # split_g3.update({patients_negative[i]: ("negative", utils.TransformType.LINEAR)
+        #                 for i in range(12, 18)})
 
         self.split = {
             1: split_g1,
@@ -170,6 +173,7 @@ class StudyData:
             names_and_paths.append(
                 (patient_name, f"{p}{patient_name}"))
 
+        # return [names_and_paths[3]]  # for testing purposes, only load the first patient in the chunk
         return names_and_paths
 
     def number_of_tasks(self) -> int:
@@ -285,9 +289,9 @@ class StudyData:
 
                 temp_rad_map += temp_chunk_map
 
-            temp_rad_map = self._insert_calibration_tasks(temp_rad_map)
+            # temp_rad_map = self._insert_calibration_tasks(temp_rad_map)
 
-            temp_rad_map = self._insert_training_tasks(temp_rad_map)
+            # temp_rad_map = self._insert_training_tasks(temp_rad_map)
 
             self.case_task_transformation_map[rad_id] = temp_rad_map
 
@@ -295,9 +299,9 @@ class StudyData:
         for rad_id, rad_content in self.participants.items():
 
             group = int(rad_content["group"])
-
-            self._insert_calibration_chunks(group)
-            self._insert_training_chunk(group)
+            self.number_of_training_patients = 0
+            # self._insert_calibration_chunks(group)
+            # self._insert_training_chunk(group)
 
     def _insert_calibration_tasks(
             self,
@@ -448,6 +452,8 @@ def load_current_chunk(self: "registrationViewerWidget") -> None:
 
     utils.set_up_progress_window("Loading data...")
 
+    # self.current_patient_name = "hmJfXqxVMk0"
+
     names_and_paths = self.study_data.get_chunked_patient_names_and_paths(self.current_patient_name,
                                                                           self.chunk_idx)
 
@@ -458,7 +464,10 @@ def load_current_chunk(self: "registrationViewerWidget") -> None:
 
     progress_val = 0
 
+
     for case_name, case_path in names_and_paths:
+        if 'training' in case_path.lower():
+            continue
         progress_val = load_one_case_voxels(
             self,
             case_name,

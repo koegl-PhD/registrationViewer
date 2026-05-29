@@ -84,7 +84,7 @@ def _is_left_and_right_drag(view_name: str) -> bool:
 def setup_sectra_movements(
     self: "registrationViewerWidget",
     sensitivity_pan: float = 1.0,
-    sensitivity_window_level: float = 1.0,
+    sensitivity_window_level: float = 0.01,
     sensitivity_scroll: float = 0.4,
     sensitivity_zoom: float = 0.01
 ):

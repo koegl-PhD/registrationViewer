@@ -275,6 +275,8 @@ def get_paths_to_load(path_case_folder: str,
         print(path_deformation)
         raise Exception(f"Deformation path does not exist: {path_deformation}")  # nopep8
 
+    path_deformation = "/Users/fryderyk.koegl/Documents/data/reg_study_temp/SerielleCTs_nii_forHumans_registrations/outputCPP_intent.nii"
+
     return path_volume_fixed, path_volume_moving, \
         path_seg_fixed, path_seg_moving, \
         path_transform_fixed, path_transform_moving, \

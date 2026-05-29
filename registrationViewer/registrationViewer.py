@@ -143,8 +143,8 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
             ('s', self.on_synchronise_views_wth_trasform_outside_of_study),
             # ('m', self.on_synchronise_views_manually),
             ('t', lambda: study_connections.key_call_on_synchronise_views_general(self)),
-            ('Ctrl+k', lambda: toggle_simple_ui_button_visibility(self)),
-            ('Ctrl+p', lambda: toggle_console_visibility(self)),
+            ('Meta+k', lambda: toggle_simple_ui_button_visibility(self)),
+            ('Meta+p', lambda: toggle_console_visibility(self)),
         )
 
         self.study_current_transform_type: 'utils.TransformType' = utils.TransformType.NONE
@@ -219,7 +219,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.first_time_training_description_show: bool = True
         self.first_time_info_show: bool = True
 
-        self.checkbox_training_cases: bool = True
+        self.checkbox_training_cases: bool = False
 
         # task specific
         self.study_gt_lymphnode_description: dict[str, str] = {}
@@ -268,7 +268,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.ui_sub_2.data_master_path_edit.nameFilters = [
             "JSON files (*.json)"]
 
-        default_path = "/home/koeglf/Documents/code/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
+        default_path = "/Users/fryderyk.koegl/Documents/registrationViewer/registrationViewer/Resources/example_study/data_master.json"
         if os.path.exists(default_path):
             self.ui_sub_2.data_master_path_edit.currentPath = default_path
 
@@ -491,7 +491,7 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
 
         if self.temp_enabled is False:
             custom_logging.configure_logger(self,
-                     "/home/koeglf/Documents/code/registrationViewer/registrationViewer/default.log",
+                     "/Users/fryderyk.koegl/Documents/data/reg_study_temp/study_output/rad_test/default.log",
                      "RegistrationEvaluation")  # nopep8
 
             sectra.setup_sectra_movements(self)
@@ -927,10 +927,13 @@ class registrationViewerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         """
         Check if the training cases should be shown.
         """
+        return False
         return self.checkbox_training_cases
 
     @property
     def current_patient_name(self) -> str:
+
+        return "hmJfXqxVMk0"
         if self.current_patient_task_transform_comb == ("", "", ""):
             return "no_patient"
 
